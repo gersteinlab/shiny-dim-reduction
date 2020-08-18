@@ -1,6 +1,6 @@
 # The purpose of this script is to store functions for 
 # building the files and folders of a dimensionality reduction app.
-# source("~/Justin-Tool/build.R")
+# source("~/Justin-Tool/code/build.R")
 
 # ---------
 # SHORTHAND
@@ -62,7 +62,7 @@ update_app <- function(filenames) {
     loc <- sprintf("%s/%s", app_loc, file)
     if (file.exists(loc))
       file.remove(loc)
-    file.copy(file, app_loc)
+    file.copy(sprintf("code/%s", file), app_loc)
   }
   setwd(current)
 }

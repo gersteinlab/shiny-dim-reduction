@@ -1,6 +1,6 @@
 # This file stores all functions and constants that should be preserved
 # across all files, from data validation to processing to the tool.
-# source("~/Justin-Tool/inherit.R")
+# source("~/Justin-Tool/code/inherit.R")
 
 require("shiny")
 require("dplyr")
