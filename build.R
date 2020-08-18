@@ -6,7 +6,7 @@
 # SHORTHAND
 # ---------
 
-source("~/Justin-Tool/inherit.R")
+source("~/Justin-Tool/code/inherit.R")
 
 exrna <- function(){
   runApp("~/Justin-Tool/exRNA/app/app.R")
