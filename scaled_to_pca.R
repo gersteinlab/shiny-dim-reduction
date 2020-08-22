@@ -1,6 +1,6 @@
 # The goal of this script is to perform PCA on the data.
 
-source("~/Justin-Tool/scaling.R")
+source("~/Justin-Tool/code/scaling.R")
 
 # ----------------------------
 # PRINCIPAL COMPONENT ANALYSIS
@@ -26,12 +26,38 @@ for (cat in dog)
         for (fea in c(1, 10, 100))
         {
           pca_title <- sprintf("PCA/PCA_%s_%s_%s_%s_%s.rds", fea, nor, sca, sub, cat)
-          scaled <- feature_start(scaled, fea/100)
+          scaled_final <- feature_start(scaled, 1.0*fea/100)
           print(pca_title)
-          pca <- prcomp(scaled, center = TRUE, rank. = pc_cap) 
+          pca <- prcomp(scaled_final, center = TRUE, rank. = pc_cap) 
+          print(dim(pca$rotation))
+          # 
+          # rotate <- pca$rotation[,1:3]
+          # ind <- rep(0, nrow(rotate))
+          # for (i in 1:nrow(rotate))
+          # {
+          #   target <- abs(rotate[i, ])
+          #   sum_ind <- which(target > sum(target)*0.5)
+          #   
+          #   if (length(sum_ind) > 0)
+          #     ind[i] <- sum_ind
+          # }
+          # pca$rotation <- ind
+          # pca$center <- NULL
+      
           myRDS(pca_title, pca)
         }
       }
     }
   }
 }
+
+c1 <- apply(pca$rotation[,1:3], 1, function(x){
+  target <- abs(x)
+  sum_ind <- which(target > sum(target)*0.6)
+  names(sum_ind) <- NULL
+  
+  if (length(sum_ind) > 0)
+    return(sum_ind)
+  return(0)
+})
+c2 <- as.factor(c1[indices])

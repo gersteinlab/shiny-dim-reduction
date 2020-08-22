@@ -9,7 +9,7 @@ library(Rtsne)
 # USER VARIABLES
 # --------------
 
-source("~/Justin-Tool/build.R")
+source("~/Justin-Tool/code/build.R")
 
 setwd(dep_loc)
 categories_full <- readRDS("categories_full.rds")
