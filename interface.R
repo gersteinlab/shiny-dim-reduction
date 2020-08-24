@@ -116,6 +116,9 @@ Note that the settings in 'Graphing' are applied in reverse order. As an example
 'Color Palette' is applied after 'Method of Dimensionality Reduction', which is
 applied after normalization, which is applied after scaling.
 <br><br>
+If you want to save plotly output as an image, use the camera icon.
+To save all other output, right click the image and 'Save image as ...'
+<br><br>
 <b>Glossary of Terms</b>
 <ul>
 <li><u>Settings Menu:</u> 
@@ -192,9 +195,6 @@ Toggles the interface panels on the left side of the tool.
 </li>
 <li><u>Bookmark:</u> 
 Creates a URL that replicates this session.
-</li>
-<li><u>Save Plot:</u> 
-Downloads a PNG of the current ggplot2 graph. For plotly, use the camera icon.
 </li>
 <li><u>Numeric Data:</u> 
 Downloads the numeric data used to produce the current plot.

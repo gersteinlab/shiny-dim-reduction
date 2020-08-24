@@ -1,12 +1,12 @@
 # The purpose of this script is to store functions for 
 # building the files and folders of a dimensionality reduction app.
-# source("~/Justin-Tool/code/build.R")
+# source("~/Justin-Tool/shiny-dim-reduction/build.R")
 
 # ---------
 # SHORTHAND
 # ---------
 
-source("~/Justin-Tool/code/inherit.R")
+source("~/Justin-Tool/shiny-dim-reduction/inherit.R")
 
 exrna <- function(){
   runApp("~/Justin-Tool/exRNA/app/app.R")
@@ -62,7 +62,7 @@ update_app <- function(filenames) {
     loc <- sprintf("%s/%s", app_loc, file)
     if (file.exists(loc))
       file.remove(loc)
-    file.copy(sprintf("code/%s", file), app_loc)
+    file.copy(sprintf("shiny-dim-reduction/%s", file), app_loc)
   }
   setwd(current)
 }

@@ -4,7 +4,7 @@
 # USER VARIABLES
 # --------------
 
-source("~/Justin-Tool/scaling.R")
+source("~/Justin-Tool/shiny-dim-reduction/scaling.R")
 
 # -------------------
 # PACKAGE PCA and VAE
@@ -92,9 +92,11 @@ for (cat in dog)
           for (emb in c("PCA", "VAE"))
           {
             loc <- sprintf("%s_%s_%s_%s_%s.rds", fea, nor, sca, sub, cat)
+            loc <- repStr(loc, sprintf("Total_%s", name_cat), name_cat)
             
             save_db(
-              myRDS(sprintf("vis-%s/NONE_%s_%s", emb, emb, loc)), 
+              myRDS(sprintf("vis-%s/NONE_%s_%s", emb, emb, loc)),
+              aws_bucket,
               make_aws_name(
                 make_file_name(sca, nor, fea, emb, "Explore", "", ""), 
                 sub, cat
@@ -103,11 +105,14 @@ for (cat in dog)
             
             save_db(
               myRDS(sprintf("vis-%s/SUM_%s_%s", emb, emb, loc)), 
+              aws_bucket,
               make_aws_name(
                 make_file_name(sca, nor, fea, emb, "Summarize", "", ""), 
                 sub, cat
               )
             )
+            
+            tsne_vis <- myRDS(sprintf("vis-%s/TSNE_%s_%s", emb, emb, loc))
             
             for (nei in perplexity_types)
             {
@@ -115,11 +120,9 @@ for (cat in dog)
               
               for (dim in c(2,3))
               {
-                tsne_vis <- myRDS(sprintf("vis-%s/TSNE_%s_%s", emb, emb, loc))[[
-                  sprintf("TSNE%s", dim)]][[sprintf("P%s", nei)]]
-                
                 save_db(
-                  tsne_vis,
+                  tsne_vis[[sprintf("TSNE%s", dim)]][[sprintf("P%s", nei)]],
+                  aws_bucket,
                   make_aws_name(
                     make_file_name(sca, nor, fea, emb, "tSNE", dim, nei_ind), 
                     sub, cat
@@ -226,9 +229,11 @@ for (cat in dog)
         for (fea in c(1, 10, 100))
         {
           loc <- sprintf("%s_%s_%s_%s_%s.rds", fea, nor, sca, sub, cat)
+          loc <- repStr(loc, sprintf("Total_%s", name_cat), name_cat)
           
           save_db(
             myRDS(sprintf("vis-UMAP/SUM_UMAP_%s", loc)), 
+            aws_bucket,
             make_aws_name(
               make_file_name(sca, nor, fea, "UMAP", "Summarize", "", ""), 
               sub, cat
@@ -243,19 +248,20 @@ for (cat in dog)
             
             save_db(
               explore[[sprintf("P%s", nei)]], 
+              aws_bucket,
               make_aws_name(
                 make_file_name(sca, nor, fea, "UMAP", "Explore", "", nei_ind), 
                 sub, cat
               )
             )
             
+            tsne_vis <- myRDS(sprintf("vis-UMAP/TSNE_UMAP_%s", loc))
+            
             for (dim in c(2,3))
             {
-              tsne_vis <- myRDS(sprintf("vis-UMAP/TSNE_UMAP_%s", loc))[[
-                sprintf("TSNE%s", dim)]][[sprintf("P%s", nei)]]
-              
               save_db(
-                tsne_vis,
+                tsne_vis[[sprintf("TSNE%s", dim)]][[sprintf("P%s", nei)]],
+                aws_bucket,
                 make_aws_name(
                   make_file_name(sca, nor, fea, "UMAP", "tSNE", dim, nei_ind), 
                   sub, cat
@@ -271,7 +277,7 @@ for (cat in dog)
 
 # -------------
 # PACKAGE PHATE
-# -------------\
+# -------------
 
 # normal
 for (sca in sca_options)
@@ -328,12 +334,17 @@ for (cat in dog)
             
             for (dim in c(2,3))
             {
+              # phate <- myRDS(sprintf(
+              #   "PHATE/PHATE-%s-%s_%s_%s_%s_%s_%s.rds", 
+              #   nei, dim, fea, nor, sca, sub, cat))$embedding
+              
               phate <- myRDS(sprintf(
-                "PHATE/PHATE-%s-%s_%s_%s_%s_%s_%s.rds", 
-                nei, dim, fea, nor, sca, sub, cat))$embedding
+                "PHATE/PHATE-%s-%s_%s_%s_%s_%s.rds", 
+                nei, dim, fea, nor, sca, cat))$embedding
               
               save_db(
                 phate,
+                aws_bucket,
                 make_aws_name(
                   make_file_name(sca, nor, fea, "PHATE", "", dim, nei_ind), 
                   sub, cat
@@ -374,6 +385,7 @@ for (cat in dog)
       {
         save_db(
           set_data[[cha]],
+          aws_bucket,
           sprintf("Sets/Sets-%s_%s_%s_%s.rds", 
                   ind, sca_ind, cha, cat)
         )

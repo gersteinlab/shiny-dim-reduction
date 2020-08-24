@@ -2,6 +2,7 @@
 # before the data undergoes a dimensionality reduction.
 # Criteria: samples are rows, features are columns
 # Criteria: all entries are numeric, data is in a matrix
+# source("~/Justin-Tool/shiny-dim-reduction/scaling.R")
 
 library(Rtsne)
 
@@ -9,17 +10,42 @@ library(Rtsne)
 # USER VARIABLES
 # --------------
 
-source("~/Justin-Tool/code/build.R")
+source("~/Justin-Tool/shiny-dim-reduction/build.R")
+setwd(app_loc)
 
-setwd(dep_loc)
-categories_full <- readRDS("categories_full.rds")
-decorations <- readRDS("decorations.rds")
-pc_cap <- readRDS("pc_cap.rds")
-order_total <- readRDS("order_total.rds")
-perplexity_types <- readRDS("perplexity_types.rds")
-amazon_keys <- readRDS("amazon_keys.rds")
+dir <- "dependencies"
 
-# set keys
+categories_full <- get_from_dir(
+  "categories_full.rds", 
+  NULL, dir
+)
+
+order_total <- get_from_dir(
+  "order_total.rds",
+  NULL, dir
+)
+
+amazon_keys <- get_from_dir(
+  "amazon_keys.rds",
+  NULL, dir
+)
+
+perplexity_types <- get_from_dir(
+  "perplexity_types.rds", 
+  NULL, dir
+)
+
+pc_cap <- get_from_dir(
+  "pc_cap.rds",
+  3, dir
+)
+
+decorations <- get_from_dir(
+  "decorations.rds",
+  NULL, dir
+)
+
+# sets parameters after getting keys for Amazon AWS
 Sys.setenv("AWS_ACCESS_KEY_ID" = amazon_keys[1],
            "AWS_SECRET_ACCESS_KEY" = amazon_keys[2])
 aws_bucket <- amazon_keys[3]

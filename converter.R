@@ -1,13 +1,13 @@
 # The goal of this script is to store functions related 
 # to converting from raw data to combined data and metadata.
 # Actual converter.R files should source this file.
-# source("~/Justin-Tool/code/converter.R")
+# source("~/Justin-Tool/shiny-dim-reduction/converter.R")
 
 # --------------
 # USER VARIABLES
 # --------------
 
-source("~/Justin-Tool/code/build.R")
+source("~/Justin-Tool/shiny-dim-reduction/build.R")
 
 # ---------
 # FUNCTIONS

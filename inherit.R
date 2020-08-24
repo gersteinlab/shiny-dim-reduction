@@ -149,3 +149,11 @@ load_db <- function(filename, bucket){
   s3load(filename, bucket)
   my_amazon_obj
 }
+
+# attempts to retrieve a file from a directory, returning a default otherwise
+get_from_dir <- function(name, default, dir)
+{
+  if (name %in% list.files(dir))
+    return(myRDS(sprintf("%s/%s", dir, name)))
+  return(default)
+}

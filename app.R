@@ -101,8 +101,7 @@ col-sm-12 col-md-8",
     action("toggle", "Interface", "eye-slash", "#FFF", "#00A86B", "#00356B"),
     bookmarkButton(),
     downloadButton('downloadData', 'Numeric Data'),
-    downloadButton('downloadMetadata', 'Metadata'),
-    downloadButton('downloadPlot', 'Plot')
+    downloadButton('downloadMetadata', 'Metadata')
   ),
   tabsetPanel(
     id = 'plotPanels',
@@ -299,11 +298,6 @@ server <- function(input, output, session) {
   # only allows the "Numeric Data" feature on the datatable page
   # only allows the "Metadata" feature on the metadata page
   observeEvent(input$plotPanels, {
-    if (input$plotPanels == "ggplot2" || input$plotPanels == "beeswarm")
-      shinyjs::show("downloadPlot")
-    else
-      shinyjs::hide("downloadPlot")
-    
     if (input$plotPanels == "Numeric Data")
       shinyjs::show("downloadData")
     else
@@ -546,20 +540,6 @@ server <- function(input, output, session) {
     },
     content = function(file){
       writeLines(regStr(citations, "<[^>]*>", ""), file)
-    }
-  )
-  
-  # download button for ggplot2 image
-  output$downloadPlot <- downloadHandler(
-    filename = function(){
-      sprintf("%s_ggplot2.png", repStr(title_text(), " ", "_"))
-    },
-    content = function(file){
-      if (!authenticated())
-        return(NULL)
-      png(file, height = 900, width = 1600)  
-      print(ggplot2_data())
-      dev.off()
     }
   )
   

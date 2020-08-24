@@ -8,7 +8,7 @@ library(Matrix)
 # USER VARIABLES
 # --------------
 
-source("~/Justin-Tool/scaling.R")
+source("~/Justin-Tool/shiny-dim-reduction/scaling.R")
 
 # threshold caps
 lower <- 8 # 2^3

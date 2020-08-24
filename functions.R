@@ -152,14 +152,6 @@ sort_by_names <- function(target)
   target[base::order(names(target))]
 }
 
-# attempts to retrieve a file from a directory, returning a default otherwise
-get_from_dir <- function(name, default, dir)
-{
-  if (name %in% list.files(dir))
-    return(myRDS(sprintf("%s/%s", dir, name)))
-  return(default)
-}
-
 # --------------
 # INPUT ENCODING
 # --------------
@@ -506,7 +498,7 @@ boxplot_beeswarm <- function(data, rel, xlab, ylab, names,
           outline = FALSE, main='boxplot + beeswarm')
   
   beeswarm(rel, data=data, xlab=xlab, ylab=ylab,
-           labels=names, col=bee_colors,
+           labels=names, col=bee_colors, corral="random",
            main= 'beeswarm + bxplot', pch=16, add=TRUE) # filled circles
 }
 
