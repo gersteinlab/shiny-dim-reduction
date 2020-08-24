@@ -21,7 +21,7 @@ entex <- function(){
 # --------------
 
 root <- "~/Justin-Tool"
-project_name <- "ENTEx"
+project_name <- "exRNA"
 
 # roo (root)
 # -- raw (raw)

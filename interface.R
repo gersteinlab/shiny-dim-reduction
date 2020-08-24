@@ -1,5 +1,5 @@
 # The purpose of this file is to store browser parameters, long text
-# strings, and user interfaces for the main app. 
+# strings, and non-generalizable user interfaces for the main app. 
 # None of these should depend on other global variables!
 # Note: Most interface numbers are rounded to 4 decimal places.
 # This likely will not change in the near future.
@@ -24,7 +24,7 @@ max_heatma <- 1048576 # 2^20
 max_dendro <- 512 # 2^9
 
 # plot panel options
-pan_options <- c("ggplot2", "plotly2", "plotly3")
+pan_options <- c("ggplot2", "plotly2", "plotly3", "beeswarm")
 # palette options
 pal_options <- list(
   "Base"=c("Custom", "Rainbow", "Heat", "Terrain", "Topography", "CM"),
@@ -242,6 +242,9 @@ for the gene to be displayed. A gene is contained if and only if it is present
 in an appropriate fraction of samples. As an example, housekeeping genes (present 
 in all characteristics) - will be removed by setting this value to less than 1.
 </li></ul>"
+
+no_autofill <- 
+  "document.getElementById('password').setAttribute('autocomplete','new-password')"
 
 # ----------
 # INTERFACES

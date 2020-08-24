@@ -11,11 +11,12 @@ lib_list <- c(
   , "shinyjs"
   , "shinycssloaders"
   , "shinyWidgets"
+  , "viridis"
   , "ggplot2"
   , "plotly"
   , "UpSetR"
   , "VennDiagram"
-  , "viridis"
+  , "beeswarm"
   , "heatmaply"
   , "DT"
 )
@@ -31,6 +32,7 @@ extra_lib_list <- c(
   , "dbscan"
   , "umap"
   , "phateR"
+  , "readxl"
 )
 
 # installation function

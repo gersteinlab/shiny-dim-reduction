@@ -7,6 +7,11 @@
 
 dir <- "dependencies"
 
+user_credentials <- get_from_dir(
+  "user_credentials.rds", 
+  NULL, dir
+)
+
 # ordered from most to least important (ex: app_title can be missing and
 # not significantly affect functionality)
 categories_full <- get_from_dir(
@@ -65,8 +70,6 @@ decorations <- get_from_dir(
   "decorations.rds",
   NULL, dir
 )
-
-rm(dir)
 
 # a bit of exposition regarding decorations:
 # first of all, each decoration in the list has a name
@@ -235,18 +238,10 @@ for (cat in name_cat)
 }
 
 bookmark_exclude_vector <- c(
-  "metadata_table_search",
-  "metadata_table_state",
-  "metadata_table_cell_clicked",
-  "metadata_table_search_columns",
-  "metadata_table_rows_current",
-  "metadata_table_rows_all",
-  "num_data_table_search",
-  "num_data_table_state",
-  "num_data_table_cell_clicked",
-  "num_data_table_search_columns",
-  "num_data_table_rows_current",
-  "num_data_table_rows_all",
+  table_exclude_vector(c(
+    "num_data_table", "metadata_table", "legend_out"
+  )),
+  
   ".clientValue-default-plotlyCrosstalkOpts",
   "plotly_hover-A",
   "plotly_afterplot-A",
@@ -262,6 +257,6 @@ bookmark_exclude_vector <- c(
   "start", "stop", "toggle", "central_nav", "instructions", "citations", 
   "sMenu", "category", "scale", "normalize", "features", "embedding", 
   "visualize", "perplexity", "upsetpref", "dendrogram", 
-  "palette", "plotPanels",  
-  "set_f1", "set_f2", "pc1", "pc2", "pc3"
+  "palette", "plotPanels", "username", "password", "toggle_password",
+  "attempt_login", "set_f1", "set_f2", "pc1", "pc2", "pc3"
 )

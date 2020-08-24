@@ -4,11 +4,12 @@
 require("shinyjs")
 require("shinycssloaders")
 require("shinyWidgets")
+require("viridis")
 require("ggplot2")
 require("plotly")
 require("UpSetR")
 require("VennDiagram")
-require("viridis")
+require("beeswarm")
 require("heatmaply")
 require("DT")
 
@@ -343,11 +344,33 @@ my_spin <- function(content)
   content %>% withSpinner(type = 6)
 }
 
+# Return the UI for a modal dialog that attempts to authenticate the user
+authenticator_modal <- function() {
+  modalDialog(
+    title = HTML("<b>Authentication</b>"),
+    HTML("Need access? Please make a request to 
+    <a href=\"justin.chang@yale.edu\" target=\"_blank\">
+    justin.chang@yale.edu</a>.<br><br>"),
+    wellPanel(
+      style="background-color: #E0F0FF; border-color: #00356B",
+      textInput("username", "Username", 
+                placeholder="Please enter your username ...", value="guest"),
+      textInput("password", "Password (is invisible)", 
+                placeholder="", value=""),
+      action("attempt_login", "Login", "unlock", "#FFFFFF", "#0064C8", "#00356B"),
+      actionButton("toggle_password", "Show/Hide Password")
+    ),
+    footer = tagList()
+  )
+}
+
 # -------------
 # NOTIFICATIONS
 # -------------
 
-# abbreviated notification method
+# shows a notification (form can be default, message, warning, error)
+# in general: warnings and errors are self-explanatory, defaults are used
+# to begin actions, and messages are used to return results
 notif <- function(message, time, form) 
 {
   showNotification(HTML(message), duration = time, closeButton = TRUE, type=form)
@@ -367,6 +390,13 @@ plot_success <- function(delta_time)
 {
   notif(sprintf("Plot generation was successful.<br>
 Seconds elapsed: %s", delta_time), 6, "message")
+}
+
+# prints a message that indicates a truncated matrix
+truncate_msg <- function()
+{
+  notif("Warning: This matrix is too large to plot.<br>
+         A truncated version will be presented.", 6, "warning")
 }
 
 # prints a failure message once a plot has been completed.
@@ -465,6 +495,19 @@ plotly_3d <- function(x, y, z, c, s, x_axis, y_axis, z_axis, title, legend, pain
                    yaxis = list(title = y_axis),
                    zaxis = list(title = z_axis)),
       showlegend = legend)
+}
+
+# Beeswarm / box plot, rel stands for relation
+boxplot_beeswarm <- function(data, rel, xlab, ylab, names, 
+                             box_colors, bee_colors)
+{
+  boxplot(rel, data=data, xlab=xlab, ylab=ylab,
+          names=names, col=box_colors,
+          outline = FALSE, main='boxplot + beeswarm')
+  
+  beeswarm(rel, data=data, xlab=xlab, ylab=ylab,
+           labels=names, col=bee_colors,
+           main= 'beeswarm + bxplot', pch=16, add=TRUE) # filled circles
 }
 
 # -----------------------
@@ -570,7 +613,7 @@ my_datatable <- function(df)
 {
   if (class(df) != "data.frame" || ncol(df) < 1)
     df <- empty_df
-
+  
   datatable(
     df, editable=FALSE, escape=TRUE, filter="top", 
     selection="none", options=list(
@@ -578,5 +621,22 @@ my_datatable <- function(df)
       scrollY=TRUE,
       autoWidth=FALSE
     )
+  )
+}
+
+# creates a vector of inputs that should be excluded 
+# from bookmarking, based on the table's ID
+table_exclude_vector <- function(table_id)
+{
+  c(
+    sprintf("%s_search", table_id),
+    sprintf("%s_state", table_id),
+    sprintf("%s_cell_clicked", table_id),
+    sprintf("%s_search_columns", table_id),
+    sprintf("%s_rows_current", table_id),
+    sprintf("%s_rows_all", table_id),
+    sprintf("%s_rows_selected", table_id),
+    sprintf("%s_columns_selected", table_id),
+    sprintf("%s_cells_selected", table_id)
   )
 }

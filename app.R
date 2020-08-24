@@ -57,8 +57,12 @@ col-xs-8 col-xs-offset-2 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-0",
     input.embedding == 'VAE' || input.embedding == 'UMAP')",
       sliderInput("pc1", "Displayed Component 1", 
                   min=1, max=pc_cap, value=1, step=1, ticks = FALSE),
-      sliderInput("pc2", "Displayed Component 2", 
-                  min=1, max=pc_cap, value=2, step=1, ticks = FALSE),
+      conditionalPanel(
+        condition = "input.plotPanels == 'ggplot2' || 
+        input.plotPanels == 'plotly2' || input.plotPanels == 'plotly3'",
+        sliderInput("pc2", "Displayed Component 2", 
+                    min=1, max=pc_cap, value=2, step=1, ticks = FALSE)
+      ),
       conditionalPanel(
         condition = "input.plotPanels == 'plotly3'",
         sliderInput("pc3", "Displayed Component 3", 
@@ -70,7 +74,11 @@ col-xs-8 col-xs-offset-2 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-0",
     do.call(conditionalPanel, c(
       condition = "input.embedding != 'Sets' && (input.embedding == 'PHATE' || 
           input.visualize != 'Summarize')",
-      color_panels_ui(color_opts), 
+      color_panels_ui(color_opts)
+    )),
+    do.call(conditionalPanel, c(
+      condition = "input.embedding != 'Sets' && input.plotPanels != 'beeswarm' &&
+      (input.embedding == 'PHATE' || input.visualize != 'Summarize')",
       shape_panels_ui(shape_opts)
     )),
     do.call(conditionalPanel, c(
@@ -101,12 +109,14 @@ col-sm-12 col-md-8",
     tabPanel("ggplot2", id="ggplot2", uiOutput("ggplot2UI")),
     tabPanel("plotly2", id="plotly2", uiOutput("plotly2UI")),
     tabPanel("plotly3", id="plotly3", uiOutput("plotly3UI")),
+    tabPanel("beeswarm", id="beeswarm", uiOutput("beeswarmUI")),
     tabPanel("Numeric Data", id="num_data", 
              DTOutput("num_data_table", width="100%") %>% my_spin()),
     tabPanel("Metadata", id="metadata", 
              DTOutput("metadata_table", width="100%") %>% my_spin())
   ),
   uiOutput("plainTitleUI"),
+  DTOutput("legend_out", width="100%") %>% my_spin(),
   h3("Documentation"),
   wellPanel(
     style="background-color: #E0F0FF; border-color: #00356B",
@@ -149,6 +159,14 @@ ui <- function(request){
 .dropdown-menu {
   min-height: 0px !important;
 }
+.my-hidden-text {
+  color: rgba(0,0,0,0) !important;
+  caret-color: rgba(0,0,0,1) !important;
+}
+.my-hidden-text::selection {
+  color: #3297FD !important;
+  background: #3297FD !important;
+}
 "))),
       fluidRow(
         my_interface_ui, 
@@ -169,6 +187,49 @@ server <- function(input, output, session) {
   # records the boot time of the program
   notif(sprintf("Reactive initialization complete.<br>Seconds elapsed: %s", 
                 my_timer(absolute_begin)), 8, "warning")
+  
+  # performs setup for authentication
+  authenticated <- reactiveVal(0)
+  showModal(authenticator_modal())
+  shinyjs::runjs(no_autofill)
+  addClass("password", "my-hidden-text")
+  
+  # if the user attempts to log in ...
+  observeEvent(input$attempt_login, {
+    notif("Attempting authentication ...", 1, "default")
+    
+    if (length(input$username) == 1 && 
+        (input$username %in% names(user_credentials))
+        && input$password == user_credentials[[input$username]])
+    {
+      notif("Authentication was successful - welcome!", 3, "message")
+      removeModal()
+      authenticated(1)
+    }
+    else
+    {
+      Sys.sleep(0.3)
+      notif("Authentication was unsuccessful.", 2, "error")
+    }
+  })
+  
+  # toggles password visibility
+  observeEvent(input$toggle_password, {
+    if (input$toggle_password %%2 == 1)
+    {
+      updateTextInput(session, "password",
+                      label="Password (is visible)",
+                      placeholder = "Please enter your password ...")
+      removeClass("password", "my-hidden-text")
+    }
+    else
+    {
+      updateTextInput(session, "password",
+                      label = "Password (is invisible)",
+                      placeholder = "")
+      addClass("password", "my-hidden-text")
+    }
+  })
   
   # shows instructions
   observeEvent(input$instructions, {
@@ -229,13 +290,16 @@ server <- function(input, output, session) {
       plotly2_current(plotly2_data())
     if (input$plotPanels == "plotly3")
       plotly3_current(plotly3_data())
+    if (input$plotPanels == "beeswarm")
+      beeswarm_current(beeswarm_data())
+    legend_current(legend_data())
   })
   
   # only allows the "Save Plot" feature on ggplot2 (plotly has it built in)
   # only allows the "Numeric Data" feature on the datatable page
   # only allows the "Metadata" feature on the metadata page
   observeEvent(input$plotPanels, {
-    if (input$plotPanels == "ggplot2")
+    if (input$plotPanels == "ggplot2" || input$plotPanels == "beeswarm")
       shinyjs::show("downloadPlot")
     else
       shinyjs::hide("downloadPlot")
@@ -255,7 +319,7 @@ server <- function(input, output, session) {
   # OUTPUTS
   # -------
   
-  numPlots <- reactiveVal(0)
+  numPlots <- reactiveVal(1)
   
   # renders ggplot2 output
   output$ggplot2UI <- renderUI({
@@ -272,13 +336,23 @@ server <- function(input, output, session) {
     plotlyOutput("plotly3_out", width="100%", height=height()) %>% my_spin()
   })
   
+  output$beeswarmUI <- renderUI({
+    plotOutput("beeswarm_out", width="100%", height=height()) %>% my_spin()
+  })
+  
   # renders the numeric data table reactively
   output$num_data_table <- renderDT({
+    if (!authenticated())
+      return(my_datatable(NULL))
+    
     my_datatable(data.frame(downloadData()))
   })
   
   # renders the metadata table interactively
   output$metadata_table <- renderDT({
+    if (!authenticated())
+      return(my_datatable(NULL))
+    
     my_datatable(data.frame(order()[keep(),]))
   })
   
@@ -289,9 +363,27 @@ server <- function(input, output, session) {
     return(HTML(sprintf("<br><b>Intended Title:</b><br>%s", title_text())))
   })
   
+  # renders a non-embedded legend nicely
+  legend_current <- reactiveVal()
+  output$legend_out <- renderDT({
+    if (!authenticated() || legend()) 
+      return(NULL)
+    
+    if (running())
+      return(my_datatable(legend_data()))
+    else
+      return(my_datatable(legend_current()))
+  })
+  
   # renders the ggplot2 data reactively
   ggplot2_current <- reactiveVal()
   output$ggplot2_out <- renderPlot({
+    if (!authenticated())
+    {
+      downloadData(NULL)
+      return(ggplot2_null())
+    }
+    
     num <- isolate(numPlots())
     numPlots(num+1)
     
@@ -319,6 +411,12 @@ server <- function(input, output, session) {
   # renders the plotly2 data reactively
   plotly2_current <- reactiveVal()
   output$plotly2_out <- renderPlotly({
+    if (!authenticated())
+    {
+      downloadData(NULL)
+      return(ggplot2_null())
+    }
+    
     num <- isolate(numPlots())
     numPlots(num+1)
     
@@ -346,6 +444,12 @@ server <- function(input, output, session) {
   # renders the plotly3 data reactively
   plotly3_current <- reactiveVal()
   output$plotly3_out <- renderPlotly({ 
+    if (!authenticated())
+    {
+      downloadData(NULL)
+      return(ggplot2_null())
+    }
+    
     num <- isolate(numPlots())
     numPlots(num+1)
     
@@ -370,6 +474,36 @@ server <- function(input, output, session) {
     target
   })
   
+  # renders the beeswarm data reactively
+  beeswarm_current <- reactiveVal()
+  output$beeswarm_out <- renderPlot({
+    if (!authenticated())
+      return(ggplot2_null())
+    
+    num <- isolate(numPlots())
+    numPlots(num+1)
+    
+    if (notify())
+      plot_start(num)
+    start <- my_timer()
+    
+    if (running())
+      target <- beeswarm_data()
+    else
+      target <- beeswarm_current()
+    
+    if (is.null(target))
+    {
+      if (notify())
+        plot_fail()
+      return(ggplot2_null())
+    }
+    
+    if (notify())
+      plot_success(my_timer(start))
+    target
+  })
+  
   # download button for data
   downloadData <- reactiveVal()
   output$downloadData <- downloadHandler(
@@ -377,6 +511,8 @@ server <- function(input, output, session) {
       sprintf("%s_num_data.csv", repStr(title_text(), " ", "_"))
     },
     content = function(file) {
+      if (!authenticated())
+        return(NULL)
       write.csv(downloadData(), file)
     }
   )
@@ -387,6 +523,8 @@ server <- function(input, output, session) {
       sprintf("%s_metadata.csv", repStr(title_text(), " ", "_"))
     },
     content = function(file) {
+      if (!authenticated())
+        return(NULL)
       write.csv(order()[keep(),], file)
     }
   )
@@ -417,6 +555,8 @@ server <- function(input, output, session) {
       sprintf("%s_ggplot2.png", repStr(title_text(), " ", "_"))
     },
     content = function(file){
+      if (!authenticated())
+        return(NULL)
       png(file, height = 900, width = 1600)  
       print(ggplot2_data())
       dev.off()
@@ -555,6 +695,7 @@ server <- function(input, output, session) {
   ggplot2_data <- reactive({
     if (input$embedding == "Sets")
     {
+      truncated <- FALSE
       if (is.null(thresholds) || is.null(my_chars())) 
         return(NULL)
       
@@ -578,6 +719,7 @@ server <- function(input, output, session) {
       
       if (memguard() && (nrow(data) * ncol(data) > max_points))
       {
+        truncated <- TRUE
         data <- data[base::order(rowSums(data),decreasing=T),]
         data <- data[1:floor(max_points/ncol(data)),]
       }
@@ -590,11 +732,15 @@ server <- function(input, output, session) {
       
       if (memguard() && (nrow(data) * ncol(data) > max_heatma))
       {
+        truncated <- TRUE
         data <- data[base::order(rowSums(data),decreasing=T),]
         data <- data[1:floor(max_heatma/ncol(data)),]
       }
       
       downloadData(data)
+      
+      if (truncated)
+        truncated_msg()
       
       if (ncol(data) == 1)
         return(venn1_custom(data, legend()))
@@ -671,6 +817,7 @@ server <- function(input, output, session) {
   plotly2_data <- reactive({
     if (input$embedding == "Sets")
     {
+      truncated <- FALSE
       if (is.null(thresholds) || is.null(my_chars())) 
         return(NULL)
       
@@ -694,6 +841,7 @@ server <- function(input, output, session) {
       
       if (memguard() && (nrow(data) * ncol(data) > max_points))
       {
+        truncated <- TRUE
         data <- data[base::order(rowSums(data),decreasing=T),]
         data <- data[1:floor(max_points/ncol(data)),]
       }
@@ -705,11 +853,15 @@ server <- function(input, output, session) {
       {
         if (memguard() && (nrow(data) > max_dendro))
         {
+          truncated <- TRUE
           data <- data[base::order(rowSums(data),decreasing=T),]
           data <- data[1:max_dendro,]
         }
         
         downloadData(data)
+        
+        if (truncated)
+          truncated_msg()
         
         return(plotly_heatmap_dendrogram(data, paint(), title(), legend(), FALSE))
       } 
@@ -718,9 +870,15 @@ server <- function(input, output, session) {
         data <- data[base::order(rowSums(data),decreasing=T),]
         
         if (memguard() && (nrow(data) * ncol(data) > max_heatma))
+        {
+          truncated <- TRUE
           data <- data[1:floor(max_heatma/ncol(data)),]
+        }
         
         downloadData(data)
+        
+        if (truncated)
+          truncated_msg()
         
         return(plotly_heatmap_variance(data, paint(), title(), legend(), FALSE))
       }
@@ -790,6 +948,7 @@ server <- function(input, output, session) {
   plotly3_data <- reactive({
     if (input$embedding == "Sets")
     {
+      truncated <- FALSE
       if (is.null(thresholds) || is.null(my_chars())) 
         return(NULL)
       
@@ -812,7 +971,10 @@ server <- function(input, output, session) {
         return(NULL)
       
       if ((memguard() && (nrow(data) * ncol(data) > max_points)))
+      {
+        truncated <- TRUE
         data <- data[1:floor(max_points/ncol(data)),]
+      }
       
       data <- data %>% frac_bound(input$set_f1[1], input$set_f1[2]) %>% 
         rowSum_filter_dat(input$set_f2[1], input$set_f2[2])
@@ -821,11 +983,15 @@ server <- function(input, output, session) {
       {
         if (memguard() && (nrow(data) > max_dendro))
         {
+          truncated <- TRUE
           data <- data[base::order(rowSums(data),decreasing=T),]
           data <- data[1:max_dendro,]
         }
         
         downloadData(data)
+        
+        if (truncated)
+          truncated_msg()
         
         return(plotly_heatmap_dendrogram(data, paint(), title(), legend(), TRUE))
       } 
@@ -834,9 +1000,15 @@ server <- function(input, output, session) {
         data <- data[base::order(rowSums(data),decreasing=T),]
         
         if (memguard() && (nrow(data) * ncol(data) > max_heatma))
+        {
+          truncated <- TRUE
           data <- data[1:floor(max_heatma/ncol(data)),]
+        }
         
         downloadData(data)
+        
+        if (truncated)
+          truncated_msg()
         
         return(plotly_heatmap_variance(data, paint(), title(), legend(), TRUE))
       }
@@ -903,6 +1075,43 @@ server <- function(input, output, session) {
         data[,1], data[,2], data[,3], colors(), captions(),
         pc("1"), pc("2"), pc("3"), title(), legend(), paint()))
     }
+  })
+  
+  # generates beeswarm data
+  beeswarm_data <- reactive({
+    if (!(input$visualize == 'Explore' && 
+          (input$embedding %in% c('PCA', 'VAE', 'UMAP'))))
+      return(NULL)
+    
+    addr <- make_aws_name(make_file_name(
+      input$scale, input$normalize, 
+      feat(), input$embedding, input$visualize, 2, per_ind()), subi(), input$category)
+    
+    data  <- cbind.data.frame(load_db(addr, aws_bucket)[keep(),input$pc1], colors())
+    pc_name <- pc(input$pc1)
+    colnames(data) <- c(pc_name, colorby())
+    temp <- unique(colors())
+    
+    names <- 1:length(temp)
+    if (legend())
+      names <- temp
+    
+    boxplot_beeswarm(data, get(pc_name) ~ get(colorby()), 
+                     colorby(), pc_name, names, 
+                     sprintf("%s44", substr(paint(), start=1, stop=7)), 
+                     paint())
+  })
+  
+  # generates data to accompany graphs
+  legend_data <- reactive({
+    if (length(colors) < 1)
+      return(NULL)
+    
+    temp <- unique(colors())
+    table <- cbind.data.frame(1:length(temp), temp)
+    colnames(table) <- c("Number", "Value")
+    
+    table
   })
   
   # -----------
@@ -984,6 +1193,9 @@ server <- function(input, output, session) {
     dendrogram_c <- which(den_options == input$dendrogram)
     palette_c <- which(unlist(pal_options) == input$palette)
     plotPanels_c <- which(pan_options == input$plotPanels)
+    
+    if (length(plotPanels_c) < 1)
+      plotPanels_c <- 1
     
     # numbers
     set_f1_c <- encode_num(input$set_f1)
