@@ -1,6 +1,6 @@
 # The goal of this app is to perform dimensionality reduction.
 
-# source("~/Justin-Tool/code/build.R")
+# source("~/Justin-Tool/shiny-dim-reduction/build.R")
 source("inherit.R", encoding="UTF-8")
 absolute_begin <- my_timer()
 source("functions.R", encoding="UTF-8")
@@ -1067,7 +1067,12 @@ server <- function(input, output, session) {
       input$scale, input$normalize, 
       feat(), input$embedding, input$visualize, 2, per_ind()), subi(), input$category)
     
-    data  <- cbind.data.frame(load_db(addr, aws_bucket)[keep(),input$pc1], colors())
+    data <- load_db(addr, aws_bucket)[keep(),input$pc1]
+    
+    if (length(data) < 1)
+      return(NULL)
+    
+    data  <- cbind.data.frame(data, colors())
     pc_name <- pc(input$pc1)
     colnames(data) <- c(pc_name, colorby())
     temp <- unique(colors())
@@ -1084,10 +1089,11 @@ server <- function(input, output, session) {
   
   # generates data to accompany graphs
   legend_data <- reactive({
-    if (length(colors) < 1)
+    temp <- unique(colors())
+    
+    if (length(temp) < 1)
       return(NULL)
     
-    temp <- unique(colors())
     table <- cbind.data.frame(1:length(temp), temp)
     colnames(table) <- c("Number", "Value")
     

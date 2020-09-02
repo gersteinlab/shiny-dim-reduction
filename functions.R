@@ -385,7 +385,7 @@ Seconds elapsed: %s", delta_time), 6, "message")
 }
 
 # prints a message that indicates a truncated matrix
-truncate_msg <- function()
+truncated_msg <- function()
 {
   notif("Warning: This matrix is too large to plot.<br>
          A truncated version will be presented.", 6, "warning")
@@ -597,7 +597,7 @@ plotly_heatmap_dendrogram <- function(binary, colors, title, legend, dend)
 # DATATABLES
 # ----------
 
-empty_df <- matrix(nrow=0, ncol=1)
+empty_df <- matrix(nrow=0, ncol=1) %>% data.frame()
 colnames(empty_df) <- "Unknown"
 
 # Creates a datatable from a data frame
