@@ -42,8 +42,8 @@ for (cat in dog)
           #   if (length(sum_ind) > 0)
           #     ind[i] <- sum_ind
           # }
-          # pca$rotation <- NULL
-          # pca$center <- NULL
+          pca$rotation <- NULL
+          pca$center <- NULL
       
           myRDS(pca_title, pca)
         }
