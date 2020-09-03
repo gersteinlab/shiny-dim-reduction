@@ -759,7 +759,7 @@ cumulative_ex_genomes <- readRDS("cumulative_ex_genomes.rds")
 specific_ex_genomes <- readRDS("specific_ex_genomes.rds")
 cumulative_ex_ribosomes <- readRDS("cumulative_ex_ribosomes.rds")
 specific_ex_ribosomes <- readRDS("specific_ex_ribosomes.rds")
-gencode <- readRDS("gencode.rds")
+# gencode <- readRDS("gencode.rds")
 
 cut_features <- function(data, thresh){
   bad_indices <- NULL
@@ -783,7 +783,7 @@ cumulative_ex_genomes <- cut_features(cumulative_ex_genomes, 0.05)
 specific_ex_genomes <- cut_features(specific_ex_genomes, 0.05)
 cumulative_ex_ribosomes <- cut_features(cumulative_ex_ribosomes, 0.05)
 specific_ex_ribosomes <- cut_features(specific_ex_ribosomes, 0.05)
-gencode <- cut_features(gencode, 0.05)
+# gencode <- cut_features(gencode, 0.05)
 
 # a very cool trick
 match_order <- function(fastq_list, ord)
@@ -827,7 +827,7 @@ cumulative_ex_genomes <- cumulative_ex_genomes[,-1]
 specific_ex_genomes <- specific_ex_genomes[,-1]
 cumulative_ex_ribosomes <- cumulative_ex_ribosomes[,-1]
 specific_ex_ribosomes <- specific_ex_ribosomes[,-1]
-gencode <- gencode[,-1]
+# gencode <- gencode[,-1]
 rownames(spe_rRNA_clean) <- NULL
 rownames(spe_gene_clean) <- NULL
 rownames(all_rRNA_clean) <- NULL
@@ -864,7 +864,7 @@ combined_cumulative_ex_genomes <- convert_to_num(cumulative_ex_genomes %>% as.ma
 combined_specific_ex_genomes <- convert_to_num(specific_ex_genomes %>% as.matrix())
 combined_cumulative_ex_ribosomes <- convert_to_num(cumulative_ex_ribosomes %>% as.matrix())
 combined_specific_ex_ribosomes <- convert_to_num(specific_ex_ribosomes %>% as.matrix())
-combined_gencode <- convert_to_num(gencode %>% as.matrix())
+# combined_gencode <- convert_to_num(gencode %>% as.matrix())
 combined_rRNA_Species <- convert_to_num(spe_rRNA_clean %>% as.matrix())
 combined_Gene_Species <- convert_to_num(spe_gene_clean %>% as.matrix())
 combined_rRNA_Total <- convert_to_num(all_rRNA_clean %>% as.matrix())
