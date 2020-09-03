@@ -1,6 +1,6 @@
 # The goal of this script is to perform PCA on the data.
 
-source("~/Justin-Tool/code/scaling.R")
+source("~/Justin-Tool/shiny-dim-reduction/scaling.R")
 
 # ----------------------------
 # PRINCIPAL COMPONENT ANALYSIS
