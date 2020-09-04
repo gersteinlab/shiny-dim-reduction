@@ -9,14 +9,14 @@ library(keras)
 # USER VARIABLES
 # --------------
 
-source("~/Justin-Tool/scaling.R")
+source("~/Justin-Tool/shiny-dim-reduction/scaling.R")
 
 # latent dimensions ... the smallest neuron layer in VAE
 latent_dim <- pc_cap
 # batch_size depends completely on the dataset and your willingness to wait
-batch_size <- 16
+batch_size <- 64
 # cap_size depends completely on the dataset and your willingness to wait
-cap_size <- 24000
+cap_size <- 9000
 # patience depends completely on the dataset and your willingness to wait (10-20 standard)
 pat_size <- 20
 

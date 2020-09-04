@@ -25,7 +25,7 @@ read_tsv_text <- function(filename)
 # converts a matrix to a numeric matrix,
 # removing columns with no valid entries
 convert_to_num <- function(data){
-  storage.mode(data) <- "numeric"
+  data <- apply(data, 1:2, as.numeric)
   data[is.na(data)] <- 0
   data[is.nan(data)] <- 0
   data[,colSums(data) > 0]
