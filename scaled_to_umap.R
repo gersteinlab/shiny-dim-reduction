@@ -7,7 +7,7 @@ library(umap)
 # USER VARIABLES
 # --------------
 
-source("~/Justin-Tool/scaling.R")
+source("~/Justin-Tool/shiny-dim-reduction/scaling.R")
 
 # ---------
 # FUNCTIONS
