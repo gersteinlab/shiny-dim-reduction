@@ -59,7 +59,10 @@ for (cat in dog)
             umap_title <- sprintf("UMAP/UMAP-%s_%s_%s_%s_%s_%s.rds", 
                                   nei, fea, nor, sca, sub, cat)
             print(umap_title)
-            myRDS(umap_title, my_UMAP(data, pc_cap, nei))
+            if (!file.exists(umap_title))
+            {
+              myRDS(umap_title, my_UMAP(data, pc_cap, nei))
+            }
           }
         }
       }
