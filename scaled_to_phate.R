@@ -37,8 +37,7 @@ my_PHATE <- function(data, dim, perp) {
 # UNIFORM MANIFOLD APPROXIMATION AND PROJECTION
 # ---------------------------------------------
 
-dog <- names(categories)
-for (cat in dog)
+for (cat in names(categories))
 {
   combined <- readRDS(sprintf("combined/combined_%s.rds", cat))
   
@@ -64,10 +63,13 @@ for (cat in dog)
               phate_title <- sprintf("PHATE/PHATE-%s-%s_%s_%s_%s_%s_%s.rds", 
                                      nei, dim, fea, nor, sca, sub, cat)
               print(phate_title)
-              my_save <- my_PHATE(data, dim, nei)
-              # prevents saving raw data
-              my_save$params$data <- NULL
-              myRDS(phate_title, my_save)
+              if (!file.exists(phate_title))
+              {
+                my_save <- my_PHATE(data, dim, nei)
+                # prevents saving raw data
+                my_save$params$data <- NULL
+                myRDS(phate_title, my_save)
+              }
             }
           }
         }
