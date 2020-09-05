@@ -246,6 +246,76 @@ in all characteristics) - will be removed by setting this value to less than 1.
 no_autofill <- 
   "document.getElementById('password').setAttribute('autocomplete','new-password')"
 
+my_css_styling <- HTML("
+.shiny-notification {
+  border-color: #00356B;  /*  */
+  opacity: 1;
+}
+.main-header .logo {
+  padding: 0px 0px;
+}
+[role=option] > .text {
+  color: #000000 !important;
+}
+[role=option] > .glyphicon {
+  color: #000000 !important;
+}
+.sidebar-collapse .main-sidebar, .sidebar-collapse .left-side {
+    -webkit-transform: translate(-100%, 0) !important;
+    -ms-transform: translate(-100%, 0) !important;
+    -o-transform: translate(-100%, 0) !important;
+    transform: translate(-100%, 0) !important;
+}
+.box {
+  border: 1px solid #00356B;
+  background-color: #e0f0ff;
+}
+.skin-blue .main-header .logo {
+  background-color: #00356B !important;
+}
+.content-wrapper, .right-side {
+    background-color: #FFFFFF !important;
+}
+.sidebar-toggle {
+  float: right !important;
+}
+.wrapper {
+  height: auto !important; 
+  position:relative; 
+  overflow-x:hidden; 
+  overflow-y:hidden
+}
+.inner {
+  min-height: 0px !important;
+  max-height: 360px !important;
+}
+.dropdown-menu {
+  min-height: 0px !important;
+  z-index: 10000;
+}
+.dropdown-menu > .text {
+  color: #000000 !important;
+}
+.dropdown-menu>li>a {
+  white-space: normal !important;
+}
+.row {
+  margin-right: 0px;
+  margin-left: 0px;
+}
+.my-hidden-text {
+  color: rgba(0,0,0,0) !important;
+  caret-color: rgba(0,0,0,1) !important;
+}
+.my-hidden-text::selection {
+  color: #3297FD !important;
+  background: #3297FD !important;
+}
+.sidebar-menu .treeview-menu {
+  padding-left: 0px !important;
+}
+")
+
 # ----------
 # INTERFACES
 # ----------
