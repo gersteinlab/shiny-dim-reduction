@@ -62,9 +62,9 @@ for (cat in names(categories))
             {
               phate_title <- sprintf("PHATE/PHATE-%s-%s_%s_%s_%s_%s_%s.rds", 
                                      nei, dim, fea, nor, sca, sub, cat)
-              print(phate_title)
               if (!file.exists(phate_title))
               {
+                print(phate_title)
                 my_save <- my_PHATE(data, dim, nei)
                 # prevents saving raw data
                 my_save$params$data <- NULL
