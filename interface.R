@@ -394,7 +394,7 @@ shape_panels_ui <- function(shapes){
 }
 
 label_panels_ui <- function(labels){
-  lapply(shapes, function(x){
+  lapply(labels, function(x){
     conditionalPanel(
       condition = sprintf("input.category == '%s'",  x[[1]]),
       select_panel(
