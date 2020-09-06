@@ -254,6 +254,11 @@ bookmark_exclude_vector <- c(
   "plotly_afterplot-A",
   "plotly_relayout-A",
   
+  "sidebar_menu",
+  "sidebarCollapsed",
+  "height",
+  "sidebarItemExpanded",
+  
   sprintf("subsetby_%s", name_cat),
   sprintf("colorby_%s", name_cat), 
   sprintf("shapeby_%s", name_cat), 
