@@ -1,5 +1,7 @@
 # The purpose of this file is to store libraries and functions
 # for the main app. None of these should depend on global variables!
+# Each section is sorted from most algorithmic to least algorithmic,
+# though intended purpose may create a more reasonable ordering.
 
 require("shinydashboard")
 require("shinyjs")
@@ -17,8 +19,6 @@ require("DT")
 # -----------
 # COMPUTATION
 # -----------
-
-# This section is sorted from most algorithmic to least algorithmic
 
 # Converts a matrix into a binary matrix: 1 if lower <= x <= upper, 0 otherwise.
 frac_convert <- function(data, lower, upper)
@@ -72,52 +72,6 @@ parse_opt <- function(checkbox)
 calc_feat <- function(pc_cap, feat, total)
 {
   pc_cap + ceiling(feat * (total - pc_cap))
-}
-
-# Generates a color sequence of length n_colors with the given type.
-# "Base"=c("Rainbow", "Heat", "Terrain", "Topography", "CM"),
-# "Viridis"=c("Viridis", "Magma", "Plasma", "Inferno", "Cividis")
-color_seq <- function(n_colors, color_type, keep) 
-{
-  rev_opt <- !keep
-  
-  if (n_colors < 2)
-    return("#00356B")
-  
-  if (color_type == "Rainbow" || color_type == "Custom")
-  {
-    if (rev_opt)
-      return(hcl(n_colors:1 * (360/(n_colors+1))-15, 160, 60))
-    else
-      return(hcl(1:n_colors * (360/(n_colors+1))-15, 160, 60))
-  }
-  if (color_type == "Heat")
-    return(heat.colors(n_colors, rev=rev_opt))
-  if (color_type == "Terrain")
-    return(terrain.colors(n_colors, rev=rev_opt))
-  if (color_type == "Topography")
-    return(topo.colors(n_colors, rev=rev_opt))
-  if (color_type == "CM")
-    return(cm.colors(n_colors, rev=rev_opt))
-  if (color_type == "Viridis")
-    return(viridis::viridis(n_colors, direction = ifelse(rev_opt, -1, 1)))
-  if (color_type == "Magma")
-    return(viridis::magma(n_colors, direction = ifelse(rev_opt, -1, 1)))
-  if (color_type == "Plasma")
-    return(plasma(n_colors, direction = ifelse(rev_opt, -1, 1)))
-  if (color_type == "Inferno")
-    return(inferno(n_colors, direction = ifelse(rev_opt, -1, 1)))
-  if (color_type == "Cividis")
-    return(cividis(n_colors, direction = ifelse(rev_opt, -1, 1)))
-}
-
-# my personal favorite ordering of the 25 default R plot shapes
-shapes_unique <- c(15:25,0:2,5:6,3:4,8,7,9:14)
-# Generates a shape sequence of length n.
-shape_seq <- function(n) 
-{
-  my_seq <- 0:(n-1) %% length(shapes_unique)
-  shapes_unique[my_seq+1]
 }
 
 # retrieves a subset
@@ -280,123 +234,63 @@ decode_lol <- function(list_string, outline)
   lol
 }
 
-# ------------
-# USER WIDGETS
-# ------------
-
-# Creates an action button with the given id, name, icon name, 
-# color, background color, and border color.
-action <- function(id, name, icon_name, color, bk, br) 
+# creates a vector of inputs that should be excluded 
+# from bookmarking, based on the table's ID
+table_exclude_vector <- function(table_id)
 {
-  actionButton(
-    inputId = id, label = name, icon = icon(icon_name), style=
-      sprintf("color: %s; background-color: %s; border-color: %s", color, bk, br))
+  c(
+    sprintf("%s_search", table_id),
+    sprintf("%s_state", table_id),
+    sprintf("%s_cell_clicked", table_id),
+    sprintf("%s_search_columns", table_id),
+    sprintf("%s_rows_current", table_id),
+    sprintf("%s_rows_all", table_id),
+    sprintf("%s_rows_selected", table_id),
+    sprintf("%s_columns_selected", table_id),
+    sprintf("%s_cells_selected", table_id)
+  )
 }
 
-# Creates a selectizeInput panel with only one option allowed.
-select_panel <- function(id, name, options, chosen) 
+# ----------------------
+# GENERAL GRAPHS / TOOLS
+# ----------------------
+
+# Generates a color sequence of length n_colors with the given type.
+# "Base"=c("Rainbow", "Heat", "Terrain", "Topography", "CM"),
+# "Viridis"=c("Viridis", "Magma", "Plasma", "Inferno", "Cividis")
+color_seq <- function(n_colors, color_type, keep) 
 {
-  if (missing(chosen))
-    chosen <- 1
-  chosen <- min(chosen, length(options))
+  rev_opt <- !keep
   
-  pickerInput(
-    inputId = id, label = name, choices = options, 
-    selected = options[chosen], multiple = FALSE,
-    options = list(
-      `live-search` = TRUE,
-      `live-search-placeholder` = "Search for a phrase ..."
-    )
-  ) 
+  if (n_colors < 2)
+    return("#00356B")
+  
+  if (color_type == "Rainbow" || color_type == "Custom")
+  {
+    if (rev_opt)
+      return(hcl(n_colors:1 * (360/(n_colors+1))-15, 160, 60))
+    else
+      return(hcl(1:n_colors * (360/(n_colors+1))-15, 160, 60))
+  }
+  if (color_type == "Heat")
+    return(heat.colors(n_colors, rev=rev_opt))
+  if (color_type == "Terrain")
+    return(terrain.colors(n_colors, rev=rev_opt))
+  if (color_type == "Topography")
+    return(topo.colors(n_colors, rev=rev_opt))
+  if (color_type == "CM")
+    return(cm.colors(n_colors, rev=rev_opt))
+  if (color_type == "Viridis")
+    return(viridis::viridis(n_colors, direction = ifelse(rev_opt, -1, 1)))
+  if (color_type == "Magma")
+    return(viridis::magma(n_colors, direction = ifelse(rev_opt, -1, 1)))
+  if (color_type == "Plasma")
+    return(plasma(n_colors, direction = ifelse(rev_opt, -1, 1)))
+  if (color_type == "Inferno")
+    return(inferno(n_colors, direction = ifelse(rev_opt, -1, 1)))
+  if (color_type == "Cividis")
+    return(cividis(n_colors, direction = ifelse(rev_opt, -1, 1)))
 }
-
-# Creates a group of checked boxes with the given id, name, and inputs
-check_panel <- function(id, name, inputs) 
-{
-  pickerInput(
-    inputId = id, label = name,
-    choices = inputs, selected = inputs, multiple = TRUE,
-    options = list(
-      `actions-box` = TRUE,
-      `selected-text-format` = "count > 1",
-      `live-search` = TRUE,
-      `live-search-placeholder` = "Search for a phrase ...")
-  )
-}
-
-# adds a spinner to content that is refreshing
-my_spin <- function(content)
-{
-  content %>% withSpinner(type = 6)
-}
-
-# Return the UI for a modal dialog that attempts to authenticate the user
-authenticator_modal <- function() {
-  modalDialog(
-    title = HTML("<b>Authentication</b>"),
-    HTML("Need access? Please make a request to 
-    <a href=\"justin.chang@yale.edu\" target=\"_blank\">
-    justin.chang@yale.edu</a>.<br><br>"),
-    wellPanel(
-      style="background-color: #E0F0FF; border-color: #00356B",
-      textInput("username", "Username", 
-                placeholder="Please enter your username ...", value="guest"),
-      textInput("password", "Password (is invisible)", 
-                placeholder="", value=""),
-      action("attempt_login", "Login", "unlock", "#FFFFFF", "#0064C8", "#00356B"),
-      actionButton("toggle_password", "Show/Hide Password")
-    ),
-    footer = tagList()
-  )
-}
-
-# -------------
-# NOTIFICATIONS
-# -------------
-
-# shows a notification (form can be default, message, warning, error)
-# in general: warnings and errors are self-explanatory, defaults are used
-# to begin actions, and messages are used to return results
-notif <- function(message, time, form) 
-{
-  showNotification(HTML(message), duration = time, closeButton = TRUE, type=form)
-}
-
-# prints a message once a plot begins generating.
-plot_start <- function(numPlots)
-{
-  notif(sprintf("Generating Plot #%s:<br>
-Please suspend plotting or wait for plotting to
-finish before attempting a new configuration.", numPlots), 4, "default")
-}
-
-# prints a success message once a plot has been completed.
-# note: start is the time when plotting begins, which can be found with Sys.time().
-plot_success <- function(delta_time) 
-{
-  notif(sprintf("Plot generation was successful.<br>
-Seconds elapsed: %s", delta_time), 6, "message")
-}
-
-# prints a message that indicates a truncated matrix
-truncated_msg <- function()
-{
-  notif("Warning: This matrix is too large to plot.<br>
-         A truncated version will be presented.", 6, "warning")
-}
-
-# prints a failure message once a plot has been completed.
-plot_fail <- function() 
-{
-  notif("Plot generation failed.<br>
-Possible reasons:<br>
-(1) invalid configuration<br>
-(2) empty dataset", 6, "error")
-}
-
-# -------------------
-# SCATTER PLOT GRAPHS
-# -------------------
 
 # Displays a default graph, which is accepted by ggplot2 and plotly.
 ggplot2_null <- function()
@@ -407,16 +301,35 @@ ggplot2_null <- function()
     xlim(0, 1) + ylim(0, 1)
 }
 
-# Plots all data points at (x,y) with color c and shape s.
+# Beeswarm / box plot, rel stands for relation
+boxplot_beeswarm <- function(data, rel, xlab, ylab, names, 
+                             box_colors, bee_colors)
+{
+  boxplot(rel, data=data, xlab=xlab, ylab=ylab,
+          names=names, col=box_colors,
+          outline = FALSE, main='boxplot + beeswarm')
+  
+  beeswarm(rel, data=data, xlab=xlab, ylab=ylab,
+           labels=names, col=bee_colors, corral="random",
+           main= 'beeswarm + bxplot', pch=16, add=TRUE) # filled circles
+}
+
+# -------------------
+# SCATTER PLOT GRAPHS
+# -------------------
+
+# Plots all data points at (x,y) ...
+# ... with appropriate colors in cq, symbols in sq.
 # The graph will have features (x_axis, y_axis, title), with legend
 # determining whether a legend will be displayed.
-ggplot2_2d <- function(x, y, c, s, x_axis, y_axis, title, legend, paint) 
+ggplot2_2d <- function(x, y, x_axis, y_axis, 
+                       color, symbol, cq, sq, title, legend) 
 {
   df <- data.frame(dx = x, dy = y, Color = c, Shape = s)
   ggplot(df, aes(x = dx, y = dy, color = Color, shape = Shape)) + 
     ggtitle(title) + xlab(x_axis) + ylab(y_axis) + 
-    scale_color_manual(values = paint) +
-    scale_shape_manual(values = shape_seq(length(unique(s)))) +
+    scale_color_manual(values = cq) +
+    scale_shape_manual(values = sq) +
     theme(plot.title=element_text(size=22,face="bold"), 
           axis.title.x=element_text(size=16, margin = margin(t = 10)), 
           axis.title.y=element_text(size=16, margin = margin(r = 10)), 
@@ -434,66 +347,37 @@ ggplot2_2d <- function(x, y, c, s, x_axis, y_axis, title, legend, paint)
     guides(color = guide_legend(order = 1))
 }
 
-# Plots all data points at (x,y) with color c and hover text s.
+# Plots all data points at (x,y) ...
+# ... with appropriate colors in cq, symbols in sq, text.
 # The graph will have features (x_axis, y_axis, title), with legend
 # determining whether a legend will be displayed.
-plotly_sum <- function(x, y, c, s, x_axis, y_axis, title, legend, paint) 
+plotly_2d <- function(x, y, x_axis, y_axis, mode, 
+                      color, symbol, cq, sq, text, title, legend) 
 {
-  df <- data.frame(dx = x, dy = y, Color = c)
-  plot_ly(df, x = ~dx, y = ~dy, color = ~Color, text = s, 
-          colors = paint, type="scatter", mode = 'lines+markers',
-          hoverinfo = 'text', marker = 
-            list(size = 6, symbol = 'circle')) %>% layout(
-              title = title,
-              xaxis = list(title = x_axis),
-              yaxis = list(title = y_axis),
-              showlegend = legend)
-}
-
-# Plots all data points at (x,y) with color c and hover text s.
-# The graph will have features (x_axis, y_axis, title), with legend
-# determining whether a legend will be displayed.
-plotly_2d <- function(x, y, c, s, x_axis, y_axis, title, legend, paint) 
-{
-  df <- data.frame(dx = x, dy = y, Color = c)
-  plot_ly(df, x = ~dx, y = ~dy, color = ~Color, text = s, 
-          colors = paint, type="scatter", mode = 'markers',
-          hoverinfo = 'text', 
-          marker = list(size = 5, symbol = 'circle')) %>% layout(
+  plot_ly(x = x, y = y, mode = mode,
+          text = text, color = color, colors = cq, symbol = symbol, symbols = sq, 
+          hoverinfo = 'text', type="scatter") %>% layout(
             title = title,
-            xaxis = list(title = x_axis),
-            yaxis = list(title = y_axis),
+            scene = list(xaxis = list(title = x_axis),
+                         yaxis = list(title = y_axis)),
             showlegend = legend)
 }
 
-# Plots all data points at (x,y,z) with color c and hover text s.
+# Plots all data points at (x,y,z) ...
+# ... with appropriate colors in cq, symbols in sq, text.
 # The graph will have features (x_axis, y_axis, z_axis, title), with legend
 # determining whether a legend will be displayed.
-plotly_3d <- function(x, y, z, c, s, x_axis, y_axis, z_axis, title, legend, paint) 
+plotly_3d <- function(x, y, z, x_axis, y_axis, z_axis,
+                      color, shape, cq, sq, text, title, legend) 
 {
-  df <- data.frame(dx = x, dy = y, dz = z, Color = c)
-  plot_ly(df, x = ~dx, y = ~dy, z = ~dz, color = ~Color, text = s, 
-          colors = paint, hoverinfo = 'text', 
-          marker = list(size = 4, symbol = 'circle')) %>%
-    add_markers() %>% layout(
-      title = title,
-      scene = list(xaxis = list(title = x_axis),
-                   yaxis = list(title = y_axis),
-                   zaxis = list(title = z_axis)),
-      showlegend = legend)
-}
-
-# Beeswarm / box plot, rel stands for relation
-boxplot_beeswarm <- function(data, rel, xlab, ylab, names, 
-                             box_colors, bee_colors)
-{
-  boxplot(rel, data=data, xlab=xlab, ylab=ylab,
-          names=names, col=box_colors,
-          outline = FALSE, main='boxplot + beeswarm')
-  
-  beeswarm(rel, data=data, xlab=xlab, ylab=ylab,
-           labels=names, col=bee_colors, corral="random",
-           main= 'beeswarm + bxplot', pch=16, add=TRUE) # filled circles
+  plot_ly(x = x, y = y, z = z,  
+          text = text, color = color, colors = cq, symbol = symbol, symbols = sq,
+          hoverinfo = 'text', type="scatter") %>% layout(
+            title = title,
+            scene = list(xaxis = list(title = x_axis),
+                         yaxis = list(title = y_axis),
+                         zaxis = list(title = z_axis)),
+            showlegend = legend)
 }
 
 # -----------------------
@@ -501,9 +385,8 @@ boxplot_beeswarm <- function(data, rel, xlab, ylab, names,
 # -----------------------
 
 # Creates an UpSetR plot with the desired aesthetic.
-upset_custom <- function(data, legend, dend) 
+upset_custom <- function(data, legend, ordering) 
 {
-  ordering <- ifelse(dend, "freq", "degree")
   upset(data, nsets = ncol(data), nintersects = 50, 
         sets.x.label = "Features Per Factor Level", 
         mainbar.y.label = "Features Per Factor Subset", 
@@ -557,7 +440,7 @@ venn2_custom <- function(data, legend)
 }
 
 # creates a variance-based heatmap for sets on plotly
-plotly_heatmap_variance <- function(binary, colors, title, legend, dend)
+plotly_heatmap_variance <- function(binary, colors, title, legend, smooth)
 {
   rows <- sprintf("X:%s", substring(rownames(binary), 0, 50))
   cols <- sprintf("Y:%s", substring(colnames(binary), 0, 50))
@@ -566,7 +449,7 @@ plotly_heatmap_variance <- function(binary, colors, title, legend, dend)
   
   plot_ly(x = rows, y = cols, z = t(binary), 
           type="heatmap", 
-          zsmooth = ifelse(dend, "best", "false"), 
+          zsmooth = ifelse(smooth, "best", "false"), 
           colors=colors) %>% layout(
             title = title, 
             showlegend = legend)
@@ -610,19 +493,112 @@ my_datatable <- function(df)
   )
 }
 
-# creates a vector of inputs that should be excluded 
-# from bookmarking, based on the table's ID
-table_exclude_vector <- function(table_id)
-{
-  c(
-    sprintf("%s_search", table_id),
-    sprintf("%s_state", table_id),
-    sprintf("%s_cell_clicked", table_id),
-    sprintf("%s_search_columns", table_id),
-    sprintf("%s_rows_current", table_id),
-    sprintf("%s_rows_all", table_id),
-    sprintf("%s_rows_selected", table_id),
-    sprintf("%s_columns_selected", table_id),
-    sprintf("%s_cells_selected", table_id)
+# ------------
+# USER WIDGETS
+# ------------
+
+# Return the UI for a modal dialog that attempts to authenticate the user
+authenticator_modal <- function() {
+  modalDialog(
+    title = HTML("<b>Authentication</b>"),
+    HTML("Need access? Please make a request to 
+    <a href=\"justin.chang@yale.edu\" target=\"_blank\">
+    justin.chang@yale.edu</a>.<br><br>"),
+    wellPanel(
+      style="background-color: #E0F0FF; border-color: #00356B",
+      textInput("username", "Username", 
+                placeholder="Please enter your username ...", value="guest"),
+      textInput("password", "Password (is invisible)", 
+                placeholder="", value=""),
+      action("attempt_login", "Login", "unlock", "#FFFFFF", "#0064C8", "#00356B"),
+      actionButton("toggle_password", "Show/Hide Password")
+    ),
+    footer = tagList()
   )
+}
+
+# Creates a selectizeInput panel with only one option allowed.
+select_panel <- function(id, name, options, chosen) 
+{
+  if (missing(chosen))
+    chosen <- 1
+  chosen <- min(chosen, length(options))
+  
+  pickerInput(
+    inputId = id, label = name, choices = options, 
+    selected = options[chosen], multiple = FALSE,
+    options = list(
+      `live-search` = TRUE,
+      `live-search-placeholder` = "Search for a phrase ..."
+    )
+  ) 
+}
+
+# Creates a group of checked boxes with the given id, name, and inputs
+check_panel <- function(id, name, inputs) 
+{
+  pickerInput(
+    inputId = id, label = name,
+    choices = inputs, selected = inputs, multiple = TRUE,
+    options = list(
+      `actions-box` = TRUE,
+      `selected-text-format` = "count > 1",
+      `live-search` = TRUE,
+      `live-search-placeholder` = "Search for a phrase ...")
+  )
+}
+
+# Creates an action button with the given id, name, icon name, 
+# color, background color, and border color.
+action <- function(id, name, icon_name, color, bk, br) 
+{
+  actionButton(
+    inputId = id, label = name, icon = icon(icon_name), style=
+      sprintf("color: %s; background-color: %s; border-color: %s", color, bk, br))
+}
+
+# adds a spinner to content that is refreshing
+my_spin <- function(content)
+{
+  content %>% withSpinner(type = 6)
+}
+
+# shows a notification (form can be default, message, warning, error)
+# in general: warnings and errors are self-explanatory, defaults are used
+# to begin actions, and messages are used to return results
+notif <- function(message, time, form) 
+{
+  showNotification(HTML(message), duration = time, closeButton = TRUE, type=form)
+}
+
+# prints a message once a plot begins generating.
+plot_start <- function(numPlots)
+{
+  notif(sprintf("Generating Plot #%s:<br>
+Please suspend plotting or wait for plotting to
+finish before attempting a new configuration.", numPlots), 4, "default")
+}
+
+# prints a success message once a plot has been completed.
+# note: start is the time when plotting begins, which can be found with Sys.time().
+plot_success <- function(delta_time) 
+{
+  notif(sprintf("Plot generation was successful.<br>
+Seconds elapsed: %s", delta_time), 6, "message")
+}
+
+# prints a message that indicates a truncated matrix
+truncated_msg <- function()
+{
+  notif("Warning: This matrix is too large to plot.<br>
+         A truncated version will be presented.", 6, "warning")
+}
+
+# prints a failure message once a plot has been completed.
+plot_fail <- function() 
+{
+  notif("Plot generation failed.<br>
+Possible reasons:<br>
+(1) invalid configuration<br>
+(2) empty dataset", 6, "error")
 }
