@@ -1298,7 +1298,7 @@ server <- function(input, output, session) {
     updatePickerInput(session, inputId = "perplexity", selected = data[["perplexity"]])
     updatePickerInput(session, inputId = "upsetpref", selected = data[["upsetpref"]])
     updatePickerInput(session, inputId = "dendrogram", selected = data[["dendrogram"]])
-    updateTabsetPanel(session, inputId = "palette", selected = data[["palette"]])
+    updatePickerInput(session, inputId = "palette", selected = data[["palette"]])
     updateTabsetPanel(session, inputId = "plotPanels", selected = data[["plotPanels"]])
     updateSliderInput(session, inputId = "set_f1", value = data[["set_f1"]])
     updateSliderInput(session, inputId = "set_f2", value = data[["set_f2"]])
