@@ -11,166 +11,135 @@ source("options.R", encoding="UTF-8")
 # ASSEMBLE UI
 # -----------
 
-my_interface_ui <- div(
-  id = "interface", class = "
-col-xs-8 col-xs-offset-2 col-sm-6 col-sm-offset-3 col-md-4 col-md-offset-0",
-  h3("Graphing"), 
-  wellPanel(
-    style="background-color: #E0F0FF; border-color: #00356B",
-    check_panel("sMenu", "Settings Menu", my_settings),
-    select_panel("palette", "Color Palette", pal_options),
-    conditionalPanel(
-      condition = "
-  input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP'", 
-      button("visualize", "Method of Visualization", vis_options)
-    ),
-    conditionalPanel(
-      condition = "input.embedding == 'Sets'",
-      conditionalPanel(
-        condition = "input.plotPanels == 'ggplot2'",
-        button("upsetpref", "Method of Visualization", ups_options)),
-      conditionalPanel(
-        condition = "input.plotPanels == 'plotly2' || input.plotPanels == 'plotly3'",
-        button("dendrogram", "Method of Visualization", den_options))
-    ),
-    button("embedding", "Method of Dimensionality Reduction", emb_options),
-    conditionalPanel(
-      condition = "input.embedding != 'Sets'",
-      button("features", "Percentage of Features Used", fea_options),
-      button("normalize", "Normalization", nor_options)
-    ),
-    button("scale", "Scale", sca_options),
-    sub_panels_ui(cat_groups, sub_groups),
-    select_panel("category", "Category", cat_groups)
-  ),
-  h3("Data Selection"),
-  wellPanel(
-    style="background-color: #e0f0ff; border-color: #00356B",
-    conditionalPanel(
-      condition = "input.visualize == 'Summarize' && (input.embedding == 'PCA' ||
-    input.embedding == 'VAE' || input.embedding == 'UMAP')",
-      "No data selection can be performed under these conditions.
-            Please switch to a non-summary plot."
-    ),
-    conditionalPanel(
-      condition = "input.visualize == 'Explore' && (input.embedding == 'PCA' ||
-    input.embedding == 'VAE' || input.embedding == 'UMAP')",
-      sliderInput("pc1", "Displayed Component 1", 
-                  min=1, max=pc_cap, value=1, step=1, ticks = FALSE),
-      conditionalPanel(
-        condition = "input.plotPanels == 'ggplot2' || 
-        input.plotPanels == 'plotly2' || input.plotPanels == 'plotly3'",
-        sliderInput("pc2", "Displayed Component 2", 
-                    min=1, max=pc_cap, value=2, step=1, ticks = FALSE)
-      ),
-      conditionalPanel(
-        condition = "input.plotPanels == 'plotly3'",
-        sliderInput("pc3", "Displayed Component 3", 
-                    min=1, max=pc_cap, value=3, step=1, ticks = FALSE)
-      )
-    ),
-    perplexity_ui(perplexity_types),
-    sets_ui(thre_panels_ui(thre_opts), max_cat_num),
-    do.call(conditionalPanel, c(
-      condition = "input.embedding != 'Sets' && (input.embedding == 'PHATE' || 
-          input.visualize != 'Summarize')",
-      color_panels_ui(color_opts)
-    )),
-    do.call(conditionalPanel, c(
-      condition = "input.embedding != 'Sets' && input.plotPanels != 'beeswarm' &&
-      (input.embedding == 'PHATE' || input.visualize != 'Summarize')",
-      shape_panels_ui(shape_opts)
-    )),
-    do.call(conditionalPanel, c(
-      condition = "input.visualize != 'Summarize' || 
-          input.embedding == 'Sets' || input.embedding == 'PHATE'",
-      filter_panels_ui(filter_opts), 
-      select_opts
-    ))
-  )
-)
-
-my_graphing_ui <- div(
-  id = "graph", class = "
-col-sm-12 col-md-8",
-  h3("Plots"),
-  wellPanel(
-    style="background-color: #E0F0FF; border-color: #00356B",
-    action("start", "Start Plotting", "chart-bar", "#FFF", "#0064C8", "#00356B"),
-    action("stop", "Stop Plotting", "ban", "#FFF", "#C90016", "#00356B"),
-    action("toggle", "Interface", "eye-slash", "#FFF", "#00A86B", "#00356B"),
-    bookmarkButton(),
-    downloadButton('downloadData', 'Numeric Data'),
-    downloadButton('downloadMetadata', 'Metadata')
-  ),
-  tabsetPanel(
-    id = 'plotPanels',
-    tabPanel("ggplot2", id="ggplot2", uiOutput("ggplot2UI")),
-    tabPanel("plotly2", id="plotly2", uiOutput("plotly2UI")),
-    tabPanel("plotly3", id="plotly3", uiOutput("plotly3UI")),
-    tabPanel("beeswarm", id="beeswarm", uiOutput("beeswarmUI")),
-    tabPanel("Numeric Data", id="num_data", 
-             DTOutput("num_data_table", width="100%") %>% my_spin()),
-    tabPanel("Metadata", id="metadata", 
-             DTOutput("metadata_table", width="100%") %>% my_spin())
-  ),
-  uiOutput("plainTitleUI"),
-  DTOutput("legend_out", width="100%") %>% my_spin(),
-  h3("Documentation"),
-  wellPanel(
-    style="background-color: #E0F0FF; border-color: #00356B",
-    action("instructions", "Instructions", "book", "#FFF", "#9400D3", "#00356B"),
-    action("citations", "Citations", "book", "#FFF", "#9400D3", "#00356B"),
-    downloadButton('downloadInstructions', 'Instructions'),
-    downloadButton('downloadCitations', 'Citations')
-  )
-)
-
 ui <- function(request){
-  navbarPage(
-    app_title,
-    fluid = TRUE, id = "central_nav",
-    tabPanel(
-      "Justin Chang | Gerstein Lab",
-      shinyjs::useShinyjs(),
-      tags$head(tags$style(HTML("
-.shiny-notification {
-  border-color: #00356B; 
-  opacity: 1;
-}
-.navbar {
-  min-height: 0px !important; 
-  margin: 0px !important;
-}
-.navbar-default, .navbar-brand, 
-.navbar-brand:hover,
-.navbar-nav > .active > a,
-.navbar-nav > .active > a:hover,
-.navbar-nav > .active > a:focus,
-.navbar {
-  background-color: #004890 !important; 
-  color: #FFFFFF !important;
-}
-.inner {
-  min-height: 0px !important;
-  max-height: 360px !important;
-}
-.dropdown-menu {
-  min-height: 0px !important;
-}
-.my-hidden-text {
-  color: rgba(0,0,0,0) !important;
-  caret-color: rgba(0,0,0,1) !important;
-}
-.my-hidden-text::selection {
-  color: #3297FD !important;
-  background: #3297FD !important;
-}
-"))),
-      fluidRow(
-        my_interface_ui, 
-        my_graphing_ui
+  dashboardPage(
+    skin="blue",
+    dashboardHeader(title=app_title,titleWidth="100%"),
+    dashboardSidebar(
+      width=300,
+      sidebarMenu(
+        id = "sidebar_menu",
+        menuItem(
+          startExpanded=TRUE,
+          "Data Selection",
+          select_panel("category", "Category", cat_groups),
+          sub_panels_ui(cat_groups, sub_groups),
+          select_panel("embedding", "Method of Dimensionality Reduction", emb_options),
+          conditionalPanel(
+            condition = "
+  input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP'", 
+            select_panel("visualize", "Method of Visualization", vis_options)
+          ),
+          conditionalPanel(
+            condition = "input.embedding == 'Sets'",
+            conditionalPanel(
+              condition = "input.plotPanels == 'ggplot2'",
+              select_panel("upsetpref", "Method of Visualization", ups_options)),
+            conditionalPanel(
+              condition = "input.plotPanels == 'plotly2' || input.plotPanels == 'plotly3'",
+              select_panel("dendrogram", "Method of Visualization", den_options))
+          )
+        ),
+        menuItem(
+          "Settings", 
+          check_panel("sMenu", "Settings", my_settings),
+          select_panel("palette", "Color Palette", pal_options),
+          numericInput("height", "Graph Height", value=graph_height, min=1, max=4000),
+          select_panel("scale", "Scale", sca_options),
+          conditionalPanel(
+            condition = "input.embedding != 'Sets'",
+            select_panel("normalize", "Normalization", nor_options),
+            select_panel("features", "Percentage of Features Used", fea_options)
+          )
+        ),
+        menuItem(
+          "Data Selection",
+          conditionalPanel(
+            condition = "input.visualize == 'Summarize' && (input.embedding == 'PCA' ||
+    input.embedding == 'VAE' || input.embedding == 'UMAP')",
+            "No data selection can be performed under these conditions.
+            Please switch to a non-summary plot."
+          ),
+          conditionalPanel(
+            condition = "input.visualize == 'Explore' && (input.embedding == 'PCA' ||
+    input.embedding == 'VAE' || input.embedding == 'UMAP')",
+            sliderInput("pc1", "Displayed Component 1", 
+                        min=1, max=pc_cap, value=1, step=1, ticks = FALSE),
+            conditionalPanel(
+              condition = "input.plotPanels == 'ggplot2' || 
+        input.plotPanels == 'plotly2' || input.plotPanels == 'plotly3'",
+              sliderInput("pc2", "Displayed Component 2", 
+                          min=1, max=pc_cap, value=2, step=1, ticks = FALSE)
+            ),
+            conditionalPanel(
+              condition = "input.plotPanels == 'plotly3'",
+              sliderInput("pc3", "Displayed Component 3", 
+                          min=1, max=pc_cap, value=3, step=1, ticks = FALSE)
+            )
+          ),
+          perplexity_ui(perplexity_types),
+          sets_ui(thre_panels_ui(thre_opts), max_cat_num),
+          do.call(conditionalPanel, c(
+            condition = "input.embedding != 'Sets' && (input.embedding == 'PHATE' || 
+          input.visualize != 'Summarize')",
+            color_panels_ui(color_opts)
+          )),
+          do.call(conditionalPanel, c(
+            condition = "input.embedding != 'Sets' && input.plotPanels == 'ggplot2' &&
+      (input.embedding == 'PHATE' || input.visualize != 'Summarize')",
+            shape_panels_ui(shape_opts)
+          )),
+          do.call(conditionalPanel, c(
+            condition = "input.embedding != 'Sets' && input.plotPanels != 'beeswarm' &&
+            input.plotPanels != 'ggplot2' &&
+      (input.embedding == 'PHATE' || input.visualize != 'Summarize')",
+            label_panels_ui(label_opts)
+          )),
+          do.call(conditionalPanel, c(
+            condition = "input.visualize != 'Summarize' || 
+          input.embedding == 'Sets' || input.embedding == 'PHATE'",
+            filter_panels_ui(filter_opts), 
+            select_opts
+          ))
+        )
       )
+    ),
+    dashboardBody(
+      shinyjs::useShinyjs(),
+      tags$head(tags$style(my_css_styling)),
+      box(
+        title = "Controls",
+        collapsible = TRUE, collapsed=TRUE, width="100%",
+        action("start", "Start Plotting", "chart-bar", "#FFF", "#0064C8", "#00356B"),
+        action("stop", "Stop Plotting", "ban", "#FFF", "#C90016", "#00356B"),
+        bookmarkButton(),
+        downloadButton('downloadData', 'Numeric Data'),
+        downloadButton('downloadMetadata', 'Metadata')
+      ),
+      tabBox(
+        width="100%",
+        id = 'plotPanels',
+        tabPanel("ggplot2", uiOutput("ggplot2UI")),
+        tabPanel("plotly2", uiOutput("plotly2UI")),
+        tabPanel("plotly3", uiOutput("plotly3UI")),
+        tabPanel("beeswarm", uiOutput("beeswarmUI")),
+        tabPanel("Numeric Data", id="num_data", 
+                 DTOutput("num_data_table", width="100%") %>% my_spin()),
+        tabPanel("Metadata", id="metadata", 
+                 DTOutput("metadata_table", width="100%") %>% my_spin())
+      ),
+      box(
+        title = "Documentation",
+        collapsible = TRUE, collapsed=TRUE, width="100%",
+        action("instructions", "Instructions", "book", "#FFF", "#9400D3", "#00356B"),
+        action("citations", "Citations", "book", "#FFF", "#9400D3", "#00356B"),
+        downloadButton('downloadInstructions', 'Instructions'),
+        downloadButton('downloadCitations', 'Citations')
+      ),
+      uiOutput("plainTitleUI"),
+      DTOutput("legend_out", width="100%") %>% my_spin(),
+      "Developed by Justin Chang at the Gerstein Lab, 
+        under the mentorship of Joel Rozowsky."
     )
   )
 }
@@ -182,14 +151,17 @@ ui <- function(request){
 server <- function(input, output, session) {
   # pushes the subtitle to the right
   shinyjs::addClass(id = "central_nav", class = "navbar-right")
+  shinyjs::hide("legend_out")
   
   # records the boot time of the program
   notif(sprintf("Reactive initialization complete.<br>Seconds elapsed: %s", 
                 my_timer(absolute_begin)), 8, "warning")
   
   # performs setup for authentication
-  authenticated <- reactiveVal(0)
-  showModal(authenticator_modal())
+  auth_default <- 1
+  authenticated <- reactiveVal(auth_default)
+  if (!auth_default)
+    showModal(authenticator_modal())
   shinyjs::runjs(no_autofill)
   addClass("password", "my-hidden-text")
   
@@ -246,19 +218,12 @@ server <- function(input, output, session) {
     ))
   })
   
-  # toggles the sidebar
-  height <- reactiveVal(graph_height)
-  observeEvent(input$toggle, {
-    shinyjs::toggle("interface")
-    shinyjs::toggleClass(id = "graph", "col-md-8")
-    shinyjs::toggleClass(id = "graph", "col-md-12")
-    
-    if (height() == graph_height)
-      height(1.4*graph_height)
+  # toggles legend table
+  observeEvent(input$sMenu, {
+    if ("Embed Legend" %in% input$sMenu)
+      shinyjs::hide("legend_out")
     else
-      height(graph_height)
-    
-    updateTabsetPanel(session, "plotPanels", input$plotPanels)
+      shinyjs::show("legend_out")
   })
   
   # constants for reactive plotting
@@ -294,26 +259,20 @@ server <- function(input, output, session) {
     legend_current(legend_data())
   })
   
-  # only allows the "Save Plot" feature on ggplot2 (plotly has it built in)
-  # only allows the "Numeric Data" feature on the datatable page
-  # only allows the "Metadata" feature on the metadata page
-  observeEvent(input$plotPanels, {
-    if (input$plotPanels == "Numeric Data")
-      shinyjs::show("downloadData")
-    else
-      shinyjs::hide("downloadData")
+  numPlots <- reactiveVal(1)
+  height <- reactive({
+    if (input$height < 1 || input$height > 4000)
+    {
+      notif("Warning: Graph height is not in [1, 4000].")
+      return(graph_height)
+    }
     
-    if (input$plotPanels == "Metadata")
-      shinyjs::show("downloadMetadata")
-    else
-      shinyjs::hide("downloadMetadata")
+    round(input$height, digits=0)
   })
   
   # -------
   # OUTPUTS
   # -------
-  
-  numPlots <- reactiveVal(1)
   
   # renders ggplot2 output
   output$ggplot2UI <- renderUI({
@@ -549,7 +508,7 @@ server <- function(input, output, session) {
   
   # Reactive variables corresponding to parsed input
   title_access <- reactive("Embed Title" %in% input$sMenu)
-  legend <- reactive("Show Legend" %in% input$sMenu)
+  legend <- reactive("Embed Legend" %in% input$sMenu)
   notifq <- reactive("Notifications" %in% input$sMenu)
   memguard <- reactive("Limit Memory Use" %in% input$sMenu)
   not_rev <- reactive("Uninverted Colors" %in% input$sMenu)
@@ -564,13 +523,14 @@ server <- function(input, output, session) {
   order <- reactive(order_total[[input$category]])
   colorby <- reactive(input[[sprintf("colorby_%s", input$category)]])
   shapeby <- reactive(input[[sprintf("shapeby_%s", input$category)]])
+  labelby <- reactive(input[[sprintf("labelby_%s", input$category)]])
   filterby <- reactive(input[[sprintf("filterby_%s", input$category)]])
   thre <- reactive(input[[get_thre(input$category, input$scale)]])
   
   # reactives that follow from filter-related reactives
-  colors <- reactive(order()[keep(),colorby()])
-  shapes <- reactive(order()[keep(),shapeby()])
-  captions <- reactive(sprintf("%s: %s", shapeby(), shapes()))
+  colors <- reactive(order()[keep(), colorby()])
+  shapes <- reactive(order()[keep(), shapeby()])
+  labels <- reactive(order()[keep(), labelby()])
   my_chars <- reactive(parse_opt(input[[get_select(input$category, filterby())]]))
   my_subset <- reactive(get_my_subset(decorations, input$category, subi()))
   
@@ -667,6 +627,24 @@ server <- function(input, output, session) {
     return(color_seq(num, input$palette, not_rev()))
   })
   
+  # shapes for ggplot2, plotly
+  shape_num <- reactive({
+    if (input$embedding == "Sets")
+      return(NULL)
+    
+    if (input$visualize == "Summarize")
+    {
+      if (input$embedding == "PCA")
+        return(1)
+      if (input$embedding == "VAE")
+        return(2)
+      if (input$embedding == "UMAP")
+        return(6)
+    }
+    
+    length(unique(shapes()))
+  })
+  
   # ---------------
   # PLOT GENERATION
   # ---------------
@@ -728,7 +706,7 @@ server <- function(input, output, session) {
       if (ncol(data) == 2)
         return(venn2_custom(data, legend()))
       
-      return(upset_custom(data, legend(), upse()))
+      return(upset_custom(data, legend(), ifelse(upse(), "freq", "degree")))
     }
     
     addr <- make_aws_name(make_file_name(
@@ -743,8 +721,8 @@ server <- function(input, output, session) {
       downloadData(data)
       
       return(ggplot2_2d(
-        data[,1], data[,2], colors(), shapes(),
-        pc("1"), pc("2"), title(), legend(), paint()))
+        data[,1], data[,2], pc("1"), pc("2"),
+        colors(), shapes(), paint(), shape_num(), title(), legend()))
     }
     
     if (input$visualize == "Summarize")
@@ -753,25 +731,29 @@ server <- function(input, output, session) {
       
       if (input$embedding == "PCA")
         return(ggplot2_2d(
-          data[,"Components"], data[,"Variance"],
-          rep("Cumulative Variance", pc_cap), rep("Cumulative Variance", pc_cap),
+          data[,"Components"], data[,"Variance"], 
           "Number of Components", "Variance Captured", 
-          title(), legend(), paint()
+          rep("Cumulative Variance", pc_cap), 
+          rep("Cumulative Variance", pc_cap),
+          paint(), shape_num(), title(), legend()
         ) + geom_smooth(se=FALSE, method="gam", formula = y ~ s(log(x))))
       
       if (input$embedding == "VAE")
         return(ggplot2_2d(
           data[,"Training Iterations"], data[,"Loss Value"],
-          data[,"Loss Type"], data[,"Loss Type"],
-          "Number of Training Iterations", "Loss Function Output", 
-          title(), legend(), paint()
+          "Number of Training Iterations", "Loss Function Output",
+          data[,"Loss Type"], 
+          data[,"Loss Type"],
+          paint(), shape_num(), title(), legend()
         ) + geom_smooth(se=FALSE, method="gam", formula = y ~ s(log(x))))
       
       if (input$embedding == "UMAP")
         return(ggplot2_2d(
-          as.numeric(data[,1]), as.numeric(data[,2]), data[,3], data[,3],
+          as.numeric(data[,1]), as.numeric(data[,2]), 
           "Number of Components", "Number of Noisy Samples", 
-          title(), legend(), paint()
+          data[,3], 
+          data[,3],
+          paint(), shape_num(), title(), legend()
         ) + geom_line())
     }
     
@@ -781,15 +763,15 @@ server <- function(input, output, session) {
     if (input$visualize == "Explore")
     {
       return(ggplot2_2d(
-        data[,input$pc1], data[,input$pc2], colors(), shapes(),
-        pc(input$pc1), pc(input$pc2), title(), legend(), paint()))
+        data[,input$pc1], data[,input$pc2], pc(input$pc1), pc(input$pc2), 
+        colors(), shapes(), paint(), shape_num(), title(), legend()))
     }
     
     if (input$visualize == "tSNE")
     {
       return(ggplot2_2d(
-        data[,1], data[,2], colors(), shapes(),
-        pc("1"), pc("2"), title(), legend(), paint()))
+        data[,1], data[,2], pc("1"), pc("2"), 
+        colors(), shapes(), paint(), shape_num(), title(), legend()))
     }
   })
   
@@ -877,8 +859,9 @@ server <- function(input, output, session) {
       downloadData(data)
       
       return(plotly_2d(
-        data[,1], data[,2], colors(), shapes(),
-        pc("1"), pc("2"), title(), legend(), paint()))
+        data[,1], data[,2], pc("1"), pc("2"), "markers",
+        colors(), shapes(), sprintf("%s: %s", labelby(), labels()),
+        paint(), shape_num(), title(), legend()))
     }
     
     if (input$visualize == "Summarize")
@@ -887,23 +870,30 @@ server <- function(input, output, session) {
       
       if (input$embedding == "PCA")
         return(plotly_2d(
-          data[,"Components"], data[,"Variance"],
-          rep("Cumulative Variance", pc_cap), rep("Cumulative Variance", pc_cap),
-          "Number of Components", "Variance Captured", 
-          title(), legend(), paint()))
+          data[,"Components"], data[,"Variance"], 
+          "Number of Components", "Variance Captured", "markers",
+          rep("Cumulative Variance", pc_cap), 
+          rep("Cumulative Variance", pc_cap), 
+          data[,"Variance"],
+          paint(), shape_num(), title(), legend()))
       
       if (input$embedding == "VAE")
         return(plotly_2d(
-          data[,"Training Iterations"], data[,"Loss Value"],
-          data[,"Loss Type"], data[,"Loss Type"],
-          "Number of Training Iterations", "Loss Function Output", 
-          title(), legend(), paint()))
+          data[,"Training Iterations"], data[,"Loss Value"], 
+          "Number of Training Iterations", "Loss Function Output", "markers",
+          data[,"Loss Type"], 
+          data[,"Loss Type"], 
+          data[,"Loss Value"],
+          paint(), shape_num(), title(), legend()))
       
       if (input$embedding == "UMAP")
         return(plotly_2d(
-          as.numeric(data[,1]), as.numeric(data[,2]), data[,3], data[,3],
-          "Number of Components", "Number of Noisy Samples", 
-          title(), legend(), paint()))
+          as.numeric(data[,1]), as.numeric(data[,2]), 
+          "Number of Components", "Number of Noisy Samples", "markers",
+          data[,3], 
+          data[,3],
+          as.numeric(data[,2]), 
+          paint(), shape_num(), title(), legend()))
     }
     
     data <- data[keep(),]
@@ -912,15 +902,17 @@ server <- function(input, output, session) {
     if (input$visualize == "Explore")
     {
       return(plotly_2d(
-        data[,input$pc1], data[,input$pc2], colors(), captions(),
-        pc(input$pc1), pc(input$pc2), title(), legend(), paint()))
+        data[,input$pc1], data[,input$pc2], pc(input$pc1), pc(input$pc2), "markers", 
+        colors(), shapes(), sprintf("%s: %s", labelby(), labels()),
+        paint(), shape_num(), title(), legend()))
     }
     
     if (input$visualize == "tSNE")
     {
       return(plotly_2d(
-        data[,1], data[,2], colors(), captions(),
-        pc("1"), pc("2"), title(), legend(), paint()))
+        data[,1], data[,2], pc("1"), pc("2"), "markers", 
+        colors(), shapes(), sprintf("%s: %s", labelby(), labels()),
+        paint(), shape_num(), title(), legend()))
     }
   })
   
@@ -1006,8 +998,9 @@ server <- function(input, output, session) {
       downloadData(data)
       
       return(plotly_3d(
-        data[,1], data[,2], data[,3], colors(), shapes(),
-        pc("1"), pc("2"), pc("3"), title(), legend(), paint()))
+        data[,1], data[,2], data[,3], pc("1"), pc("2"), pc("3"),
+        colors(), shapes(), sprintf("%s: %s", labelby(), labels()),
+        paint(), shape_num(), title(), legend()))
     }
     
     if (input$visualize == "Summarize")
@@ -1015,24 +1008,31 @@ server <- function(input, output, session) {
       downloadData(data)
       
       if (input$embedding == "PCA")
-        return(plotly_sum(
-          data[,"Components"], data[,"Variance"],
-          rep("Cumulative Variance", pc_cap), rep("Cumulative Variance", pc_cap),
-          "Number of Components", "Variance Captured", 
-          title(), legend(), paint()))
+        return(plotly_2d(
+          data[,"Components"], data[,"Variance"], 
+          "Number of Components", "Variance Captured", "lines+markers",
+          rep("Cumulative Variance", pc_cap), 
+          rep("Cumulative Variance", pc_cap), 
+          data[,"Variance"],
+          paint(), shape_num(), title(), legend()))
       
       if (input$embedding == "VAE")
-        return(plotly_sum(
-          data[,"Training Iterations"], data[,"Loss Value"],
-          data[,"Loss Type"], data[,"Loss Type"],
-          "Number of Training Iterations", "Loss Function Output", 
-          title(), legend(), paint()))
+        return(plotly_2d(
+          data[,"Training Iterations"], data[,"Loss Value"], 
+          "Number of Training Iterations", "Loss Function Output", "lines+markers",
+          data[,"Loss Type"], 
+          data[,"Loss Type"], 
+          data[,"Loss Value"],
+          paint(), shape_num(), title(), legend()))
       
       if (input$embedding == "UMAP")
-        return(plotly_sum(
-          as.numeric(data[,1]), as.numeric(data[,2]), data[,3], data[,3],
-          "Number of Components", "Number of Noisy Samples", 
-          title(), legend(), paint()))
+        return(plotly_2d(
+          as.numeric(data[,1]), as.numeric(data[,2]), 
+          "Number of Components", "Number of Noisy Samples", "lines+markers",
+          data[,3], 
+          data[,3],
+          as.numeric(data[,2]), 
+          paint(), shape_num(), title(), legend()))
     }
     
     data <- data[keep(),]
@@ -1042,8 +1042,9 @@ server <- function(input, output, session) {
     {
       return(plotly_3d(
         data[,input$pc1], data[,input$pc2], data[,input$pc3], 
-        colors(), captions(),pc(input$pc1), pc(input$pc2), pc(input$pc3), 
-        title(), legend(), paint()))
+        pc(input$pc1), pc(input$pc2), pc(input$pc3), 
+        colors(), shapes(), sprintf("%s: %s", labelby(), labels()),
+        paint(), shape_num(), title(), legend()))
     }
     
     data <- data[keep(),]
@@ -1052,8 +1053,10 @@ server <- function(input, output, session) {
     if (input$visualize == "tSNE")
     {
       return(plotly_3d(
-        data[,1], data[,2], data[,3], colors(), captions(),
-        pc("1"), pc("2"), pc("3"), title(), legend(), paint()))
+        data[,1], data[,2], data[,3],
+        pc("1"), pc("2"), pc("3"), 
+        colors(), shapes(), sprintf("%s: %s", labelby(), labels()),
+        paint(), shape_num(), title(), legend()))
     }
   })
   
@@ -1271,29 +1274,29 @@ server <- function(input, output, session) {
     updatePickerInput(session, inputId = "category", 
                       selected = name_cat[category_d])
     scale_d <- data[9] %>% as.numeric()
-    updateRadioButtons(session, inputId = "scale", 
-                       selected = sca_options[scale_d])
+    updatePickerInput(session, inputId = "scale", 
+                      selected = sca_options[scale_d])
     normalize_d <- data[10] %>% as.numeric()
-    updateRadioButtons(session, inputId = "normalize", 
-                       selected = nor_options[normalize_d])
+    updatePickerInput(session, inputId = "normalize", 
+                      selected = nor_options[normalize_d])
     features_d <- data[11] %>% as.numeric()
-    updateRadioButtons(session, inputId = "features", 
-                       selected = fea_options[features_d])
+    updatePickerInput(session, inputId = "features", 
+                      selected = fea_options[features_d])
     embedding_d <- data[12] %>% as.numeric()
-    updateRadioButtons(session, inputId = "embedding", 
-                       selected = emb_options[embedding_d])
+    updatePickerInput(session, inputId = "embedding", 
+                      selected = emb_options[embedding_d])
     visualize_d <- data[13] %>% as.numeric()
-    updateRadioButtons(session, inputId = "visualize", 
-                       selected = vis_options[visualize_d])
+    updatePickerInput(session, inputId = "visualize", 
+                      selected = vis_options[visualize_d])
     perplexity_d <- data[14] %>% as.numeric()
     updatePickerInput(session, inputId = "perplexity", 
                       selected = perplexity_types[perplexity_d])
     upsetpref_d <- data[15] %>% as.numeric()
-    updateRadioButtons(session, inputId = "upsetpref",
-                       selected = ups_options[upsetpref_d])
+    updatePickerInput(session, inputId = "upsetpref",
+                      selected = ups_options[upsetpref_d])
     dendrogram_d <- data[16] %>% as.numeric()
-    updateRadioButtons(session, inputId = "dendrogram",
-                       selected = den_options[dendrogram_d])
+    updatePickerInput(session, inputId = "dendrogram",
+                      selected = den_options[dendrogram_d])
     palette_d <- data[17] %>% as.numeric()
     my_pal <- unlist(pal_options)
     names(my_pal) <- NULL
