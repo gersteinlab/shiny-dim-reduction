@@ -6,6 +6,7 @@ require("shiny")
 require("dplyr")
 require("stringi")
 require("aws.s3")
+require("bcrypt")
 
 # ---------
 # FUNCTIONS
