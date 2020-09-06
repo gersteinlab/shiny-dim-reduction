@@ -923,7 +923,7 @@ In addition, the NIH Common Fund, ERCC, and many ERCC producers
 graciously generated these datasets."
 perplexity_types <- c(10, 20, 30, 50, 100)
 pc_cap <- 10
-user_credentials <- list("guest"="All@2019")
+user_credentials <- list("guest"=hashpw("All@2019", gensalt(12)))
 
 myRDS("amazon_keys.rds", amazon_keys)
 myRDS("app_title.rds", app_title)
