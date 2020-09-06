@@ -14,7 +14,7 @@ source("options.R", encoding="UTF-8")
 ui <- function(request){
   dashboardPage(
     skin="blue",
-    dashboardHeader(title=app_title,titleWidth="100%"),
+    dashboardHeader(title=app_title, titleWidth="100%"),
     dashboardSidebar(
       width=300,
       sidebarMenu(
@@ -53,7 +53,7 @@ ui <- function(request){
           )
         ),
         menuItem(
-          "Data Selection",
+          "Filtering",
           conditionalPanel(
             condition = "input.visualize == 'Summarize' && (input.embedding == 'PCA' ||
     input.embedding == 'VAE' || input.embedding == 'UMAP')",
@@ -63,18 +63,15 @@ ui <- function(request){
           conditionalPanel(
             condition = "input.visualize == 'Explore' && (input.embedding == 'PCA' ||
     input.embedding == 'VAE' || input.embedding == 'UMAP')",
-            sliderInput("pc1", "Displayed Component 1", 
-                        min=1, max=pc_cap, value=1, step=1, ticks = FALSE),
+            pc_slider(1, pc_cap),
             conditionalPanel(
               condition = "input.plotPanels == 'ggplot2' || 
         input.plotPanels == 'plotly2' || input.plotPanels == 'plotly3'",
-              sliderInput("pc2", "Displayed Component 2", 
-                          min=1, max=pc_cap, value=2, step=1, ticks = FALSE)
+              pc_slider(2, pc_cap)
             ),
             conditionalPanel(
               condition = "input.plotPanels == 'plotly3'",
-              sliderInput("pc3", "Displayed Component 3", 
-                          min=1, max=pc_cap, value=3, step=1, ticks = FALSE)
+              pc_slider(3, pc_cap)
             )
           ),
           perplexity_ui(perplexity_types),
@@ -172,7 +169,7 @@ server <- function(input, output, session) {
     
     if (length(input$username) == 1 && 
         (input$username %in% names(user_credentials))
-        && input$password == user_credentials[[input$username]])
+        && checkpw(input$password, user_credentials[[input$username]]))
     {
       notif("Authentication was successful - welcome!", 3, "message")
       removeModal()
@@ -1165,65 +1162,82 @@ server <- function(input, output, session) {
     }
     thre_array_c <- encode_lol(thre_array_c)
     
-    # controls
-    sMenu_c <- 16*(title() != "")+8*legend()+4*notifq()+2*memguard()+not_rev()
+    # encoded
+    encoded_form <- list(
+      sMenu=input$sMenu, 
+      category=input$category, 
+      scale=input$scale, 
+      normalize=input$normalize, 
+      features=input$features, 
+      embedding=input$embedding, 
+      visualize=input$visualize, 
+      perplexity=input$perplexity, 
+      upsetpref=input$upsetpref, 
+      dendrogram=input$dendrogram, 
+      palette=input$palette, 
+      plotPanels=input$plotPanels, 
+      set_f1=input$set_f1, 
+      set_f2=input$set_f2, 
+      pc1=input$pc1, 
+      pc2=input$pc2, 
+      pc3=input$pc3,
+      "complex"=c(
+        subset_c, 
+        color_shape_label_filter, 
+        select_array_c, 
+        thre_array_c
+      )
+    )
     
-    # options
-    category_c <- which(name_cat == input$category)
-    scale_c <- which(sca_options == input$scale)
-    normalize_c <- which(nor_options == input$normalize)
-    features_c <- which(fea_options == add_perc(feat()))
-    embedding_c <- which(emb_options == input$embedding)
-    visualize_c <- which(vis_options == input$visualize)
+    # get the vector of all session IDs
+    num_sessions <- 0
+    if (length(get_bucket(aws_bucket, prefix="Sessions/num_sessions.rds")) > 0)
+      num_sessions <- load_db("Sessions/num_sessions.rds", aws_bucket)
     
-    if (is.null(perplexity_types))
-      perplexity_c <- 1
-    else
-      perplexity_c <- which(perplexity_types == input$perplexity)
+    # find a session ID that is not used
+    i <- 1
+    while (i %in% num_sessions)
+      i <- i+1
     
-    upsetpref_c <- which(ups_options == input$upsetpref)
-    dendrogram_c <- which(den_options == input$dendrogram)
-    palette_c <- which(unlist(pal_options) == input$palette)
-    plotPanels_c <- which(pan_options == input$plotPanels)
+    # add the session ID to the list and save the session
+    save_db(c(num_sessions, i), aws_bucket, "Sessions/num_sessions.rds")
+    save_db(encoded_form, aws_bucket, sprintf("Sessions/session_%s.rds", i))
     
-    if (length(plotPanels_c) < 1)
-      plotPanels_c <- 1
-    
-    # numbers
-    set_f1_c <- encode_num(input$set_f1)
-    set_f2_c <- encode_num(input$set_f2)
-    pc1_c <- input$pc1
-    pc2_c <- input$pc2
-    pc3_c <- input$pc3
-    
-    # complete the bookmark, d = data
-    state$values$d <- c(
-      subset_c, color_shape_label_filter, select_array_c, thre_array_c, sMenu_c, 
-      category_c, scale_c, normalize_c, features_c, embedding_c, 
-      visualize_c, perplexity_c, upsetpref_c, dendrogram_c, 
-      palette_c, plotPanels_c, 
-      set_f1_c, set_f2_c, pc1_c, pc2_c, pc3_c
-    ) %>% paste(collapse=sep_chars[1])
+    # the bookmark is simply the numerical ID for the session
+    state$values$user_id <- i
   })
   
-  # restore compressed data when link is followed, d = data
+  # restore compressed data when link is followed
   onRestored(function(state) {
-    data <- strsplit(state$values$d, sep_chars[1])[[1]]
+    # get the vector of all session IDs
+    num_sessions <- 0
+    if (length(get_bucket(aws_bucket, prefix="Sessions/num_sessions.rds")) > 0)
+      num_sessions <- load_db("Sessions/num_sessions.rds", aws_bucket)
+    
+    # if the ID is invalid, load nothing
+    id <- state$values$user_id
+    if (!(id %in% num_sessions))
+      return(NULL)
+    
+    # otherwise, load the appropriate item
+    data <- load_db(sprintf("Sessions/session_%s.rds", id), aws_bucket)
+    complex <- data$complex
+    data$complex <- NULL
     
     # subsets, colors, shapes, filters, selections, thresholds
-    subsets <- strsplit(data[1], sep_chars[3])[[1]] %>% as.list()
+    subsets <- strsplit(complex[[1]], sep_chars[3])[[1]] %>% as.list()
     names(subsets) <- name_cat
-    colors <- strsplit(data[2], sep_chars[3])[[1]] %>% as.list()
+    colors <- strsplit(complex[[2]], sep_chars[3])[[1]] %>% as.list()
     names(colors) <- name_cat
-    shapes <- strsplit(data[3], sep_chars[3])[[1]] %>% as.list()
+    shapes <- strsplit(complex[[3]], sep_chars[3])[[1]] %>% as.list()
     names(shapes) <- name_cat
-    labels <- strsplit(data[4], sep_chars[3])[[1]] %>% as.list()
+    labels <- strsplit(complex[[4]], sep_chars[3])[[1]] %>% as.list()
     names(labels) <- name_cat
-    filters <- strsplit(data[5], sep_chars[3])[[1]] %>% as.list()
+    filters <- strsplit(complex[[5]], sep_chars[3])[[1]] %>% as.list()
     names(filters) <- name_cat
     
-    checkboxes <- decode_lol(data[6], bookmark_cat)
-    thres <- decode_lol(data[7], bookmark_thre)
+    checkboxes <- decode_lol(complex[[6]], bookmark_cat)
+    thres <- decode_lol(complex[[7]], bookmark_thre)
     
     for (cat in name_cat)
     {
@@ -1273,61 +1287,24 @@ server <- function(input, output, session) {
             as.numeric(thres[[cat]][[sca]]) / 10000)
     }
     
-    # controls 
-    sMenu_d <- data[8] 
-    bits <- sMenu_d %>% as.numeric() %>% intToBits() %>% 
-      as.numeric() %>% head(length(my_settings)) %>% rev()
-    updatePickerInput(session, inputId = "sMenu", 
-                      selected = my_settings[which(bits == 1)])
-    
-    # options
-    category_d <- data[9] %>% as.numeric()
-    updatePickerInput(session, inputId = "category", 
-                      selected = name_cat[category_d])
-    scale_d <- data[10] %>% as.numeric()
-    updatePickerInput(session, inputId = "scale", 
-                      selected = sca_options[scale_d])
-    normalize_d <- data[11] %>% as.numeric()
-    updatePickerInput(session, inputId = "normalize", 
-                      selected = nor_options[normalize_d])
-    features_d <- data[12] %>% as.numeric()
-    updatePickerInput(session, inputId = "features", 
-                      selected = fea_options[features_d])
-    embedding_d <- data[13] %>% as.numeric()
-    updatePickerInput(session, inputId = "embedding", 
-                      selected = emb_options[embedding_d])
-    visualize_d <- data[14] %>% as.numeric()
-    updatePickerInput(session, inputId = "visualize", 
-                      selected = vis_options[visualize_d])
-    perplexity_d <- data[15] %>% as.numeric()
-    updatePickerInput(session, inputId = "perplexity", 
-                      selected = perplexity_types[perplexity_d])
-    upsetpref_d <- data[16] %>% as.numeric()
-    updatePickerInput(session, inputId = "upsetpref",
-                      selected = ups_options[upsetpref_d])
-    dendrogram_d <- data[17] %>% as.numeric()
-    updatePickerInput(session, inputId = "dendrogram",
-                      selected = den_options[dendrogram_d])
-    palette_d <- data[18] %>% as.numeric()
-    my_pal <- unlist(pal_options)
-    names(my_pal) <- NULL
-    updateTabsetPanel(session, inputId = "palette",
-                      selected = my_pal[palette_d])
-    plotPanels_d <- data[19] %>% as.numeric()
-    updateTabsetPanel(session, inputId = "plotPanels",
-                      selected = pan_options[plotPanels_d])
-    
-    # numbers
-    updateSliderInput(session, inputId = "set_f1",
-                      value = decode_num(data[20]))
-    updateSliderInput(session, inputId = "set_f2",
-                      value = decode_num(data[21]))
-    updateSliderInput(session, inputId = "pc1",
-                      value = data[22] %>% as.numeric())
-    updateSliderInput(session, inputId = "pc2",
-                      value = data[23] %>% as.numeric())
-    updateSliderInput(session, inputId = "pc3",
-                      value = data[24] %>% as.numeric())
+    # simpler
+    updatePickerInput(session, inputId = "sMenu", selected = data[["sMenu"]])
+    updatePickerInput(session, inputId = "category", selected = data[["category"]])
+    updatePickerInput(session, inputId = "scale", selected = data[["scale"]])
+    updatePickerInput(session, inputId = "normalize", selected = data[["normalize"]])
+    updatePickerInput(session, inputId = "features", selected = data[["features"]])
+    updatePickerInput(session, inputId = "embedding", selected = data[["embedding"]])
+    updatePickerInput(session, inputId = "visualize", selected = data[["visualize"]])
+    updatePickerInput(session, inputId = "perplexity", selected = data[["perplexity"]])
+    updatePickerInput(session, inputId = "upsetpref", selected = data[["upsetpref"]])
+    updatePickerInput(session, inputId = "dendrogram", selected = data[["dendrogram"]])
+    updateTabsetPanel(session, inputId = "palette", selected = data[["palette"]])
+    updateTabsetPanel(session, inputId = "plotPanels", selected = data[["plotPanels"]])
+    updateSliderInput(session, inputId = "set_f1", value = data[["set_f1"]])
+    updateSliderInput(session, inputId = "set_f2", value = data[["set_f2"]])
+    updateSliderInput(session, inputId = "pc1", value = data[["pc1"]])
+    updateSliderInput(session, inputId = "pc2", value = data[["pc2"]])
+    updateSliderInput(session, inputId = "pc3", value = data[["pc3"]])
   })
 }
 
