@@ -292,6 +292,70 @@ color_seq <- function(n_colors, color_type, keep)
     return(cividis(n_colors, direction = ifelse(rev_opt, -1, 1)))
 }
 
+# my personal favorite ordering of the 25 default R plot shapes
+ggplot2_shapes_unique <- c(15:25,0:2,5:6,3:4,8,7,9:14)
+# Generates a shape sequence of length n for ggplot2.
+ggplot2_shape_seq <- function(n) 
+{
+  my_seq <- 0:(n-1) %% length(ggplot2_shapes_unique)
+  ggplot2_shapes_unique[my_seq+1]
+}
+
+# the default ordering of all plotly shapes
+# vals <- schema(F)$traces$scatter$attributes$marker$symbol$values
+# vals <- grep("-", vals, value = T)
+plotly2_shapes_unique <- c(
+  "circle-open", "circle-dot", "circle-open-dot", 
+  "square-open", "square-dot", "square-open-dot", 
+  "diamond-open", "diamond-dot", "diamond-open-dot", 
+  "cross-open", "cross-dot", "cross-open-dot", 
+  "x-open", "x-dot", "x-open-dot", "triangle-up", 
+  "triangle-up-open", "triangle-up-dot", "triangle-up-open-dot", 
+  "triangle-down", "triangle-down-open", "triangle-down-dot", 
+  "triangle-down-open-dot", "triangle-left", "triangle-left-open", 
+  "triangle-left-dot", "triangle-left-open-dot", 
+  "triangle-right", "triangle-right-open", "triangle-right-dot", 
+  "triangle-right-open-dot", "triangle-ne", "triangle-ne-open", 
+  "triangle-ne-dot", "triangle-ne-open-dot", "triangle-se", 
+  "triangle-se-open", "triangle-se-dot", "triangle-se-open-dot", 
+  "triangle-sw", "triangle-sw-open", "triangle-sw-dot", 
+  "triangle-sw-open-dot", "triangle-nw", "triangle-nw-open", 
+  "triangle-nw-dot", "triangle-nw-open-dot", "pentagon-open", 
+  "pentagon-dot", "pentagon-open-dot", "hexagon-open", 
+  "hexagon-dot", "hexagon-open-dot", "hexagon2-open", 
+  "hexagon2-dot", "hexagon2-open-dot", "octagon-open", 
+  "octagon-dot", "octagon-open-dot", "star-open", 
+  "star-dot", "star-open-dot", "hexagram-open", 
+  "hexagram-dot", "hexagram-open-dot", "star-triangle-up", 
+  "star-triangle-up-open", "star-triangle-up-dot", 
+  "star-triangle-up-open-dot", "star-triangle-down", 
+  "star-triangle-down-open", "star-triangle-down-dot", 
+  "star-triangle-down-open-dot", "star-square", 
+  "star-square-open", "star-square-dot", "star-square-open-dot", 
+  "star-diamond", "star-diamond-open", "star-diamond-dot", 
+  "star-diamond-open-dot", "diamond-tall", "diamond-tall-open", 
+  "diamond-tall-dot", "diamond-tall-open-dot", 
+  "diamond-wide", "diamond-wide-open", "diamond-wide-dot", 
+  "diamond-wide-open-dot", "hourglass-open", "bowtie-open", 
+  "circle-cross", "circle-cross-open", "circle-x", 
+  "circle-x-open", "square-cross", "square-cross-open", 
+  "square-x", "square-x-open", "diamond-cross", 
+  "diamond-cross-open", "diamond-x", "diamond-x-open", 
+  "cross-thin", "cross-thin-open", "x-thin", 
+  "x-thin-open", "asterisk-open", "hash-open", 
+  "hash-dot", "hash-open-dot", "y-up", "y-up-open", 
+  "y-down", "y-down-open", "y-left", "y-left-open", 
+  "y-right", "y-right-open", "line-ew", "line-ew-open", 
+  "line-ns", "line-ns-open", "line-ne", "line-ne-open", 
+  "line-nw", "line-nw-open"
+)
+# Generates a shape sequence of length n for plotly.
+plotly_shape_seq <- function(n) 
+{
+  my_seq <- 0:(n-1) %% length(plotly2_shapes_unique)
+  plotly2_shapes_unique[my_seq+1]
+}
+
 # Displays a default graph, which is accepted by ggplot2 and plotly.
 ggplot2_null <- function()
 {
@@ -325,11 +389,11 @@ boxplot_beeswarm <- function(data, rel, xlab, ylab, names,
 ggplot2_2d <- function(x, y, x_axis, y_axis, 
                        color, symbol, cq, sq, title, legend) 
 {
-  df <- data.frame(dx = x, dy = y, Color = c, Shape = s)
+  df <- data.frame(dx = x, dy = y, Color = color, Shape = symbol)
   ggplot(df, aes(x = dx, y = dy, color = Color, shape = Shape)) + 
     ggtitle(title) + xlab(x_axis) + ylab(y_axis) + 
     scale_color_manual(values = cq) +
-    scale_shape_manual(values = sq) +
+    scale_shape_manual(values = ggplot2_shape_seq(sq)) +
     theme(plot.title=element_text(size=22,face="bold"), 
           axis.title.x=element_text(size=16, margin = margin(t = 10)), 
           axis.title.y=element_text(size=16, margin = margin(r = 10)), 
@@ -352,10 +416,12 @@ ggplot2_2d <- function(x, y, x_axis, y_axis,
 # The graph will have features (x_axis, y_axis, title), with legend
 # determining whether a legend will be displayed.
 plotly_2d <- function(x, y, x_axis, y_axis, mode, 
-                      color, symbol, cq, sq, text, title, legend) 
+                      color, symbol, text, cq, sq, title, legend) 
 {
   plot_ly(x = x, y = y, mode = mode,
-          text = text, color = color, colors = cq, symbol = symbol, symbols = sq, 
+          text = text, color = color, colors = cq, # symbol = symbol, 
+          # symbols = plotly_shape_seq(sq),
+          marker = list(size = 6, symbol = 'circle'),
           hoverinfo = 'text', type="scatter") %>% layout(
             title = title,
             scene = list(xaxis = list(title = x_axis),
@@ -368,10 +434,12 @@ plotly_2d <- function(x, y, x_axis, y_axis, mode,
 # The graph will have features (x_axis, y_axis, z_axis, title), with legend
 # determining whether a legend will be displayed.
 plotly_3d <- function(x, y, z, x_axis, y_axis, z_axis,
-                      color, shape, cq, sq, text, title, legend) 
+                      color, shape, text, cq, sq, title, legend) 
 {
   plot_ly(x = x, y = y, z = z,  
-          text = text, color = color, colors = cq, symbol = symbol, symbols = sq,
+          text = text, color = color, colors = cq, # symbol = symbol, 
+          # symbols = plotly_shape_seq(sq),
+          marker = list(size = 4, symbol = 'circle'),
           hoverinfo = 'text', type="scatter") %>% layout(
             title = title,
             scene = list(xaxis = list(title = x_axis),
