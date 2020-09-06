@@ -284,13 +284,6 @@ decode_lol <- function(list_string, outline)
 # USER WIDGETS
 # ------------
 
-# Creates a set of inline radio buttons with the first option selected.
-button <- function(inputId, label, choices) 
-{
-  radioButtons(inputId = inputId, label = label, inline = T,
-               choices = choices, selected = choices[1])
-}
-
 # Creates an action button with the given id, name, icon name, 
 # color, background color, and border color.
 action <- function(id, name, icon_name, color, bk, br) 
