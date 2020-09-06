@@ -12,6 +12,8 @@
 num_colors <- 60
 # Only allow "Shape By" on a characteristic with <= num_shapes distinct values.
 num_shapes <- 60
+# Only allow "Label By" on a characteristic with <= num_labels distinct values.
+num_labels <- 60
 # Only allow filtering on a characteristic with <= num_filters distinct values.
 num_filters <- 60
 # The height of a graph by default. Depends on browser interpretation.
