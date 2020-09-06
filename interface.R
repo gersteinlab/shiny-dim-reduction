@@ -35,7 +35,7 @@ den_options <- c("Variance", "Correlation")
 # upset plot options
 ups_options <- c("Frequency", "Degree")
 # settings options
-my_settings <- c("Embed Title", "Show Legend", "Notifications", 
+my_settings <- c("Embed Title", "Embed Legend", "Notifications", 
                  "Limit Memory Use", "Uninverted Colors")
 
 # ----------
@@ -247,70 +247,71 @@ no_autofill <-
   "document.getElementById('password').setAttribute('autocomplete','new-password')"
 
 my_css_styling <- HTML("
+/* Personal notification preferences */
 .shiny-notification {
-  border-color: #00356B;  /*  */
-  opacity: 1;
+  border-color: #00356B !important;  
+  opacity: 1 !important;
 }
-.main-header .logo {
-  padding: 0px 0px;
-}
-[role=option] > .text {
+
+/* Increases text / icon visibility in selectors */
+[role=option] > .text, [role=option] > .glyphicon {
   color: #000000 !important;
 }
-[role=option] > .glyphicon {
-  color: #000000 !important;
+
+/* Better indicator of selected item */
+.dropdown-menu>.active>a, 
+.dropdown-menu>.active>a:focus, 
+.dropdown-menu>.active>a:hover {
+    background-color: #E0F0FF !important;
 }
-.sidebar-collapse .main-sidebar, .sidebar-collapse .left-side {
-    -webkit-transform: translate(-100%, 0) !important;
-    -ms-transform: translate(-100%, 0) !important;
-    -o-transform: translate(-100%, 0) !important;
-    transform: translate(-100%, 0) !important;
-}
-.box {
-  border: 1px solid #00356B;
-  background-color: #e0f0ff;
-}
+
+/* Everyone's favorite color - Yale Blue! */
 .skin-blue .main-header .logo {
   background-color: #00356B !important;
 }
-.content-wrapper, .right-side {
-    background-color: #FFFFFF !important;
-}
+
+/* Place sidebar toggle on right! */
 .sidebar-toggle {
   float: right !important;
 }
+
+/* Prevents weird sidebar glitch */
 .wrapper {
   height: auto !important; 
   position:relative; 
   overflow-x:hidden; 
   overflow-y:hidden
 }
+
+/* Prevents overflow from input pickers */
 .inner {
   min-height: 0px !important;
   max-height: 360px !important;
 }
+
+/* Prevents misfitting of dropdowns */
 .dropdown-menu {
   min-height: 0px !important;
-  z-index: 10000;
 }
-.dropdown-menu > .text {
-  color: #000000 !important;
-}
-.dropdown-menu>li>a {
+
+/* Wrap text to avoid overflowing selectors */
+.dropdown-menu > li > a {
   white-space: normal !important;
 }
-.row {
-  margin-right: 0px;
-  margin-left: 0px;
-}
+
+/* Make password text invisible, but mark the caret */
 .my-hidden-text {
   color: rgba(0,0,0,0) !important;
   caret-color: rgba(0,0,0,1) !important;
 }
+
+/* Make password text same color as selection */
 .my-hidden-text::selection {
   color: #3297FD !important;
   background: #3297FD !important;
 }
+
+/* center selectors */
 .sidebar-menu .treeview-menu {
   padding-left: 0px !important;
 }
