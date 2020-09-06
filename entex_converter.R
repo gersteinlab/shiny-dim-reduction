@@ -612,7 +612,7 @@ In addition, the ENCODE Consortium and several ENCODE production laboratories
 graciously generated these datasets." 
 perplexity_types <- c(2, 4, 6, 12, 20)
 pc_cap <- 10
-user_credentials <- list("guest"="All@2019")
+user_credentials <- list("guest"=hashpw("All@2019", gensalt(12)))
 
 myRDS("amazon_keys.rds", amazon_keys)
 myRDS("app_title.rds", app_title)
