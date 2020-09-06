@@ -171,19 +171,19 @@ for (cn in 1:num_cat)
   # colors
   color_opts[[cn]] <- list(
     "1"=cat, 
-    "2"=c("Total", order_names[between(cols_unique_gen, 2, num_colors)])
+    "2"=order_names[between(cols_unique_gen, 2, num_colors)]
   )
   
   # shapes
   shape_opts[[cn]] <- list(
     "1"=cat, 
-    "2"=c("Total", order_names[between(cols_unique_gen, 2, num_shapes)])
+    "2"=order_names[between(cols_unique_gen, 2, num_shapes)]
   )
   
   # labels
   label_opts[[cn]] <- list(
     "1"=cat, 
-    "2"=c("Total", order_names[between(cols_unique_gen, 2, num_labels)])
+    "2"=order_names[between(cols_unique_gen, 2, num_labels)]
   )
   
   # filters
