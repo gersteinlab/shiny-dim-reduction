@@ -1,8 +1,8 @@
 # The goal of this app is to perform dimensionality reduction.
 
 # source("~/Justin-Tool/shiny-dim-reduction/build.R")
+absolute_begin <- round(as.numeric(Sys.time()), 4)
 source("inherit.R", encoding="UTF-8")
-absolute_begin <- my_timer()
 source("functions.R", encoding="UTF-8")
 source("interface.R", encoding="UTF-8")
 source("options.R", encoding="UTF-8")
