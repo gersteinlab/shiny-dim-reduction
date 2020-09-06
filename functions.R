@@ -616,6 +616,13 @@ check_panel <- function(id, name, inputs)
   )
 }
 
+# makes a slider for the nth principal component
+pc_slider <- function(n, pc_cap)
+{
+  sliderInput(sprintf("pc%s", n), sprintf("Displayed Component %s", n), 
+              min=1, max=pc_cap, value=n, step=1, ticks = FALSE)
+}
+
 # Creates an action button with the given id, name, icon name, 
 # color, background color, and border color.
 action <- function(id, name, icon_name, color, bk, br) 
