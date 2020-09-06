@@ -190,9 +190,6 @@ Activates plotting and causes plots to update instantaneously.
 <li><u>Stop Plotting:</u> 
 Stops plotting and allows settings to be updated without waiting.
 </li>
-<li><u>Interface:</u> 
-Toggles the interface panels on the left side of the tool.
-</li>
 <li><u>Bookmark:</u> 
 Creates a URL that replicates this session.
 </li>
@@ -209,9 +206,8 @@ after dimensionality reduction, that will be shown on the y-axis. For plotly3,
 Displayed Component 3 denotes the component, after dimensionality reduction, 
 that will be shown on the z-axis. Note that components can equal each other.
 </li>
-<li><u>Color By, Label By:</u>
-What category should points on the graph be colored/labeled by? Shapes are used 
-for ggplot2 and captions are used for plotly. 
+<li><u>Color By, Shape By, Label By:</u>
+What category should points on the graph be colored / shaped / labeled by?
 (Note: depends on the category selected.)
 </li>
 <li><u>Current Filter, Filter By:</u> 
