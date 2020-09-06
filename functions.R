@@ -440,7 +440,7 @@ plotly_3d <- function(x, y, z, x_axis, y_axis, z_axis,
           text = text, color = color, colors = cq, # symbol = symbol, 
           # symbols = plotly_shape_seq(sq),
           marker = list(size = 4, symbol = 'circle'),
-          hoverinfo = 'text', type="scatter") %>% layout(
+          hoverinfo = 'text') %>% layout(
             title = title,
             scene = list(xaxis = list(title = x_axis),
                          yaxis = list(title = y_axis),
