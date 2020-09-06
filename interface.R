@@ -379,7 +379,7 @@ color_panels_ui <- function(colors){
       condition = sprintf("input.category == '%s'", x[[1]]),
       select_panel(
         sprintf("colorby_%s", x[[1]]), sprintf("Color By (%s)", x[[1]]), 
-        x[[2]], 2))
+        x[[2]], 1))
   })
 }
 
@@ -389,7 +389,7 @@ shape_panels_ui <- function(shapes){
       condition = sprintf("input.category == '%s'",  x[[1]]),
       select_panel(
         sprintf("shapeby_%s", x[[1]]), sprintf("Shape By (%s)", x[[1]]), 
-        x[[2]], 3))
+        x[[2]], 2))
   })
 }
 
@@ -399,7 +399,7 @@ label_panels_ui <- function(labels){
       condition = sprintf("input.category == '%s'",  x[[1]]),
       select_panel(
         sprintf("labelby_%s", x[[1]]), sprintf("Label By (%s)", x[[1]]), 
-        x[[2]], 4))
+        x[[2]], 1))
   })
 }
 
