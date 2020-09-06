@@ -1,6 +1,7 @@
 # The purpose of this file is to store libraries and functions
 # for the main app. None of these should depend on global variables!
 
+require("shinydashboard")
 require("shinyjs")
 require("shinycssloaders")
 require("shinyWidgets")
