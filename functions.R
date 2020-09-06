@@ -436,11 +436,11 @@ plotly_2d <- function(x, y, x_axis, y_axis, mode,
 plotly_3d <- function(x, y, z, x_axis, y_axis, z_axis,
                       color, shape, text, cq, sq, title, legend) 
 {
-  plot_ly(x = x, y = y, z = z,  
+  plot_ly(x = x, y = y, z = z, mode="markers",  
           text = text, color = color, colors = cq, # symbol = symbol, 
           # symbols = plotly_shape_seq(sq),
           marker = list(size = 4, symbol = 'circle'),
-          hoverinfo = 'text') %>% layout(
+          hoverinfo = 'text', type="scatter3d") %>% layout(
             title = title,
             scene = list(xaxis = list(title = x_axis),
                          yaxis = list(title = y_axis),
