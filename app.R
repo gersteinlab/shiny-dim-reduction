@@ -137,7 +137,8 @@ ui <- function(request){
         downloadButton('downloadCitations', 'Citations')
       ),
       uiOutput("plainTitleUI"),
-      DTOutput("legend_out", width="100%") %>% my_spin(),
+      div(id="legend_out_spin", DTOutput("legend_out", width="100%") %>% my_spin()),
+      hr(),
       "Developed by Justin Chang at the Gerstein Lab, 
         under the mentorship of Joel Rozowsky."
     )
@@ -151,14 +152,14 @@ ui <- function(request){
 server <- function(input, output, session) {
   # pushes the subtitle to the right
   shinyjs::addClass(id = "central_nav", class = "navbar-right")
-  shinyjs::hide("legend_out")
+  shinyjs::hide("legend_out_spin")
   
   # records the boot time of the program
   notif(sprintf("Reactive initialization complete.<br>Seconds elapsed: %s", 
                 my_timer(absolute_begin)), 8, "warning")
   
   # performs setup for authentication
-  auth_default <- 1
+  auth_default <- 0
   authenticated <- reactiveVal(auth_default)
   if (!auth_default)
     showModal(authenticator_modal())
@@ -221,9 +222,9 @@ server <- function(input, output, session) {
   # toggles legend table
   observeEvent(input$sMenu, {
     if ("Embed Legend" %in% input$sMenu)
-      shinyjs::hide("legend_out")
+      shinyjs::hide("legend_out_spin")
     else
-      shinyjs::show("legend_out")
+      shinyjs::show("legend_out_spin")
   })
   
   # constants for reactive plotting
@@ -259,6 +260,7 @@ server <- function(input, output, session) {
     legend_current(legend_data())
   })
   
+  # manages height and numPlots
   numPlots <- reactiveVal(1)
   height <- reactive({
     if (input$height < 1 || input$height > 4000)
@@ -289,6 +291,7 @@ server <- function(input, output, session) {
     plotlyOutput("plotly3_out", width="100%", height=height()) %>% my_spin()
   })
   
+  # renders beeswarm output
   output$beeswarmUI <- renderUI({
     plotOutput("beeswarm_out", width="100%", height=height()) %>% my_spin()
   })
@@ -1124,11 +1127,11 @@ server <- function(input, output, session) {
     
     subset_c <- paste(unlist(target), collapse=sep_chars[3])
     
-    # colors, shapes, filters
-    color_shape_filter <- rep("", 3)
-    types <- c("color", "shape", "filter")
+    # colors, shapes, labels, filters
+    color_shape_label_filter <- rep("", 4)
+    types <- c("color", "shape", "label", "filter")
     
-    for (i in 1:3)
+    for (i in 1:4)
     {
       target <- my_empty_list(name_cat)
       
@@ -1136,7 +1139,7 @@ server <- function(input, output, session) {
         target[[cat]] <- match(input[[sprintf("%sby_%s", types[i], cat)]], 
                                names(outline[[cat]])) %>% indices_fifstr()
       
-      color_shape_filter[i] <- paste(unlist(target), collapse=sep_chars[3])
+      color_shape_label_filter[i] <- paste(unlist(target), collapse=sep_chars[3])
     }
     
     # selections
@@ -1195,7 +1198,7 @@ server <- function(input, output, session) {
     
     # complete the bookmark, d = data
     state$values$d <- c(
-      subset_c, color_shape_filter, select_array_c, thre_array_c, sMenu_c, 
+      subset_c, color_shape_label_filter, select_array_c, thre_array_c, sMenu_c, 
       category_c, scale_c, normalize_c, features_c, embedding_c, 
       visualize_c, perplexity_c, upsetpref_c, dendrogram_c, 
       palette_c, plotPanels_c, 
@@ -1214,11 +1217,13 @@ server <- function(input, output, session) {
     names(colors) <- name_cat
     shapes <- strsplit(data[3], sep_chars[3])[[1]] %>% as.list()
     names(shapes) <- name_cat
-    filters <- strsplit(data[4], sep_chars[3])[[1]] %>% as.list()
+    labels <- strsplit(data[4], sep_chars[3])[[1]] %>% as.list()
+    names(labels) <- name_cat
+    filters <- strsplit(data[5], sep_chars[3])[[1]] %>% as.list()
     names(filters) <- name_cat
     
-    checkboxes <- decode_lol(data[5], bookmark_cat)
-    thres <- decode_lol(data[6], bookmark_thre)
+    checkboxes <- decode_lol(data[6], bookmark_cat)
+    thres <- decode_lol(data[7], bookmark_thre)
     
     for (cat in name_cat)
     {
@@ -1242,6 +1247,12 @@ server <- function(input, output, session) {
         selected = names(chars)[fifstr_indices(shapes[[cat]])]
       )
       
+      # labels
+      updatePickerInput(
+        session, inputId = sprintf("labelby_%s", cat), 
+        selected = names(chars)[fifstr_indices(labels[[cat]])]
+      )
+      
       # filters
       updatePickerInput(
         session, inputId = sprintf("filterby_%s", cat), 
@@ -1263,60 +1274,60 @@ server <- function(input, output, session) {
     }
     
     # controls 
-    sMenu_d <- data[7] 
+    sMenu_d <- data[8] 
     bits <- sMenu_d %>% as.numeric() %>% intToBits() %>% 
       as.numeric() %>% head(length(my_settings)) %>% rev()
     updatePickerInput(session, inputId = "sMenu", 
                       selected = my_settings[which(bits == 1)])
     
     # options
-    category_d <- data[8] %>% as.numeric()
+    category_d <- data[9] %>% as.numeric()
     updatePickerInput(session, inputId = "category", 
                       selected = name_cat[category_d])
-    scale_d <- data[9] %>% as.numeric()
+    scale_d <- data[10] %>% as.numeric()
     updatePickerInput(session, inputId = "scale", 
                       selected = sca_options[scale_d])
-    normalize_d <- data[10] %>% as.numeric()
+    normalize_d <- data[11] %>% as.numeric()
     updatePickerInput(session, inputId = "normalize", 
                       selected = nor_options[normalize_d])
-    features_d <- data[11] %>% as.numeric()
+    features_d <- data[12] %>% as.numeric()
     updatePickerInput(session, inputId = "features", 
                       selected = fea_options[features_d])
-    embedding_d <- data[12] %>% as.numeric()
+    embedding_d <- data[13] %>% as.numeric()
     updatePickerInput(session, inputId = "embedding", 
                       selected = emb_options[embedding_d])
-    visualize_d <- data[13] %>% as.numeric()
+    visualize_d <- data[14] %>% as.numeric()
     updatePickerInput(session, inputId = "visualize", 
                       selected = vis_options[visualize_d])
-    perplexity_d <- data[14] %>% as.numeric()
+    perplexity_d <- data[15] %>% as.numeric()
     updatePickerInput(session, inputId = "perplexity", 
                       selected = perplexity_types[perplexity_d])
-    upsetpref_d <- data[15] %>% as.numeric()
+    upsetpref_d <- data[16] %>% as.numeric()
     updatePickerInput(session, inputId = "upsetpref",
                       selected = ups_options[upsetpref_d])
-    dendrogram_d <- data[16] %>% as.numeric()
+    dendrogram_d <- data[17] %>% as.numeric()
     updatePickerInput(session, inputId = "dendrogram",
                       selected = den_options[dendrogram_d])
-    palette_d <- data[17] %>% as.numeric()
+    palette_d <- data[18] %>% as.numeric()
     my_pal <- unlist(pal_options)
     names(my_pal) <- NULL
     updateTabsetPanel(session, inputId = "palette",
                       selected = my_pal[palette_d])
-    plotPanels_d <- data[18] %>% as.numeric()
+    plotPanels_d <- data[19] %>% as.numeric()
     updateTabsetPanel(session, inputId = "plotPanels",
                       selected = pan_options[plotPanels_d])
     
     # numbers
     updateSliderInput(session, inputId = "set_f1",
-                      value = decode_num(data[19]))
-    updateSliderInput(session, inputId = "set_f2",
                       value = decode_num(data[20]))
+    updateSliderInput(session, inputId = "set_f2",
+                      value = decode_num(data[21]))
     updateSliderInput(session, inputId = "pc1",
-                      value = data[21] %>% as.numeric())
-    updateSliderInput(session, inputId = "pc2",
                       value = data[22] %>% as.numeric())
-    updateSliderInput(session, inputId = "pc3",
+    updateSliderInput(session, inputId = "pc2",
                       value = data[23] %>% as.numeric())
+    updateSliderInput(session, inputId = "pc3",
+                      value = data[24] %>% as.numeric())
   })
 }
 
