@@ -6,7 +6,7 @@ library(dbscan)
 # USER VARIABLES
 # --------------
 
-source("~/Justin-Tool/scaling.R")
+source("~/Justin-Tool/shiny-dim-reduction/scaling.R")
 
 # ---------
 # FUNCTIONS
@@ -43,27 +43,28 @@ for (cat in dog)
         for (fea in c(1, 10, 100))
         {
           loc <- sprintf("%s_%s_%s_%s_%s.rds", fea, nor, sca, sub, cat)
+          print(loc)
           
-          # none <- perplexity_list
-          # tsne2 <- perplexity_list
-          # tsne3 <- perplexity_list
-          # 
-          # for (nei in perplexity_types)
-          # {
-          #   explore <- myRDS(sprintf("UMAP/UMAP-%s_%s", nei, loc))$layout
-          #   
-          #   # NONE
-          #   none[[sprintf("P%s", nei)]] <- explore
-          #   
-          #   # tSNE
-          #   tsne2[[sprintf("P%s", nei)]] <- my_rTSNE(explore, 2, nei)$Y
-          #   tsne3[[sprintf("P%s", nei)]] <- my_rTSNE(explore, 3, nei)$Y
-          # }
-          # 
-          # myRDS(sprintf("vis-UMAP/NONE_UMAP_%s", loc), 
-          #       none)
-          # myRDS(sprintf("vis-UMAP/TSNE_UMAP_%s", loc), 
-          #       list("TSNE2"=tsne2, "TSNE3"=tsne3))
+          none <- perplexity_list
+          tsne2 <- perplexity_list
+          tsne3 <- perplexity_list
+
+          for (nei in perplexity_types)
+          {
+            explore <- myRDS(sprintf("UMAP/UMAP-%s_%s", nei, loc))$layout
+
+            # NONE
+            none[[sprintf("P%s", nei)]] <- explore
+
+            # tSNE
+            tsne2[[sprintf("P%s", nei)]] <- my_rTSNE(explore, 2, nei)$Y
+            tsne3[[sprintf("P%s", nei)]] <- my_rTSNE(explore, 3, nei)$Y
+          }
+
+          myRDS(sprintf("vis-UMAP/NONE_UMAP_%s", loc),
+                none)
+          myRDS(sprintf("vis-UMAP/TSNE_UMAP_%s", loc),
+                list("TSNE2"=tsne2, "TSNE3"=tsne3))
           
           # SUM
           raw <- myRDS(sprintf("combined/combined_%s.rds", cat))
