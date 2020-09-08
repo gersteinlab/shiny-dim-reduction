@@ -260,9 +260,10 @@ server <- function(input, output, session) {
   # manages height and numPlots
   numPlots <- reactiveVal(1)
   height <- reactive({
-    if (input$height < 1 || input$height > 4000)
+    if (length(input$height) < 1 || is.na(input$height) ||
+        input$height < 1 || input$height > 4000)
     {
-      notif("Warning: Graph height is not in [1, 4000].")
+      notif("Warning: Graph height is not in [1, 4000].", 6, "error")
       return(graph_height)
     }
     
