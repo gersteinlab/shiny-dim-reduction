@@ -92,7 +92,7 @@ for (cat in dog)
           for (emb in c("PCA", "VAE"))
           {
             loc <- sprintf("%s_%s_%s_%s_%s.rds", fea, nor, sca, sub, cat)
-            loc <- repStr(loc, sprintf("Total_%s", name_cat), name_cat)
+            # loc <- repStr(loc, sprintf("Total_%s", name_cat), name_cat)
             
             save_db(
               myRDS(sprintf("vis-%s/NONE_%s_%s", emb, emb, loc)),
@@ -229,7 +229,7 @@ for (cat in dog)
         for (fea in c(1, 10, 100))
         {
           loc <- sprintf("%s_%s_%s_%s_%s.rds", fea, nor, sca, sub, cat)
-          loc <- repStr(loc, sprintf("Total_%s", name_cat), name_cat)
+          # loc <- repStr(loc, sprintf("Total_%s", name_cat), name_cat)
           
           save_db(
             myRDS(sprintf("vis-UMAP/SUM_UMAP_%s", loc)), 
@@ -334,13 +334,13 @@ for (cat in dog)
             
             for (dim in c(2,3))
             {
-              # phate <- myRDS(sprintf(
-              #   "PHATE/PHATE-%s-%s_%s_%s_%s_%s_%s.rds", 
-              #   nei, dim, fea, nor, sca, sub, cat))$embedding
-              
               phate <- myRDS(sprintf(
-                "PHATE/PHATE-%s-%s_%s_%s_%s_%s.rds", 
-                nei, dim, fea, nor, sca, cat))$embedding
+                "PHATE/PHATE-%s-%s_%s_%s_%s_%s_%s.rds",
+                nei, dim, fea, nor, sca, sub, cat))$embedding
+              
+              # phate <- myRDS(sprintf(
+              #   "PHATE/PHATE-%s-%s_%s_%s_%s_%s.rds", 
+              #   nei, dim, fea, nor, sca, cat))$embedding
               
               save_db(
                 phate,
