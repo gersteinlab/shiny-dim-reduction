@@ -4,7 +4,7 @@
 # USER VARIABLES
 # --------------
 
-source("~/Justin-Tool/scaling.R")
+source("~/Justin-Tool/shiny-dim-reduction/scaling.R")
 
 # ---------
 # FUNCTIONS
@@ -63,11 +63,14 @@ for (cat in names(categories))
           tsne2 <- perplexity_list
           tsne3 <- perplexity_list
           
+          start <- my_timer()
           for (nei in perplexity_types)
           {
             tsne2[[sprintf("P%s", nei)]] <- my_rTSNE(explore, 2, nei)$Y
             tsne3[[sprintf("P%s", nei)]] <- my_rTSNE(explore, 3, nei)$Y
           }
+          print(my_timer(start))
+         
           myRDS(sprintf("vis-VAE/TSNE_VAE_%s", loc),
                 list("TSNE2"=tsne2, "TSNE3"=tsne3))
           
