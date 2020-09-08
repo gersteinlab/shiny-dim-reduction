@@ -897,9 +897,12 @@ setwd(dep_loc)
 saveRDS(categories, "categories_full.rds")
 saveRDS(order_total, "order_total.rds")
 
+# amazon_keys <- c("AKIAVI2HZGPODUFE62HE",
+#                  "V4LyDo0i1zv2cUZaFeIg9EFUFe+Fr+cv05U30efG",
+#                  "shiny-app-data-justin-2")
 amazon_keys <- c("AKIAVI2HZGPODUFE62HE",
                  "V4LyDo0i1zv2cUZaFeIg9EFUFe+Fr+cv05U30efG",
-                 "shiny-app-data-justin-2")
+                 "shiny-app-data-justin-exrna")
 app_title <- "Dimensionality Reduction Plotting Tool for the exRNA Atlas"
 app_citations <- "<u>ERCC:</u>
 Ainsztein AM, Brooks PJ, Dugan VG, et al. The NIH Extracellular RNA Communication 
