@@ -583,65 +583,137 @@ for (i in 4:5)
     rg_txt[[i-3]][[j]] <- do.call(rbind, read_tsv_text(dest_list[j]))
   }
 }
-
-empty_df <- matrix(0, nrow=1, ncol=1) %>% data.frame()
-colnames(empty_df) <- "Unknown"
-
-clean_names <- function(data){
-  if (is.null(data) || nrow(data) < 1 || ncol(data) != 7)
-    return(empty_df)
-  
-  rownames(data) <- apply(data, 1, function(x){sprintf("%s_%s", x[5], x[3])})
-  data[,c(2, 6),drop=FALSE]
-}
-
 for (i in 1:2)
 {
   for (j in 1:length(rg_txt[[i]]))
   {
-    rg_txt[[i]][[j]] <- rg_txt[[i]][[j]] %>% r1_to_cols() %>% 
-      clean_names() %>% data.frame()
+    rg_txt[[i]][[j]] <- rg_txt[[i]][[j]] %>% r1_to_cols() %>% data.frame()
   }
 }
 
-# now that all the cleaning is done, split and save ...
-rRNA_txt <- rg_txt$rRNA
-gene_txt <- rg_txt$Gene
+# a predetermined ordering for taxonomy
+taxonomic_ordering <- c(
+  "superkingdom", "kingdom", "subkingdom",
+  "superphylum", "phylum", "subphylum",
+  "superclass", "class", "subclass", "infraclass",
+  "superorder", "order", "suborder", "infraorder", "parvorder",
+  "superfamily", "family", "subfamily",
+  "tribe", "subtribe",
+  "genus", "subgenus",
+  "species group", "species subgroup",
+  "species", "subspecies",
+  "varietas", "forma"
+)
 
+# a super-optimized function for populating the tree to species only
+species_only <- function(hmm1)
+{
+  working <- rep(0, 24)
+  
+  for (i in 1:nrow(hmm1))
+  {
+    if (hmm1[i, 25] != 0)
+    {
+      hmm1[i, 1:24] <- working
+    }
+    else
+    {
+      for (j in 24:1)
+      {
+        if (hmm1[i,j] != 0)
+        {
+          working[j] <- hmm1[i,j]
+          break
+        }
+        else
+        {
+          working[j] <- 0
+        }
+      }
+    }
+  }
+  
+  hmm1[hmm1[,25] != 0,]
+}
+
+rg_assoc <- my_empty_list(names(rg_txt))
+rg_txt2 <- rg_assoc
+
+empty_df <- matrix(0, nrow=1, ncol=1) %>% data.frame()
+colnames(empty_df) <- "Unknown"
+start <- my_timer()
+
+for (n in 1:2)
+{
+  print(n)
+  rg_assoc[[n]] <- my_empty_list(names(rg_txt[[n]]))
+  rg_txt2[[n]] <- rg_assoc[[n]]
+  for (k in 1:length(rg_txt[[n]]))
+  {
+    if (k %% 30 == 0)
+    {
+      print(sprintf("k: %s", k))
+      print(sprintf("Average: %s", my_timer(start)/k))
+    }
+      
+    test <- rg_txt[[n]][[k]]
+    
+    if (length(test) < 1 || nrow(test) < 1 || ncol(test) != 7)
+    {
+      rg_assoc[[n]][[k]] <- empty_df
+      rg_txt2[[n]][[k]] <- empty_df
+    }
+    else
+    {
+      x <- test[test$level != "no rank",c(2,3,5,6)]
+      
+      if (length(which(x$level == "species")) < 1 || ncol(x) != 4)
+      {
+        rg_assoc[[n]][[k]] <- empty_df
+        rg_txt2[[n]][[k]] <- empty_df
+      }
+      else
+      {
+        hmm1 <- matrix(0, nrow=nrow(x), ncol=length(taxonomic_ordering)) %>% data.frame()
+        for (i in 1:nrow(x))
+          hmm1[i, taxonomic_ordering == x[i, 1]] <- x[i, 3]
+        
+        hmm2 <- species_only(hmm1)[,1:25]
+        readCounts <- x[as.numeric(rownames(hmm2)),,drop=FALSE]
+        
+        rownames(readCounts) <- apply(readCounts, 1, 
+                                      function(a){sprintf("%s_%s", a[3], a[2])})
+        rownames(hmm2) <- rownames(readCounts)
+        indices <- readCounts[,4] > 0
+        
+        rg_assoc[[n]][[k]] <- hmm2[indices,]
+        rg_txt2[[n]][[k]] <- t(readCounts[indices,4,drop=FALSE]) %>% data.frame()
+      }
+    }
+  }
+}
+
+# now that all the cleaning is done, save ...
 setwd(raw_loc)
-saveRDS(rRNA_txt, "Metadata_Taxonomy/rRNA_txt.rds")
-saveRDS(gene_txt, "Metadata_Taxonomy/gene_txt.rds")
+saveRDS(rg_txt2, "Metadata_Taxonomy/rg_txt2.rds")
+saveRDS(rg_assoc, "Metadata_Taxonomy/rg_assoc.rds")
 
 setwd(raw_loc)
 rRNA_txt <- readRDS("Metadata_Taxonomy/rRNA_txt.rds")
 gene_txt <- readRDS("Metadata_Taxonomy/gene_txt.rds")
 
-# finds bad list entries for all
-find_bad_all <- function(data_list){
-  bad_indices <- NULL
-  
-  for (i in 1:length(data_list))
-  {
-    test <- data_list[[i]]
-    if (!("data.frame" %in% class(test)) || !("level" %in% colnames(test)) || 
-        ncol(test) != 2 || nrow(test) < 1)
-    {
-      bad_indices <- c(bad_indices, i)
-    }
-  }
-  
-  bad_indices
-}
+rRNA_types <- unique(unlist(lapply(rRNA_txt, function(x){x$level})))
+gene_types <- unique(unlist(lapply(gene_txt, function(x){x$level})))
 
 # finds bad list entries for species
-find_bad_spe <- function(data_list){
+find_bad_type <- function(data_list, type){
   bad_indices <- NULL
   
   for (i in 1:length(data_list))
   {
     test <- data_list[[i]]
     if (!("data.frame" %in% class(test)) || !("level" %in% colnames(test)) || 
-        ncol(test) != 2 || nrow(test) < 1 || !("species" %in% test$level))
+        ncol(test) != 2 || nrow(test) < 1 || !(type %in% test$level))
     {
       bad_indices <- c(bad_indices, i)
     }
@@ -650,85 +722,137 @@ find_bad_spe <- function(data_list){
   bad_indices
 }
 
-get_all <- function(test){
+# gets a type
+get_type <- function(test, type){
+  test <- test[test$level == type,]
   as.data.frame(t(test[,-1,drop=FALSE]))
 }
 
-get_spe <- function(test){
-  t2 <- test[test$level == "species",]
-  as.data.frame(t(t2[,-1,drop=FALSE]))
-}
-
-# rRNA
-len_r <- length(rRNA_txt)
-all_rRNA_added <- setdiff(1:len_r, find_bad_all(rRNA_txt))
-spe_rRNA_added <- setdiff(1:len_r, find_bad_spe(rRNA_txt))
-all_rRNA_data <- rRNA_txt[all_rRNA_added] %>% lapply(get_all)
-spe_rRNA_data <- rRNA_txt[spe_rRNA_added] %>% lapply(get_spe)
-rm(rRNA_txt)
-
-# gene
-len_g <- length(gene_txt)
-all_gene_added <- setdiff(1:len_g, find_bad_all(gene_txt))
-spe_gene_added <- setdiff(1:len_g, find_bad_spe(gene_txt))
-all_gene_data <- gene_txt[all_gene_added] %>% lapply(get_all)
-spe_gene_data <- gene_txt[spe_gene_added] %>% lapply(get_spe)
-rm(gene_txt)
-
+# cleans up
 cleanup_fun_1 <- function(x){
   x <- apply(x, 1:2, as.numeric) %>% data.frame()
   x[,colSums(x) > 0,drop=FALSE]
 }
 
-all_rRNA_data <- lapply(all_rRNA_data, cleanup_fun_1)
-spe_rRNA_data <- lapply(spe_rRNA_data, cleanup_fun_1)
-all_gene_data <- lapply(all_gene_data, cleanup_fun_1)
-spe_gene_data <- lapply(spe_gene_data, cleanup_fun_1)
+# rRNA
+len_r <- length(rRNA_txt)
+all_rRNA_added <- my_empty_list(rRNA_types)
+all_rRNA_data <- my_empty_list(rRNA_types)
 
+for (type in rRNA_types)
+{
+  all_rRNA_added[[type]] <- setdiff(1:len_r, find_bad_type(rRNA_txt, type))
+  all_rRNA_data[[type]] <- rRNA_txt[all_rRNA_added[[type]]] %>% lapply(function(x){
+    get_type(x, type)
+  })
+}
+
+for (type in rRNA_types)
+{
+  all_rRNA_data[[type]] <- lapply(all_rRNA_data[[type]], cleanup_fun_1)
+}
+
+# gene
+len_g <- length(gene_txt)
+all_gene_added <- my_empty_list(gene_types)
+all_gene_data <- my_empty_list(gene_types)
+
+for (type in gene_types)
+{
+  all_gene_added[[type]] <- setdiff(1:len_g, find_bad_type(gene_txt, type))
+  all_gene_data[[type]] <- gene_txt[all_gene_added[[type]]] %>% lapply(function(x){
+    get_type(x, type)
+  })
+}
+
+for (type in gene_types)
+{
+  all_gene_data[[type]] <- lapply(all_gene_data[[type]], cleanup_fun_1)
+}
+
+# saving
 setwd(raw_loc)
 saveRDS(all_rRNA_data, "Metadata_Taxonomy/all_rRNA_data.rds")
-saveRDS(spe_rRNA_data, "Metadata_Taxonomy/spe_rRNA_data.rds")
+saveRDS(all_rRNA_added, "Metadata_Taxonomy/all_rRNA_added.rds")
 saveRDS(all_gene_data, "Metadata_Taxonomy/all_gene_data.rds")
-saveRDS(spe_gene_data, "Metadata_Taxonomy/spe_gene_data.rds")
+saveRDS(all_gene_added, "Metadata_Taxonomy/all_gene_added.rds")
 
 setwd(raw_loc)
 all_rRNA_data <- readRDS("Metadata_Taxonomy/all_rRNA_data.rds")
-spe_rRNA_data <- readRDS("Metadata_Taxonomy/spe_rRNA_data.rds")
+all_rRNA_added <- readRDS("Metadata_Taxonomy/all_rRNA_added.rds")
 all_gene_data <- readRDS("Metadata_Taxonomy/all_gene_data.rds")
-spe_gene_data <- readRDS("Metadata_Taxonomy/spe_gene_data.rds")
+all_gene_added <- readRDS("Metadata_Taxonomy/all_gene_added.rds")
 
-# note: may need to be done iteratively
-all_rRNA <- dplyr::bind_rows(all_rRNA_data)
-spe_rRNA <- dplyr::bind_rows(spe_rRNA_data)
-all_gene <- dplyr::bind_rows(all_gene_data)
-spe_gene <- dplyr::bind_rows(spe_gene_data)
+# quickly binds rows
+iterative_bind_rows <- function(data)
+{
+  len <- length(data)
+  
+  if (len < 512)
+  {
+    print(len)
+    return(dplyr::bind_rows(data))
+  }
+  
+  midpoint <- floor(len/2)
+  d1 <- data[1:midpoint]
+  d2 <- data[(midpoint+1):len]
+  
+  dplyr::bind_rows(iterative_bind_rows(d1), iterative_bind_rows(d2))
+}
 
+# rrna
+all_rrna <- my_empty_list(names(all_rRNA_data))
+for (type in names(all_rrna))
+{
+  all_rrna[[type]] <- iterative_bind_rows(all_rRNA_data[[type]])
+}
+
+for (type in names(all_rrna))
+{
+  rownames(all_rrna[[type]]) <- all_rRNA_added[[type]]
+}
+
+# gene
+all_gene <- my_empty_list(names(all_gene_data))
+for (type in names(all_gene))
+{
+  all_gene[[type]] <- iterative_bind_rows(all_gene_data[[type]])
+}
+
+for (type in names(all_gene))
+{
+  rownames(all_gene[[type]]) <- all_gene_added[[type]]
+}
+
+# saving
 setwd(raw_loc)
-saveRDS(all_rRNA, "Metadata_Taxonomy/all_rRNA.rds")
-saveRDS(spe_rRNA, "Metadata_Taxonomy/spe_rRNA.rds")
+saveRDS(all_rrna, "Metadata_Taxonomy/all_rRNA.rds")
 saveRDS(all_gene, "Metadata_Taxonomy/all_gene.rds")
-saveRDS(spe_gene, "Metadata_Taxonomy/spe_gene.rds")
 
 setwd(raw_loc)
 all_rRNA <- readRDS("Metadata_Taxonomy/all_rRNA.rds")
-spe_rRNA <- readRDS("Metadata_Taxonomy/spe_rRNA.rds")
 all_gene <- readRDS("Metadata_Taxonomy/all_gene.rds")
-spe_gene <- readRDS("Metadata_Taxonomy/spe_gene.rds")
 
-# need to rerun earlier to get added ...
-rownames(all_rRNA) <- all_rRNA_added
-rownames(spe_rRNA) <- spe_rRNA_added
-rownames(all_gene) <- all_gene_added
-rownames(spe_gene) <- spe_gene_added
-
+# more cleaning
 cleanup_fun_2 <- function(data, frac){
   data[,colSums(is.na(data)) < frac*nrow(data), drop=FALSE]
 }
 
-all_rRNA_clean <- cleanup_fun_2(all_rRNA, 0.95)
-spe_rRNA_clean <- cleanup_fun_2(spe_rRNA, 0.95)
-all_gene_clean <- cleanup_fun_2(all_gene, 0.95)
-spe_gene_clean <- cleanup_fun_2(spe_gene, 0.95)
+all_rRNA_clean <- lapply(all_rRNA, function(x){cleanup_fun_2(x, 0.95)})
+all_gene_clean <- lapply(all_gene, function(x){cleanup_fun_2(x, 0.95)})
+
+for (type in names(all_rRNA_clean))
+{
+  if (nrow(all_rRNA_clean[[type]]) < 5000 || ncol(all_rRNA_clean[[type]]) < 2)
+    all_rRNA_clean[[type]] <- NULL
+}
+
+for (type in names(all_gene_clean))
+{
+  if (nrow(all_gene_clean[[type]]) < 5000 || ncol(all_gene_clean[[type]]) < 2)
+    all_gene_clean[[type]] <- NULL
+}
 
 setwd(raw_loc)
 saveRDS(all_rRNA_clean, "Metadata_Taxonomy/all_rrna_clean.rds")
