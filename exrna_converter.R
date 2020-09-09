@@ -701,87 +701,24 @@ saveRDS(rg_assoc, "Metadata_Taxonomy/rg_assoc.rds")
 setwd(raw_loc)
 rg_txt2 <- readRDS("Metadata_Taxonomy/rg_txt2.rds")
 rg_assoc <- readRDS("Metadata_Taxonomy/rg_assoc.rds")
+good_indices <- my_empty_list(names(rg_txt2))
 
-rRNA_types <- unique(unlist(lapply(rRNA_txt, function(x){x$level})))
-gene_types <- unique(unlist(lapply(gene_txt, function(x){x$level})))
-
-# finds bad list entries for species
-find_bad_type <- function(data_list, type){
-  bad_indices <- NULL
-  
-  for (i in 1:length(data_list))
+# find and keep only actual samples
+for (i in 1:2)
+{
+  good_indices[[i]] <- numeric(0)
+  for (j in 1:length(rg_txt2[[i]]))
   {
-    test <- data_list[[i]]
-    if (!("data.frame" %in% class(test)) || !("level" %in% colnames(test)) || 
-        ncol(test) != 2 || nrow(test) < 1 || !(type %in% test$level))
-    {
-      bad_indices <- c(bad_indices, i)
-    }
+    if (!("Unknown" %in% colnames(rg_txt2[[i]][[j]])))
+      good_indices[[i]] <- c(good_indices[[i]], j)
   }
-  
-  bad_indices
 }
 
-# gets a type
-get_type <- function(test, type){
-  test <- test[test$level == type,]
-  as.data.frame(t(test[,-1,drop=FALSE]))
-}
-
-# cleans up
-cleanup_fun_1 <- function(x){
-  x <- apply(x, 1:2, as.numeric) %>% data.frame()
-  x[,colSums(x) > 0,drop=FALSE]
-}
-
-# rRNA
-len_r <- length(rRNA_txt)
-all_rRNA_added <- my_empty_list(rRNA_types)
-all_rRNA_data <- my_empty_list(rRNA_types)
-
-for (type in rRNA_types)
+for (i in 1:2)
 {
-  all_rRNA_added[[type]] <- setdiff(1:len_r, find_bad_type(rRNA_txt, type))
-  all_rRNA_data[[type]] <- rRNA_txt[all_rRNA_added[[type]]] %>% lapply(function(x){
-    get_type(x, type)
-  })
+  rg_txt2[[i]] <- rg_txt2[[i]][good_indices[[i]]]
+  rg_assoc[[i]] <- rg_assoc[[i]][good_indices[[i]]]
 }
-
-for (type in rRNA_types)
-{
-  all_rRNA_data[[type]] <- lapply(all_rRNA_data[[type]], cleanup_fun_1)
-}
-
-# gene
-len_g <- length(gene_txt)
-all_gene_added <- my_empty_list(gene_types)
-all_gene_data <- my_empty_list(gene_types)
-
-for (type in gene_types)
-{
-  all_gene_added[[type]] <- setdiff(1:len_g, find_bad_type(gene_txt, type))
-  all_gene_data[[type]] <- gene_txt[all_gene_added[[type]]] %>% lapply(function(x){
-    get_type(x, type)
-  })
-}
-
-for (type in gene_types)
-{
-  all_gene_data[[type]] <- lapply(all_gene_data[[type]], cleanup_fun_1)
-}
-
-# saving
-setwd(raw_loc)
-saveRDS(all_rRNA_data, "Metadata_Taxonomy/all_rRNA_data.rds")
-saveRDS(all_rRNA_added, "Metadata_Taxonomy/all_rRNA_added.rds")
-saveRDS(all_gene_data, "Metadata_Taxonomy/all_gene_data.rds")
-saveRDS(all_gene_added, "Metadata_Taxonomy/all_gene_added.rds")
-
-setwd(raw_loc)
-all_rRNA_data <- readRDS("Metadata_Taxonomy/all_rRNA_data.rds")
-all_rRNA_added <- readRDS("Metadata_Taxonomy/all_rRNA_added.rds")
-all_gene_data <- readRDS("Metadata_Taxonomy/all_gene_data.rds")
-all_gene_added <- readRDS("Metadata_Taxonomy/all_gene_added.rds")
 
 # quickly binds rows
 iterative_bind_rows <- function(data)
@@ -801,64 +738,44 @@ iterative_bind_rows <- function(data)
   dplyr::bind_rows(iterative_bind_rows(d1), iterative_bind_rows(d2))
 }
 
-# rrna
-all_rrna <- my_empty_list(names(all_rRNA_data))
-for (type in names(all_rrna))
-{
-  all_rrna[[type]] <- iterative_bind_rows(all_rRNA_data[[type]])
-}
-
-for (type in names(all_rrna))
-{
-  rownames(all_rrna[[type]]) <- all_rRNA_added[[type]]
-}
-
-# gene
-all_gene <- my_empty_list(names(all_gene_data))
-for (type in names(all_gene))
-{
-  all_gene[[type]] <- iterative_bind_rows(all_gene_data[[type]])
-}
-
-for (type in names(all_gene))
-{
-  rownames(all_gene[[type]]) <- all_gene_added[[type]]
-}
+# bind them all together!
+all_rRNA <- iterative_bind_rows(rg_txt2[[1]])
+rownames(all_rRNA) <- good_indices[[1]]
+assoc_rRNA <- iterative_bind_rows(rg_assoc[[1]])
+assoc_rRNA <- assoc_rRNA[!duplicated(assoc_rRNA$X25),]
+all_gene <- iterative_bind_rows(rg_txt2[[2]])
+rownames(all_gene) <- good_indices[[2]]
+assoc_gene <- iterative_bind_rows(rg_assoc[[2]])
+assoc_gene <- assoc_gene[!duplicated(assoc_gene$X25),]
 
 # saving
 setwd(raw_loc)
-saveRDS(all_rrna, "Metadata_Taxonomy/all_rRNA.rds")
+saveRDS(all_rRNA, "Metadata_Taxonomy/all_rRNA.rds")
+saveRDS(assoc_rRNA, "Metadata_Taxonomy/assoc_rRNA.rds")
 saveRDS(all_gene, "Metadata_Taxonomy/all_gene.rds")
+saveRDS(assoc_gene, "Metadata_Taxonomy/assoc_gene.rds")
 
 setwd(raw_loc)
 all_rRNA <- readRDS("Metadata_Taxonomy/all_rRNA.rds")
+assoc_rRNA <- readRDS("Metadata_Taxonomy/assoc_rRNA.rds")
 all_gene <- readRDS("Metadata_Taxonomy/all_gene.rds")
+assoc_gene <- readRDS("Metadata_Taxonomy/assoc_gene.rds")
 
 # more cleaning
 cleanup_fun_2 <- function(data, frac){
   data[,colSums(is.na(data)) < frac*nrow(data), drop=FALSE]
 }
 
-all_rRNA_clean <- lapply(all_rRNA, function(x){cleanup_fun_2(x, 0.95)})
-all_gene_clean <- lapply(all_gene, function(x){cleanup_fun_2(x, 0.95)})
-
-for (type in names(all_rRNA_clean))
-{
-  if (nrow(all_rRNA_clean[[type]]) < 5000 || ncol(all_rRNA_clean[[type]]) < 2)
-    all_rRNA_clean[[type]] <- NULL
-}
-
-for (type in names(all_gene_clean))
-{
-  if (nrow(all_gene_clean[[type]]) < 5000 || ncol(all_gene_clean[[type]]) < 2)
-    all_gene_clean[[type]] <- NULL
-}
+all_rRNA_clean <- cleanup_fun_2(all_rRNA, 0.99)
+all_gene_clean <- cleanup_fun_2(all_gene, 0.99)
+assoc_rRNA_clean <- assoc_rRNA[colnames(all_rRNA) %in% colnames(all_rRNA_clean),]
+assoc_gene_clean <- assoc_gene[colnames(all_gene) %in% colnames(all_gene_clean),]
 
 setwd(raw_loc)
 saveRDS(all_rRNA_clean, "Metadata_Taxonomy/all_rrna_clean.rds")
-saveRDS(spe_rRNA_clean, "Metadata_Taxonomy/spe_rrna_clean.rds")
+saveRDS(assoc_rRNA_clean, "Metadata_Taxonomy/assoc_rrna_clean.rds")
 saveRDS(all_gene_clean, "Metadata_Taxonomy/all_gene_clean.rds")
-saveRDS(spe_gene_clean, "Metadata_Taxonomy/spe_gene_clean.rds")
+saveRDS(assoc_gene_clean, "Metadata_Taxonomy/assoc_gene_clean.rds")
 
 # ---------
 # FINISHING
@@ -869,9 +786,11 @@ metadata <- readRDS("Metadata_Taxonomy/metadata.rds")
 
 setwd(raw_loc)
 all_rRNA_clean <- readRDS("Metadata_Taxonomy/all_rrna_clean.rds")
-spe_rRNA_clean <- readRDS("Metadata_Taxonomy/spe_rrna_clean.rds")
+assoc_rRNA_clean <- readRDS("Metadata_Taxonomy/assoc_rrna_clean.rds")
+rownames(assoc_rRNA_clean) <- NULL
 all_gene_clean <- readRDS("Metadata_Taxonomy/all_gene_clean.rds")
-spe_gene_clean <- readRDS("Metadata_Taxonomy/spe_gene_clean.rds")
+assoc_gene_clean <- readRDS("Metadata_Taxonomy/assoc_gene_clean.rds")
+rownames(assoc_gene_clean) <- NULL
 
 setwd(sprintf("%s/Summary_Cleaned", raw_loc))
 miRNA <- readRDS("miRNA.rds") 
@@ -924,6 +843,9 @@ match_order <- function(fastq_list, ord)
   ord[match(fastq_list, ord$FASTQ_IDENTIFIER),]
 }
 
+assoc_rRNA_clean[assoc_rRNA_clean == 0] <- "Unknown"
+assoc_gene_clean[assoc_gene_clean == 0] <- "Unknown"
+
 order_total <- list("miRNA"=match_order(miRNA[,1], metadata), 
                     "piRNA"=match_order(piRNA[,1], metadata), 
                     "tRNA"=match_order(tRNA[,1], metadata), 
@@ -937,10 +859,10 @@ order_total <- list("miRNA"=match_order(miRNA[,1], metadata),
                       match_order(cumulative_ex_ribosomes[,1], metadata),
                     "specific_ex_ribosomes"=
                       match_order(specific_ex_ribosomes[,1], metadata),
-                    "rRNA_Species"=metadata[rownames(spe_rRNA_clean),],
-                    "Gene_Species"=metadata[rownames(spe_gene_clean),],
-                    "rRNA_Total"=metadata[rownames(all_rRNA_clean),],
-                    "Gene_Total"=metadata[rownames(all_gene_clean),])
+                    "rRNA_Species"=metadata[rownames(all_rRNA_clean),],
+                    "Gene_Species"=metadata[rownames(all_gene_clean),],
+                    "rRNA_Transpose"=assoc_rRNA_clean,
+                    "Gene_Transpose"=assoc_gene_clean)
 
 miRNA <- miRNA[,-1]
 piRNA <- piRNA[,-1]
@@ -952,18 +874,24 @@ specific_ex_genomes <- specific_ex_genomes[,-1]
 cumulative_ex_ribosomes <- cumulative_ex_ribosomes[,-1]
 specific_ex_ribosomes <- specific_ex_ribosomes[,-1]
 # gencode <- gencode[,-1]
-rownames(spe_rRNA_clean) <- NULL
-rownames(spe_gene_clean) <- NULL
-rownames(all_rRNA_clean) <- NULL
-rownames(all_gene_clean) <- NULL
+rRNA_species <- all_rRNA_clean
+gene_species <- all_gene_clean
+rRNA_transpose <- t(all_rRNA_clean)
+gene_transpose <- t(all_gene_clean)
+rownames(rRNA_species) <- NULL
+rownames(gene_species) <- NULL
+rownames(rRNA_transpose) <- NULL
+rownames(gene_transpose) <- NULL
+colnames(rRNA_transpose) <- order_total$rRNA_Samples$FASTQ_IDENTIFIER
+colnames(gene_transpose) <- order_total$Gene_Samples$FASTQ_IDENTIFIER
 
 categories <- list(
   "Extracellular RNA"=list(
-    "miRNA"=2557,
-    "piRNA"=8300,
-    "tRNA"=26,
-    "circRNA"=743,
-    "ex_miRNA"=6792
+    "miRNA"=ncol(miRNA),
+    "piRNA"=ncol(piRNA),
+    "tRNA"=ncol(tRNA),
+    "circRNA"=ncol(circRNA),
+    "ex_miRNA"=ncol(ex_miRNA)
   ),
   "Exogenous RNA"=list(
     "cumulative_ex_genomes"=5431,
@@ -972,10 +900,10 @@ categories <- list(
     "specific_ex_ribosomes"=1317
   ),
   "Taxonomy"=list(
-    "rRNA_Species"=639,
-    "Gene_Species"=1296,
-    "rRNA_Total"=1610,
-    "Gene_Total"=4059
+    "rRNA_Species"=1967,
+    "Gene_Species"=1702,
+    "rRNA_Transpose"=5260,
+    "Gene_Transpose"=5276
   )
 )
 
@@ -989,10 +917,10 @@ combined_specific_ex_genomes <- convert_to_num(specific_ex_genomes)
 combined_cumulative_ex_ribosomes <- convert_to_num(cumulative_ex_ribosomes)
 combined_specific_ex_ribosomes <- convert_to_num(specific_ex_ribosomes)
 # combined_gencode <- convert_to_num(gencode)
-combined_rRNA_Species <- convert_to_num(spe_rRNA_clean)
-combined_Gene_Species <- convert_to_num(spe_gene_clean)
-combined_rRNA_Total <- convert_to_num(all_rRNA_clean)
-combined_Gene_Total <- convert_to_num(all_gene_clean)
+combined_rRNA_species <- convert_to_num(rRNA_species)
+combined_gene_species <- convert_to_num(gene_species)
+combined_rRNA_transpose <- convert_to_num(rRNA_transpose)
+combined_gene_transpose <- convert_to_num(gene_transpose)
 
 # -----------------------
 # LIBRARIES AND FUNCTIONS
@@ -1008,10 +936,10 @@ saveRDS(combined_cumulative_ex_genomes, "combined/combined_cumulative_ex_genomes
 saveRDS(combined_specific_ex_genomes, "combined/combined_specific_ex_genomes.rds")
 saveRDS(combined_cumulative_ex_ribosomes, "combined/combined_cumulative_ex_ribosomes.rds")
 saveRDS(combined_specific_ex_ribosomes, "combined/combined_specific_ex_ribosomes.rds")
-saveRDS(combined_rRNA_Species, "combined/combined_rRNA_Species.rds")
-saveRDS(combined_Gene_Species, "combined/combined_Gene_Species.rds")
-saveRDS(combined_rRNA_Total, "combined/combined_rRNA_Total.rds")
-saveRDS(combined_Gene_Total, "combined/combined_Gene_Total.rds")
+saveRDS(combined_rRNA_species, "combined/combined_rRNA_Species.rds")
+saveRDS(combined_gene_species, "combined/combined_Gene_Species.rds")
+saveRDS(combined_rRNA_transpose, "combined/combined_rRNA_Transpose.rds")
+saveRDS(combined_gene_transpose, "combined/combined_Gene_Transpose.rds")
 
 # -----------------
 # SAVE DEPENDENCIES
