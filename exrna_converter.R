@@ -699,8 +699,8 @@ saveRDS(rg_txt2, "Metadata_Taxonomy/rg_txt2.rds")
 saveRDS(rg_assoc, "Metadata_Taxonomy/rg_assoc.rds")
 
 setwd(raw_loc)
-rRNA_txt <- readRDS("Metadata_Taxonomy/rRNA_txt.rds")
-gene_txt <- readRDS("Metadata_Taxonomy/gene_txt.rds")
+rg_txt2 <- readRDS("Metadata_Taxonomy/rg_txt2.rds")
+rg_assoc <- readRDS("Metadata_Taxonomy/rg_assoc.rds")
 
 rRNA_types <- unique(unlist(lapply(rRNA_txt, function(x){x$level})))
 gene_types <- unique(unlist(lapply(gene_txt, function(x){x$level})))
