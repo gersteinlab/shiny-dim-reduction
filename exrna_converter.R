@@ -788,9 +788,11 @@ setwd(raw_loc)
 all_rRNA_clean <- readRDS("Metadata_Taxonomy/all_rrna_clean.rds")
 assoc_rRNA_clean <- readRDS("Metadata_Taxonomy/assoc_rrna_clean.rds")
 rownames(assoc_rRNA_clean) <- NULL
+colnames(assoc_rRNA_clean) <- taxonomic_ordering[1:25]
 all_gene_clean <- readRDS("Metadata_Taxonomy/all_gene_clean.rds")
 assoc_gene_clean <- readRDS("Metadata_Taxonomy/assoc_gene_clean.rds")
 rownames(assoc_gene_clean) <- NULL
+colnames(assoc_gene_clean) <- taxonomic_ordering[1:25]
 
 setwd(sprintf("%s/Summary_Cleaned", raw_loc))
 miRNA <- readRDS("miRNA.rds") 
