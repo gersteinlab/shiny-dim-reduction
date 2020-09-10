@@ -34,7 +34,7 @@ my_UMAP <- function(data, dim, perp) {
 # UNIFORM MANIFOLD APPROXIMATION AND PROJECTION
 # ---------------------------------------------
 
-dog <- names(categories)
+dog <- rev(names(categories))
 for (cat in dog)
 {
   combined <- myRDS(sprintf("combined/combined_%s.rds", cat))
