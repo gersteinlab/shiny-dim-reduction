@@ -39,7 +39,8 @@ rec_to_sum <- function(records)
 # PERFORM VISUALIZATION
 # ---------------------
 
-for (cat in names(categories))
+dog <- rev(names(categories))
+for (cat in dog)
 {
   for (sub in sub_groups[[cat]])
   {
