@@ -156,7 +156,7 @@ server <- function(input, output, session) {
                 my_timer(absolute_begin)), 8, "warning")
   
   # performs setup for authentication
-  auth_default <- 0
+  auth_default <- 1
   authenticated <- reactiveVal(auth_default)
   if (!auth_default)
     showModal(authenticator_modal())
@@ -1047,9 +1047,6 @@ server <- function(input, output, session) {
         colors(), shapes(), sprintf("%s: %s", labelby(), labels()),
         paint(), shape_num(), title(), legend()))
     }
-    
-    data <- data[keep(),]
-    downloadData(data)
     
     if (input$visualize == "tSNE")
     {
