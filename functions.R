@@ -361,11 +361,11 @@ ggplot2_2d <- function(x, y, x_axis, y_axis,
 # The graph will have features (x_axis, y_axis, title), with legend
 # determining whether a legend will be displayed.
 plotly_2d <- function(x, y, x_axis, y_axis, mode, 
-                      color, c_axis, c_seq, title, legend) 
+                      color, text, c_seq, title, legend) 
 {
   plot_ly(x = x, y = y, mode = mode,
           color = color, colors = c_seq,  
-          text = sprintf("%s: %s", c_axis, color), 
+          text = text, 
           marker = list(size = 6, symbol = 'circle'),
           hovertemplate = paste(
             "<b>%{text}</b>",
@@ -382,11 +382,11 @@ plotly_2d <- function(x, y, x_axis, y_axis, mode,
 # The graph will have features (x_axis, y_axis, z_axis, title), with legend
 # determining whether a legend will be displayed.
 plotly_3d <- function(x, y, z, x_axis, y_axis, z_axis,
-                      color, c_axis, c_seq, title, legend) 
+                      color, text, c_seq, title, legend) 
 {
   plot_ly(x = x, y = y, z = z, mode = "markers",  
           color = color, colors = c_seq,
-          text = sprintf("%s: %s", c_axis, color), 
+          text = text, 
           marker = list(size = 4, symbol = 'circle'),
           hovertemplate = paste(
             "<b>%{text}</b>",
