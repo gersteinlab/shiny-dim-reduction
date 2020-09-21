@@ -1165,6 +1165,12 @@ server <- function(input, output, session) {
     
     # encoded
     encoded_form <- list(
+      "complex"=c(
+        subset_c, 
+        color_shape_label_filter, 
+        select_array_c, 
+        thre_array_c
+      ),
       sMenu=input$sMenu, 
       category=input$category, 
       scale=input$scale, 
@@ -1181,13 +1187,7 @@ server <- function(input, output, session) {
       set_f2=input$set_f2, 
       pc1=input$pc1, 
       pc2=input$pc2, 
-      pc3=input$pc3,
-      "complex"=c(
-        subset_c, 
-        color_shape_label_filter, 
-        select_array_c, 
-        thre_array_c
-      )
+      pc3=input$pc3
     )
     
     # get the vector of all session IDs
