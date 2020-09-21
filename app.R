@@ -41,19 +41,13 @@ ui <- function(request){
           )
         ),
         menuItem(
-          "Settings", 
-          check_panel("sMenu", "Settings", my_settings),
-          select_panel("palette", "Color Palette", pal_options),
-          numericInput("height", "Graph Height", value=graph_height, min=1, max=4000),
+          "Parameters",
           select_panel("scale", "Scale", sca_options),
           conditionalPanel(
             condition = "input.embedding != 'Sets'",
             select_panel("normalize", "Normalization", nor_options),
             select_panel("features", "Percentage of Features Used", fea_options)
-          )
-        ),
-        menuItem(
-          "Filtering",
+          ),
           conditionalPanel(
             condition = "input.visualize == 'Summarize' && (input.embedding == 'PCA' ||
     input.embedding == 'VAE' || input.embedding == 'UMAP')",
@@ -75,7 +69,10 @@ ui <- function(request){
             )
           ),
           perplexity_ui(perplexity_types),
-          sets_ui(thre_panels_ui(thre_opts), max_cat_num),
+          sets_ui(thre_panels_ui(thre_opts), max_cat_num)
+        ),
+        menuItem(
+          "Filters",
           do.call(conditionalPanel, c(
             condition = "input.embedding != 'Sets' && (input.embedding == 'PHATE' || 
           input.visualize != 'Summarize')",
@@ -98,6 +95,12 @@ ui <- function(request){
             filter_panels_ui(filter_opts), 
             select_opts
           ))
+        ),
+        menuItem(
+          "Settings", 
+          check_panel("sMenu", "Settings", my_settings),
+          select_panel("palette", "Color Palette", pal_options),
+          numericInput("height", "Graph Height", value=graph_height, min=1, max=4000)
         )
       )
     ),
@@ -531,7 +534,7 @@ server <- function(input, output, session) {
   # reactives that follow from filter-related reactives
   colors <- reactive(order()[keep(), colorby()])
   shapes <- reactive(order()[keep(), shapeby()])
-  labels <- reactive(order()[keep(), labelby()])
+  labels <- reactive(sprintf("%s: %s", labelby(), order()[keep(), labelby()]))
   my_chars <- reactive(parse_opt(input[[get_select(input$category, filterby())]]))
   my_subset <- reactive(get_my_subset(decorations, input$category, subi()))
   
@@ -861,8 +864,8 @@ server <- function(input, output, session) {
       
       return(plotly_2d(
         data[,1], data[,2], pc("1"), pc("2"), "markers",
-        colors(), shapes(), sprintf("%s: %s", labelby(), labels()),
-        paint(), shape_num(), title(), legend()))
+        colors(), labels(), paint(), title(), legend()
+      ))
     }
     
     if (input$visualize == "Summarize")
@@ -873,28 +876,28 @@ server <- function(input, output, session) {
         return(plotly_2d(
           data[,"Components"], data[,"Variance"], 
           "Number of Components", "Variance Captured", "markers",
-          rep("Cumulative Variance", pc_cap), 
-          rep("Cumulative Variance", pc_cap), 
-          data[,"Variance"],
-          paint(), shape_num(), title(), legend()))
+          rep("Cumulative", pc_cap), 
+          sprintf("%s: %s", "Variance", rep("Cumulative", pc_cap)), 
+          paint(), title(), legend()
+        ))
       
       if (input$embedding == "VAE")
         return(plotly_2d(
           data[,"Training Iterations"], data[,"Loss Value"], 
           "Number of Training Iterations", "Loss Function Output", "markers",
           data[,"Loss Type"], 
-          data[,"Loss Type"], 
-          data[,"Loss Value"],
-          paint(), shape_num(), title(), legend()))
+          sprintf("%s: %s", "Loss Type", data[,"Loss Type"]), 
+          paint(), title(), legend()
+        ))
       
       if (input$embedding == "UMAP")
         return(plotly_2d(
           as.numeric(data[,1]), as.numeric(data[,2]), 
           "Number of Components", "Number of Noisy Samples", "markers",
           data[,3], 
-          data[,3],
-          as.numeric(data[,2]), 
-          paint(), shape_num(), title(), legend()))
+          sprintf("%s: %s", "Embedding", data[,3]),
+          paint(), title(), legend()
+        ))
     }
     
     data <- data[keep(),]
@@ -904,16 +907,16 @@ server <- function(input, output, session) {
     {
       return(plotly_2d(
         data[,input$pc1], data[,input$pc2], pc(input$pc1), pc(input$pc2), "markers", 
-        colors(), shapes(), sprintf("%s: %s", labelby(), labels()),
-        paint(), shape_num(), title(), legend()))
+        colors(), labels(), paint(), title(), legend()
+      ))
     }
     
     if (input$visualize == "tSNE")
     {
       return(plotly_2d(
         data[,1], data[,2], pc("1"), pc("2"), "markers", 
-        colors(), shapes(), sprintf("%s: %s", labelby(), labels()),
-        paint(), shape_num(), title(), legend()))
+        colors(), labels(), paint(), title(), legend()
+      ))
     }
   })
   
@@ -1000,8 +1003,8 @@ server <- function(input, output, session) {
       
       return(plotly_3d(
         data[,1], data[,2], data[,3], pc("1"), pc("2"), pc("3"),
-        colors(), shapes(), sprintf("%s: %s", labelby(), labels()),
-        paint(), shape_num(), title(), legend()))
+        colors(), labels(), paint(), title(), legend()
+      ))
     }
     
     if (input$visualize == "Summarize")
@@ -1012,28 +1015,28 @@ server <- function(input, output, session) {
         return(plotly_2d(
           data[,"Components"], data[,"Variance"], 
           "Number of Components", "Variance Captured", "lines+markers",
-          rep("Cumulative Variance", pc_cap), 
-          rep("Cumulative Variance", pc_cap), 
-          data[,"Variance"],
-          paint(), shape_num(), title(), legend()))
+          rep("Cumulative", pc_cap), 
+          sprintf("%s: %s", "Variance", rep("Cumulative", pc_cap)), 
+          paint(), title(), legend()
+        ))
       
       if (input$embedding == "VAE")
         return(plotly_2d(
           data[,"Training Iterations"], data[,"Loss Value"], 
           "Number of Training Iterations", "Loss Function Output", "lines+markers",
           data[,"Loss Type"], 
-          data[,"Loss Type"], 
-          data[,"Loss Value"],
-          paint(), shape_num(), title(), legend()))
+          sprintf("%s: %s", "Loss Type", data[,"Loss Type"]), 
+          paint(), title(), legend()
+        ))
       
       if (input$embedding == "UMAP")
         return(plotly_2d(
           as.numeric(data[,1]), as.numeric(data[,2]), 
           "Number of Components", "Number of Noisy Samples", "lines+markers",
           data[,3], 
-          data[,3],
-          as.numeric(data[,2]), 
-          paint(), shape_num(), title(), legend()))
+          sprintf("%s: %s", "Embedding", data[,3]),
+          paint(), title(), legend()
+        ))
     }
     
     data <- data[keep(),]
@@ -1044,8 +1047,8 @@ server <- function(input, output, session) {
       return(plotly_3d(
         data[,input$pc1], data[,input$pc2], data[,input$pc3], 
         pc(input$pc1), pc(input$pc2), pc(input$pc3), 
-        colors(), shapes(), sprintf("%s: %s", labelby(), labels()),
-        paint(), shape_num(), title(), legend()))
+        colors(), labels(), paint(), title(), legend()
+      ))
     }
     
     if (input$visualize == "tSNE")
@@ -1053,8 +1056,8 @@ server <- function(input, output, session) {
       return(plotly_3d(
         data[,1], data[,2], data[,3],
         pc("1"), pc("2"), pc("3"), 
-        colors(), shapes(), sprintf("%s: %s", labelby(), labels()),
-        paint(), shape_num(), title(), legend()))
+        colors(), labels(), paint(), title(), legend()
+      ))
     }
   })
   
