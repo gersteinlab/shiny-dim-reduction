@@ -72,6 +72,12 @@ ui <- function(request){
           sets_ui(thre_panels_ui(thre_opts), max_cat_num)
         ),
         menuItem(
+          "Settings", 
+          check_panel("sMenu", "Settings", my_settings),
+          select_panel("palette", "Color Palette", pal_options),
+          numericInput("height", "Graph Height", value=graph_height, min=1, max=4000)
+        ),
+        menuItem(
           "Filters",
           do.call(conditionalPanel, c(
             condition = "input.embedding != 'Sets' && (input.embedding == 'PHATE' || 
@@ -95,12 +101,6 @@ ui <- function(request){
             filter_panels_ui(filter_opts), 
             select_opts
           ))
-        ),
-        menuItem(
-          "Settings", 
-          check_panel("sMenu", "Settings", my_settings),
-          select_panel("palette", "Color Palette", pal_options),
-          numericInput("height", "Graph Height", value=graph_height, min=1, max=4000)
         )
       )
     ),
@@ -1209,7 +1209,7 @@ server <- function(input, output, session) {
   })
   
   # restore compressed data when link is followed
-  onRestored(function(state) {
+  onRestore(function(state) {
     # get the vector of all session IDs
     num_sessions <- 0
     if (length(get_bucket(aws_bucket, prefix="Sessions/num_sessions.rds")) > 0)
