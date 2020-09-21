@@ -2,19 +2,7 @@
 # building the files and folders of a dimensionality reduction app.
 # source("~/Justin-Tool/shiny-dim-reduction/build.R")
 
-# ---------
-# SHORTHAND
-# ---------
-
 source("~/Justin-Tool/shiny-dim-reduction/inherit.R")
-
-exrna <- function(){
-  runApp("~/Justin-Tool/exRNA/app/app.R")
-}
-
-entex <- function(){
-  runApp("~/Justin-Tool/ENTEx/app/app.R")
-}
 
 # --------------
 # USER VARIABLES
@@ -44,7 +32,7 @@ switch_project <- function(name)
   if (missing(name))
     name <- setdiff(project_names, project_name)[1]
   
-  project_name <<- project_name
+  project_name <<- name
   
   roo_loc <<- sprintf("%s/%s", root, project_name)
   raw_loc <<- sprintf("%s/raw", roo_loc)
@@ -67,11 +55,17 @@ update_app <- function(filenames) {
   setwd(current)
 }
 
-# shorter version of update_app
-uapp <- function(){
+# runs the app
+rapp <- function(...){
+  runApp(sprintf("%s/app/app.R", roo_loc))
+}
+
+# updates and runs the app
+uapp <- function(...){
   update_app(c("app.R", 
                "interface.R", 
                "functions.R", 
                "options.R", 
                "inherit.R"))
+  rapp()
 }
