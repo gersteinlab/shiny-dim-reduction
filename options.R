@@ -149,6 +149,7 @@ rm(filchar, filterable, order_gen)
 # the option boxes that will be presented to the user
 color_opts <- vector(mode = "list", length = num_cat)
 shape_opts <- vector(mode = "list", length = num_cat)
+label_opts <- vector(mode = "list", length = num_cat)
 filter_opts <- vector(mode = "list", length = num_cat)
 select_opts <- vector(mode = "list", length = num_filchars)
 thre_opts <- vector(mode = "list", length = 2*num_cat)
@@ -177,6 +178,12 @@ for (cn in 1:num_cat)
   shape_opts[[cn]] <- list(
     "1"=cat, 
     "2"=order_names[between(cols_unique_gen, 2, num_shapes)]
+  )
+  
+  # labels
+  label_opts[[cn]] <- list(
+    "1"=cat, 
+    "2"=order_names[between(cols_unique_gen, 2, num_labels)]
   )
   
   # filters
@@ -255,6 +262,7 @@ bookmark_exclude_vector <- c(
   sprintf("subsetby_%s", name_cat),
   sprintf("colorby_%s", name_cat), 
   sprintf("shapeby_%s", name_cat), 
+  sprintf("labelby_%s", name_cat), 
   sprintf("filterby_%s", name_cat), 
   select_ids, 
   get_thre(name_cat, "Logarithmic"), get_thre(name_cat, "Linear"), 
