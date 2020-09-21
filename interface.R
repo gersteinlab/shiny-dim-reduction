@@ -208,7 +208,7 @@ after dimensionality reduction, that will be shown on the y-axis. For plotly3,
 Displayed Component 3 denotes the component, after dimensionality reduction, 
 that will be shown on the z-axis. Note that components can equal each other.
 </li>
-<li><u>Color By, Shape By:</u>
+<li><u>Color By, Shape By, Label By:</u>
 What category should points on the graph be colored / shaped by?
 (Note: depends on the category selected.)
 </li>
@@ -390,6 +390,16 @@ shape_panels_ui <- function(shapes){
       select_panel(
         sprintf("shapeby_%s", x[[1]]), sprintf("Shape By (%s)", x[[1]]), 
         x[[2]], 2))
+  })
+}
+
+label_panels_ui <- function(labels){
+  lapply(labels, function(x){
+    conditionalPanel(
+      condition = sprintf("input.category == '%s'",  x[[1]]),
+      select_panel(
+        sprintf("labelby_%s", x[[1]]), sprintf("Label By (%s)", x[[1]]), 
+        x[[2]], 1))
   })
 }
 
