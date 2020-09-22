@@ -243,3 +243,33 @@ for (cat in name_cat)
   bookmark_cat[[cat]] <- names(outline[[cat]])
   bookmark_thre[[cat]] <- sca_options
 }
+
+bookmark_exclude_vector <- c(
+  table_exclude_vector(c(
+    "num_data_table", "metadata_table", "legend_out"
+  )),
+  
+  ".clientValue-default-plotlyCrosstalkOpts",
+  "plotly_hover-A",
+  "plotly_afterplot-A",
+  "plotly_relayout-A",
+  
+  "sidebar_menu",
+  "sidebarCollapsed",
+  "height",
+  "sidebarItemExpanded",
+  
+  sprintf("subsetby_%s", name_cat),
+  sprintf("colorby_%s", name_cat), 
+  sprintf("shapeby_%s", name_cat), 
+  sprintf("labelby_%s", name_cat), 
+  sprintf("filterby_%s", name_cat), 
+  select_ids, 
+  get_thre(name_cat, "Logarithmic"), get_thre(name_cat, "Linear"), 
+  
+  "start", "stop", "toggle", "central_nav", "instructions", "citations", 
+  "sMenu", "category", "scale", "normalize", "features", "embedding", 
+  "visualize", "perplexity", "upsetpref", "dendrogram", 
+  "palette", "plotPanels", "username", "password", "toggle_password",
+  "attempt_login", "set_f1", "set_f2", "pc1", "pc2", "pc3"
+)
