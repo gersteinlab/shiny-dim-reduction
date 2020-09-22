@@ -7,144 +7,6 @@ source("functions.R", encoding="UTF-8")
 source("interface.R", encoding="UTF-8")
 source("options.R", encoding="UTF-8")
 
-# -----------
-# ASSEMBLE UI
-# -----------
-
-ui <- function(request){
-  dashboardPage(
-    skin="blue",
-    dashboardHeader(title=app_title, titleWidth="100%"),
-    dashboardSidebar(
-      width=300,
-      sidebarMenu(
-        id = "sidebar_menu",
-        menuItem(
-          startExpanded=TRUE,
-          "Data Selection",
-          select_panel("category", "Category", cat_groups),
-          sub_panels_ui(cat_groups, sub_groups),
-          select_panel("embedding", "Method of Dimensionality Reduction", emb_options),
-          conditionalPanel(
-            condition = "
-  input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP'", 
-            select_panel("visualize", "Method of Visualization", vis_options)
-          ),
-          conditionalPanel(
-            condition = "input.embedding == 'Sets'",
-            conditionalPanel(
-              condition = "input.plotPanels == 'ggplot2'",
-              select_panel("upsetpref", "Method of Visualization", ups_options)),
-            conditionalPanel(
-              condition = "input.plotPanels == 'plotly2' || input.plotPanels == 'plotly3'",
-              select_panel("dendrogram", "Method of Visualization", den_options))
-          )
-        ),
-        menuItem(
-          "Parameters",
-          select_panel("scale", "Scale", sca_options),
-          conditionalPanel(
-            condition = "input.embedding != 'Sets'",
-            select_panel("normalize", "Normalization", nor_options),
-            select_panel("features", "Percentage of Features Used", fea_options)
-          ),
-          conditionalPanel(
-            condition = "input.visualize == 'Summarize' && (input.embedding == 'PCA' ||
-    input.embedding == 'VAE' || input.embedding == 'UMAP')",
-            "No data selection can be performed under these conditions.
-            Please switch to a non-summary plot."
-          ),
-          conditionalPanel(
-            condition = "input.visualize == 'Explore' && (input.embedding == 'PCA' ||
-    input.embedding == 'VAE' || input.embedding == 'UMAP')",
-            pc_slider(1, pc_cap),
-            conditionalPanel(
-              condition = "input.plotPanels == 'ggplot2' || 
-        input.plotPanels == 'plotly2' || input.plotPanels == 'plotly3'",
-              pc_slider(2, pc_cap)
-            ),
-            conditionalPanel(
-              condition = "input.plotPanels == 'plotly3'",
-              pc_slider(3, pc_cap)
-            )
-          ),
-          perplexity_ui(perplexity_types),
-          sets_ui(thre_panels_ui(thre_opts), max_cat_num)
-        ),
-        menuItem(
-          "Settings", 
-          check_panel("sMenu", "Settings", my_settings),
-          select_panel("palette", "Color Palette", pal_options),
-          numericInput("height", "Graph Height", value=graph_height, min=1, max=4000)
-        ),
-        menuItem(
-          "Filters",
-          do.call(conditionalPanel, c(
-            condition = "input.embedding != 'Sets' && (input.embedding == 'PHATE' || 
-          input.visualize != 'Summarize')",
-            color_panels_ui(color_opts)
-          )),
-          do.call(conditionalPanel, c(
-            condition = "input.embedding != 'Sets' && input.plotPanels == 'ggplot2' &&
-      (input.embedding == 'PHATE' || input.visualize != 'Summarize')",
-            shape_panels_ui(shape_opts)
-          )),
-          do.call(conditionalPanel, c(
-            condition = "input.embedding != 'Sets' && input.plotPanels != 'beeswarm' &&
-            input.plotPanels != 'ggplot2' &&
-      (input.embedding == 'PHATE' || input.visualize != 'Summarize')",
-            label_panels_ui(label_opts)
-          )),
-          do.call(conditionalPanel, c(
-            condition = "input.visualize != 'Summarize' || 
-          input.embedding == 'Sets' || input.embedding == 'PHATE'",
-            filter_panels_ui(filter_opts), 
-            select_opts
-          ))
-        )
-      )
-    ),
-    dashboardBody(
-      shinyjs::useShinyjs(),
-      tags$head(tags$style(my_css_styling)),
-      box(
-        title = "Controls",
-        collapsible = TRUE, collapsed=TRUE, width="100%",
-        action("start", "Start Plotting", "chart-bar", "#FFF", "#0064C8", "#00356B"),
-        action("stop", "Stop Plotting", "ban", "#FFF", "#C90016", "#00356B"),
-        bookmarkButton(),
-        downloadButton('downloadData', 'Numeric Data'),
-        downloadButton('downloadMetadata', 'Metadata')
-      ),
-      tabBox(
-        width="100%",
-        id = 'plotPanels',
-        tabPanel("ggplot2", uiOutput("ggplot2UI")),
-        tabPanel("plotly2", uiOutput("plotly2UI")),
-        tabPanel("plotly3", uiOutput("plotly3UI")),
-        tabPanel("beeswarm", uiOutput("beeswarmUI")),
-        tabPanel("Numeric Data", id="num_data", 
-                 DTOutput("num_data_table", width="100%") %>% my_spin()),
-        tabPanel("Metadata", id="metadata", 
-                 DTOutput("metadata_table", width="100%") %>% my_spin())
-      ),
-      box(
-        title = "Documentation",
-        collapsible = TRUE, collapsed=TRUE, width="100%",
-        action("instructions", "Instructions", "book", "#FFF", "#9400D3", "#00356B"),
-        action("citations", "Citations", "book", "#FFF", "#9400D3", "#00356B"),
-        downloadButton('downloadInstructions', 'Instructions'),
-        downloadButton('downloadCitations', 'Citations')
-      ),
-      uiOutput("plainTitleUI"),
-      div(id="legend_out_spin", DTOutput("legend_out", width="100%") %>% my_spin()),
-      hr(),
-      "Developed by Justin Chang at the Gerstein Lab, 
-        under the mentorship of Joel Rozowsky."
-    )
-  )
-}
-
 # ------------------------------------------
 # REACTIVE SERVER: INITIALIZATION, OBSERVERS
 # ------------------------------------------
@@ -582,6 +444,11 @@ server <- function(input, output, session) {
       (input$embedding == "UMAP" || input$embedding == "PHATE" || 
          input$visualize == "tSNE") && (input$visualize != "Summarize"), 
       sprintf(", %s Neighbors", input$perplexity), "")
+    
+    if (grepl("Transpose", input$category, fixed = TRUE))
+      notif("This matrix has been transposed. Therefore, the current
+            samples represent original features and the current
+            features represent original samples.", 6, "warning")
     
     sprintf("%s%s on %s.%s (%s Samples, %s Features%s)", 
             ifelse(input$embedding == "PHATE", "", 
@@ -1312,4 +1179,10 @@ server <- function(input, output, session) {
 # -----------
 # RUN THE APP
 # -----------
+
+ui <- function(request){
+  # the complete UI is assembled in "options.R"
+  complete_ui
+}
+
 shinyApp(ui = ui, server = server, enableBookmarking = "url")
