@@ -536,54 +536,7 @@ authenticator_modal <- function() {
   )
 }
 
-# Creates a selectizeInput panel with only one option allowed.
-select_panel <- function(id, name, options, chosen) 
-{
-  if (missing(chosen))
-    chosen <- 1
-  chosen <- min(chosen, length(options))
-  
-  pickerInput(
-    inputId = id, label = name, choices = options, 
-    selected = options[chosen], multiple = FALSE,
-    options = list(
-      `live-search` = TRUE,
-      `live-search-placeholder` = "Search for a phrase ..."
-    )
-  ) 
-}
-
-# Creates a group of checked boxes with the given id, name, and inputs
-check_panel <- function(id, name, inputs) 
-{
-  pickerInput(
-    inputId = id, label = name,
-    choices = inputs, selected = inputs, multiple = TRUE,
-    options = list(
-      `actions-box` = TRUE,
-      `selected-text-format` = "count > 1",
-      `live-search` = TRUE,
-      `live-search-placeholder` = "Search for a phrase ...")
-  )
-}
-
-# makes a slider for the nth principal component
-pc_slider <- function(n, pc_cap)
-{
-  sliderInput(sprintf("pc%s", n), sprintf("Displayed Component %s", n), 
-              min=1, max=pc_cap, value=n, step=1, ticks = FALSE)
-}
-
-# Creates an action button with the given id, name, icon name, 
-# color, background color, and border color.
-action <- function(id, name, icon_name, color, bk, br) 
-{
-  actionButton(
-    inputId = id, label = name, icon = icon(icon_name), style=
-      sprintf("color: %s; background-color: %s; border-color: %s", color, bk, br))
-}
-
-# adds a spinner to content that is refreshing
+# adds a spinner to content that may need to be refreshed
 my_spin <- function(content)
 {
   content %>% withSpinner(type = 6)
