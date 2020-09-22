@@ -115,24 +115,71 @@ bookmark_exclude_vector <- c(
   "attempt_login", "set_f1", "set_f2", "pc1", "pc2", "pc3"
 )
 
-# ---------------
-# ASSEMBLE THE UI
-# ---------------
+# ------------
+# UI FUNCTIONS
+# ------------
 
-# only do assembly if you don't have a saved version
-
+# # Creates a selectizeInput panel with only one option allowed.
+# select_panel <- function(id, name, options, chosen)
+# {
+#   if (missing(chosen))
+#     chosen <- 1
+#   chosen <- min(chosen, length(options))
+# 
+#   pickerInput(
+#     inputId = id, label = name, choices = options,
+#     selected = options[chosen], multiple = FALSE,
+#     options = list(
+#       `live-search` = TRUE,
+#       `live-search-placeholder` = "Search for a phrase ..."
+#     )
+#   )
+# }
+# 
+# # Creates a group of checked boxes with the given id, name, and inputs
+# check_panel <- function(id, name, inputs)
+# {
+#   pickerInput(
+#     inputId = id, label = name,
+#     choices = inputs, selected = inputs, multiple = TRUE,
+#     options = list(
+#       `actions-box` = TRUE,
+#       `selected-text-format` = "count > 1",
+#       `live-search` = TRUE,
+#       `live-search-placeholder` = "Search for a phrase ...")
+#   )
+# }
+# 
+# # makes a slider for the nth principal component
+# pc_slider <- function(n, pc_cap)
+# {
+#   sliderInput(sprintf("pc%s", n), sprintf("Displayed Component %s", n),
+#               min=1, max=pc_cap, value=n, step=1, ticks = FALSE)
+# }
+# 
+# # Creates an action button with the given id, name, icon name,
+# # color, background color, and border color.
+# action <- function(id, name, icon_name, color, bk, br)
+# {
+#   actionButton(
+#     inputId = id, label = name, icon = icon(icon_name), style=
+#       sprintf("color: %s; background-color: %s; border-color: %s", color, bk, br))
+# }
+# 
+# # Creates the UI for perplexity.
 # perplexity_ui <- function(p_types){
 #   if (length(p_types) < 1)
 #     return(NULL)
-#   
+# 
 #   conditionalPanel(
-#     condition = "input.embedding != 'Sets' && 
+#     condition = "input.embedding != 'Sets' &&
 #   (input.embedding == 'PHATE' || input.visualize == 'tSNE' ||
 #   (input.embedding == 'UMAP' && input.visualize != 'Summarize'))",
 #     select_panel("perplexity", "Perplexity", p_types, ceiling(length(p_types)/2))
 #   )
 # }
 # 
+# # Creates the UI for sets.
 # sets_ui <- function(thre_opts, max){
 #   min_max <- num_filters
 #   for (i in 0:4)
@@ -144,21 +191,22 @@ bookmark_exclude_vector <- c(
 #         min_max <- target
 #     }
 #   }
-#   
+# 
 #   do.call(conditionalPanel, c(
 #     condition = "input.embedding == 'Sets'", thre_opts, list(
 #       sliderInput(
-#         "set_f1", "Fraction of Samples", 
+#         "set_f1", "Fraction of Samples",
 #         min=0, max=1, value=c(0.5,1), step=0.01,
 #         ticks = FALSE, dragRange=FALSE),
 #       sliderInput(
-#         "set_f2", "Fraction of Characteristics", 
+#         "set_f2", "Fraction of Characteristics",
 #         min=0, max=1, value=c(0,1), step=1.0/min_max,
 #         ticks = FALSE, dragRange=FALSE)
 #     )
 #   ))
 # }
 # 
+# # Creates the UI for subsets.
 # sub_panels_ui <- function(cat_groups, sub_groups){
 #   name_cat_temp <- unlist(cat_groups)
 #   sub_panels <- my_empty_list(name_cat_temp)
@@ -169,68 +217,79 @@ bookmark_exclude_vector <- c(
 #     sub_panels[[cat]] <- conditionalPanel(
 #       condition = sprintf("input.category == '%s'",  cat),
 #       select_panel(
-#         sprintf("subsetby_%s", cat), sprintf("Feature Subset (%s)", cat), 
+#         sprintf("subsetby_%s", cat), sprintf("Feature Subset (%s)", cat),
 #         subsets_temp))
 #   }
 #   sub_panels
 # }
 # 
+# # Creates the UI for colors.
 # color_panels_ui <- function(colors){
 #   lapply(colors, function(x){
 #     conditionalPanel(
 #       condition = sprintf("input.category == '%s'", x[[1]]),
 #       select_panel(
-#         sprintf("colorby_%s", x[[1]]), sprintf("Color By (%s)", x[[1]]), 
+#         sprintf("colorby_%s", x[[1]]), sprintf("Color By (%s)", x[[1]]),
 #         x[[2]], 1))
 #   })
 # }
 # 
+# # Creates the UI for shapes.
 # shape_panels_ui <- function(shapes){
 #   lapply(shapes, function(x){
 #     conditionalPanel(
 #       condition = sprintf("input.category == '%s'",  x[[1]]),
 #       select_panel(
-#         sprintf("shapeby_%s", x[[1]]), sprintf("Shape By (%s)", x[[1]]), 
+#         sprintf("shapeby_%s", x[[1]]), sprintf("Shape By (%s)", x[[1]]),
 #         x[[2]], 2))
 #   })
 # }
 # 
+# # Creates the UI for labels.
 # label_panels_ui <- function(labels){
 #   lapply(labels, function(x){
 #     conditionalPanel(
 #       condition = sprintf("input.category == '%s'",  x[[1]]),
 #       select_panel(
-#         sprintf("labelby_%s", x[[1]]), sprintf("Label By (%s)", x[[1]]), 
+#         sprintf("labelby_%s", x[[1]]), sprintf("Label By (%s)", x[[1]]),
 #         x[[2]], 1))
 #   })
 # }
 # 
+# # Creates the UI for filter panels.
 # filter_panels_ui <- function(filters){
 #   lapply(filters, function(x){
 #     conditionalPanel(
 #       condition = sprintf("input.category == '%s'",  x[[1]]),
 #       select_panel(
-#         sprintf("filterby_%s", x[[1]]), sprintf("Current Filter (%s)", x[[1]]), 
+#         sprintf("filterby_%s", x[[1]]), sprintf("Current Filter (%s)", x[[1]]),
 #         x[[2]]))
 #   })
 # }
 # 
+# # Creates the UI for threshold panels.
 # thre_panels_ui <- function(thres){
 #   if (is.null(thres))
 #     return(NULL)
-#   
+# 
 #   lapply(thres, function(x){
 #     conditionalPanel(
-#       condition = sprintf("input.category == '%s' && input.scale == '%s'", 
+#       condition = sprintf("input.category == '%s' && input.scale == '%s'",
 #                           x[[1]], x[[2]]),
 #       sliderInput(
-#         get_thre(x[[1]], x[[2]]), "Threshold", min=x[[3]], max=x[[4]], 
+#         get_thre(x[[1]], x[[2]]), "Threshold", min=x[[3]], max=x[[4]],
 #         value=(x[[3]]+x[[4]])/2, step=(x[[4]]-x[[3]])/10, round=-4,
 #         ticks = FALSE)
 #     )
 #   })
 # }
-# 
+
+# ---------------
+# ASSEMBLE THE UI
+# ---------------
+
+# only do assembly if you don't have a saved version
+
 # # the option boxes that will be presented to the user
 # color_opts <- vector(mode = "list", length = num_cat)
 # shape_opts <- vector(mode = "list", length = num_cat)
