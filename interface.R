@@ -1,8 +1,5 @@
-# The purpose of this file is to store browser parameters, long text
-# strings, and non-generalizable user interfaces for the main app. 
-# None of these should depend on other global variables!
-# Note: Most interface numbers are rounded to 4 decimal places.
-# This likely will not change in the near future.
+# The purpose of this file is to store browser parameters, set up long text
+# strings, and load dependencies for the main app. 
 
 # ------------------
 # BROWSER PARAMETERS
@@ -315,116 +312,88 @@ my_css_styling <- HTML("
 }
 ")
 
-# ----------
-# INTERFACES
-# ----------
+# -----------------
+# LOAD DEPENDENCIES
+# -----------------
 
-perplexity_ui <- function(p_types){
-  if (length(p_types) < 1)
-    return(NULL)
-  
-  conditionalPanel(
-    condition = "input.embedding != 'Sets' && 
-    (input.embedding == 'PHATE' || input.visualize == 'tSNE' ||
-    (input.embedding == 'UMAP' && input.visualize != 'Summarize'))",
-    select_panel("perplexity", "Perplexity", p_types, ceiling(length(p_types)/2))
-  )
-}
+# these are ordered from most to least important (ex: app_title can be 
+# missing and not significantly affect functionality)
+dir <- "dependencies"
 
-sets_ui <- function(thre_opts, max){
-  min_max <- num_filters
-  for (i in 0:4)
-  {
-    for (j in 0:4)
-    {
-      target <- 2^i * 5*j
-      if (target >= max && target < min_max)
-        min_max <- target
-    }
-  }
-  
-  do.call(conditionalPanel, c(
-    condition = "input.embedding == 'Sets'", thre_opts, list(
-      sliderInput(
-        "set_f1", "Fraction of Samples", 
-        min=0, max=1, value=c(0.5,1), step=0.01,
-        ticks = FALSE, dragRange=FALSE),
-      sliderInput(
-        "set_f2", "Fraction of Characteristics", 
-        min=0, max=1, value=c(0,1), step=1.0/min_max,
-        ticks = FALSE, dragRange=FALSE)
-    )
-  ))
-}
+user_credentials <- get_from_dir(
+  "user_credentials.rds", 
+  NULL, dir
+)
 
-sub_panels_ui <- function(cat_groups, sub_groups){
-  name_cat_temp <- unlist(cat_groups)
-  sub_panels <- my_empty_list(name_cat_temp)
-  for (cat in name_cat_temp)
-  {
-    subsets_temp <- sub_groups[[cat]]
-    names(subsets_temp) <- NULL
-    sub_panels[[cat]] <- conditionalPanel(
-      condition = sprintf("input.category == '%s'",  cat),
-      select_panel(
-        sprintf("subsetby_%s", cat), sprintf("Feature Subset (%s)", cat), 
-        subsets_temp))
-  }
-  sub_panels
-}
+# a bit of exposition regarding categories_full:
+# first, break up into groups (ex: cCREs, Expression, Proteomics)
+# second, break up into categories (ex: H3K27ac, H3K9me3, Methylation)
+# note that all categories MUST be unique, even if in different groups
+# also, the value of categories_full$cCREs$H3K27ac must be the number of
+# features originally in that dataset before dimensionality reduction
+categories_full <- get_from_dir(
+  "categories_full.rds", 
+  NULL, dir
+)
 
-color_panels_ui <- function(colors){
-  lapply(colors, function(x){
-    conditionalPanel(
-      condition = sprintf("input.category == '%s'", x[[1]]),
-      select_panel(
-        sprintf("colorby_%s", x[[1]]), sprintf("Color By (%s)", x[[1]]), 
-        x[[2]], 1))
-  })
-}
+order_total <- get_from_dir(
+  "order_total.rds",
+  NULL, dir
+)
 
-shape_panels_ui <- function(shapes){
-  lapply(shapes, function(x){
-    conditionalPanel(
-      condition = sprintf("input.category == '%s'",  x[[1]]),
-      select_panel(
-        sprintf("shapeby_%s", x[[1]]), sprintf("Shape By (%s)", x[[1]]), 
-        x[[2]], 2))
-  })
-}
+amazon_keys <- get_from_dir(
+  "amazon_keys.rds",
+  NULL, dir
+)
 
-label_panels_ui <- function(labels){
-  lapply(labels, function(x){
-    conditionalPanel(
-      condition = sprintf("input.category == '%s'",  x[[1]]),
-      select_panel(
-        sprintf("labelby_%s", x[[1]]), sprintf("Label By (%s)", x[[1]]), 
-        x[[2]], 1))
-  })
-}
+# sets parameters after getting keys for Amazon AWS
+Sys.setenv("AWS_ACCESS_KEY_ID" = amazon_keys[1],
+           "AWS_SECRET_ACCESS_KEY" = amazon_keys[2])
+aws_bucket <- amazon_keys[3]
 
-filter_panels_ui <- function(filters){
-  lapply(filters, function(x){
-    conditionalPanel(
-      condition = sprintf("input.category == '%s'",  x[[1]]),
-      select_panel(
-        sprintf("filterby_%s", x[[1]]), sprintf("Current Filter (%s)", x[[1]]), 
-        x[[2]]))
-  })
-}
+perplexity_types <- get_from_dir(
+  "perplexity_types.rds", 
+  NULL, dir
+)
 
-thre_panels_ui <- function(thres){
-  if (is.null(thres))
-    return(NULL)
-  
-  lapply(thres, function(x){
-    conditionalPanel(
-      condition = sprintf("input.category == '%s' && input.scale == '%s'", 
-                          x[[1]], x[[2]]),
-      sliderInput(
-        get_thre(x[[1]], x[[2]]), "Threshold", min=x[[3]], max=x[[4]], 
-        value=(x[[3]]+x[[4]])/2, step=(x[[4]]-x[[3]])/10, round=-4,
-        ticks = FALSE)
-    )
-  })
-}
+thresholds <- get_from_dir(
+  "thresholds.rds",
+  NULL, dir
+)
+
+pc_cap <- get_from_dir(
+  "pc_cap.rds",
+  3, dir
+)
+
+app_title <- get_from_dir(
+  "app_title.rds", 
+  "Dimensionality Reduction Tool", dir)
+
+app_citations <- get_from_dir(
+  "app_citations.rds", 
+  "No data citations could be found.", dir)
+
+citations <- bibliography(app_citations)
+
+custom_color_scales <- get_from_dir(
+  "custom_color_scales.rds",
+  NULL, dir
+)
+
+# a bit of exposition regarding decorations:
+# first of all, each decoration in the list has a name
+# and then two entries:
+# (i) a vector of categories to which the decoration applies
+# (ii) a list containing (a) a reference character vector and 
+# (b) indices of that reference vector that constitute subsets
+decorations <- get_from_dir(
+  "decorations.rds",
+  NULL, dir
+)
+
+# try to load the complete ui from memory
+complete_ui <- get_from_dir(
+  "complete_ui.rds",
+  NULL, dir
+)
