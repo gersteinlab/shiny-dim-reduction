@@ -115,9 +115,11 @@ bookmark_exclude_vector <- c(
   "attempt_login", "set_f1", "set_f2", "pc1", "pc2", "pc3"
 )
 
-# ------------
-# UI FUNCTIONS
-# ------------
+# ---------------
+# ASSEMBLE THE UI
+# ---------------
+
+# only uncomment and do assembly if you don't have a saved version
 
 # # Creates a selectizeInput panel with only one option allowed.
 # select_panel <- function(id, name, options, chosen)
@@ -283,13 +285,7 @@ bookmark_exclude_vector <- c(
 #     )
 #   })
 # }
-
-# ---------------
-# ASSEMBLE THE UI
-# ---------------
-
-# only do assembly if you don't have a saved version
-
+# 
 # # the option boxes that will be presented to the user
 # color_opts <- vector(mode = "list", length = num_cat)
 # shape_opts <- vector(mode = "list", length = num_cat)
@@ -306,44 +302,44 @@ bookmark_exclude_vector <- c(
 #   cat <- name_cat[cn]
 #   cols_unique_gen <- cols_unique[[cat]]
 #   order_names <- colnames(order_gen)
-#   
+# 
 #   # colors
 #   color_opts[[cn]] <- list(
-#     "1"=cat, 
+#     "1"=cat,
 #     "2"=order_names[between(cols_unique_gen, 2, num_colors)]
 #   )
-#   
+# 
 #   # shapes
 #   shape_opts[[cn]] <- list(
-#     "1"=cat, 
+#     "1"=cat,
 #     "2"=order_names[between(cols_unique_gen, 2, num_shapes)]
 #   )
-#   
+# 
 #   # labels
 #   label_opts[[cn]] <- list(
-#     "1"=cat, 
+#     "1"=cat,
 #     "2"=order_names[between(cols_unique_gen, 2, num_labels)]
 #   )
-#   
+# 
 #   # filters
 #   filter_opts[[cn]] <- list(
-#     "1"=cat, 
+#     "1"=cat,
 #     "2"=names(outline[[cat]])
 #   )
-#   
+# 
 #   # selections
 #   for (char in names(outline[[cat]]))
 #   {
 #     gen_index <- gen_index + 1
-#     
+# 
 #     select_opts[[gen_index]] <- conditionalPanel(
 #       condition=sprintf(
 #         "input.category == '%s' && input.filterby_%s == '%s'", cat, cat, char),
-#       check_panel(get_select(cat, char), sprintf("Filter By (%s)", cat), 
+#       check_panel(get_select(cat, char), sprintf("Filter By (%s)", cat),
 #                   outline[[cat]][[char]])
 #     )
 #   }
-#   
+# 
 #   # thresholds
 #   if (!is.null(thresholds))
 #   {
@@ -351,11 +347,11 @@ bookmark_exclude_vector <- c(
 #     {
 #       sca <- sca_options[sn]
 #       thre_temp <- thresholds[[sca]][[cat]]
-#       
+# 
 #       thre_opts[[2*cn-2+sn]] <- list(
-#         "1"=cat, 
-#         "2"=sca, 
-#         "3"=round(thre_temp[1], 4), 
+#         "1"=cat,
+#         "2"=sca,
+#         "3"=round(thre_temp[1], 4),
 #         "4"=round(thre_temp[2], 4)
 #       )
 #     }
@@ -381,7 +377,7 @@ bookmark_exclude_vector <- c(
 #         select_panel("embedding", "Method of Dimensionality Reduction", emb_options),
 #         conditionalPanel(
 #           condition = "
-# input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP'", 
+# input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP'",
 #           select_panel("visualize", "Method of Visualization", vis_options)
 #         ),
 #         conditionalPanel(
@@ -413,7 +409,7 @@ bookmark_exclude_vector <- c(
 #   input.embedding == 'VAE' || input.embedding == 'UMAP')",
 #           pc_slider(1, pc_cap),
 #           conditionalPanel(
-#             condition = "input.plotPanels == 'ggplot2' || 
+#             condition = "input.plotPanels == 'ggplot2' ||
 #       input.plotPanels == 'plotly2' || input.plotPanels == 'plotly3'",
 #             pc_slider(2, pc_cap)
 #           ),
@@ -426,7 +422,7 @@ bookmark_exclude_vector <- c(
 #         sets_ui(thre_panels_ui(thre_opts), max_cat_num)
 #       ),
 #       menuItem(
-#         "Settings", 
+#         "Settings",
 #         check_panel("sMenu", "Settings", my_settings),
 #         select_panel("palette", "Color Palette", pal_options),
 #         numericInput("height", "Graph Height", value=graph_height, min=1, max=4000)
@@ -434,7 +430,7 @@ bookmark_exclude_vector <- c(
 #       menuItem(
 #         "Filters",
 #         do.call(conditionalPanel, c(
-#           condition = "input.embedding != 'Sets' && (input.embedding == 'PHATE' || 
+#           condition = "input.embedding != 'Sets' && (input.embedding == 'PHATE' ||
 #         input.visualize != 'Summarize')",
 #           color_panels_ui(color_opts)
 #         )),
@@ -450,9 +446,9 @@ bookmark_exclude_vector <- c(
 #           label_panels_ui(label_opts)
 #         )),
 #         do.call(conditionalPanel, c(
-#           condition = "input.visualize != 'Summarize' || 
+#           condition = "input.visualize != 'Summarize' ||
 #         input.embedding == 'Sets' || input.embedding == 'PHATE'",
-#           filter_panels_ui(filter_opts), 
+#           filter_panels_ui(filter_opts),
 #           select_opts
 #         ))
 #       )
@@ -477,9 +473,9 @@ bookmark_exclude_vector <- c(
 #       tabPanel("plotly2", uiOutput("plotly2UI")),
 #       tabPanel("plotly3", uiOutput("plotly3UI")),
 #       tabPanel("beeswarm", uiOutput("beeswarmUI")),
-#       tabPanel("Numeric Data", id="num_data", 
+#       tabPanel("Numeric Data", id="num_data",
 #                DTOutput("num_data_table", width="100%") %>% my_spin()),
-#       tabPanel("Metadata", id="metadata", 
+#       tabPanel("Metadata", id="metadata",
 #                DTOutput("metadata_table", width="100%") %>% my_spin())
 #     ),
 #     box(
@@ -493,10 +489,10 @@ bookmark_exclude_vector <- c(
 #     uiOutput("plainTitleUI"),
 #     div(id="legend_out_spin", DTOutput("legend_out", width="100%") %>% my_spin()),
 #     hr(),
-#     "Developed by Justin Chang at the Gerstein Lab, 
+#     "Developed by Justin Chang at the Gerstein Lab,
 #       under the mentorship of Joel Rozowsky."
 #   )
 # )
-
-# saves the UI
-# setwd(dep_loc); saveRDS(complete_ui, "complete_ui.rds")
+# 
+# # saves the UI
+# # setwd(dep_loc); saveRDS(complete_ui, "complete_ui.rds")
