@@ -44,8 +44,9 @@ my_settings <- c("Embed Title", "Embed Legend", "Notifications",
 bibliography <- function(app_citations){sprintf(
   "Developed at Gerstein Lab from 2019-2020.
 <br><br>
-Work conducted under the mentorship of Joel Rozowsky and Mark Gerstein. 
-The citations below are in the format requested by their respective creators.
+Work conducted under the mentorship of Joel Rozowsky and Mark Gerstein. I appreciate
+the help of Emily LaPlante, Abhinav Godavarthi, Max Sun, and Ana Berthel in developing
+this tool. The citations below are in the format requested by their respective creators.
 <br><br>
 <b>Data Sources</b>
 <br>
