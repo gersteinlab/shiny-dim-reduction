@@ -11,6 +11,9 @@ source("~/Justin-Tool/shiny-dim-reduction/inherit.R")
 root <- "~/Justin-Tool"
 project_names <- c("exRNA", "ENTEx")
 
+# project_name <- "exRNA"
+# project_name <- "ENTEx"
+
 if (!exists("project_name"))
   project_name <- project_names[1]
 
