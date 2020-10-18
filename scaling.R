@@ -79,35 +79,78 @@ perplexity_list <- my_empty_list(sprintf("P%s", perplexity_types))
 # note that the working directory after sourcing is pro_loc
 setwd(pro_loc)
 
+# -------------
+# NORMALIZATION
+# -------------
+
+# normalizes a vector or matrix to [0,1]
+norm_min_max <- function(data)
+{
+  max <- base::max(data)
+  min <- base::min(data)
+  if (max == min)
+  {
+    data[] <- 0.5
+    return(data)
+  }
+  (data-min)/(max-min)
+}
+
+# normalizes a vector or matrix to have a mean of 0 and a variance of 1
+norm_z_score <- function(data)
+{
+  mean <- base::mean(data)
+  sd <- stats::sd(data)
+  if (sd == 0)
+  {
+    data[] <- 0
+    return(data)
+  }
+  (data-mean)/sd
+}
+
+# normalizes a vector by quantile
+norm_quantile <- function(data) {
+  data[] <- qnorm((rank(data, na.last = 'keep') - .5) / length(data))
+  data
+}
+
+# normalizes each feature with min-max
+local_min_max <- function(data)
+{
+  apply(data, 2, norm_min_max)
+}
+
+# normalizes each feature with z-score
+local_z_score <- function(data)
+{
+  apply(data, 2, norm_z_score)
+}
+
+# normalizes each feature with quantile
+local_quantile <- function(data)
+{
+  apply(data, 2, norm_quantile)
+}
+
+# performs normalization
+do_norm <- function(nor, scaled)
+{
+  if (nor == nor_options[1])
+    return(norm_min_max(scaled))
+  if (nor == nor_options[2])
+    return(local_min_max(scaled))
+  if (nor == nor_options[3])
+    return(norm_z_score(scaled))
+  if (nor == nor_options[4])
+    return(local_z_score(scaled))
+  if (nor == nor_options[5])
+    return(local_quantile(scaled))
+}
+
 # ---------
 # FUNCTIONS
 # ---------
-
-# normalizes a dataset by global min, max to [0,1]
-norm_global <- function(data)
-{
-  max <- max(data)
-  min <- min(data)
-  diff <- max - min
-  if (is.na(diff) || is.nan(diff) || diff == 0)
-    print("!!!")
-  (data-min)/diff
-}
-
-# normalizes a dataset by each feature's min, max to [0,1]
-norm_local <- function(data)
-{
-  for (j in 1:ncol(data))
-  {
-    num_unique <- length(unique(data[,j]))
-    if (num_unique < 2)
-      data[,j] <- 0.5
-    else
-      data[,j] <- norm_global(data[,j])
-  }
-    
-  data
-}
 
 # logarithmically scales data
 log_scale <- function(data)
@@ -147,15 +190,6 @@ do_scal <- function(sca, scaled)
   if (sca == "Logarithmic")
     return(log_scale(scaled))
   return(scaled)
-}
-
-# performs normalization
-do_norm <- function(nor, scaled)
-{
-  if (nor == "Normalized")
-    return(norm_local(scaled))
-  else
-    return(norm_global(scaled))
 }
 
 # performs safe subsetting
