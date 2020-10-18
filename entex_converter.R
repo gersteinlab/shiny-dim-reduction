@@ -1,13 +1,14 @@
 # The goal of this script is to convert raw ENTEx data
 # into numeric data and metadata
 
+project_name <- "ENTEx"
+source("~/Justin-Tool/shiny-dim-reduction/converter.R")
+
 # -----------------------
 # LIBRARIES AND FUNCTIONS
 # -----------------------
 
 library(Matrix)
-
-source("~/Justin-Tool/shiny-dim-reduction/converter.R")
 
 # creates the order data frame
 create_order <- function(data, colnames)
@@ -96,7 +97,8 @@ categories_full <- list(
   ),
   "Expression"=list(
     "Protein_Coding_Genes"=17598,
-    "Pseudogenes"=5657
+    "Pseudogenes"=5657,
+    "Long Non-Coding RNAs"=0
   ),
   "Proteomics"=list(
     "Peptide"=9411,
@@ -111,9 +113,9 @@ num_cat <- length(name_cat)
 categories <- unlist(categories_full, recursive=FALSE)
 names(categories) <- name_cat
 
-# -----------------
-# FABIO AND YUCHENG
-# -----------------
+# -----
+# FABIO
+# -----
 
 order_total <- my_empty_list(name_cat)
 
@@ -140,6 +142,7 @@ for (cat in dog)
   
   # read data
   setwd(raw_loc)
+  setwd("cCREs")
   print(sprintf("Reading %s for %s", filename, cat))
   my_lists <- read_tsv_text(filename)
   my_colnames <- EH38D_removal(my_lists[[1]])
@@ -181,15 +184,27 @@ for (cat in dog)
   saveRDS(data, sprintf("combined/combined_%s.rds", cat), compress=FALSE)
 }
 
-# start: 11:19 PM
-# end: 11:36 PM
+# -------
+# YUCHENG
+# -------
+
+setwd(raw_loc)
+setwd("Yucheng_New")
 
 yyang_filenames <- list(
-  "gene_expression_pc.mx",
-  "gene_expression_pg.mx"
+  "gene_expression.lnc.cufflinks_output.reformat",
+  "gene_expression.pc.cufflinks_output.reformat",
+  "gene_expression.pg.cufflinks_output.reformat" 
 )
 
-dog <- name_cat[11:12]
+yyang_compile <- my_empty_list()
+
+for (i in 1:3)
+{
+   
+}
+
+dog <- name_cat[11:13]
 names(yyang_filenames) <- dog
 
 for (cat in dog)
