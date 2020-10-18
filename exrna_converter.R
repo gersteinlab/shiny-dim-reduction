@@ -3,6 +3,8 @@
 # (ii) use the raw data to process metadata dependencies for the app
 # warning: varies highly based on data source.
 
+project_name <- "exRNA"
+
 source("~/Justin-Tool/shiny-dim-reduction/converter.R")
 
 # --------------
