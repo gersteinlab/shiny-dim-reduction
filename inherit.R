@@ -73,7 +73,9 @@ rem_perc <- function(str)
 # scale options 
 sca_options <- c("Logarithmic", "Linear")
 # normalization options
-nor_options <- c("Raw", "Normalized")
+nor_options <- c("Global Min-Max", "Local Min-Max", 
+                 "Global Z-Score", "Local Z-Score", 
+                 "Local Quantile")
 # feature options
 fea_options <- c("100%", "10%", "1%")
 # embedding options
