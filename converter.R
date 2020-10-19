@@ -16,10 +16,7 @@ source("~/Justin-Tool/shiny-dim-reduction/build.R")
 # reads tsv text
 read_tsv_text <- function(filename)
 {
-  conn <- file(filename, open="rt")
-  x <- conn %>% readLines() %>% strsplit(split='\t')
-  close(conn)
-  x
+  strsplit(readLines(filename), split='\t', fixed=TRUE)
 }
 
 # converts a matrix to a numeric matrix,
