@@ -357,7 +357,7 @@ ggplot2_2d <- function(x, y, x_axis, y_axis,
 }
 
 # Plots all data points at (x,y) ...
-# ... with appropriate colors in cq, symbols in sq, text.
+# ... with appropriate colors in colors in c_seq, text.
 # The graph will have features (x_axis, y_axis, title), with legend
 # determining whether a legend will be displayed.
 plotly_2d <- function(x, y, x_axis, y_axis, mode, 
@@ -378,7 +378,7 @@ plotly_2d <- function(x, y, x_axis, y_axis, mode,
 }
 
 # Plots all data points at (x,y,z) ...
-# ... with appropriate colors in cq, symbols in sq, text.
+# ... with appropriate colors in c_seq, text.
 # The graph will have features (x_axis, y_axis, z_axis, title), with legend
 # determining whether a legend will be displayed.
 plotly_3d <- function(x, y, z, x_axis, y_axis, z_axis,
