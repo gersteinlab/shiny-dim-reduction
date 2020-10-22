@@ -74,6 +74,7 @@ vis_options <- c("Explore", "Summarize", "tSNE")
 # visualization options as nouns
 vis_nouns <- c("Exploration of ", "Summary of ", "tSNE of ")
 
+# creates the name of a file in AWS
 # For emb and vis (non-Sets) ...
 # PCA: 1 (explore) + 1 (summarize) + 5*2 (tSNE) = 12
 # VAE: 1 (explore) + 1 (summarize) + 5*2 (tsNE) = 12
@@ -82,9 +83,7 @@ vis_nouns <- c("Exploration of ", "Summary of ", "tSNE of ")
 # combinatorially ... 2 (sca) * 2 (nor) * 3 (fea) * 50 (emb) = 600 files
 # Note that Sets undergoes neither grouping nor decompression ...
 # For subsets and categories, we expect a leap in file number for AWS ...
-
-# makes a file name for app data storage, does not apply to sets
-make_file_name <- function(sca, nor, fea, emb, vis, dim_ind, per_ind)
+make_aws_name <- function(sca, nor, fea, emb, vis, dim_ind, per_ind, sub_ind, cat_ind)
 {
   sca_ind <- which(sca_options == sca)
   nor_ind <- which(nor_options == nor)
@@ -118,15 +117,9 @@ make_file_name <- function(sca, nor, fea, emb, vis, dim_ind, per_ind)
     }
   }
   
-  sprintf("Dim_Red/%s_%s_%s_%s_%s_%s_%s.rds",
-          sca_ind, nor_ind, fea_ind, emb_ind, vis_ind, dim_ind, per_ind)
-}
-
-# converts a file name to an AWS name
-make_aws_name <- function(name, sub, cat)
-{
-  clean_addr <- regStr(name, c("^Dim_Red/", ".rds$"), c("", ""))
-  sprintf("Dim_Red/%s_%s_%s.rds", clean_addr, sub, cat)
+  sprintf("Dim_Red/%s_%s_%s_%s_%s_%s_%s_%s_%s.rds",
+          sca_ind, nor_ind, fea_ind, emb_ind, vis_ind, 
+          dim_ind, per_ind, sub_ind, cat_ind)
 }
 
 # saves an object to Amazon AWS
@@ -146,6 +139,12 @@ load_db <- function(filename, bucket){
 get_from_dir <- function(name, default, dir)
 {
   if (name %in% list.files(dir))
-    return(myRDS(sprintf("%s/%s", dir, name)))
+    return(readRDS(sprintf("%s/%s", dir, name)))
   return(default)
+}
+
+# straightforward password hashing
+my_hash <- function(password)
+{
+  bcrypt::hashpw(password, gensalt(12))
 }
