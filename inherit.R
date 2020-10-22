@@ -29,17 +29,6 @@ my_empty_list <- function(names)
   target
 }
 
-# my version of RDS operations
-myRDS <- function(name, data)
-{
-  if (!missing(data))
-  {
-    saveRDS(data, name, compress=TRUE)
-    return(NULL)
-  }
-  readRDS(name)
-}
-
 # fixed pattern replacement in a vector of strings
 repStr <- function(x_stringi, pattern, replacement)
 {
