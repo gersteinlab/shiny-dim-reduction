@@ -55,7 +55,12 @@ rowSum_filter_dat <- function(data, lower, upper)
 
 # Gets the option set for a group of samples
 get_opt <- function(samples) {
-  lapply(unique(samples), function(x){sprintf("%s (%s)", x, sum(x == samples))})
+  lapply(unique(samples), function(x){make_opt(x, sum(x == samples))})
+}
+
+# Formats an option for app selection
+make_opt <- function(a,b) {
+  sprintf("%s (%s)", a, b)
 }
 
 # Suppose a checkbox created by get_opt() returns the string "Sputum (100)". 
