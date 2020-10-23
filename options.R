@@ -9,35 +9,31 @@
 # ----------------
 
 # create categories
-cat_groups <- lapply(categories_full, function(x){names(x)})
-name_cat <- unlist(cat_groups)
-num_cat <- length(name_cat)
-categories <- unlist(categories_full, recursive=FALSE)
-names(categories) <- name_cat
-names(name_cat) <- NULL
+init_cat(categories_full)
 
-# create category subsets panel
-sub_groups <- my_empty_list(name_cat)
+# create sub_groups
 for (cat in name_cat)
   sub_groups[[cat]] <- sprintf("Total (%s)", categories[[cat]])
 
 for (dec_group in decorations)
 {
   if (length(dec_group$Categories) > 0)
-    subset <- dec_group$Subsets[-1]
-  
-  for (good_cat in dec_group$Categories)
   {
-    mapping <- mapply(
-      function(a,b){
-        sprintf("%s (%s)", b, length(a))
-      }, subset, names(subset)
-    ) %>% sort_by_names()
-    names(mapping) <- NULL
-    sub_groups[[good_cat]] <- c(sub_groups[[good_cat]], mapping) 
+    subset <- dec_group$Subsets[-1]
+    
+    for (good_cat in dec_group$Categories)
+    {
+      mapping <- mapply(
+        function(a,b){
+          sprintf("%s (%s)", b, length(a))
+        }, subset, names(subset)
+        
+      ) %>% sort_by_names()
+      names(mapping) <- NULL
+      
+      sub_groups[[good_cat]] <- c(sub_groups[[good_cat]], mapping) 
+    }
   }
-  
-  rm(subset)
 }
 
 # an outline of characteristics
@@ -68,7 +64,7 @@ for (cat in name_cat)
     select_ids <- c(select_ids, get_select(cat, filchar))
     max_cat_num <- max(length(opt), max_cat_num)
   }
-    
+  
 }
 rm(filchar, filterable, order_gen)
 
@@ -209,10 +205,9 @@ if (is.null(complete_ui))
   }
   
   # Creates the UI for subsets.
-  sub_panels_ui <- function(cat_groups, sub_groups){
-    name_cat_temp <- unlist(cat_groups)
-    sub_panels <- my_empty_list(name_cat_temp)
-    for (cat in name_cat_temp)
+  sub_panels_ui <- function(name_cat, sub_groups){
+    sub_panels <- my_empty_list(name_cat)
+    for (cat in name_cat)
     {
       subsets_temp <- sub_groups[[cat]]
       names(subsets_temp) <- NULL
@@ -271,9 +266,6 @@ if (is.null(complete_ui))
   
   # Creates the UI for threshold panels.
   thre_panels_ui <- function(thres){
-    if (is.null(thres))
-      return(NULL)
-    
     lapply(thres, function(x){
       conditionalPanel(
         condition = sprintf("input.category == '%s' && input.scale == '%s'",
@@ -341,29 +333,109 @@ if (is.null(complete_ui))
     }
     
     # thresholds
-    if (!is.null(thresholds))
+    for (sn in 1:2)
     {
-      for (sn in 1:2)
-      {
-        sca <- sca_options[sn]
+      sca <- sca_options[sn]
+      thre_temp <- 0:1
+      if (!is.null(thresholds) && !is.null(thresholds[[sca]])
+          && !is.null(thresholds[[sca]][[cat]])) 
         thre_temp <- thresholds[[sca]][[cat]]
-        
-        if (!is.null(thre_temp))
-        {
-          thre_opts[[2*cn-2+sn]] <- list(
-            "1"=cat,
-            "2"=sca,
-            "3"=round(thre_temp[1], 4),
-            "4"=round(thre_temp[2], 4)
-          )
-        }
-      }
-    }
-    else
-    {
-      thre_opts <- NULL
+      
+      thre_opts[[2*cn-2+sn]] <- list(
+        "1"=cat,
+        "2"=sca,
+        "3"=round(thre_temp[1], 4),
+        "4"=round(thre_temp[2], 4)
+      )
     }
   }
+  
+  dataSelectionMenu <- menuItem(
+    startExpanded=TRUE,
+    "Data Selection",
+    select_panel("category", "Category", cat_groups),
+    sub_panels_ui(name_cat, sub_groups),
+    select_panel("embedding", "Method of Dimensionality Reduction", emb_options),
+    conditionalPanel(
+      condition = "
+input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP'",
+      select_panel("visualize", "Method of Visualization", vis_options)
+    ),
+    conditionalPanel(
+      condition = "input.embedding == 'Sets'",
+      conditionalPanel(
+        condition = "input.plotPanels == 'ggplot2'",
+        select_panel("upsetpref", "Method of Visualization", ups_options)),
+      conditionalPanel(
+        condition = "input.plotPanels == 'plotly2' || input.plotPanels == 'plotly3'",
+        select_panel("dendrogram", "Method of Visualization", den_options))
+    )
+  )
+  
+  parametersMenu <- menuItem(
+    "Parameters",
+    select_panel("scale", "Scale", sca_options),
+    conditionalPanel(
+      condition = "input.embedding != 'Sets'",
+      select_panel("normalize", "Normalization", nor_options),
+      select_panel("features", "Percentage of Features Used", fea_options)
+    ),
+    conditionalPanel(
+      condition = "input.visualize == 'Summarize' && (input.embedding == 'PCA' ||
+  input.embedding == 'VAE' || input.embedding == 'UMAP')",
+      "No data selection can be performed under these conditions.
+          Please switch to a non-summary plot."
+    ),
+    conditionalPanel(
+      condition = "input.visualize == 'Explore' && (input.embedding == 'PCA' ||
+  input.embedding == 'VAE' || input.embedding == 'UMAP')",
+      pc_slider(1, pc_cap),
+      conditionalPanel(
+        condition = "input.plotPanels == 'ggplot2' ||
+      input.plotPanels == 'plotly2' || input.plotPanels == 'plotly3'",
+        pc_slider(2, pc_cap)
+      ),
+      conditionalPanel(
+        condition = "input.plotPanels == 'plotly3'",
+        pc_slider(3, pc_cap)
+      )
+    ),
+    perplexity_ui(perplexity_types),
+    sets_ui(thre_panels_ui(thre_opts), max_cat_num)
+  )
+  
+  settingsMenu <- menuItem(
+    "Settings",
+    check_panel("sMenu", "Settings", my_settings),
+    select_panel("palette", "Color Palette", pal_options),
+    numericInput("height", "Graph Height", value=graph_height, min=1, max=4000)
+  )
+  
+  filtersMenu <- menuItem(
+    "Filters",
+    do.call(conditionalPanel, c(
+      condition = "input.embedding != 'Sets' && (input.embedding == 'PHATE' ||
+        input.visualize != 'Summarize')",
+      color_panels_ui(color_opts)
+    )),
+    do.call(conditionalPanel, c(
+      condition = "input.embedding != 'Sets' && input.plotPanels == 'ggplot2' &&
+    (input.embedding == 'PHATE' || input.visualize != 'Summarize')",
+      shape_panels_ui(shape_opts)
+    )),
+    do.call(conditionalPanel, c(
+      condition = "input.embedding != 'Sets' && input.plotPanels != 'beeswarm' &&
+          input.plotPanels != 'ggplot2' &&
+    (input.embedding == 'PHATE' || input.visualize != 'Summarize')",
+      label_panels_ui(label_opts)
+    )),
+    do.call(conditionalPanel, c(
+      condition = "input.visualize != 'Summarize' ||
+        input.embedding == 'Sets' || input.embedding == 'PHATE'",
+      filter_panels_ui(filter_opts),
+      select_opts
+    ))
+  )
   
   complete_ui <- dashboardPage(
     skin="blue",
@@ -372,89 +444,10 @@ if (is.null(complete_ui))
       width=300,
       sidebarMenu(
         id = "sidebar_menu",
-        menuItem(
-          startExpanded=TRUE,
-          "Data Selection",
-          select_panel("category", "Category", cat_groups),
-          sub_panels_ui(cat_groups, sub_groups),
-          select_panel("embedding", "Method of Dimensionality Reduction", emb_options),
-          conditionalPanel(
-            condition = "
-input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP'",
-            select_panel("visualize", "Method of Visualization", vis_options)
-          ),
-          conditionalPanel(
-            condition = "input.embedding == 'Sets'",
-            conditionalPanel(
-              condition = "input.plotPanels == 'ggplot2'",
-              select_panel("upsetpref", "Method of Visualization", ups_options)),
-            conditionalPanel(
-              condition = "input.plotPanels == 'plotly2' || input.plotPanels == 'plotly3'",
-              select_panel("dendrogram", "Method of Visualization", den_options))
-          )
-        ),
-        menuItem(
-          "Parameters",
-          select_panel("scale", "Scale", sca_options),
-          conditionalPanel(
-            condition = "input.embedding != 'Sets'",
-            select_panel("normalize", "Normalization", nor_options),
-            select_panel("features", "Percentage of Features Used", fea_options)
-          ),
-          conditionalPanel(
-            condition = "input.visualize == 'Summarize' && (input.embedding == 'PCA' ||
-  input.embedding == 'VAE' || input.embedding == 'UMAP')",
-            "No data selection can be performed under these conditions.
-          Please switch to a non-summary plot."
-          ),
-          conditionalPanel(
-            condition = "input.visualize == 'Explore' && (input.embedding == 'PCA' ||
-  input.embedding == 'VAE' || input.embedding == 'UMAP')",
-            pc_slider(1, pc_cap),
-            conditionalPanel(
-              condition = "input.plotPanels == 'ggplot2' ||
-      input.plotPanels == 'plotly2' || input.plotPanels == 'plotly3'",
-              pc_slider(2, pc_cap)
-            ),
-            conditionalPanel(
-              condition = "input.plotPanels == 'plotly3'",
-              pc_slider(3, pc_cap)
-            )
-          ),
-          perplexity_ui(perplexity_types),
-          sets_ui(thre_panels_ui(thre_opts), max_cat_num)
-        ),
-        menuItem(
-          "Settings",
-          check_panel("sMenu", "Settings", my_settings),
-          select_panel("palette", "Color Palette", pal_options),
-          numericInput("height", "Graph Height", value=graph_height, min=1, max=4000)
-        ),
-        menuItem(
-          "Filters",
-          do.call(conditionalPanel, c(
-            condition = "input.embedding != 'Sets' && (input.embedding == 'PHATE' ||
-        input.visualize != 'Summarize')",
-            color_panels_ui(color_opts)
-          )),
-          do.call(conditionalPanel, c(
-            condition = "input.embedding != 'Sets' && input.plotPanels == 'ggplot2' &&
-    (input.embedding == 'PHATE' || input.visualize != 'Summarize')",
-            shape_panels_ui(shape_opts)
-          )),
-          do.call(conditionalPanel, c(
-            condition = "input.embedding != 'Sets' && input.plotPanels != 'beeswarm' &&
-          input.plotPanels != 'ggplot2' &&
-    (input.embedding == 'PHATE' || input.visualize != 'Summarize')",
-            label_panels_ui(label_opts)
-          )),
-          do.call(conditionalPanel, c(
-            condition = "input.visualize != 'Summarize' ||
-        input.embedding == 'Sets' || input.embedding == 'PHATE'",
-            filter_panels_ui(filter_opts),
-            select_opts
-          ))
-        )
+        dataSelectionMenu,
+        parametersMenu,
+        settingsMenu,
+        filtersMenu
       )
     ),
     dashboardBody(
