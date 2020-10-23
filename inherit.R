@@ -163,9 +163,9 @@ make_aws_name <- function(sca, nor, fea, emb, vis, dim_ind, per_ind, sub_ind, ca
           dim_ind, per_ind, sub_ind, cat_ind)
 }
 
-# creates category-related and subset-related data
-# to remove: rm(cat_groups, name_cat, num_cat, categories, sub_groups)
-init_cat_sub <- function(categories_full, decorations)
+# creates category-related data
+# to remove: rm(cat_groups, name_cat, num_cat, categories)
+init_cat <- function(categories_full)
 {
   # cat groups
   assign("cat_groups", lapply(categories_full, names), envir = .GlobalEnv)
@@ -182,18 +182,6 @@ init_cat_sub <- function(categories_full, decorations)
   categories <- unlist(categories_full, recursive=FALSE)
   names(categories) <- name_cat
   assign("categories", categories, envir = .GlobalEnv)
-  
-  # sub_groups
-  sub_groups <- my_empty_list(name_cat)
-
-  for (cat in name_cat)
-    sub_groups[[cat]] <- "Total"
-  
-  for (dec_group in decorations)
-    for (gc in dec_group$Categories)
-      sub_groups[[gc]] <- c(sub_groups[[gc]], names(dec_group$Subsets)[-1])
-  
-  assign("sub_groups", sub_groups, envir = .GlobalEnv)
   
   return(NULL)
 }
