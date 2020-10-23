@@ -77,9 +77,6 @@ calc_feat <- function(pc_cap, feat, total)
 # retrieves a subset
 get_my_subset <- function(decor, cat, sub)
 {
-  if (sub == "Total")
-    return(NULL)
-  
   for (dec_group in decor)
   {
     if (cat %in% dec_group$Categories)
