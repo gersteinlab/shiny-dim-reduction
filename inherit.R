@@ -59,6 +59,47 @@ rem_perc <- function(str)
   repStr(str, "%", "") %>% as.numeric()
 }
 
+# attempts to retrieve a file from a directory, returning a default otherwise
+get_from_dir <- function(filename, default, dir = "dependencies")
+{
+  if (sprintf("%s.rds", filename) %in% list.files(dir))
+    default <- readRDS(sprintf("%s/%s.rds", dir, filename))
+  assign(filename, default, envir = .GlobalEnv)
+  return(NULL)
+}
+
+# saves an object to Amazon AWS
+save_db <- function(dat, bucket, filename){
+  my_amazon_obj <- dat
+  s3save(my_amazon_obj, bucket=bucket, object=filename)
+  my_amazon_obj <- NULL
+}
+
+# loads an object from Amazon AWS
+load_db <- function(filename, bucket){
+  s3load(filename, bucket)
+  my_amazon_obj
+}
+
+# assigns Amazon keys
+assign_keys <- function(amazon_keys)
+{
+  Sys.setenv("AWS_ACCESS_KEY_ID" = amazon_keys[1],
+             "AWS_SECRET_ACCESS_KEY" = amazon_keys[2])
+  assign("aws_bucket", amazon_keys[3], envir = .GlobalEnv)
+  return(NULL)
+}
+
+# straightforward password hashing
+my_hash <- function(password)
+{
+  bcrypt::hashpw(password, gensalt(12))
+}
+
+# -----------------------
+# CONSTANT INITIALIZATION
+# -----------------------
+
 # scale options 
 sca_options <- c("Logarithmic", "Linear")
 # normalization options
@@ -122,29 +163,37 @@ make_aws_name <- function(sca, nor, fea, emb, vis, dim_ind, per_ind, sub_ind, ca
           dim_ind, per_ind, sub_ind, cat_ind)
 }
 
-# saves an object to Amazon AWS
-save_db <- function(dat, bucket, filename){
-  my_amazon_obj <- dat
-  s3save(my_amazon_obj, bucket=bucket, object=filename)
-  my_amazon_obj <- NULL
-}
-
-# loads an object from Amazon AWS
-load_db <- function(filename, bucket){
-  s3load(filename, bucket)
-  my_amazon_obj
-}
-
-# attempts to retrieve a file from a directory, returning a default otherwise
-get_from_dir <- function(name, default, dir)
+# creates category-related and subset-related data
+# to remove: rm(cat_groups, name_cat, num_cat, categories, sub_groups)
+init_cat_sub <- function(categories_full, decorations)
 {
-  if (name %in% list.files(dir))
-    return(readRDS(sprintf("%s/%s", dir, name)))
-  return(default)
-}
+  # cat groups
+  assign("cat_groups", lapply(categories_full, names), envir = .GlobalEnv)
+  
+  # name_cat
+  name_cat <- unlist(cat_groups)
+  names(name_cat) <- NULL
+  assign("name_cat", name_cat, envir = .GlobalEnv)
+  
+  # num_cat
+  assign("num_cat", length(name_cat), envir = .GlobalEnv)
+  
+  # categories
+  categories <- unlist(categories_full, recursive=FALSE)
+  names(categories) <- name_cat
+  assign("categories", categories, envir = .GlobalEnv)
+  
+  # sub_groups
+  sub_groups <- my_empty_list(name_cat)
 
-# straightforward password hashing
-my_hash <- function(password)
-{
-  bcrypt::hashpw(password, gensalt(12))
+  for (cat in name_cat)
+    sub_groups[[cat]] <- "Total"
+  
+  for (dec_group in decorations)
+    for (gc in dec_group$Categories)
+      sub_groups[[gc]] <- c(sub_groups[[gc]], names(dec_group$Subsets)[-1])
+  
+  assign("sub_groups", sub_groups, envir = .GlobalEnv)
+  
+  return(NULL)
 }
