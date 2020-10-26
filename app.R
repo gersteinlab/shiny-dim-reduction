@@ -398,7 +398,6 @@ server <- function(input, output, session) {
   shapes <- reactive(order()[keep(), shapeby()])
   labels <- reactive(sprintf("%s: %s", labelby(), order()[keep(), labelby()]))
   my_chars <- reactive(parse_opt(input[[get_select(input$category, filterby())]]))
-  my_subset <- reactive(get_my_subset(decorations, input$category, subi()))
   
   # calculate which samples to keep
   keep <- reactive({
@@ -540,8 +539,9 @@ server <- function(input, output, session) {
       
       data <- load_db(addr, aws_bucket)[,my_chars(),drop=FALSE]
       
-      if (subi() != "Total" && !is.null(my_subset()))
-        data <- data[rownames(data) %in% my_subset(),,drop=FALSE]
+      if (subi() != "Total")
+        data <- data[rownames(data) %in% get_my_subset(
+          decorations, input$category, subi()),,drop=FALSE]
       
       if (ncol(data) < 1 || nrow(data) < 8)
         return(NULL)
@@ -666,8 +666,9 @@ server <- function(input, output, session) {
       
       data <- load_db(addr, aws_bucket)[,my_chars(),drop=FALSE]
       
-      if (subi() != "Total" && !is.null(my_subset()))
-        data <- data[rownames(data) %in% my_subset(),,drop=FALSE]
+      if (subi() != "Total")
+        data <- data[rownames(data) %in% get_my_subset(
+          decorations, input$category, subi()),,drop=FALSE]
       
       if (ncol(data) < 1 || nrow(data) < 1)
         return(NULL)
@@ -807,8 +808,9 @@ server <- function(input, output, session) {
       
       data <- load_db(addr, aws_bucket)[,my_chars(),drop=FALSE]
       
-      if (subi() != "Total" && !is.null(my_subset()))
-        data <- data[rownames(data) %in% my_subset(),,drop=FALSE]
+      if (subi() != "Total")
+        data <- data[rownames(data) %in% get_my_subset(
+          decorations, input$category, subi()),,drop=FALSE]
       
       if (ncol(data) < 1 || nrow(data) < 1)
         return(NULL)
