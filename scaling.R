@@ -13,22 +13,13 @@ library(Rtsne)
 source("~/Justin-Tool/shiny-dim-reduction/build.R")
 setwd(app_loc)
 
-dir <- "dependencies"
+# essential
+get_from_dir("categories_full", NULL)
+get_from_dir("decorations", NULL)
+get_from_dir("amazon_keys", NULL)
+get_from_dir("order_total.rds", NULL)
 
-categories_full <- get_from_dir(
-  "categories_full.rds", 
-  NULL, dir
-)
-
-order_total <- get_from_dir(
-  "order_total.rds",
-  NULL, dir
-)
-
-amazon_keys <- get_from_dir(
-  "amazon_keys.rds",
-  NULL, dir
-)
+assign_keys(amazon_keys)
 
 perplexity_types <- get_from_dir(
   "perplexity_types.rds", 
@@ -40,38 +31,19 @@ pc_cap <- get_from_dir(
   3, dir
 )
 
-decorations <- get_from_dir(
-  "decorations.rds",
-  NULL, dir
-)
-
 # sets parameters after getting keys for Amazon AWS
-Sys.setenv("AWS_ACCESS_KEY_ID" = amazon_keys[1],
-           "AWS_SECRET_ACCESS_KEY" = amazon_keys[2])
-aws_bucket <- amazon_keys[3]
+
 
 # create categories
-cat_groups <- lapply(categories_full, function(x){names(x)})
-name_cat <- unlist(cat_groups)
-num_cat <- length(name_cat)
-categories <- unlist(categories_full, recursive=FALSE)
-names(categories) <- name_cat
-names(name_cat) <- NULL
-
-# create category subsets panel
+init_cat(categories_full)
 sub_groups <- my_empty_list(name_cat)
 
 for (cat in name_cat)
   sub_groups[[cat]] <- "Total"
 
 for (dec_group in decorations)
-{
-  for (good_cat in dec_group$Categories)
-  {
-    sub_groups[[good_cat]] <- c(sub_groups[[good_cat]], 
-                                names(dec_group$Subsets)[-1])
-  }
-}
+  for (gc in dec_group$Categories)
+    sub_groups[[gc]] <- c(sub_groups[[gc]], names(dec_group$Subsets)[-1])
 
 # creates an empty list for neighbors
 perplexity_list <- my_empty_list(sprintf("P%s", perplexity_types))
