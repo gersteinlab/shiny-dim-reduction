@@ -116,12 +116,7 @@ categories_full <- list(
   )
 )
 
-cat_groups <- lapply(categories_full, function(x){names(x)})
-name_cat <- unlist(cat_groups)
-num_cat <- length(name_cat)
-categories <- unlist(categories_full, recursive=FALSE)
-names(categories) <- name_cat
-order_total <- my_empty_list(name_cat)
+init_cat(categories_full)
 
 # -----
 # FABIO
