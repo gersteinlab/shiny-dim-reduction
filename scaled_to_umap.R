@@ -24,7 +24,7 @@ my_UMAP <- function(data, dim, perp) {
     min_dist = 0.1,
     input = "data",
     init = "random",
-    verbose = FALSE,
+    verbose = TRUE,
     random_state = 0,
     transform_state = 0
   )
