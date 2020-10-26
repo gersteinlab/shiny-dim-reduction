@@ -21,7 +21,7 @@ get_from_dir("order_total.rds", NULL)
 
 # optional
 get_from_dir("perplexity_types", 1:5)
-get_from_dir("pc_cap.rds", 3)
+get_from_dir("pc_cap", 3)
 
 assign_keys(amazon_keys)
 
