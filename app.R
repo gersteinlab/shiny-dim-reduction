@@ -49,7 +49,7 @@ server <- function(input, output, session) {
   
   # toggles password visibility
   observeEvent(input$toggle_password, {
-    if (input$toggle_password %%2 == 1)
+    if (input$toggle_password %% 2 == 1)
     {
       updateTextInput(session, "password",
                       label="Password (is visible)",
