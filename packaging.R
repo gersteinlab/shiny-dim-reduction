@@ -10,7 +10,7 @@ source("~/Justin-Tool/shiny-dim-reduction/scaling.R")
 # PACKAGE PCA and VAE
 # -------------------
 setwd(pro_loc)
-dog <- names(categories)
+dog <- name_cat
 for (cat in dog)
 {
   print(cat)
@@ -30,24 +30,18 @@ for (cat in dog)
             # loc <- repStr(loc, sprintf("Total_%s", name_cat), name_cat)
             
             save_db(
-              myRDS(sprintf("vis-%s/NONE_%s_%s", emb, emb, loc)),
+              readRDS(sprintf("vis-%s/NONE_%s_%s", emb, emb, loc)),
               aws_bucket,
-              make_aws_name(
-                make_file_name(sca, nor, fea, emb, "Explore", "", ""), 
-                sub, cat
-              )
+              make_aws_name(cat, sub, sca, nor, fea, emb, "Explore", "", "")
             )
             
             save_db(
-              myRDS(sprintf("vis-%s/SUM_%s_%s", emb, emb, loc)), 
+              readRDS(sprintf("vis-%s/SUM_%s_%s", emb, emb, loc)), 
               aws_bucket,
-              make_aws_name(
-                make_file_name(sca, nor, fea, emb, "Summarize", "", ""), 
-                sub, cat
-              )
+              make_aws_name(cat, sub, sca, nor, fea, emb, "Summarize", "", "")
             )
             
-            tsne_vis <- myRDS(sprintf("vis-%s/TSNE_%s_%s", emb, emb, loc))
+            tsne_vis <- readRDS(sprintf("vis-%s/TSNE_%s_%s", emb, emb, loc))
             
             for (nei in perplexity_types)
             {
@@ -58,10 +52,7 @@ for (cat in dog)
                 save_db(
                   tsne_vis[[sprintf("TSNE%s", dim)]][[sprintf("P%s", nei)]],
                   aws_bucket,
-                  make_aws_name(
-                    make_file_name(sca, nor, fea, emb, "tSNE", dim, nei_ind), 
-                    sub, cat
-                  )
+                  make_aws_name(cat, sub, sca, nor, fea, emb, "tSNE", dim, nei_ind)
                 )
               }
             }
