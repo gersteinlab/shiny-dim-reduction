@@ -25,7 +25,7 @@ my_props <- function(data) {
 # PERFORM VISUALIZATION
 # ---------------------
 
-dog <- names(categories)
+dog <- name_cat
 for (cat in dog)
 {
   for (sub in sub_groups[[cat]])
@@ -44,7 +44,7 @@ for (cat in dog)
           explore <- pca$x
           
           # NONE
-          myRDS(sprintf("vis-PCA/NONE_PCA_%s", loc), explore)
+          saveRDS(explore, sprintf("vis-PCA/NONE_PCA_%s", loc))
           
           # tSNE
           tsne2 <- perplexity_list
@@ -57,11 +57,11 @@ for (cat in dog)
             tsne3[[sprintf("P%s", nei)]] <- my_rTSNE(explore, 3, nei)$Y
           }
           print(my_timer(start))
-          myRDS(sprintf("vis-PCA/TSNE_PCA_%s", loc), 
-                list("TSNE2"=tsne2, "TSNE3"=tsne3))
+          saveRDS(list("TSNE2"=tsne2, "TSNE3"=tsne3),
+                  sprintf("vis-PCA/TSNE_PCA_%s", loc))
           
           # SUM
-          myRDS(sprintf("vis-PCA/SUM_PCA_%s", loc), my_props(pca))
+          saveRDS(my_props(pca), sprintf("vis-PCA/SUM_PCA_%s", loc))
         }
       }
     }
