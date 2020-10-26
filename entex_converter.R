@@ -318,7 +318,7 @@ for (i in 1:nrow(order))
 }
 
 order_total[[cat]] <- order
-myRDS(sprintf("combined/combined_%s.rds", cat), pd)
+saveRDS(pd, sprintf("combined/combined_%s.rds", cat))
 
 # process metadata
 cat <- name_cat[15]
@@ -343,7 +343,7 @@ for (i in 1:nrow(order))
 }
 
 order_total[[cat]] <- order
-myRDS(sprintf("combined/combined_%s.rds", cat), ft)
+saveRDS(ft, sprintf("combined/combined_%s.rds", cat))
 
 # process metadata
 cat <- name_cat[16]
