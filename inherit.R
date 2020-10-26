@@ -68,6 +68,13 @@ get_from_dir <- function(filename, default, dir = "dependencies")
   return(NULL)
 }
 
+# attempts to save an object with the given name to the current directory
+self_save <- function(filename, compress=TRUE)
+{
+  saveRDS(get(filename), sprintf("%s.rds", filename), compress=compress)
+  return(NULL)
+}
+
 # saves an object to Amazon AWS
 save_db <- function(dat, bucket, filename){
   my_amazon_obj <- dat
