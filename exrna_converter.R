@@ -4,7 +4,6 @@
 # warning: varies highly based on data source.
 
 project_name <- "exRNA"
-
 source("~/Justin-Tool/shiny-dim-reduction/converter.R")
 
 # --------------
@@ -982,7 +981,7 @@ In addition, the NIH Common Fund, ERCC, and many ERCC producers
 graciously generated these datasets."
 perplexity_types <- c(10, 20, 30, 50, 100)
 pc_cap <- 10
-user_credentials <- list("guest"=hashpw("All@2019", gensalt(12)))
+user_credentials <- list("guest"=my_hash("All@2019"))
 
 myRDS("amazon_keys.rds", amazon_keys)
 myRDS("app_title.rds", app_title)
