@@ -87,10 +87,7 @@ for (cat in dog)
           save_db(
             myRDS(sprintf("vis-UMAP/SUM_UMAP_%s", loc)), 
             aws_bucket,
-            make_aws_name(
-              make_file_name(sca, nor, fea, "UMAP", "Summarize", "", ""), 
-              sub, cat
-            )
+            make_aws_name(cat, sub, sca, nor, fea, "UMAP", "Summarize", "", "")
           )
           
           explore <- myRDS(sprintf("vis-UMAP/NONE_UMAP_%s", loc))
@@ -102,10 +99,7 @@ for (cat in dog)
             save_db(
               explore[[sprintf("P%s", nei)]], 
               aws_bucket,
-              make_aws_name(
-                make_file_name(sca, nor, fea, "UMAP", "Explore", "", nei_ind), 
-                sub, cat
-              )
+              make_aws_name(cat, sub, sca, nor, fea, "UMAP", "Explore", "", nei_ind)
             )
             
             tsne_vis <- myRDS(sprintf("vis-UMAP/TSNE_UMAP_%s", loc))
@@ -115,10 +109,7 @@ for (cat in dog)
               save_db(
                 tsne_vis[[sprintf("TSNE%s", dim)]][[sprintf("P%s", nei)]],
                 aws_bucket,
-                make_aws_name(
-                  make_file_name(sca, nor, fea, "UMAP", "tSNE", dim, nei_ind), 
-                  sub, cat
-                )
+                make_aws_name(cat, sub, sca, nor, fea, "UMAP", "tSNE", dim, nei_ind)
               )
             }
           }
