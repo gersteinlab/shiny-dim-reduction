@@ -317,84 +317,52 @@ my_css_styling <- HTML("
 # LOAD DEPENDENCIES
 # -----------------
 
-# these are ordered from most to least important (ex: app_title can be 
-# missing and not significantly affect functionality)
-dir <- "dependencies"
+# these are ordered from most to least necessary for app function.
 
-user_credentials <- get_from_dir(
-  "user_credentials.rds", 
-  NULL, dir
-)
-
-# a bit of exposition regarding categories_full:
+# a bit of exposition regarding categories_full (REQUIRED):
 # first, break up into groups (ex: cCREs, Expression, Proteomics)
 # second, break up into categories (ex: H3K27ac, H3K9me3, Methylation)
 # note that all categories MUST be unique, even if in different groups
 # also, the value of categories_full$cCREs$H3K27ac must be the number of
 # features originally in that dataset before dimensionality reduction
-categories_full <- get_from_dir(
-  "categories_full.rds", 
-  NULL, dir
-)
+get_from_dir("categories_full", NULL)
 
-order_total <- get_from_dir(
-  "order_total.rds",
-  NULL, dir
-)
-
-amazon_keys <- get_from_dir(
-  "amazon_keys.rds",
-  NULL, dir
-)
-
-# sets parameters after getting keys for Amazon AWS
-Sys.setenv("AWS_ACCESS_KEY_ID" = amazon_keys[1],
-           "AWS_SECRET_ACCESS_KEY" = amazon_keys[2])
-aws_bucket <- amazon_keys[3]
-
-perplexity_types <- get_from_dir(
-  "perplexity_types.rds", 
-  NULL, dir
-)
-
-thresholds <- get_from_dir(
-  "thresholds.rds",
-  NULL, dir
-)
-
-pc_cap <- get_from_dir(
-  "pc_cap.rds",
-  3, dir
-)
-
-app_title <- get_from_dir(
-  "app_title.rds", 
-  "Dimensionality Reduction Tool", dir)
-
-app_citations <- get_from_dir(
-  "app_citations.rds", 
-  "No data citations could be found.", dir)
-
-citations <- bibliography(app_citations)
-
-custom_color_scales <- get_from_dir(
-  "custom_color_scales.rds",
-  NULL, dir
-)
-
-# a bit of exposition regarding decorations:
+# a bit of exposition regarding decorations (REQUIRED):
 # first of all, each decoration in the list has a name
 # and then two entries:
 # (i) a vector of categories to which the decoration applies
 # (ii) a list containing (a) a reference character vector and 
 # (b) indices of that reference vector that constitute subsets
-decorations <- get_from_dir(
-  "decorations.rds",
-  NULL, dir
-)
+get_from_dir("decorations", NULL)
 
-# try to load the complete ui from memory
-complete_ui <- get_from_dir(
-  "complete_ui.rds",
-  NULL, dir
-)
+# amazon keys (REQUIRED)
+get_from_dir("amazon_keys", NULL)
+assign_keys(amazon_keys)
+
+# metadata
+get_from_dir("order_total", NULL)
+
+# perplexity types for particular analyses
+get_from_dir("perplexity_types", 1:5)
+
+# thresholds for sets
+get_from_dir("thresholds", NULL)
+
+# app title
+get_from_dir("app_title", "Dimensionality Reduction Tool")
+
+# create citations
+get_from_dir("app_citations", "No data citations could be found.")
+citations <- bibliography(app_citations)
+
+# component cap
+get_from_dir("pc_cap", 3)
+
+# user credentials, only needed for online version
+get_from_dir("user_credentials", NULL)
+
+# custom color scales, frequently omitted
+get_from_dir("custom_color_scales", NULL)
+
+# try to load the complete ui from memory - if it doesn't exist, regenerate later
+get_from_dir("complete_ui", NULL)
