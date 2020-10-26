@@ -9,7 +9,7 @@ source("~/Justin-Tool/shiny-dim-reduction/scaling.R")
 dog <- name_cat
 for (cat in dog)
 {
-  combined <- myRDS(sprintf("combined/combined_%s.rds", cat))
+  combined <- readRDS(sprintf("combined/combined_%s.rds", cat))
   
   for (sub in sub_groups[[cat]])
   {
