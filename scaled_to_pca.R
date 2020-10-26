@@ -33,7 +33,7 @@ for (cat in dog)
             pca <- prcomp(scaled, center = TRUE, rank. = pc_cap) 
             pca$rotation <- NULL
             pca$center <- NULL
-            myRDS(pca_title, pca)
+            saveRDS(pca, pca_title)
           }
         }
       }
