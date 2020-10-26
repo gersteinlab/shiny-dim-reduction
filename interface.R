@@ -363,6 +363,3 @@ get_from_dir("user_credentials", NULL)
 
 # custom color scales, frequently omitted
 get_from_dir("custom_color_scales", NULL)
-
-# try to load the complete ui from memory - if it doesn't exist, regenerate later
-get_from_dir("complete_ui", NULL)
