@@ -644,7 +644,7 @@ self_save("order_total")
 # shiny-app-entex
 amazon_keys <- c("AKIAVI2HZGPON64RUYYJ",
                  "1AE4Jlbrp0Sfuq8Ew1gYNFkWOaqgrDVVvCJqCz8b",
-                 "shiny-app-data-justin")
+                 "shiny-app-data-justin-entex")
 app_title <- "Dimensionality Reduction Plotting Tool for the ENTEx Project"
 app_citations <- 
   "<u>ENCODE Paper 1:</u> ENCODE Project Consortium. An integrated encyclopedia of 
