@@ -377,6 +377,13 @@ for (file in filenames)
   save_db(data, sprintf("Sets/%s", file))
 }
 
+
+
+
+
+# -----
+# exRNA
+# -----
 order <- data.frame(matrix(colnames(all_decorations[[1]]), ncol=1))
 colnames(order) <- "TISSUE"
 
@@ -384,3 +391,60 @@ new_order <- my_empty_list(names(all_decorations))
 for (dec in names(all_decorations))
   new_order[[dec]] <- order
 myRDS("order_total.rds", new_order)
+
+
+cat <- name_cat[1]
+combined <- myRDS(sprintf("combined/combined_%s.rds", cat))
+sub <- sub_groups[[cat]][1]
+scaled_raw <- get_safe_sub(sub, combined, decorations, cat)
+net_data_pca <- my_empty_list(sca_options)
+
+for (sca in sca_options)
+{
+  scaled <- do_scal(sca, scaled_raw)
+  scaled <- do_scal(sca, scaled)
+  net_data_pca[[sca]] <- my_empty_list(nor_options)
+  
+  for (nor in nor_options[1:4])
+  {
+    print(nor)
+    scaled <- do_norm(nor, scaled)
+    s2 <- feature_start(scaled, 1.0*10/100)
+    pca <- prcomp(s2, center = TRUE, rank. = pc_cap) 
+    net_data_pca[[sca]][[nor]] <- pca
+  }
+}
+
+net_data_tsne <- net_data_pca
+for (sca in sca_options)
+{
+  net_data_tsne[[sca]] <- my_empty_list(nor_options)
+  
+  for (nor in nor_options[1:4])
+  {
+    net_data_tsne[[sca]][[nor]] <- my_rTSNE(net_data_pca[[sca]][[nor]]$x, 2, 50)
+  }
+}
+
+biofluids <- order_total$miRNA$BIOFLUID
+
+tsne <- net_data_tsne[["Logarithmic"]][["Global Min-Max"]]$Y
+plotly_2d(tsne[,1], tsne[,2], "1", "2", "markers", 
+          biofluids, biofluids, color_seq(length(unique(biofluids)), "Rainbow", TRUE), "", TRUE)
+
+net_data_tsne <- net_data_pca
+for (sca in sca_options)
+{
+  net_data_tsne[[sca]] <- my_empty_list(nor_options)
+  
+  for (nor in nor_options[1:4])
+  {
+    net_data_tsne[[sca]][[nor]] <- my_rTSNE(net_data_pca[[sca]][[nor]]$x, 2, 50)
+  }
+}
+
+source("~/Justin-Tool/shiny-dim-reduction/functions.R")
+
+# -----
+# ENTEx
+# -----
