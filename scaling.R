@@ -19,23 +19,16 @@ get_from_dir("decorations", NULL)
 get_from_dir("amazon_keys", NULL)
 get_from_dir("order_total.rds", NULL)
 
+# optional
+get_from_dir("perplexity_types", 1:5)
+get_from_dir("pc_cap.rds", 3)
+
 assign_keys(amazon_keys)
-
-perplexity_types <- get_from_dir(
-  "perplexity_types.rds", 
-  NULL, dir
-)
-
-pc_cap <- get_from_dir(
-  "pc_cap.rds",
-  3, dir
-)
-
-# sets parameters after getting keys for Amazon AWS
-
 
 # create categories
 init_cat(categories_full)
+
+# create subsets
 sub_groups <- my_empty_list(name_cat)
 
 for (cat in name_cat)
