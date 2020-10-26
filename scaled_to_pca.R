@@ -6,7 +6,7 @@ source("~/Justin-Tool/shiny-dim-reduction/scaling.R")
 # PRINCIPAL COMPONENT ANALYSIS
 # ----------------------------
 
-dog <- names(categories)
+dog <- name_cat
 for (cat in dog)
 {
   combined <- myRDS(sprintf("combined/combined_%s.rds", cat))
