@@ -365,7 +365,15 @@ for (i in 1:nrow(order))
 }
 
 order_total[[cat]] <- order
-myRDS(sprintf("combined/combined_%s.rds", cat), oms)
+saveRDS(oms, sprintf("combined/combined_%s.rds", cat))
+
+for (cat in name_cat)
+{
+  order_total[[cat]]$INDIVIDUAL <- repStr(
+    order_total[[cat]]$INDIVIDUAL,
+    c("001", "002", "003", "004"),
+    c("1", "2", "3", "4"))
+}
 
 # -----------
 # DECORATIONS
@@ -547,12 +555,35 @@ all_decorations$Bivalent_Proximal_CTCF <- matrix_and(
   all_decorations$Bivalent_Proximal, all_decorations$Bivalent_CTCF
 )
 
-all_decorations$Active_Distal_CTCF_
+# allele specific
+ind_decor$Active_Distal_CTCF_AS <- which(
+  ref %in% union_full$active.distal.CTCF.AS)
+ind_decor$Active_Distal_CTCF_nonAS <- which(
+  ref %in% union_full$active.distal.CTCF.nonAS)
+ind_decor$Active_Distal_nonCTCF_AS <- which(
+  ref %in% union_full$active.distal.nonCTCF.AS)
+ind_decor$Active_Distal_nonCTCF_nonAS <- which(
+  ref %in% union_full$active.distal.nonCTCF.nonAS)
+ind_decor$Active_Proximal_CTCF_AS <- which(
+  ref %in% union_full$active.proximal.CTCF.AS)
+ind_decor$Active_Proximal_CTCF_nonAS <- which(
+  ref %in% union_full$active.proximal.CTCF.nonAS)
+ind_decor$Active_Proximal_nonCTCF_AS <- which(
+  ref %in% union_full$active.proximal.nonCTCF.AS)
+ind_decor$Active_Proximal_nonCTCF_nonAS <- which(
+  ref %in% union_full$active.proximal.nonCTCF.nonAS)
+
+ind_decor_order <- ind_decor[c(1,
+                               6,9,14,
+                               5,3,2,4,
+                               8,7,
+                               13,11,10,12, 
+                               15:30)]
 
 decorations <- list(
   "cCREs"=list(
     "Categories"=names(categories_full$cCREs),
-    "Subsets"=ind_decor
+    "Subsets"=ind_decor_order
   )
 )
 
@@ -600,23 +631,15 @@ custom_color_scales <- list(
   )
 )
 
-for (cat in name_cat)
-{
-  order_total[[cat]]$INDIVIDUAL <- repStr(
-    order_total[[cat]]$INDIVIDUAL,
-    c("001", "002", "003", "004"),
-    c("1", "2", "3", "4"))
-}
-
 # -----------------
 # SAVE DEPENDENCIES
 # -----------------
 
 setwd(dep_loc)
 
-myRDS("decorations.rds", decorations)
-myRDS("categories_full.rds", categories_full)
-myRDS("order_total.rds", order_total)
+self_save("decorations")
+self_save("categories_full")
+self_save("order_total")
 
 amazon_keys <- c("AKIAVI2HZGPON64RUYYJ",
                  "1AE4Jlbrp0Sfuq8Ew1gYNFkWOaqgrDVVvCJqCz8b",
@@ -639,62 +662,10 @@ perplexity_types <- c(2, 4, 6, 12, 20)
 pc_cap <- 10
 user_credentials <- list("guest" = my_hash("All@2019")) 
 
-myRDS("amazon_keys.rds", amazon_keys)
-myRDS("app_title.rds", app_title)
-myRDS("app_citations.rds", app_citations)
-myRDS("perplexity_types.rds", perplexity_types)
-myRDS("pc_cap.rds", pc_cap)
-myRDS("user_credentials.rds", user_credentials)
-
-# ----------------------
-# Kun's Methylation Data
-# ----------------------
-setwd(sprintf("%s/Kun", raw_loc))
-filenames <- list.files()
-first <- read_tsv_text(filenames[1])
-f_matrix <- r1_to_cols(do.call(rbind, first))[,-1]
-my_ids <- f_matrix[,1]
-f_matrix <- f_matrix[,-1]
-target <- apply(f_matrix, 1:2, as.numeric)
-target <- target[rowSums(is.na(target)) == 0, ]
-
-# -----------------
-# Yucheng's Example
-# -----------------
-setwd(sprintf("%s/decorations_app/Dependencies", roo_loc))
-myRDS("decorations.rds", decorations)
-feat_counts <- my_empty_list(names(all_decorations))
-for (dec in names(all_decorations))
-  feat_counts[[dec]] <- nrow(all_decorations[[dec]])
-sub_cat <- list("Decorations"=feat_counts)
-myRDS("categories_full.rds", sub_cat)
-
-# Continuing ...
-myRDS("all_decorations.rds", all_decorations)
-setwd(sprintf("%s/decorations_app/data", roo_loc))
-for (dec in names(all_decorations))
-{
-  compressed <- all_decorations[[dec]] %>% Matrix(sparse=TRUE)
-  myRDS(sprintf("%s.rds", dec), 
-        list("TISSUE"=compressed)
-  )
-}
-
-# upload Sets
-setwd(dat_loc)
-setwd("Sets")
-filenames <- list.files()
-
-for (file in filenames)
-{
-  data <- myRDS(file)
-  save_db(data, sprintf("Sets/%s", file))
-}
-
-order <- data.frame(matrix(colnames(all_decorations[[1]]), ncol=1))
-colnames(order) <- "TISSUE"
-
-new_order <- my_empty_list(names(all_decorations))
-for (dec in names(all_decorations))
-  new_order[[dec]] <- order
-myRDS("order_total.rds", new_order)
+self_save("amazon_keys")
+self_save("app_title")
+self_save("app_citations")
+self_save("perplexity_types")
+self_save("pc_cap")
+self_save("user_credentials")
+self_save("custom_color_scales")
