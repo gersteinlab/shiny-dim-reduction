@@ -11,9 +11,9 @@ source("~/Justin-Tool/shiny-dim-reduction/converter.R")
 library(Matrix)
 
 # creates the order data frame
-create_order <- function(data, colnames)
+create_order <- function(num_rows, colnames)
 {
-  order <- matrix(ncol = length(colnames), nrow = nrow(data))
+  order <- matrix(ncol = length(colnames), nrow = num_rows)
   colnames(order) <- colnames
   data.frame(order)
 }
@@ -23,6 +23,15 @@ EH38D_removal <- function(char_vec)
 {
   splits <- substr(char_vec, start = 1, stop = 5)
   if (length(which(splits == "EH38D")) == length(char_vec))
+    return(substr(char_vec, start = 6, stop = 12))
+  return(char_vec)
+}
+
+# apply to colnames of Yucheng's data to remove EH38E
+EH38E_removal <- function(char_vec)
+{
+  splits <- substr(char_vec, start = 1, stop = 5)
+  if (length(which(splits == "EH38E")) == length(char_vec))
     return(substr(char_vec, start = 6, stop = 12))
   return(char_vec)
 }
@@ -96,9 +105,9 @@ categories_full <- list(
     "Methylation"=226807
   ),
   "Expression"=list(
-    "Protein_Coding_Genes"=17598,
-    "Pseudogenes"=5657,
-    "Long Non-Coding RNAs"=0
+    "Protein_Coding_Genes"=9571,
+    "Pseudogenes"=17201,
+    "Long Non-Coding RNAs"=2542
   ),
   "Proteomics"=list(
     "Peptide"=9411,
@@ -112,25 +121,23 @@ name_cat <- unlist(cat_groups)
 num_cat <- length(name_cat)
 categories <- unlist(categories_full, recursive=FALSE)
 names(categories) <- name_cat
+order_total <- my_empty_list(name_cat)
 
 # -----
 # FABIO
 # -----
 
-order_total <- my_empty_list(name_cat)
-
 fabio_filenames <- list(
-  "k27ac.normalized.FN_JR.txt",
-  "raw.average.K27me3.table.quantile.scaled.txt",
-  "raw.average.k4me1.table.quantile.scaled.txt",
-  "raw.average.k4me3.table.quantile.scaled.txt",
-  "raw.average.K9me3.table.quantile.scaled.txt",
-  
-  "raw.average.ATAC.table.quantile.scaled.txt",
-  "raw.average.CTCF.table.quantile.scaled.txt",
-  "raw.average.DNase.table.quantile.scaled.txt",
-  "raw.average.POLR2A.table.quantile.scaled.txt",
-  "raw.average.methylation.table.quantile.scaled.txt"
+  "Fabio/k27ac.normalized.FN_JR.txt",
+  "Fabio/raw.average.K27me3.table.quantile.scaled.txt",
+  "Fabio/raw.average.k4me1.table.quantile.scaled.txt",
+  "Fabio/raw.average.k4me3.table.quantile.scaled.txt",
+  "Fabio/raw.average.K9me3.table.quantile.scaled.txt",
+  "Fabio/raw.average.ATAC.table.quantile.scaled.txt",
+  "Fabio/raw.average.CTCF.table.quantile.scaled.txt",
+  "Fabio/raw.average.DNase.table.quantile.scaled.txt",
+  "Fabio/raw.average.POLR2A.table.quantile.scaled.txt",
+  "Fabio/raw.average.methylation.table.quantile.scaled.txt"
 )
 
 dog <- name_cat[1:10]
@@ -142,22 +149,23 @@ for (cat in dog)
   
   # read data
   setwd(raw_loc)
-  setwd("cCREs")
   print(sprintf("Reading %s for %s", filename, cat))
+  begin <- my_timer()
   my_lists <- read_tsv_text(filename)
-  my_colnames <- EH38D_removal(my_lists[[1]])
-  my_lists[[1]] <- c("CORNER_CORNER", my_colnames)
-  data <- do.call(rbind, my_lists) %>% r1_to_cols()
+  print(sprintf("Seconds elapsed: %s", my_timer(begin)))
+  begin <- my_timer()
+  my_colnames <- c("CORNER_CORNER", EH38D_removal(my_lists[[1]]))
+  my_lists[[1]] <- NULL
+  data <- do.call(rbind, my_lists)
   rm(my_lists)
+  colnames(data) <- my_colnames
+  print(sprintf("Seconds elapsed: %s", my_timer(begin)))
   
   # process metadata
   print(sprintf("Processing metadata for %s", cat))
-  order <- create_order(data, c("SAMPLE", "TISSUE", "INDIVIDUAL"))
+  begin <- my_timer()
+  order <- create_order(nrow(data), c("SAMPLE", "TISSUE", "INDIVIDUAL"))
   order[,1] <- data[,1]
-  
-  # delete samples row in data and convert to numeric
-  data <- convert_to_num(data[,-1])
-  print(ncol(data))
   
   for (j in 1:nrow(order))
   {
@@ -178,52 +186,58 @@ for (cat in dog)
   }
   
   order_total[[cat]] <- order
+  print(sprintf("Seconds elapsed: %s", my_timer(begin)))
   
-  # save data
-  setwd(pro_loc)
-  saveRDS(data, sprintf("combined/combined_%s.rds", cat), compress=FALSE)
+  # # delete samples row in data and convert to numeric
+  # print(sprintf("Converting numerical data for %s", cat))
+  # begin <- my_timer()
+  # data <- convert_to_num(data[,-1])
+  # print(ncol(data))
+  # 
+  # # save data
+  # setwd(pro_loc)
+  # saveRDS(data, sprintf("combined/combined_%s.rds", cat), compress=FALSE)
+  # print(sprintf("Seconds elapsed: %s", my_timer(begin)))
 }
 
 # -------
 # YUCHENG
 # -------
 
-setwd(raw_loc)
-setwd("Yucheng_New")
-
-yyang_filenames <- list(
-  "gene_expression.lnc.cufflinks_output.reformat",
-  "gene_expression.pc.cufflinks_output.reformat",
-  "gene_expression.pg.cufflinks_output.reformat" 
+yyang_folder_names <- list(
+  "Yucheng/gene_expression.lnc.cufflinks_output.reformat",
+  "Yucheng/gene_expression.pc.cufflinks_output.reformat",
+  "Yucheng/gene_expression.pg.cufflinks_output.reformat" 
 )
 
-yyang_compile <- my_empty_list()
-
-for (i in 1:3)
-{
-   
-}
-
 dog <- name_cat[11:13]
-names(yyang_filenames) <- dog
+names(yyang_folder_names) <- dog
 
 for (cat in dog)
 {
   setwd(raw_loc)
-  filename <- yyang_filenames[[cat]]
+  folder <- yyang_folder_names[[cat]]
+  print(sprintf("Reading %s for %s", folder, cat))
+  begin <- my_timer()
+  folder_entries <- my_empty_list(list.files(folder))
   
-  my_lists <- read_tsv_text(filename)
-  data <- do.call(rbind, my_lists) %>% t() %>% r1_to_cols()
-  colnames(data)[1] <- "CORNER_CORNER"
+  for (file in names(folder_entries))
+  {
+    folder_entries[[file]] <- sprintf("%s/%s", folder, file) %>% 
+      read_tsv_text() %>% do.call(rbind, .)
+  }
   
-  # process metadata
+  rows <- lapply(folder_entries, function(x){x[,2]})
+  data <- do.call(rbind, rows)
+  colnames(data) <- folder_entries[[1]][,1]
+  row_names <- repStr(rownames(data), ".txt", "")
+  rownames(data) <- NULL
+  print(sprintf("Seconds elapsed: %s", my_timer(begin)))
+  
   print(sprintf("Processing metadata for %s", cat))
-  order <- create_order(data, c("SAMPLE", "TISSUE", "INDIVIDUAL"))
-  order[,1] <- data[,1]
-  
-  # delete samples row in data and convert to numeric
-  data <- convert_to_num(data[,-1])
-  print(ncol(data))
+  begin <- my_timer()
+  order <- create_order(length(row_names), c("SAMPLE", "TISSUE", "INDIVIDUAL"))
+  order[,1] <- row_names
   
   for (j in 1:nrow(order))
   {
@@ -243,9 +257,16 @@ for (cat in dog)
   
   order_total[[cat]] <- order
   
+  # convert to numeric
+  print(sprintf("Converting numerical data for %s", cat))
+  begin <- my_timer()
+  data <- convert_to_num(data)
+  print(ncol(data))
+  
   # save data
   setwd(pro_loc)
   saveRDS(data, sprintf("combined/combined_%s.rds", cat), compress=FALSE)
+  print(sprintf("Seconds elapsed: %s", my_timer(begin)))
 }
 
 # -------------------------------
@@ -279,13 +300,13 @@ oms <- data[95:104,]
 # Proteomics, FPKM/TPM, OMS Metadata
 # ----------------------------------
 
-setwd(com_loc)
+setwd(pro_loc)
 
 # process metadata
-cat <- name_cat[13]
+cat <- name_cat[14]
 print(sprintf("Processing metadata for %s", cat))
 order <- create_order(
-  pd, 
+  nrow(pd), 
   c("SAMPLE", "TISSUE", "INDIVIDUAL", "EXPRESSION"))
 order[,1] <- pd[,1]
 
@@ -302,13 +323,13 @@ for (i in 1:nrow(order))
 }
 
 order_total[[cat]] <- order
-myRDS(sprintf("combined_%s.rds", cat), pd)
+myRDS(sprintf("combined/combined_%s.rds", cat), pd)
 
 # process metadata
-cat <- name_cat[14]
+cat <- name_cat[15]
 print(sprintf("Processing metadata for %s", cat))
 order <- create_order(
-  ft, 
+  nrow(ft), 
   c("SAMPLE", "TISSUE", "INDIVIDUAL", "EXPRESSION", "EXP_COEFFICIENT"))
 order[,1] <- ft[,1]
 
@@ -327,13 +348,13 @@ for (i in 1:nrow(order))
 }
 
 order_total[[cat]] <- order
-myRDS(sprintf("combined_%s.rds", cat), ft)
+myRDS(sprintf("combined/combined_%s.rds", cat), ft)
 
 # process metadata
-cat <- name_cat[15]
+cat <- name_cat[16]
 print(sprintf("Processing metadata for %s", cat))
 order <- create_order(
-  oms, 
+  nrow(oms), 
   c("SAMPLE", "TISSUE", "INDIVIDUAL"))
 order[,1] <- oms[,1]
 
@@ -349,17 +370,59 @@ for (i in 1:nrow(order))
 }
 
 order_total[[cat]] <- order
-myRDS(sprintf("combined_%s.rds", cat), oms)
+myRDS(sprintf("combined/combined_%s.rds", cat), oms)
 
 # -----------
 # DECORATIONS
 # -----------
 
-combined_H3K27ac <- readRDS("combined_H3K27ac.rds")
+setwd(raw_loc)
+ED_mapping <- read_tsv_text("GRCh38-ccREs.bed")
+ED_mapping <- do.call(rbind, ED_mapping)
+input_E <- ED_mapping[,5] %>% EH38E_removal()
+output_D <- ED_mapping[,4] %>% EH38D_removal()
+
+ED_map <- function(vec_x)
+{
+  output_D[input_E %in% vec_x]
+}
+
+setwd(raw_loc)
+setwd("allele_specific")
+
+folder_list <- list.files()
+folder_full <- my_empty_list(folder_list)
+union_full <- folder_full
+
+for (folder in folder_list)
+{
+  file_list <- list.files(folder)
+  all_stuff <- my_empty_list(file_list)
+  
+  for (file in file_list)
+  {
+    all_stuff[[file]] <- read_tsv_text(sprintf("%s/%s", folder, file)) %>% 
+      unlist() %>% EH38E_removal() %>% ED_map()
+  }
+  
+  union <- NULL
+  for (file in file_list)
+  {
+    union <- base::union(union, all_stuff[[file]])
+  }
+  
+  print(length(union))
+  
+  folder_full[[folder]] <- all_stuff
+  union_full[[folder]] <- union
+}
+
+setwd(pro_loc)
+combined_H3K27ac <- readRDS("combined/combined_H3K27ac.rds")
 ref <- colnames(combined_H3K27ac)
 rm(combined_H3K27ac)
 
-setwd(sprintf("%s/cCRE_ID", raw_loc))
+setwd(sprintf("%s/Decorations", raw_loc))
 file_names <- list.files()
 all_decorations <- my_empty_list(file_names)
 
@@ -489,28 +552,7 @@ all_decorations$Bivalent_Proximal_CTCF <- matrix_and(
   all_decorations$Bivalent_Proximal, all_decorations$Bivalent_CTCF
 )
 
-# ----------------------
-# Kun's Methylation Data
-# ----------------------
-setwd(sprintf("%s/Kun", raw_loc))
-filenames <- list.files()
-first <- read_tsv_text(filenames[1])
-f_matrix <- r1_to_cols(do.call(rbind, first))[,-1]
-my_ids <- f_matrix[,1]
-f_matrix <- f_matrix[,-1]
-target <- apply(f_matrix, 1:2, as.numeric)
-target <- target[rowSums(is.na(target)) == 0, ]
-
-# Continuing ...
-myRDS("all_decorations.rds", all_decorations)
-setwd(sprintf("%s/decorations_app/data", roo_loc))rm()
-for (dec in names(all_decorations))
-{
-  compressed <- all_decorations[[dec]] %>% Matrix(sparse=TRUE)
-  myRDS(sprintf("%s.rds", dec), 
-        list("TISSUE"=compressed)
-  )
-}
+all_decorations$Active_Distal_CTCF_
 
 decorations <- list(
   "cCREs"=list(
@@ -518,22 +560,6 @@ decorations <- list(
     "Subsets"=ind_decor
   )
 )
-
-setwd(sprintf("%s/decorations_app/Dependencies", roo_loc))
-myRDS("decorations.rds", decorations)
-feat_counts <- my_empty_list(names(all_decorations))
-for (dec in names(all_decorations))
-  feat_counts[[dec]] <- nrow(all_decorations[[dec]])
-sub_cat <- list("Decorations"=feat_counts)
-myRDS("categories_full.rds", sub_cat)
-
-order <- data.frame(matrix(colnames(all_decorations[[1]]), ncol=1))
-colnames(order) <- "TISSUE"
-
-new_order <- my_empty_list(names(all_decorations))
-for (dec in names(all_decorations))
-  new_order[[dec]] <- order
-myRDS("order_total.rds", new_order)
 
 custom_color_scales <- list(
   "TISSUE"=list(
@@ -593,17 +619,6 @@ for (cat in name_cat)
 
 setwd(dep_loc)
 
-# upload Sets
-setwd(dat_loc)
-setwd("Sets")
-filenames <- list.files()
-
-for (file in filenames)
-{
-  data <- myRDS(file)
-  save_db(data, sprintf("Sets/%s", file))
-}
-
 myRDS("decorations.rds", decorations)
 myRDS("categories_full.rds", categories_full)
 myRDS("order_total.rds", order_total)
@@ -627,7 +642,7 @@ In addition, the ENCODE Consortium and several ENCODE production laboratories
 graciously generated these datasets." 
 perplexity_types <- c(2, 4, 6, 12, 20)
 pc_cap <- 10
-user_credentials <- list("guest"=hashpw("All@2019", gensalt(12)))
+user_credentials <- list("guest" = my_hash("All@2019")) 
 
 myRDS("amazon_keys.rds", amazon_keys)
 myRDS("app_title.rds", app_title)
@@ -635,3 +650,56 @@ myRDS("app_citations.rds", app_citations)
 myRDS("perplexity_types.rds", perplexity_types)
 myRDS("pc_cap.rds", pc_cap)
 myRDS("user_credentials.rds", user_credentials)
+
+# ----------------------
+# Kun's Methylation Data
+# ----------------------
+setwd(sprintf("%s/Kun", raw_loc))
+filenames <- list.files()
+first <- read_tsv_text(filenames[1])
+f_matrix <- r1_to_cols(do.call(rbind, first))[,-1]
+my_ids <- f_matrix[,1]
+f_matrix <- f_matrix[,-1]
+target <- apply(f_matrix, 1:2, as.numeric)
+target <- target[rowSums(is.na(target)) == 0, ]
+
+# -----------------
+# Yucheng's Example
+# -----------------
+setwd(sprintf("%s/decorations_app/Dependencies", roo_loc))
+myRDS("decorations.rds", decorations)
+feat_counts <- my_empty_list(names(all_decorations))
+for (dec in names(all_decorations))
+  feat_counts[[dec]] <- nrow(all_decorations[[dec]])
+sub_cat <- list("Decorations"=feat_counts)
+myRDS("categories_full.rds", sub_cat)
+
+# Continuing ...
+myRDS("all_decorations.rds", all_decorations)
+setwd(sprintf("%s/decorations_app/data", roo_loc))
+for (dec in names(all_decorations))
+{
+  compressed <- all_decorations[[dec]] %>% Matrix(sparse=TRUE)
+  myRDS(sprintf("%s.rds", dec), 
+        list("TISSUE"=compressed)
+  )
+}
+
+# upload Sets
+setwd(dat_loc)
+setwd("Sets")
+filenames <- list.files()
+
+for (file in filenames)
+{
+  data <- myRDS(file)
+  save_db(data, sprintf("Sets/%s", file))
+}
+
+order <- data.frame(matrix(colnames(all_decorations[[1]]), ncol=1))
+colnames(order) <- "TISSUE"
+
+new_order <- my_empty_list(names(all_decorations))
+for (dec in names(all_decorations))
+  new_order[[dec]] <- order
+myRDS("order_total.rds", new_order)
