@@ -128,10 +128,10 @@ vis_nouns <- c("Exploration of ", "Summary of ", "tSNE of ")
 # VAE: 1 (explore) + 1 (summarize) + 5*2 (tsNE) = 12
 # UMAP: 5 (explore) + 1 (summarize) + 5*2 (tSNE) = 16
 # PHATE: 5*2 (2D and 3D)
-# combinatorially ... 2 (sca) * 2 (nor) * 3 (fea) * 50 (emb) = 600 files
+# combinatorially ... 2 (sca) * 5 (nor) * 3 (fea) * 50 (emb) = 1500 files per folder
 # Note that Sets undergoes neither grouping nor decompression ...
 # For subsets and categories, we expect a leap in file number for AWS ...
-make_aws_name <- function(sca, nor, fea, emb, vis, dim_ind, per_ind, sub_ind, cat_ind)
+make_aws_name <- function(cat, sub, sca, nor, fea, emb, vis, dim_ind, per_ind)
 {
   sca_ind <- which(sca_options == sca)
   nor_ind <- which(nor_options == nor)
@@ -165,9 +165,9 @@ make_aws_name <- function(sca, nor, fea, emb, vis, dim_ind, per_ind, sub_ind, ca
     }
   }
   
-  sprintf("Dim_Red/%s_%s_%s_%s_%s_%s_%s_%s_%s.rds",
-          sca_ind, nor_ind, fea_ind, emb_ind, vis_ind, 
-          dim_ind, per_ind, sub_ind, cat_ind)
+  sprintf("Dim_Red/%s/%s/%s_%s_%s_%s_%s_%s_%s.rds",
+          cat, sub, sca_ind, nor_ind, fea_ind, emb_ind, vis_ind, 
+          dim_ind, per_ind)
 }
 
 # creates category-related data
