@@ -448,3 +448,161 @@ source("~/Justin-Tool/shiny-dim-reduction/functions.R")
 # -----
 # ENTEx
 # -----
+# ---------
+# TRANSPOSE
+# ---------
+source("~/Justin-Tool/shiny-dim-reduction/functions.R")
+
+decor <- decorations$cCREs$Subsets
+ref <- decor$Reference
+decor$Reference <- NULL
+
+for (dec in names(decor))
+{
+  decor[[dec]] <- ref[decor[[dec]]]
+}
+
+setwd(pro_loc)
+dog <- names(categories)[1:10]
+umap_total <- my_empty_list(dog)
+tsne_total <- umap_total
+u1_plots <- umap_total
+t1_plots <- umap_total
+u2_plots <- u1_plots
+t2_plots <- t1_plots
+u3_plots <- u1_plots
+t3_plots <- t1_plots
+
+cat <- "Methylation"
+scaled <- myRDS(sprintf("combined/combined_%s.rds", cat))
+indices <- sample(1:226807, 20000)
+t1 <- rep("Unknown", 20000)
+t2 <- t1
+t3 <- t1
+samples <- colnames(scaled)[indices]
+d1 <- decor[c(5,8, 13)]
+d2 <- decor[c(1:4, 6:7, 9:12)]
+d3 <- decor[14:22]
+r1 <- names(d1)
+r2 <- names(d2)
+r3 <- names(d3)
+
+for (i in 1:20000)
+{
+  if (i %% 1000 == 0)
+    print(i)
+  
+  samp <- samples[i]
+  
+  for (dec in r1)
+  {
+    if (samp %in% d1[[dec]])
+    {
+      t1[i] <- dec
+      break
+    }
+  }
+  
+  for (dec in r2)
+  {
+    if (samp %in% d2[[dec]])
+    {
+      t2[i] <- dec
+      break
+    }
+  }
+  
+  for (dec in r3)
+  {
+    if (samp %in% d3[[dec]])
+    {
+      t3[i] <- dec
+      break
+    }
+  }
+}
+
+good <- which(t3 != "Unknown")
+t11 <- t1[good]
+t22 <- t2[good]
+t33 <- t3[good]
+col1 <- color_seq(length(unique(t11)), "Rainbow", TRUE)
+col2 <- color_seq(length(unique(t22)), "Rainbow", TRUE)
+col3 <- color_seq(length(unique(t33)), "Rainbow", TRUE)
+indices <- indices[good]
+
+sca <- "Linear"
+nor <- "Global Min-Max"
+nei <- 30
+
+for (cat in dog)
+{
+  combined <- myRDS(sprintf("combined/combined_%s.rds", cat))
+  
+  scaled <- combined %>% do_scal(sca, .) %>% do_norm(nor, .)
+  trans <- t(scaled[,indices])
+  print(sprintf("Dimensions of %s: %s %s", cat, dim(trans)[1], dim(trans)[2]))
+  
+  umap_total[[cat]] <- my_UMAP(trans, pc_cap, nei)
+  umap_emb <- umap_total[[cat]]$layout
+  tsne_total[[cat]] <- my_rTSNE(umap_emb, 2, nei)
+}
+
+setwd(roo_loc)
+saveRDS(tsne_total, "tsne_total.rds")
+saveRDS(umap_total, "umap_total.rds")
+saveRDS(t1, "t1.rds")
+saveRDS(t2, "t2.rds")
+saveRDS(t3, "t3.rds")
+
+my_subsetter <- function(types)
+{
+  uni <- unique(types)
+  ltype <- lapply(as.list(uni), function(x){length(which(types == x))})
+  lnum <- mean(unlist(ltype))
+  lind <- my_empty_list(uni)
+  
+  for (u in uni)
+  {
+    num <- 0
+    for (i in 1:length(types))
+    {
+      if (types[i] == u)
+      {
+        num <- num+1
+        if (num > lnum)
+          types[i] <- "REMOVE"
+      }
+    }
+  }
+  
+  which(types != "REMOVE")
+}
+
+s1 <- my_subsetter(t11)
+s2 <- my_subsetter(t22)
+s3 <- my_subsetter(t33)
+
+for (cat in dog)
+{
+  umap_emb <- umap_total[[cat]]$layout
+  tsne_emb <- tsne_total[[cat]]$Y
+  
+  umap_x <- umap_emb[,1]
+  umap_y <- umap_emb[,2]
+  tsne_x <- tsne_emb[,1]
+  tsne_y <- tsne_emb[,2]
+  
+  t1_plots[[cat]] <- plotly_2d(tsne_x[s1], tsne_y[s1], "1", "2", "markers", 
+                               t11[s1], t11[s1], col1, "", TRUE)
+  u1_plots[[cat]] <- plotly_2d(umap_x[s1], umap_y[s1], "1", "2", "markers", 
+                               t11[s1], t11[s1],  col1, "", TRUE)
+  t2_plots[[cat]] <- plotly_2d(tsne_x[s2], tsne_y[s2], "1", "2", "markers", 
+                               t22[s2], t22[s2], col2, "", TRUE)
+  u2_plots[[cat]] <- plotly_2d(umap_x[s2], umap_y[s2], "1", "2", "markers", 
+                               t22[s2], t22[s2],  col2, "", TRUE)
+  t3_plots[[cat]] <- plotly_2d(tsne_x[s3], tsne_y[s3], "1", "2", "markers", 
+                               t33[s3], t33[s3], col3, "", TRUE)
+  u3_plots[[cat]] <- plotly_2d(umap_x[s3], umap_y[s3], "1", "2", "markers", 
+                               t33[s3], t33[s3],  col3, "", TRUE)
+}
