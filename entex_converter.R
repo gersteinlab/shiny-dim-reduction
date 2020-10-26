@@ -641,6 +641,7 @@ self_save("decorations")
 self_save("categories_full")
 self_save("order_total")
 
+# shiny-app-entex
 amazon_keys <- c("AKIAVI2HZGPON64RUYYJ",
                  "1AE4Jlbrp0Sfuq8Ew1gYNFkWOaqgrDVVvCJqCz8b",
                  "shiny-app-data-justin")
