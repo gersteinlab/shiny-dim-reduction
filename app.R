@@ -580,9 +580,9 @@ server <- function(input, output, session) {
       return(upset_custom(data, legend(), ifelse(upse(), "freq", "degree")))
     }
     
-    addr <- make_aws_name(make_file_name(
-      input$scale, input$normalize, 
-      feat(), input$embedding, input$visualize, 2, per_ind()), subi(), input$category)
+    addr <- make_aws_name(input$category, subi(),
+                          input$scale, input$normalize, 
+                          feat(), input$embedding, input$visualize, 2, per_ind())
     
     data <- load_db(addr, aws_bucket)
     
@@ -718,9 +718,9 @@ server <- function(input, output, session) {
       }
     }
     
-    addr <- make_aws_name(make_file_name(
-      input$scale, input$normalize, 
-      feat(), input$embedding, input$visualize, 2, per_ind()), subi(), input$category)
+    addr <- make_aws_name(input$category, subi(),
+                          input$scale, input$normalize, 
+                          feat(), input$embedding, input$visualize, 2, per_ind())
     
     data <- load_db(addr, aws_bucket)
     
@@ -859,9 +859,9 @@ server <- function(input, output, session) {
       }
     }
     
-    addr <- make_aws_name(make_file_name(
-      input$scale, input$normalize, 
-      feat(), input$embedding, input$visualize, 3, per_ind()), subi(), input$category)
+    addr <- make_aws_name(input$category, subi(),
+                          input$scale, input$normalize, 
+                          feat(), input$embedding, input$visualize, 3, per_ind())
     
     data <- load_db(addr, aws_bucket)
     
@@ -936,9 +936,9 @@ server <- function(input, output, session) {
           (input$embedding %in% c('PCA', 'VAE', 'UMAP'))))
       return(NULL)
     
-    addr <- make_aws_name(make_file_name(
-      input$scale, input$normalize, 
-      feat(), input$embedding, input$visualize, 2, per_ind()), subi(), input$category)
+    addr <- make_aws_name(input$category, subi(),
+                          input$scale, input$normalize, 
+                          feat(), input$embedding, input$visualize, 2, per_ind())
     
     data <- load_db(addr, aws_bucket)[keep(),input$pc1]
     
