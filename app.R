@@ -588,7 +588,7 @@ server <- function(input, output, session) {
     
     if (input$embedding == "PHATE")
     {
-      data <- data[keep(),]
+      data <- data[keep(),,drop=FALSE]
       downloadData(data)
       
       return(ggplot2_2d(
@@ -628,7 +628,7 @@ server <- function(input, output, session) {
         ) + geom_line())
     }
     
-    data <- data[keep(),]
+    data <- data[keep(),,drop=FALSE]
     downloadData(data)
     
     if (input$visualize == "Explore")
@@ -726,7 +726,7 @@ server <- function(input, output, session) {
     
     if (input$embedding == "PHATE")
     {
-      data <- data[keep(),]
+      data <- data[keep(),,drop=FALSE]
       
       downloadData(data)
       
@@ -768,7 +768,7 @@ server <- function(input, output, session) {
         ))
     }
     
-    data <- data[keep(),]
+    data <- data[keep(),,drop=FALSE]
     downloadData(data)
     
     if (input$visualize == "Explore")
@@ -867,7 +867,7 @@ server <- function(input, output, session) {
     
     if (input$embedding == "PHATE")
     {
-      data <- data[keep(),]
+      data <- data[keep(),,drop=FALSE]
       downloadData(data)
       
       return(plotly_3d(
@@ -908,7 +908,7 @@ server <- function(input, output, session) {
         ))
     }
     
-    data <- data[keep(),]
+    data <- data[keep(),,drop=FALSE]
     downloadData(data)
     
     if (input$visualize == "Explore")
