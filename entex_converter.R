@@ -107,7 +107,7 @@ categories_full <- list(
   "Expression"=list(
     "Protein_Coding_Genes"=9571,
     "Pseudogenes"=17201,
-    "Long Non-Coding RNAs"=2542
+    "Long_Non_Coding_RNAs"=2542
   ),
   "Proteomics"=list(
     "Peptide"=9411,
