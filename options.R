@@ -8,12 +8,22 @@
 # GENERATE OUTLINE
 # ----------------
 
-# create categories
-init_cat(categories_full)
-
-# create sub_groups
 for (cat in name_cat)
+{
+  # create sub_groups
   sub_groups[[cat]] <- sprintf("Total (%s)", categories[[cat]])
+  
+  # for redundancy
+  if (is.null(order_total[[cat]]))
+  {
+    addr <- make_aws_name(
+      cat, "Total", sca_options[1], nor_options[1], 
+      rem_perc(fea_options[1]), emb_options[1], vis_options[1], 2, perplexity_types[1])
+    
+    data <- load_db(addr, aws_bucket)
+    order_total[[cat]] <- data.frame("Unknown" = rep("Unknown", nrow(data)))
+  }
+}
 
 for (dec_group in decorations)
 {
@@ -54,6 +64,9 @@ for (cat in name_cat)
   
   # characteristics with a factor number in the range 2 <= x <= num_filters
   filterable <- colnames(order_gen)[between(cols_unique[[cat]], 2, num_filters)]
+  
+  if (length(filterable) < 1)
+    filterable <- "Unknown"
   
   outline[[cat]] <- my_empty_list(filterable)
   for (filchar in filterable)
@@ -246,22 +259,22 @@ for (cn in 1:num_cat)
   order_names <- colnames(order_gen)
   
   # colors
-  color_opts[[cn]] <- list(
-    "1"=cat,
-    "2"=order_names[between(cols_unique_gen, 2, num_colors)]
-  )
+  colors <- order_names[between(cols_unique_gen, 2, num_colors)]
+  if (length(colors) < 1) 
+    colors <- "Unknown"
+  color_opts[[cn]] <- list("1"=cat, "2"=colors)
   
   # shapes
-  shape_opts[[cn]] <- list(
-    "1"=cat,
-    "2"=order_names[between(cols_unique_gen, 2, num_shapes)]
-  )
+  shapes <- order_names[between(cols_unique_gen, 2, num_shapes)]
+  if (length(shapes) < 1) 
+    shapes <- "Unknown"
+  shape_opts[[cn]] <- list("1"=cat, "2"=shapes)
   
   # labels
-  label_opts[[cn]] <- list(
-    "1"=cat,
-    "2"=order_names[between(cols_unique_gen, 2, num_labels)]
-  )
+  labels <- order_names[between(cols_unique_gen, 2, num_labels)]
+  if (length(labels) < 1) 
+    labels<- "Unknown"
+  label_opts[[cn]] <- list("1"=cat, "2"=labels)
   
   # filters
   filter_opts[[cn]] <- list(
