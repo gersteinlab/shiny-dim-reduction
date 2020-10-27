@@ -17,7 +17,7 @@ setwd(app_loc)
 get_from_dir("categories_full", NULL)
 get_from_dir("decorations", NULL)
 get_from_dir("amazon_keys", NULL)
-get_from_dir("order_total.rds", NULL)
+get_from_dir("order_total", NULL)
 
 # optional
 get_from_dir("perplexity_types", 1:5)
