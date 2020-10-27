@@ -378,6 +378,9 @@ action <- function(id, name, icon_name, color, bk, br)
 # features originally in that dataset before dimensionality reduction
 get_from_dir("categories_full", NULL)
 
+# create categories
+init_cat(categories_full)
+
 # a bit of exposition regarding decorations (REQUIRED):
 # first of all, each decoration in the list has a name
 # and then two entries:
@@ -391,7 +394,7 @@ get_from_dir("amazon_keys", NULL)
 assign_keys(amazon_keys)
 
 # metadata
-get_from_dir("order_total", NULL)
+get_from_dir("order_total", my_empty_list(name_cat))
 
 # perplexity types for particular analyses
 get_from_dir("perplexity_types", 1:5)
