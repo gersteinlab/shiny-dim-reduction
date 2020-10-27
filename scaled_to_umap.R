@@ -34,10 +34,10 @@ my_UMAP <- function(data, dim, perp) {
 # UNIFORM MANIFOLD APPROXIMATION AND PROJECTION
 # ---------------------------------------------
 
-dog <- rev(names(categories))
+dog <- name_cat
 for (cat in dog)
 {
-  combined <- myRDS(sprintf("combined/combined_%s.rds", cat))
+  combined <- readRDS(sprintf("combined/combined_%s.rds", cat))
   
   for (sub in sub_groups[[cat]])
   {
@@ -62,7 +62,7 @@ for (cat in dog)
             if (!file.exists(umap_title))
             {
               print(umap_title)
-              myRDS(umap_title, my_UMAP(data, pc_cap, nei))
+              saveRDS(my_UMAP(data, pc_cap, nei), umap_title)
             }
           }
         }
