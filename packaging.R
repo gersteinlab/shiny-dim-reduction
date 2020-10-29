@@ -67,7 +67,7 @@ for (cat in dog)
 # PACKAGE UMAP
 # ------------
 setwd(pro_loc)
-dog <- names(categories)
+dog <- name_cat
 for (cat in dog)
 {
   print(cat)
@@ -85,12 +85,12 @@ for (cat in dog)
           # loc <- repStr(loc, sprintf("Total_%s", name_cat), name_cat)
           
           save_db(
-            myRDS(sprintf("vis-UMAP/SUM_UMAP_%s", loc)), 
+            readRDS(sprintf("vis-UMAP/SUM_UMAP_%s", loc)), 
             aws_bucket,
             make_aws_name(cat, sub, sca, nor, fea, "UMAP", "Summarize", "", "")
           )
           
-          explore <- myRDS(sprintf("vis-UMAP/NONE_UMAP_%s", loc))
+          explore <- readRDS(sprintf("vis-UMAP/NONE_UMAP_%s", loc))
           
           for (nei in perplexity_types)
           {
@@ -102,7 +102,7 @@ for (cat in dog)
               make_aws_name(cat, sub, sca, nor, fea, "UMAP", "Explore", "", nei_ind)
             )
             
-            tsne_vis <- myRDS(sprintf("vis-UMAP/TSNE_UMAP_%s", loc))
+            tsne_vis <- readRDS(sprintf("vis-UMAP/TSNE_UMAP_%s", loc))
             
             for (dim in c(2,3))
             {
