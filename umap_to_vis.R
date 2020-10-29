@@ -31,7 +31,7 @@ my_hdbscan <- function(data, cols)
 
 empty_results <- matrix(0, nrow=(pc_cap+1)*(length(perplexity_types)+1), ncol=3)
 
-dog <- names(categories)
+dog <- name_cat
 for (cat in dog)
 {
   for (sub in sub_groups[[cat]])
@@ -51,7 +51,7 @@ for (cat in dog)
 
           for (nei in perplexity_types)
           {
-            explore <- myRDS(sprintf("UMAP/UMAP-%s_%s", nei, loc))$layout
+            explore <- readRDS(sprintf("UMAP/UMAP-%s_%s", nei, loc))$layout
 
             # NONE
             none[[sprintf("P%s", nei)]] <- explore
@@ -61,13 +61,12 @@ for (cat in dog)
             tsne3[[sprintf("P%s", nei)]] <- my_rTSNE(explore, 3, nei)$Y
           }
 
-          myRDS(sprintf("vis-UMAP/NONE_UMAP_%s", loc),
-                none)
-          myRDS(sprintf("vis-UMAP/TSNE_UMAP_%s", loc),
-                list("TSNE2"=tsne2, "TSNE3"=tsne3))
+          saveRDS(none, sprintf("vis-UMAP/NONE_UMAP_%s", loc))
+          saveRDS(list("TSNE2"=tsne2, "TSNE3"=tsne3),
+                  sprintf("vis-UMAP/TSNE_UMAP_%s", loc))
           
           # SUM
-          raw <- myRDS(sprintf("combined/combined_%s.rds", cat))
+          raw <- readRDS(sprintf("combined/combined_%s.rds", cat))
           raw <- get_safe_sub(sub, raw, decorations, cat)
           raw <- do_scal(sca, raw)
           raw <- do_norm(nor, raw)
@@ -97,13 +96,13 @@ for (cat in dog)
           
           for (nei in 1:length(perplexity_types))
           {
-            umap <- myRDS(sprintf("UMAP/UMAP-%s_%s", 
+            umap <- readRDS(sprintf("UMAP/UMAP-%s_%s", 
                                     perplexity_types[nei], loc))$layout
             
             for (hdim in 1:pc_cap)
               results[nei*(pc_cap+1)+hdim+1,2] <- my_hdbscan(umap, hdim)
           }
-          myRDS(sprintf("vis-UMAP/SUM_UMAP_%s", loc), results)
+          saveRDS(results, sprintf("vis-UMAP/SUM_UMAP_%s", loc))
         }
       }
     }
