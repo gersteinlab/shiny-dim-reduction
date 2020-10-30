@@ -64,7 +64,7 @@ thresholds <- list(
 # SET ANALYSIS
 # ------------
 
-dog <- names(categories)
+dog <- name_cat
 for (cat in dog)
 {
   order <- order_total[[cat]]
