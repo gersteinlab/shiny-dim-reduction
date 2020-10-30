@@ -14,7 +14,7 @@ source("~/Justin-Tool/shiny-dim-reduction/scaling.R")
 lower <- 8 # 2^3
 upper <- 262144 # 2^18
 numdigits <- 4
-len <- 10
+len_inter <- 10
 
 # Only allow filtering on a characteristic with <= num_filters distinct values.
 num_filters <- 60
@@ -53,10 +53,9 @@ binary_search <- function(data, target, numdigits)
 # THRESHOLDS
 # ----------
 
-thresholds <- list(
-  "Linear"=my_empty_list(names(categories)), 
-  "Logarithmic"=my_empty_list(names(categories))
-)
+thresholds <- my_empty_list(sca_options)
+for (sca in sca_options)
+  thresholds[[sca]] <- my_empty_list(name_cat)
 
 # ------------
 # SET ANALYSIS
@@ -68,6 +67,7 @@ select_chars <- function(order){
   })
 }
 
+setwd(pro_loc)
 dog <- name_cat
 for (cat in dog)
 {
@@ -77,73 +77,68 @@ for (cat in dog)
   print(sprintf("For %s: %s", cat, names(final_saver)))
   
   combined <- readRDS(sprintf("combined/combined_%s.rds", cat))
-  scaled <- combined
   
   for (sca in sca_options) 
   {
-    scaled <- do_scal(sca, scaled)
+    scaled <- combined %>% do_scal(sca, .) %>% do_norm(nor_options[1], .)
     
-    for (nor in nor_options)
+    local_lower <- binary_search(scaled, upper, numdigits-1)
+    local_upper <- binary_search(scaled, lower, numdigits-1)
+    
+    if (local_lower > 1 - 10^(1-numdigits))
+      local_lower <- 1 - 10^(1-numdigits)
+    
+    if (local_upper < local_lower + 10^(1-numdigits))
+      local_upper <- local_lower + 10^(1-numdigits)
+    
+    print(sprintf("(%s, %s) for %s", local_lower, local_upper, sca))
+    
+    thresholds[[sca]][[cat]] <- c(local_lower, local_upper)
+    diff <- (local_lower - local_upper)/len_inter
+    chord <- round(seq(local_upper, local_lower, diff), 4)
+    
+    for (ind in (len_inter+1):1)
     {
-      scaled <- do_norm(nor, scaled)
+      thre <- chord[length(chord)-ind+1]
+      target <- calculate_sets(scaled, thre) %>% Matrix(sparse = TRUE)
+      summary <- summary(target)
+      rownames_final <- target@Dimnames[[2]]
+      summary_i <- summary[, 1]
+      summary_j <- summary[, 2]
       
-      local_lower <- binary_search(scaled, upper, numdigits-1)
-      local_upper <- binary_search(scaled, lower, numdigits-1)
-      
-      if (local_upper - local_lower < 10^(1-numdigits))
-        local_upper <- local_upper + 10^(1-numdigits)
-      
-      print(sprintf("(%s, %s) for %s, %s", local_lower, local_upper, sca, nor))
-      
-      thresholds[[sca]][[cat]] <- c(local_lower, local_upper)
-      diff <- (local_lower - local_upper)/len
-      chord <- round(seq(local_upper, local_lower, diff), 4)
-      
-      for (ind in len:1)
+      for (cha in colnames(short_list))
       {
-        thre <- chord[length(chord)-ind+1]
-        target <- calculate_sets(scaled, thre) %>% Matrix(sparse = TRUE)
-        summary <- summary(target)
-        rownames_final <- target@Dimnames[[2]]
-        rm(target)
-        summary_i <- summary[, 1]
-        summary_j <- summary[, 2]
-        rm(summary)
+        associated <- short_list[[cha]]
         
-        for (cha in colnames(short_list))
+        set_types <- unique(associated)
+        num_types <- length(set_types)
+        rowlen_final <- length(rownames_final)
+        
+        final <- rep(0, rowlen_final*num_types)
+        lookup <- match(associated, set_types)
+        lookup2 <- (lookup - 1) * rowlen_final
+        
+        for (len in 1:length(summary_i))
         {
-          associated <- short_list[[cha]]
-          
-          set_types <- unique(associated)
-          num_types <- length(set_types)
-          rowlen_final <- length(rownames_final)
-          
-          final <- rep(0, rowlen_final*num_types)
-          lookup <- match(associated, set_types)
-          lookup2 <- (lookup - 1) * rowlen_final
-          
-          for (len in 1:length(summary_i))
-          {
-            num_i <- summary_i[len]
-            index <- lookup2[num_i] + summary_j[len]
-            final[index] <- final[index] + 1
-          }
-          
-          final <- matrix(final, ncol=num_types)
-          
-          numbers <- rep(0, num_types)
-          for (a in lookup)
-            numbers[a] <- numbers[a] + 1
-          for (j in 1:num_types)
-            final[,j] <- final[,j] / numbers[j]
-          
-          colnames(final) <- set_types
-          rownames(final) <- rownames_final
-          final_saver[[cha]] <- final
+          num_i <- summary_i[len]
+          index <- lookup2[num_i] + summary_j[len]
+          final[index] <- final[index] + 1
         }
         
-        saveRDS(final_saver, sprintf("Sets/Sets_%s_%s_%s_%s.rds", cat, sca, nor, ind))
+        final <- matrix(final, ncol=num_types)
+        
+        numbers <- rep(0, num_types)
+        for (a in lookup)
+          numbers[a] <- numbers[a] + 1
+        for (j in 1:num_types)
+          final[,j] <- final[,j] / numbers[j]
+        
+        colnames(final) <- set_types
+        rownames(final) <- rownames_final
+        final_saver[[cha]] <- final
       }
+      
+      saveRDS(final_saver, sprintf("Sets/Sets-%s_%s_%s.rds", ind, sca, cat))
     }
   }
 }
