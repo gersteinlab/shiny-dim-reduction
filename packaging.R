@@ -190,7 +190,7 @@ for (cat in dog)
     
     for (ind in 11:1)
     {
-      set_data <- myRDS(sprintf("Sets/Sets-%s_%s_%s.rds", 
+      set_data <- readRDS(sprintf("Sets/Sets-%s_%s_%s.rds", 
                                 ind, sca, cat))
       
       for (cha in colnames(short_list))
