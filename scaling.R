@@ -4,6 +4,9 @@
 # Criteria: all entries are numeric, data is in a matrix
 # source("~/Justin-Tool/shiny-dim-reduction/scaling.R")
 
+# install.packages("BiocManager")
+# BiocManager::install("limma")
+library(limma)
 library(Rtsne)
 
 # --------------
