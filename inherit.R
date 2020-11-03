@@ -53,7 +53,7 @@ add_perc <- function(str)
   sprintf("%s%%", str)
 }
 
-# removes a percent sign from a string
+# removes a percent sign from a string and converts to a number
 rem_perc <- function(str)
 {
   repStr(str, "%", "") %>% as.numeric()
@@ -65,13 +65,6 @@ get_from_dir <- function(filename, default, dir = "dependencies")
   if (sprintf("%s.rds", filename) %in% list.files(dir))
     default <- readRDS(sprintf("%s/%s.rds", dir, filename))
   assign(filename, default, envir = .GlobalEnv)
-  return(NULL)
-}
-
-# attempts to save an object with the given name to the current directory
-self_save <- function(filename, compress=TRUE)
-{
-  saveRDS(get(filename), sprintf("%s.rds", filename), compress=compress)
   return(NULL)
 }
 
