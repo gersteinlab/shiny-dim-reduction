@@ -77,12 +77,6 @@ norm_z_score <- function(data)
   (data-mean)/sd
 }
 
-# normalizes a vector by quantile
-norm_quantile <- function(data) {
-  data[] <- qnorm((rank(data, na.last = 'keep') - .5) / length(data))
-  data
-}
-
 # normalizes each feature with min-max
 local_min_max <- function(data)
 {
@@ -93,12 +87,6 @@ local_min_max <- function(data)
 local_z_score <- function(data)
 {
   apply(data, 2, norm_z_score)
-}
-
-# normalizes each feature with quantile
-local_quantile <- function(data)
-{
-  apply(data, 2, norm_quantile)
 }
 
 # performs normalization
@@ -113,7 +101,7 @@ do_norm <- function(nor, scaled)
   if (nor == nor_options[4])
     return(local_z_score(scaled))
   if (nor == nor_options[5])
-    return(local_quantile(scaled))
+    return(normalizeQuantiles(scaled))
 }
 
 # ---------
