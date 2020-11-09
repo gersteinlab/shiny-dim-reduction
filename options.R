@@ -8,6 +8,8 @@
 # GENERATE OUTLINE
 # ----------------
 
+sub_groups <- my_empty_list(name_cat)
+
 for (cat in name_cat)
 {
   # create sub_groups
