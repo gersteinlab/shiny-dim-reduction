@@ -1,7 +1,7 @@
 # OBJECTIVE
 
 The purpose of this tool is to perform dimensionality reduction and visualize the results.  
-This project contains a standalone app for visualizing preprocessed data and a data analysis workflow for generating new data to visualize.
+This project contains a standalone app for visualizing preprocessed data and a data analysis workflow for generating new data to visualize.  
 Developed at the Gerstein Lab from 2019-2020 by Justin Chang.  
 
 # INSTALLING R
@@ -23,7 +23,6 @@ You can download an installer for RStudio from "https://rstudio.com/products/rst
 For reproducibility, the following settings were used in development:  
 * Run the installer as an administrator. Keep the default installation location.  
 * Do not create start menu shortcuts. Do not allow automated crash reporting.  
-Once RStudio is installed, add an environmental variable pointing to the root directory of the tool like so: writeLines('PATH="${RTOOLS40_HOME}\\usr\\bin;${PATH}"', con = "~/.Renviron")
 
 # INSTALLING RTOOLS40
 
@@ -43,8 +42,9 @@ Use the following R code to add Rtools to the PATH and specify the root director
 * "writeLines('PATH="${RTOOLS40_HOME}\\usr\\bin;${PATH}"', con = "~/.Renviron")"
 * "cat('SHINY_DIM_REDUCTION_ROOT="~/Justin-Tool"\n', append=TRUE, file="~/.Renviron")"
 Restart RStudio and run the following snippets of R code to test functionality:
-* "Sys.which("make")"
-* "Sys.getenv("SHINY_DIM_REDUCTION_ROOT")"
+* "Sys.which("make")"  
+* "Sys.getenv("SHINY_DIM_REDUCTION_ROOT")"  
+The actual '.Renviron' file can be modified in a text editor to alter these settings.  
 
 # PACKAGE INSTALLATION
 
@@ -62,6 +62,7 @@ Then set up r-reticulate in the Anaconda Command Prompt:
 * "pip install phate"  
 You can then open RStudio.  
 
+In your specified directory (SHINY_DIM_REDUCTION_ROOT), create a folder called "shiny-dim-reduction" and place all source code in "shiny-dim-reduction".  
 To finish installation, open and execute the code in "installer.R".  
 The following warning(s) can be safely ignored:  
-"Your CPU supports instructions that this TensorFlow binary  was not compiled to use ..."  
+"Your CPU supports instructions that this TensorFlow binary was not compiled to use ..."  
