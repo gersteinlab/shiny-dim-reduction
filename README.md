@@ -1,30 +1,32 @@
 # OBJECTIVE
 
-The purpose of this tool is to perform dimensionality reduction. 
-Developed at the Gerstein Lab from 2019-2020 by Justin Chang.
+The purpose of this tool is to perform dimensionality reduction and visualize the results.   
+Developed at the Gerstein Lab from 2019-2020 by Justin Chang.  
 
 # INSTALLING R
 
-This tool is intended for R 4.0.2, but compatability and cross-version robustness was a focus during development.  
-Download the installer for R 4.0.2 from: "https://cran.r-project.org/bin/windows/base/".  
-Run the installer as an administrator.  
-Keep the default installation location.  
-Select the 64-bit user installation.  
-Select customized startup, MDI, plain text help, no start menu folder.  
-Keep the defaults for additional tasks.  
-Wait for the installation to complete.  
+This tool is intended for R 4.0.3, but cross-version compatability was a focus during development.  
+You can download an installer for R from "https://cran.r-project.org". 
+For reproducibility, the following settings were used in development:  
+* Run the installer as an administrator.  
+* Keep the default installation location.  
+* Select the 64-bit user installation.  
+* Select customized startup, MDI, plain text help, no start menu folder.  
+* Keep the defaults for additional tasks.  
 
 # INSTALLING RSTUDIO
 
-RStudio is only necessary if you intend to use this tool's processing workflow with your own datasets.  
-Download the installer for RStudio 1.3.1056 from: "https://rstudio.com/products/rstudio/download/"  
-Run the installer as an administrator. Keep the default installation location.  
-Do not create start menu shortcuts. Do not allow automated crash reporting.  
-Wait for the installation to complete.  
+RStudio is only necessary if you intend to use this tool's data analysis workflow with your own datasets.  
+This tool is intended for RStudio 1.3.1056, but cross-version compatability was a focus during development.  
+You can download an installer for RStudio from "https://rstudio.com/products/rstudio/download/".  
+For reproducibility, the following settings were used in development:  
+* Run the installer as an administrator. Keep the default installation location.  
+* Do not create start menu shortcuts. Do not allow automated crash reporting.  
 
 # INSTALLING RTOOLS40
 
-Rtools is only necessary if you intend to use this tool's processing workflow with your own datasets.  
+Rtools is only necessary if you intend to use this tool's data analysis workflow with your own datasets.  
+This tool is intended for Rtools40, but cross-version compatability was a focus during development.  
 Download the installer for Rtools40 from: "https://cran.r-project.org/bin/windows/Rtools/"  
 Run the installer as an administrator. Keep the default installation location.  
 Save version history to registry and don't create start menu icons.  
