@@ -1,3 +1,8 @@
+# OBJECTIVE
+
+The purpose of this tool is to perform dimensionality reduction. 
+Developed at the Gerstein Lab from 2019-2020 by Justin Chang.
+
 # INSTALLING R
 
 This tool is intended for R 4.0.2, but compatability and cross-version robustness was a focus during development.  
