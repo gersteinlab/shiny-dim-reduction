@@ -606,3 +606,30 @@ for (cat in dog)
   u3_plots[[cat]] <- plotly_2d(umap_x[s3], umap_y[s3], "1", "2", "markers", 
                                t33[s3], t33[s3],  col3, "", TRUE)
 }
+
+# PORTABLE - currently not revised
+
+# To begin, install R-Portable and GoogleChromePortable into your dist folder  
+# Add to R-Portable/App/R-Portable/etc/Rprofile.site:  
+#   .First = function(){.libPaths(.Library)}  
+# 
+# Open up R-Portable as an admin. Check library is portable with .libPaths().  
+# Install all necessary packages ...  
+# DO NOT COMPILE FROM SOURCE! Use the binaries from CRAN.  
+# 
+# Create a file called runShinyApp.R with the following lines:  
+#   message('library paths:\n', paste('... ', .libPaths(), sep='', collapse='\n'))  
+# options(browser='C:/Program Files (x86)/Google/Chrome/Application/chrome.exe')  
+# shiny::runApp('app', launch.browser=T)  
+# 
+# Create a file called run.bat with the following lines:  
+#   SET ROPTS=--no-save --no-environ --no-init-file --no-restore --no-Rconsole  
+# R-Portable\App\R-Portable\bin\Rscript.exe %ROPTS% runShinyApp.R 1> ShinyApp.log 2>&1  
+# 
+# copy and paste the app folder into the dist ... final product  
+# JC-Portable  
+# -runShinyApp.R  
+# -run.bat  
+# -app (DIR)  
+# -R-Portable (DIR)  
+# -GoogleChromePortable (DIR)  
