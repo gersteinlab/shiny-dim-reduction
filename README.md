@@ -60,6 +60,7 @@ Then set up r-reticulate in the Anaconda Command Prompt:
 * "conda install matplotlib numba pandas scikit-learn"  
 * "pip install umap-learn"  
 * "pip install phate"  
+
 You can then open RStudio.  
 
 In your specified directory (SHINY_DIM_REDUCTION_ROOT), create a folder called "shiny-dim-reduction" and place all source code in "shiny-dim-reduction".  
