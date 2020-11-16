@@ -95,5 +95,4 @@ Type anything else and press enter to skip this step.")
 
 # run installation - further notes are located below
 print_clean("This tool was developed at the Gerstein Lab from 2019-2020.")
-print_clean("If you are running the offline version for the first time, please
-            call the installation function by typing 'install()'.")
+print_clean("You can call the installation function by typing 'install()'.")
