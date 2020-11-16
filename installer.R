@@ -63,8 +63,7 @@ Type anything else and press enter to quit.")
     }
     else
     {
-      print_clean("Not all necessary packages have been installed.
-                  Quitting installation.")
+      print_clean("Quitting installation - some packages remain uninstalled.")
       invisible()
     }
   }
