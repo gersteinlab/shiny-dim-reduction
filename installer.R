@@ -37,7 +37,6 @@ extra_lib_list <- c(
   , "dbscan"
   , "umap"
   , "phateR"
-  , "readxl"
 )
 
 # installation function
