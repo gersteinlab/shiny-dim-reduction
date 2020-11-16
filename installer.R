@@ -13,6 +13,9 @@ lib_list <- c(
   , "dplyr"
   , "stringi"
   , "aws.s3"
+  , "bcrypt"
+  
+  , "shinydashboard"
   , "shinyjs"
   , "shinycssloaders"
   , "shinyWidgets"
@@ -28,8 +31,7 @@ lib_list <- c(
 
 # a list of extra libraries for data exploration and processing
 extra_lib_list <- c(
-  "lobstr"
-  , "Matrix"
+  "Matrix"
   , "Rtsne"
   , "reticulate"
   , "tfruns"
