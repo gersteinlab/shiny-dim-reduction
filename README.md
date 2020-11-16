@@ -37,7 +37,6 @@ Restart RStudio and test with:
 
 Go to your Windows environment variables ("env" in search).  
 Set HOME, R_LIBS_USER under System Variables.  
-Make sure R_LIBS_USER is completely empty.  
 
 # PACKAGE INSTALLATION
 
