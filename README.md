@@ -28,7 +28,7 @@ For reproducibility, the following settings were used in development:
 
 Rtools is only necessary if you intend to use this tool's data analysis workflow.  
 This tool is intended for Rtools40, but cross-version compatability was a focus during development.  
-You can download an installer for Rtools40 from "https://cran.r-project.org/bin/windows/Rtools/".
+You can download an installer for Rtools40 from "https://cran.r-project.org/bin/windows/Rtools/".  
 For reproducibility, the following settings were used in development:  
 * Run the installer as an administrator. Keep the default installation location.  
 * Save version history to registry and don't create start menu icons.  
