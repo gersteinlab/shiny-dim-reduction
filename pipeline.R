@@ -1,8 +1,8 @@
 # The purpose of this script is to store functions for 
 # building the files and folders of a dimensionality reduction app.
-# source("~/Justin-Tool/shiny-dim-reduction/build.R")
+# source("~/Justin-Tool/shiny-dim-reduction/pipeline.R")
 
-source("~/Justin-Tool/shiny-dim-reduction/inherit.R")
+source("~/Justin-Tool/shiny-dim-reduction/outline.R")
 
 # --------------
 # USER VARIABLES
