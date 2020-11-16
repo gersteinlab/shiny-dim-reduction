@@ -76,7 +76,6 @@ Type anything else and press enter to quit.")
     print_clean("Do you wish to use this tool's data analysis workflow?")
     print_clean("If so, the following additional packages are necessary:")
     print_clean(paste(extra_missing_packages, collapse = ", "))
-    print_clean("Please check that the README is satisfied before proceeding.")
     extras <- readline(prompt="
 To proceed with additional package installation, type 'Y' and press enter to continue. 
 Type anything else and press enter to skip this step.")
@@ -90,43 +89,8 @@ Type anything else and press enter to skip this step.")
     }
   }
   
-  run_app <- readline(prompt="
-Type 'Y' and press enter to run the app. 
-Type anything else and press enter to quit.")
-  
-  if (run_app == "Y")
-  {
-    while(TRUE)
-    {
-      if ("app" %in% list.files())
-      {
-        break
-      }
-      else
-      {
-        correct_dir <- readline(sprintf("
-The current directory is %s and it does not contain 'app' as a subfolder.
-Please type 'Q' to quit or type in another directory.", getwd()))
-        
-        if (correct_dir == "Q")
-        {
-          print_clean("You have quit the installation.")
-          invisible()
-        }
-        else
-        {
-          tryCatch(
-            setwd(correct_dir),
-            error = function(e){
-              print("Failed to change working directory.")
-            }
-          )
-        }
-      }
-    }
-    
-    shiny::runApp("app")
-  }
+  print_clean("Please check that the README is satisfied.")
+  print_clean("All necessary R packages have been installed.")
 }
 
 # run installation - further notes are located below
