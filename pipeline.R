@@ -69,8 +69,9 @@ rapp <- function(...){
 uapp <- function(...){
   update_app(c("app.R", 
                "interface.R", 
-               "functions.R", 
+               "app_functions.R", 
                "options.R", 
-               "inherit.R"))
+               "outline.R",
+               "installer.R"))
   rapp()
 }
