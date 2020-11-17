@@ -1,6 +1,6 @@
 # The purpose of this file is to install packages 
 # and run the offline version of the tool.
-# source("~/Justin-Tool/shiny-dim-reduction/installer.R")
+# source("installer.R")
 
 # prints a single line cleanly
 print_clean <- function(msg){
