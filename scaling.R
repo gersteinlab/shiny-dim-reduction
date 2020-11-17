@@ -2,18 +2,17 @@
 # before the data undergoes a dimensionality reduction.
 # Criteria: samples are rows, features are columns
 # Criteria: all entries are numeric, data is in a matrix
-# source("~/Justin-Tool/shiny-dim-reduction/scaling.R")
+# source("scaling.R", encoding="UTF-8")
 
-# install.packages("BiocManager")
-# BiocManager::install("limma")
+setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
+source("pipeline.R", encoding="UTF-8")
+
 library(limma)
 library(Rtsne)
 
 # --------------
 # USER VARIABLES
 # --------------
-
-source("~/Justin-Tool/shiny-dim-reduction/build.R")
 setwd(app_loc)
 
 # essential
