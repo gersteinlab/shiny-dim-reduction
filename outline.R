@@ -1,7 +1,8 @@
 # This file stores all functions and constants that should be preserved
 # across all files, from data validation to processing to the tool.
+# source("outline.R", encoding="UTF-8")
 
-source("installer.R")
+source("installer.R", encoding="UTF-8")
 
 require("shiny")
 require("dplyr")
