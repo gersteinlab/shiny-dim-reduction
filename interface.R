@@ -1,6 +1,11 @@
 # The purpose of this file is to store browser parameters, set up long text
 # strings, and load dependencies for the main app. 
 
+source("app_functions.R", encoding="UTF-8")
+
+require("shinycssloaders")
+require("shinyWidgets")
+
 # ------------------
 # BROWSER PARAMETERS
 # ------------------
@@ -316,6 +321,12 @@ my_css_styling <- HTML("
 # -------------------
 # INTERFACE FUNCTIONS
 # -------------------
+
+# adds a spinner to content that may need to be refreshed
+my_spin <- function(content)
+{
+  content %>% withSpinner(type = 6)
+}
 
 # Creates a selectizeInput panel with only one option allowed.
 select_panel <- function(id, name, options, chosen)
