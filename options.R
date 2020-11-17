@@ -4,6 +4,11 @@
 # Note: Most interface numbers are rounded to 4 decimal places.
 # This likely will not change in the near future.
 
+source("interface.R", encoding="UTF-8")
+
+require("shinydashboard")
+require("shinyjs")
+
 # ----------------
 # GENERATE OUTLINE
 # ----------------
