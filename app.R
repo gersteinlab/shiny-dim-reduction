@@ -1,10 +1,5 @@
 # The goal of this app is to perform dimensionality reduction.
 
-# source("~/Justin-Tool/shiny-dim-reduction/build.R")
-absolute_begin <- round(as.numeric(Sys.time()), 4)
-source("inherit.R", encoding="UTF-8")
-source("functions.R", encoding="UTF-8")
-source("interface.R", encoding="UTF-8")
 source("options.R", encoding="UTF-8")
 
 # ------------------------------------------
@@ -15,10 +10,6 @@ server <- function(input, output, session) {
   # pushes the subtitle to the right
   shinyjs::addClass(id = "central_nav", class = "navbar-right")
   shinyjs::hide("legend_out_spin")
-  
-  # records the boot time of the program
-  notif(sprintf("Reactive initialization complete.<br>Seconds elapsed: %s", 
-                my_timer(absolute_begin)), 8, "warning")
   
   # performs setup for authentication
   auth_default <- 1
