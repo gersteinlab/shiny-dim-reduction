@@ -44,6 +44,7 @@ Use the following R code to add Rtools to the PATH and specify the root director
 Restart RStudio and run the following snippets of R code to test functionality:
 * "Sys.which("make")"  
 * "Sys.getenv("SHINY_DIM_REDUCTION_ROOT")"  
+
 The actual '.Renviron' file can be modified in a text editor to alter these settings.  
 
 # PACKAGE INSTALLATION

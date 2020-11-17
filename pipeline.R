@@ -1,21 +1,30 @@
 # The purpose of this script is to store functions for 
 # building the files and folders of a dimensionality reduction app.
-# source("~/Justin-Tool/shiny-dim-reduction/pipeline.R")
 
-source("~/Justin-Tool/shiny-dim-reduction/outline.R")
+root <- Sys.getenv("SHINY_DIM_REDUCTION_ROOT")
+source(sprintf("%s/shiny-dim-reduction/outline.R", root))
 
 # --------------
 # USER VARIABLES
 # --------------
 
-root <- "~/Justin-Tool"
-project_names <- c("exRNA", "ENTEx")
+# have the user enter the project name
+while (!exists("project_name"))
+{
+  attempted_name <- readline(prompt = "
+Please enter the name of the project that you would like to work on.")
+  
+  if (attempted_name %in% list.files(root))
+    assign("project_name", attempted_name, envir = .GlobalEnv)
+}
 
-# project_name <- "exRNA"
-# project_name <- "ENTEx"
-
-if (!exists("project_name"))
-  project_name <- project_names[1]
+# creates a directory carefully
+safe_dir <- function(path)
+{
+  if (!dir.exists(path))
+    dir.create(path)
+  invisible()
+}
 
 # roo (root)
 # -- raw (raw)
@@ -23,28 +32,19 @@ if (!exists("project_name"))
 # -- app (app)
 # -- -- dep (dependencies)
 roo_loc <- sprintf("%s/%s", root, project_name)
+safe_dir(roo_loc)
 raw_loc <- sprintf("%s/raw", roo_loc)
+safe_dir(raw_loc)
 pro_loc <- sprintf("%s/processing", roo_loc)
+safe_dir(pro_loc)
 app_loc <- sprintf("%s/app", roo_loc)
+safe_dir(app_loc)
 dep_loc <- sprintf("%s/dependencies", app_loc)
+safe_dir(dep_loc)
 
 # ---------
 # FUNCTIONS
 # ---------
-
-switch_project <- function(name)
-{
-  if (missing(name))
-    name <- setdiff(project_names, project_name)[1]
-  
-  project_name <<- name
-  
-  roo_loc <<- sprintf("%s/%s", root, project_name)
-  raw_loc <<- sprintf("%s/raw", roo_loc)
-  pro_loc <<- sprintf("%s/processing", roo_loc)
-  app_loc <<- sprintf("%s/app", roo_loc)
-  dep_loc <<- sprintf("%s/dependencies", app_loc)
-}
 
 # update the selected files in the app
 update_app <- function(filenames) {
@@ -61,12 +61,12 @@ update_app <- function(filenames) {
 }
 
 # runs the app
-rapp <- function(...){
+rapp <- function(){
   runApp(sprintf("%s/app/app.R", roo_loc))
 }
 
 # updates and runs the app
-uapp <- function(...){
+uapp <- function(){
   update_app(c("app.R", 
                "interface.R", 
                "app_functions.R", 
