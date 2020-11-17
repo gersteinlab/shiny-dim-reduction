@@ -1,8 +1,7 @@
 # This file stores all functions and constants that should be preserved
 # across all files, from data validation to processing to the tool.
-# source("~/Justin-Tool/shiny-dim-reduction/outline.R")
 
-source("~/Justin-Tool/shiny-dim-reduction/installer.R")
+source("installer.R")
 
 require("shiny")
 require("dplyr")
