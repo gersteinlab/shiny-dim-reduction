@@ -2,13 +2,14 @@
 # building the files and folders of a dimensionality reduction app.
 # source("pipeline.R", encoding="UTF-8")
 
-root <- Sys.getenv("SHINY_DIM_REDUCTION_ROOT")
-setwd(sprintf("%s/shiny-dim-reduction", root))
+setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
 source("outline.R", encoding="UTF-8")
 
 # --------------
 # USER VARIABLES
 # --------------
+
+root <- Sys.getenv("SHINY_DIM_REDUCTION_ROOT")
 
 # have the user enter the project name
 while (!exists("project_name"))
