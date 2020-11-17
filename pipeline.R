@@ -2,7 +2,8 @@
 # building the files and folders of a dimensionality reduction app.
 
 root <- Sys.getenv("SHINY_DIM_REDUCTION_ROOT")
-source(sprintf("%s/shiny-dim-reduction/outline.R", root))
+setwd(sprintf("%s/shiny-dim-reduction", root))
+source("outline.R", encoding="UTF-8")
 
 # --------------
 # USER VARIABLES
