@@ -633,3 +633,96 @@ for (cat in dog)
 # -app (DIR)  
 # -R-Portable (DIR)  
 # -GoogleChromePortable (DIR)  
+
+# ----------------
+# SETTING THE ROOT
+# ----------------
+
+# a root system that simply didn't work out
+
+# a pre-determined location for saving the root location
+root_save_loc <- "~/justin_tool_root.rds"
+
+# prompt for saving the root directory
+save_root <- function(root)
+{
+  save_root <- readline(prompt="
+Type 'Y' and press enter to save the root directory to '~/justin_tool_root.rds'.
+Type anything else and press enter to skip this step.")
+  
+  if (save_root == "Y")
+  {
+    saveRDS(root, root_save_loc)
+    print_clean("The root directory has been saved to '~/justin_tool_root.rds'.")
+  }
+}
+
+# sets the root directory
+set_root <- function()
+{
+  # does a saved version of the root exist?
+  exists_save <- tail(strsplit(root_save_loc, split='/', fixed="TRUE")[[1]], 1) %in% 
+    list.files("~")
+  
+  if (exists("root"))
+  {
+    change_root <- readline(prompt=sprintf("
+The current root directory of this tool is '%s'.
+Type 'R' and press enter to reset the root and delete any saved root.
+Type anything else and press enter to keep this directory.", root))
+    
+    if (change_root == 'R')
+    {
+      rm(root, envir=.GlobalEnv)
+      
+      if (exists_save)
+        unlink(root_save_loc)
+    }
+    else
+    {
+      if (!exists_save)
+        save_root(root)
+    }
+  }
+  else
+  {
+    print_clean("The root directory of this tool has not been set.")
+    
+    if (exists_save)
+    {
+      read_root <- readline(prompt="
+Type 'Y' and press enter to set the root from a saved location.
+Type anything else and press enter to specify a new root.")
+      
+      if (read_root == "Y")
+      {
+        assign("root", readRDS(root_save_loc), envir = .GlobalEnv)
+        print_clean("The root has been set from a saved location.")
+      }
+    }
+  }
+  
+  while (!exists("root"))
+  {
+    attempt_root <- readline(prompt="Type 'Q' to quit or type in a directory.")
+    
+    if (attempt_root == "Q")
+    {
+      print_clean("set_root() was quit.")
+      break
+    }
+    
+    if (dir.exists(attempt_root))
+    {
+      assign("root", attempt_root, envir = .GlobalEnv)
+      print_clean(sprintf("The root has been assigned to %s.", root))
+      save_root(root)
+    }
+    else
+    {
+      print_clean("This directory could not be found.")
+    }
+  }
+}
+
+set_root()
