@@ -3,10 +3,8 @@
 # Each section is sorted from most algorithmic to least algorithmic,
 # though intended purpose may create a more reasonable ordering.
 
-require("shinydashboard")
-require("shinyjs")
-require("shinycssloaders")
-require("shinyWidgets")
+source("outline.R", encoding="UTF-8")
+
 require("viridis")
 require("ggplot2")
 require("plotly")
@@ -536,12 +534,6 @@ authenticator_modal <- function() {
     ),
     footer = tagList()
   )
-}
-
-# adds a spinner to content that may need to be refreshed
-my_spin <- function(content)
-{
-  content %>% withSpinner(type = 6)
 }
 
 # shows a notification (form can be default, message, warning, error)
