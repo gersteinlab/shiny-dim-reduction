@@ -1,5 +1,6 @@
 # The purpose of this script is to store functions for 
 # building the files and folders of a dimensionality reduction app.
+# source("pipeline.R", encoding="UTF-8")
 
 root <- Sys.getenv("SHINY_DIM_REDUCTION_ROOT")
 setwd(sprintf("%s/shiny-dim-reduction", root))
@@ -59,6 +60,14 @@ update_app <- function(filenames) {
     file.copy(sprintf("shiny-dim-reduction/%s", file), app_loc)
   }
   setwd(current)
+}
+
+# switches projects
+pro_swi <- function()
+{
+  rm(project_name, envir=.GlobalEnv)
+  setwd(sprintf("%s/shiny-dim-reduction", root))
+  source("pipeline.R", encoding="UTF-8")
 }
 
 # runs the app
