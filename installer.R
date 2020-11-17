@@ -1,6 +1,6 @@
 # The purpose of this file is to install packages 
 # and run the offline version of the tool.
-# source("installer.R")
+# source("installer.R", encoding="UTF-8")
 
 # prints a single line cleanly
 print_clean <- function(msg){
