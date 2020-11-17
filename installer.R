@@ -32,6 +32,7 @@ lib_list <- c(
 # a list of extra libraries for data exploration and processing
 extra_lib_list <- c(
   "Matrix"
+  , "BiocManager"
   , "Rtsne"
   , "reticulate"
   , "tfruns"
@@ -85,6 +86,14 @@ Type anything else and press enter to skip this step.")
       {
         install.packages(lib, type="binary", character.only=TRUE)
       }
+    }
+    
+    limma_install <- readline(prompt="
+Type 'Y' and press enter to install limma for quantile normalization.
+Type anything else and press enter to skip this step.")
+    if (limma_install == "Y")
+    {
+      BiocManager::install("limma")
     }
   }
   
