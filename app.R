@@ -1172,10 +1172,4 @@ server <- function(input, output, session) {
 # -----------
 # RUN THE APP
 # -----------
-
-ui <- function(request){
-  # the complete UI is assembled in "options.R"
-  complete_ui
-}
-
 shinyApp(ui = ui, server = server, enableBookmarking = "url")
