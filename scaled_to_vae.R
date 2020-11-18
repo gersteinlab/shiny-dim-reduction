@@ -59,7 +59,7 @@ vae_loss_full <- function(x, x_decoded_mean, dim, z_mean, z_log_var){
 # is to improve scalability.
 # Let A be the number of input neurons.
 # Let d1 be the number of neurons in layer 1.
-# LEt d2 be the number of neurons in layer 2.
+# Let d2 be the number of neurons in layer 2.
 # Let B be the number of latent neurons.
 get_intermediate <- function(input_dim, latent_dim)
 {
