@@ -19,7 +19,7 @@ num_labels <- 60
 # Only allow filtering on a characteristic with <= num_filters distinct values.
 num_filters <- 60
 # The height of a graph by default. Depends on browser interpretation.
-graph_height <- 600
+graph_height <- 540
 # the maximum size of a matrix (prevent memory overflow)
 max_points <- 16777216 # 2^24
 # the maximum number of points on a heatmap
@@ -49,7 +49,8 @@ my_settings <- c("Embed Title", "Embed Legend", "Notifications",
 bibliography <- function(app_citations){sprintf(
   "Developed at Gerstein Lab from 2019-2020.
 <br><br>
-Work conducted under the mentorship of Joel Rozowsky and Mark Gerstein. I appreciate
+Developed by Justin Chang at the Gerstein Lab from 2019-2020, 
+under the mentorship of Joel Rozowsky. I appreciate
 the help of Abhinav Godavarthi, Max Sun, and Ana Berthel in developing
 this tool. The citations below are in the format requested by their respective creators.
 <br><br>
@@ -107,7 +108,8 @@ https://github.com/jamesdiao/ERCC-Plotting-Tool</a>", app_citations, intToUtf8(0
 
 instructions <- 
   "Welcome! Please feel free to explore this dimensionality reduction tool.
-Developed at Gerstein Lab from 2019-2020.
+Developed by Justin Chang at the Gerstein Lab from 2019-2020, 
+under the mentorship of Joel Rozowsky.
 <br><br>
 In Shiny, values are reactive and observe their dependencies. If one of their 
 dependencies is invalidated - meaning one of the inputs has changed - then they 
