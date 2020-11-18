@@ -339,23 +339,22 @@ input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP
     conditionalPanel(
       condition = "input.plotPanels == 'plotly2' || input.plotPanels == 'plotly3'",
       select_panel("dendrogram", "Method of Visualization", den_options))
-  )
-)
-
-parametersMenu <- menuItem(
-  "Parameters",
+  ),
   select_panel("scale", "Scale", sca_options),
   conditionalPanel(
     condition = "input.embedding != 'Sets'",
     select_panel("normalize", "Normalization", nor_options),
     select_panel("features", "Percentage of Features Used", fea_options)
   ),
-  conditionalPanel(
-    condition = "input.visualize == 'Summarize' && (input.embedding == 'PCA' ||
-input.embedding == 'VAE' || input.embedding == 'UMAP')",
-    "No data selection can be performed under these conditions.
-        Please switch to a non-summary plot."
-  ),
+  perplexity_ui(perplexity_types),
+  sets_ui(thre_panels_ui(thre_opts), max_cat_num)
+)
+
+settingsMenu <- menuItem(
+  "Settings",
+  check_panel("sMenu", "Settings", my_settings),
+  select_panel("palette", "Color Palette", pal_options),
+  numericInput("height", "Graph Height", value=graph_height, min=1, max=4000),
   conditionalPanel(
     condition = "input.visualize == 'Explore' && (input.embedding == 'PCA' ||
 input.embedding == 'VAE' || input.embedding == 'UMAP')",
@@ -369,16 +368,7 @@ input.embedding == 'VAE' || input.embedding == 'UMAP')",
       condition = "input.plotPanels == 'plotly3'",
       pc_slider(3, pc_cap)
     )
-  ),
-  perplexity_ui(perplexity_types),
-  sets_ui(thre_panels_ui(thre_opts), max_cat_num)
-)
-
-settingsMenu <- menuItem(
-  "Settings",
-  check_panel("sMenu", "Settings", my_settings),
-  select_panel("palette", "Color Palette", pal_options),
-  numericInput("height", "Graph Height", value=graph_height, min=1, max=4000)
+  )
 )
 
 filtersMenu <- menuItem(
@@ -407,55 +397,53 @@ filtersMenu <- menuItem(
   ))
 )
 
-complete_ui <- dashboardPage(
-  skin="blue",
-  dashboardHeader(title=app_title, titleWidth="100%"),
-  dashboardSidebar(
-    width=300,
-    sidebarMenu(
-      id = "sidebar_menu",
-      dataSelectionMenu,
-      parametersMenu,
-      settingsMenu,
-      filtersMenu
+ui <- function(request){
+  dashboardPage(
+    skin="blue",
+    dashboardHeader(title=app_title, titleWidth="100%"),
+    dashboardSidebar(
+      width=300,
+      sidebarMenu(
+        id = "sidebar_menu",
+        dataSelectionMenu,
+        settingsMenu,
+        filtersMenu
+      )
+    ),
+    dashboardBody(
+      shinyjs::useShinyjs(),
+      tags$head(tags$style(my_css_styling)),
+      box(
+        title = "Controls",
+        collapsible=TRUE, collapsed=FALSE, width="100%",
+        action("start", "Start Plotting", "chart-bar", "#FFF", "#0064C8", "#00356B"),
+        action("stop", "Stop Plotting", "ban", "#FFF", "#C90016", "#00356B"),
+        bookmarkButton(),
+        downloadButton('downloadData', 'Numeric Data'),
+        downloadButton('downloadMetadata', 'Metadata')
+      ),
+      tabBox(
+        width="100%",
+        id = 'plotPanels',
+        tabPanel("ggplot2", uiOutput("ggplot2UI")),
+        tabPanel("plotly2", uiOutput("plotly2UI")),
+        tabPanel("plotly3", uiOutput("plotly3UI")),
+        tabPanel("beeswarm", uiOutput("beeswarmUI")),
+        tabPanel("Numeric Data", id="num_data",
+                 DTOutput("num_data_table", width="100%") %>% my_spin()),
+        tabPanel("Metadata", id="metadata",
+                 DTOutput("metadata_table", width="100%") %>% my_spin())
+      ),
+      box(
+        title = "Documentation",
+        collapsible=TRUE, collapsed=FALSE, width="100%",
+        action("instructions", "Instructions", "book", "#FFF", "#9400D3", "#00356B"),
+        action("citations", "Citations", "book", "#FFF", "#9400D3", "#00356B"),
+        downloadButton('downloadInstructions', 'Instructions'),
+        downloadButton('downloadCitations', 'Citations')
+      ),
+      uiOutput("plainTitleUI"),
+      div(id="legend_out_spin", DTOutput("legend_out", width="100%") %>% my_spin())
     )
-  ),
-  dashboardBody(
-    shinyjs::useShinyjs(),
-    tags$head(tags$style(my_css_styling)),
-    box(
-      title = "Controls",
-      collapsible = TRUE, collapsed=TRUE, width="100%",
-      action("start", "Start Plotting", "chart-bar", "#FFF", "#0064C8", "#00356B"),
-      action("stop", "Stop Plotting", "ban", "#FFF", "#C90016", "#00356B"),
-      bookmarkButton(),
-      downloadButton('downloadData', 'Numeric Data'),
-      downloadButton('downloadMetadata', 'Metadata')
-    ),
-    tabBox(
-      width="100%",
-      id = 'plotPanels',
-      tabPanel("ggplot2", uiOutput("ggplot2UI")),
-      tabPanel("plotly2", uiOutput("plotly2UI")),
-      tabPanel("plotly3", uiOutput("plotly3UI")),
-      tabPanel("beeswarm", uiOutput("beeswarmUI")),
-      tabPanel("Numeric Data", id="num_data",
-               DTOutput("num_data_table", width="100%") %>% my_spin()),
-      tabPanel("Metadata", id="metadata",
-               DTOutput("metadata_table", width="100%") %>% my_spin())
-    ),
-    box(
-      title = "Documentation",
-      collapsible = TRUE, collapsed=TRUE, width="100%",
-      action("instructions", "Instructions", "book", "#FFF", "#9400D3", "#00356B"),
-      action("citations", "Citations", "book", "#FFF", "#9400D3", "#00356B"),
-      downloadButton('downloadInstructions', 'Instructions'),
-      downloadButton('downloadCitations', 'Citations')
-    ),
-    uiOutput("plainTitleUI"),
-    div(id="legend_out_spin", DTOutput("legend_out", width="100%") %>% my_spin()),
-    hr(),
-    "Developed by Justin Chang at the Gerstein Lab,
-    under the mentorship of Joel Rozowsky."
   )
-)
+}
