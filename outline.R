@@ -70,6 +70,22 @@ get_from_dir <- function(filename, default, dir = "dependencies")
   return(NULL)
 }
 
+# retrieves a subset based on the list of subsets, the subset name, and the category 
+get_my_subset <- function(decor, cat, sub)
+{
+  for (dec_group in decor)
+  {
+    if (cat %in% dec_group$Categories)
+    {
+      ref <- dec_group$Subsets$Reference
+      ind <- dec_group$Subsets[[sub]]
+      return(ref[ind])
+    }
+  }
+  
+  return(NULL)
+}
+
 # saves an object to Amazon AWS
 save_db <- function(dat, bucket, filename){
   my_amazon_obj <- dat
@@ -110,6 +126,8 @@ nor_options <- c("Global Min-Max", "Local Min-Max",
                  "Quantile")
 # feature options
 fea_options <- c("100%", "10%", "1%")
+# options for set selection (marking features)
+mar_options <- c("Random", "Variance", "Average", "Maximum")
 # embedding options
 emb_options <- c("PCA", "VAE", "UMAP", "PHATE", "Sets")
 # visualization options
