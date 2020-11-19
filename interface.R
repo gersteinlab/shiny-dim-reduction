@@ -19,7 +19,7 @@ num_labels <- 60
 # Only allow filtering on a characteristic with <= num_filters distinct values.
 num_filters <- 60
 # The height of a graph by default. Depends on browser interpretation.
-graph_height <- 540
+graph_height <- 520
 # the maximum size of a matrix (prevent memory overflow)
 max_points <- 16777216 # 2^24
 # the maximum number of points on a heatmap
