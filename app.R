@@ -108,7 +108,7 @@ server <- function(input, output, session) {
       plotly2_current(plotly2_data())
     if (input$plotPanels == "plotly3")
       plotly3_current(plotly3_data())
-    if (input$plotPanels == "beeswarm")
+    if (input$plotPanels == "boxplot")
       beeswarm_current(beeswarm_data())
     legend_current(legend_data())
   })
@@ -512,6 +512,9 @@ server <- function(input, output, session) {
   
   # generates ggplot2 data
   ggplot2_data <- reactive({
+    if (input$embedding == "VAE" && which(nor_options == input$normalize) > 2)
+      return(NULL)
+    
     if (input$embedding == "Sets")
     {
       truncated <- FALSE
@@ -639,6 +642,9 @@ server <- function(input, output, session) {
   
   # generates plotly2 data
   plotly2_data <- reactive({
+    if (input$embedding == "VAE" && which(nor_options == input$normalize) > 2)
+      return(NULL)
+    
     if (input$embedding == "Sets")
     {
       truncated <- FALSE
@@ -781,6 +787,9 @@ server <- function(input, output, session) {
   
   # generates plotly3 data
   plotly3_data <- reactive({
+    if (input$embedding == "VAE" && which(nor_options == input$normalize) > 2)
+      return(NULL)
+    
     if (input$embedding == "Sets")
     {
       truncated <- FALSE
