@@ -428,7 +428,7 @@ ui <- function(request){
         tabPanel("ggplot2", uiOutput("ggplot2UI")),
         tabPanel("plotly2", uiOutput("plotly2UI")),
         tabPanel("plotly3", uiOutput("plotly3UI")),
-        tabPanel("beeswarm", uiOutput("beeswarmUI")),
+        tabPanel("boxplot", uiOutput("beeswarmUI")),
         tabPanel("Numeric Data", id="num_data",
                  DTOutput("num_data_table", width="100%") %>% my_spin()),
         tabPanel("Metadata", id="metadata",
