@@ -1,5 +1,8 @@
 # The goal of this script is to perform dimensionality reduction with VAE.
 
+setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
+source("scaling.R", encoding="UTF-8")
+
 library(reticulate)
 library(tfruns)
 library(tensorflow)
@@ -9,16 +12,14 @@ library(keras)
 # USER VARIABLES
 # --------------
 
-source("~/Justin-Tool/shiny-dim-reduction/scaling.R")
-
 # latent dimensions ... the smallest neuron layer in VAE
 latent_dim <- pc_cap
 # batch_size depends completely on the dataset and your willingness to wait
-batch_size <- 64
+batch_size <- 2
 # cap_size depends completely on the dataset and your willingness to wait
-cap_size <- 9000
+cap_size <- 12000
 # patience depends completely on the dataset and your willingness to wait (10-20 standard)
-pat_size <- 20
+pat_size <- 5
 
 # ---------
 # FUNCTIONS
@@ -143,7 +144,7 @@ for (cat in dog)
     {
       scaled <- do_scal(sca, scaled)
       
-      for (nor in nor_options)
+      for (nor in nor_options[1:2])
       {
         scaled <- do_norm(nor, scaled)
         
@@ -215,7 +216,7 @@ for (cat in dog)
               "records"=make_records(loss, history$metrics$val_loss)
             )
             
-            myRDS(vae_title, vae_final)
+            saveRDS(vae_final, vae_title)
             
             k_clear_session()
           }
