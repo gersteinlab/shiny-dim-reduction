@@ -1,10 +1,8 @@
 # The goal of this script is to convert VAE data to vis data.
 
-# --------------
-# USER VARIABLES
-# --------------
 
-source("~/Justin-Tool/shiny-dim-reduction/scaling.R")
+setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
+source("scaling.R", encoding="UTF-8")
 
 # ---------
 # FUNCTIONS
@@ -46,7 +44,7 @@ for (cat in dog)
   {
     for (sca in sca_options)
     {
-      for (nor in nor_options)
+      for (nor in nor_options[1:2])
       {
         for (fea in c(1, 10, 100))
         {
@@ -58,7 +56,7 @@ for (cat in dog)
           explore <- vae$predict
           
           # NONE
-          myRDS(sprintf("vis-VAE/NONE_VAE_%s", loc), explore)
+          saveRDS(explore, sprintf("vis-VAE/NONE_VAE_%s", loc))
           
           # tSNE
           tsne2 <- perplexity_list
@@ -71,13 +69,13 @@ for (cat in dog)
             tsne3[[sprintf("P%s", nei)]] <- my_rTSNE(explore, 3, nei)$Y
           }
           print(my_timer(start))
-         
-          myRDS(sprintf("vis-VAE/TSNE_VAE_%s", loc),
-                list("TSNE2"=tsne2, "TSNE3"=tsne3))
+          
+          saveRDS(list("TSNE2"=tsne2, "TSNE3"=tsne3),
+                  sprintf("vis-VAE/TSNE_VAE_%s", loc))
           
           # SUM
-          myRDS(sprintf("vis-VAE/SUM_VAE_%s", loc), 
-                rec_to_sum(vae$records))
+          saveRDS(rec_to_sum(vae$records),
+                  sprintf("vis-VAE/SUM_VAE_%s", loc))
         }
       }
     }
