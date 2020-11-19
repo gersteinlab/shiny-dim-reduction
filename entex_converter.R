@@ -1,14 +1,15 @@
 # The goal of this script is to convert raw ENTEx data
-# into numeric data and metadata
+# into numeric data and metadata.
 
 project_name <- "ENTEx"
-source("~/Justin-Tool/shiny-dim-reduction/converter.R")
-
-# -----------------------
-# LIBRARIES AND FUNCTIONS
-# -----------------------
+setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
+source("converter.R", encoding="UTF-8")
 
 library(Matrix)
+
+# ---------
+# FUNCTIONS
+# ---------
 
 # creates the order data frame
 create_order <- function(num_rows, colnames)
