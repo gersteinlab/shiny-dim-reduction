@@ -103,6 +103,31 @@ do_norm <- function(nor, scaled)
     return(t(normalizeQuantiles(t(scaled))))
 }
 
+# -------
+# MARKING
+# -------
+
+# selects the top num columns of scaled, based on the numerical output of fun
+select_top_cols <- function(scaled, num, fun)
+{
+  outcomes <- apply(scaled, 2, fun)
+  sorted <- sort(outcomes, decreasing=TRUE, index.return=TRUE)$ix[1:num]
+  scaled[,sorted,drop=FALSE]
+}
+
+# performs feature marking
+do_mark <- function(mar, scaled, num)
+{
+  if (mar == mar_options[1])
+    return(scaled[,sample(1:ncol(scaled), num),drop=FALSE])
+  if (mar == mar_options[2])
+    return(select_top_cols(scaled, num, var))
+  if (mar == mar_options[3])
+    return(select_top_cols(scaled, num, mean))
+  if (mar == mar_options[4])
+    return(select_top_cols(scaled, num, max))
+}
+
 # ---------
 # FUNCTIONS
 # ---------
@@ -118,25 +143,6 @@ feature_start <- function(data, fraction)
 {
   features <- floor(fraction * (ncol(data)-pc_cap) + pc_cap)
   data[,1:features]
-}
-
-# gets a subset
-get_my_subset <- function(decor, cat, subset)
-{
-  if (sub == "Total")
-    return(NULL)
-  
-  for (dec_group in decor)
-  {
-    if (cat %in% dec_group$Categories)
-    {
-      ref <- dec_group$Subsets$Reference
-      ind <- dec_group$Subsets[[sub]]
-      return(ref[ind])
-    }
-  }
-  
-  return(NULL)
 }
 
 # performs scaling
