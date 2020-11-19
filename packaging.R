@@ -1,16 +1,14 @@
 # The goal of this script is to convert vis data to packaged data.
 
-# --------------
-# USER VARIABLES
-# --------------
-
-source("~/Justin-Tool/shiny-dim-reduction/scaling.R")
+setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
+source("scaling.R", encoding="UTF-8")
 
 # -------------------
 # PACKAGE PCA and VAE
 # -------------------
 setwd(pro_loc)
 dog <- name_cat
+emb <- "PCA"
 for (cat in dog)
 {
   print(cat)
@@ -24,37 +22,89 @@ for (cat in dog)
       {
         for (fea in c(1, 10, 100))
         {
-          for (emb in c("PCA", "VAE"))
+          loc <- sprintf("%s_%s_%s_%s_%s.rds", fea, nor, sca, sub, cat)
+          # loc <- repStr(loc, sprintf("Total_%s", name_cat), name_cat)
+          
+          save_db(
+            readRDS(sprintf("vis-%s/NONE_%s_%s", emb, emb, loc)),
+            aws_bucket,
+            make_aws_name(cat, sub, sca, nor, fea, emb, "Explore", "", "")
+          )
+          
+          save_db(
+            readRDS(sprintf("vis-%s/SUM_%s_%s", emb, emb, loc)), 
+            aws_bucket,
+            make_aws_name(cat, sub, sca, nor, fea, emb, "Summarize", "", "")
+          )
+          
+          tsne_vis <- readRDS(sprintf("vis-%s/TSNE_%s_%s", emb, emb, loc))
+          
+          for (nei in perplexity_types)
           {
-            loc <- sprintf("%s_%s_%s_%s_%s.rds", fea, nor, sca, sub, cat)
-            # loc <- repStr(loc, sprintf("Total_%s", name_cat), name_cat)
+            nei_ind <- which(perplexity_types == nei)
             
-            save_db(
-              readRDS(sprintf("vis-%s/NONE_%s_%s", emb, emb, loc)),
-              aws_bucket,
-              make_aws_name(cat, sub, sca, nor, fea, emb, "Explore", "", "")
-            )
-            
-            save_db(
-              readRDS(sprintf("vis-%s/SUM_%s_%s", emb, emb, loc)), 
-              aws_bucket,
-              make_aws_name(cat, sub, sca, nor, fea, emb, "Summarize", "", "")
-            )
-            
-            tsne_vis <- readRDS(sprintf("vis-%s/TSNE_%s_%s", emb, emb, loc))
-            
-            for (nei in perplexity_types)
+            for (dim in c(2,3))
             {
-              nei_ind <- which(perplexity_types == nei)
-              
-              for (dim in c(2,3))
-              {
-                save_db(
-                  tsne_vis[[sprintf("TSNE%s", dim)]][[sprintf("P%s", nei)]],
-                  aws_bucket,
-                  make_aws_name(cat, sub, sca, nor, fea, emb, "tSNE", dim, nei_ind)
-                )
-              }
+              save_db(
+                tsne_vis[[sprintf("TSNE%s", dim)]][[sprintf("P%s", nei)]],
+                aws_bucket,
+                make_aws_name(cat, sub, sca, nor, fea, emb, "tSNE", dim, nei_ind)
+              )
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+# -----------
+# PACKAGE VAE
+# -----------
+setwd(pro_loc)
+dog <- name_cat
+emb <- "VAE"
+for (cat in dog)
+{
+  print(cat)
+  print(Sys.time())
+  
+  for (sub in sub_groups[[cat]])
+  {
+    for (sca in sca_options)
+    {
+      for (nor in nor_options[1:2])
+      {
+        for (fea in c(1, 10, 100))
+        {
+          loc <- sprintf("%s_%s_%s_%s_%s.rds", fea, nor, sca, sub, cat)
+          # loc <- repStr(loc, sprintf("Total_%s", name_cat), name_cat)
+          
+          save_db(
+            readRDS(sprintf("vis-%s/NONE_%s_%s", emb, emb, loc)),
+            aws_bucket,
+            make_aws_name(cat, sub, sca, nor, fea, emb, "Explore", "", "")
+          )
+          
+          save_db(
+            readRDS(sprintf("vis-%s/SUM_%s_%s", emb, emb, loc)), 
+            aws_bucket,
+            make_aws_name(cat, sub, sca, nor, fea, emb, "Summarize", "", "")
+          )
+          
+          tsne_vis <- readRDS(sprintf("vis-%s/TSNE_%s_%s", emb, emb, loc))
+          
+          for (nei in perplexity_types)
+          {
+            nei_ind <- which(perplexity_types == nei)
+            
+            for (dim in c(2,3))
+            {
+              save_db(
+                tsne_vis[[sprintf("TSNE%s", dim)]][[sprintf("P%s", nei)]],
+                aws_bucket,
+                make_aws_name(cat, sub, sca, nor, fea, emb, "tSNE", dim, nei_ind)
+              )
             }
           }
         }
@@ -183,7 +233,7 @@ for (cat in dog)
   short_list <- select_if(order, function(x){
     between(length(unique(x)), 2, num_filters)
   })
-
+  
   for (sca in sca_options) 
   {
     sca_ind <- which(sca_options == sca)
@@ -191,7 +241,7 @@ for (cat in dog)
     for (ind in 11:1)
     {
       set_data <- readRDS(sprintf("Sets/Sets-%s_%s_%s.rds", 
-                                ind, sca, cat))
+                                  ind, sca, cat))
       
       for (cha in colnames(short_list))
       {
