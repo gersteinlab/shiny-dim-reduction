@@ -1,12 +1,9 @@
 # The goal of this script is to perform PHATE on the data.
 
+setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
+source("scaling.R", encoding="UTF-8")
+
 library(phateR)
-
-# --------------
-# USER VARIABLES
-# --------------
-
-source("~/Justin-Tool/shiny-dim-reduction/scaling.R")
 
 # ---------
 # FUNCTIONS
