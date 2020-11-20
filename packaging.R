@@ -3,9 +3,9 @@
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
 source("scaling.R", encoding="UTF-8")
 
-# -------------------
-# PACKAGE PCA and VAE
-# -------------------
+# -----------
+# PACKAGE PCA
+# -----------
 setwd(pro_loc)
 dog <- name_cat
 emb <- "PCA"
@@ -193,7 +193,7 @@ for (cat in dog)
             
             for (dim in c(2,3))
             {
-              phate <- myRDS(sprintf(
+              phate <- readRDS(sprintf(
                 "PHATE/PHATE-%s-%s_%s_%s_%s_%s_%s.rds",
                 nei, dim, fea, nor, sca, sub, cat))$embedding
               
@@ -204,10 +204,7 @@ for (cat in dog)
               save_db(
                 phate,
                 aws_bucket,
-                make_aws_name(
-                  make_file_name(sca, nor, fea, "PHATE", "", dim, nei_ind), 
-                  sub, cat
-                )
+                make_aws_name(cat, sub, sca, nor, fea, "PHATE", "", dim, nei_ind)
               )
             }
           }
