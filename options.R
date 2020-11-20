@@ -134,46 +134,6 @@ bookmark_exclude_vector <- c(
 # ASSEMBLE THE UI
 # ---------------
 
-# Creates the UI for perplexity.
-perplexity_ui <- function(p_types){
-  if (length(p_types) < 1)
-    return(NULL)
-  
-  conditionalPanel(
-    condition = "input.embedding != 'Sets' &&
-(input.embedding == 'PHATE' || input.visualize == 'tSNE' ||
-(input.embedding == 'UMAP' && input.visualize != 'Summarize'))",
-    select_panel("perplexity", "Perplexity", p_types, ceiling(length(p_types)/2))
-  )
-}
-
-# Creates the UI for sets.
-sets_ui <- function(thre_opts, max){
-  min_max <- num_filters
-  for (i in 0:4)
-  {
-    for (j in 0:4)
-    {
-      target <- 2^i * 5*j
-      if (target >= max && target < min_max)
-        min_max <- target
-    }
-  }
-  
-  do.call(conditionalPanel, c(
-    condition = "input.embedding == 'Sets'", thre_opts, list(
-      sliderInput(
-        "set_f1", "Fraction of Samples",
-        min=0, max=1, value=c(0.5,1), step=0.01,
-        ticks = FALSE, dragRange=FALSE),
-      sliderInput(
-        "set_f2", "Fraction of Characteristics",
-        min=0, max=1, value=c(0,1), step=1.0/min_max,
-        ticks = FALSE, dragRange=FALSE)
-    )
-  ))
-}
-
 # Creates the UI for subsets.
 sub_panels_ui <- function(name_cat, sub_groups){
   sub_panels <- my_empty_list(name_cat)
@@ -346,8 +306,19 @@ input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP
     select_panel("normalize", "Normalization", nor_options),
     select_panel("features", "Percentage of Features Used", fea_options)
   ),
-  perplexity_ui(perplexity_types),
-  sets_ui(thre_panels_ui(thre_opts), max_cat_num)
+  conditionalPanel(
+    condition = "input.embedding != 'Sets' &&
+(input.embedding == 'PHATE' || input.visualize == 'tSNE' ||
+(input.embedding == 'UMAP' && input.visualize != 'Summarize'))",
+    select_panel("perplexity", "Perplexity", perplexity_types, 
+                 ceiling(length(perplexity_types)/2))
+  ),
+  do.call(conditionalPanel, c(
+    condition = "input.embedding == 'Sets'", thre_opts, list(
+      numericRangeInput("set_f1", "Fraction of Samples", c(0.5,1)),
+      numericRangeInput("set_f2", "Fraction of Characteristics", c(0,1))
+    )
+  ))
 )
 
 settingsMenu <- menuItem(
