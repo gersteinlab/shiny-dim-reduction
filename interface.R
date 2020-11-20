@@ -318,6 +318,11 @@ my_css_styling <- HTML("
 .sidebar-menu .treeview-menu {
   padding-left: 0px !important;
 }
+
+/* center title */
+#plainTitleUI {
+  text-align: center !important;
+}
 ")
 
 # -------------------
@@ -391,20 +396,20 @@ action <- function(id, name, icon_name, color, bk, br)
 # features originally in that dataset before dimensionality reduction
 get_from_dir("categories_full", NULL)
 
+# amazon keys (REQUIRED)
+get_from_dir("amazon_keys", NULL)
+assign_keys(amazon_keys)
+
 # create categories
 init_cat(categories_full)
 
-# a bit of exposition regarding decorations (REQUIRED):
+# a bit of exposition regarding decoration:
 # first of all, each decoration in the list has a name
 # and then two entries:
 # (i) a vector of categories to which the decoration applies
 # (ii) a list containing (a) a reference character vector and 
 # (b) indices of that reference vector that constitute subsets
 get_from_dir("decorations", NULL)
-
-# amazon keys (REQUIRED)
-get_from_dir("amazon_keys", NULL)
-assign_keys(amazon_keys)
 
 # metadata
 get_from_dir("order_total", my_empty_list(name_cat))
