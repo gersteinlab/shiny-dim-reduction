@@ -2,13 +2,14 @@
 # Note: Given the large sizes of the matrices, the possible values for
 # the threshold should be precomputed. Even so, it's a challenge!
 
+setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
+source("scaling.R", encoding="UTF-8")
+
 library(Matrix)
 
 # --------------
 # USER VARIABLES
 # --------------
-
-source("~/Justin-Tool/shiny-dim-reduction/scaling.R")
 
 # threshold caps
 lower <- 8 # 2^3
@@ -67,6 +68,39 @@ select_chars <- function(order){
   })
 }
 
+gather_char <- function(target, associated){
+  rownames_final <- colnames(target)
+  summary <- summary(Matrix(target, sparse = TRUE))
+  summary_i <- summary[, 1]
+  summary_j <- summary[, 2]
+  
+  set_types <- unique(associated)
+  num_types <- length(set_types)
+  rowlen_final <- length(rownames_final)
+  
+  final <- rep(0, rowlen_final*num_types)
+  lookup <- match(associated, set_types)
+  lookup2 <- (lookup - 1) * rowlen_final
+  
+  for (len in 1:length(summary_i))
+  {
+    num_i <- summary_i[len]
+    index <- lookup2[num_i] + summary_j[len]
+    final[index] <- final[index] + 1
+  }
+  
+  final <- matrix(final, ncol=num_types)
+  
+  numbers <- rep(0, num_types)
+  for (a in lookup)
+    numbers[a] <- numbers[a] + 1
+  for (j in 1:num_types)
+    final[,j] <- final[,j] / numbers[j]
+  
+  dimnames(final) <- list(rownames_final, set_types)
+  final
+}
+
 setwd(pro_loc)
 dog <- name_cat
 for (cat in dog)
@@ -100,43 +134,10 @@ for (cat in dog)
     for (ind in (len_inter+1):1)
     {
       thre <- chord[length(chord)-ind+1]
-      target <- calculate_sets(scaled, thre) %>% Matrix(sparse = TRUE)
-      summary <- summary(target)
-      rownames_final <- target@Dimnames[[2]]
-      summary_i <- summary[, 1]
-      summary_j <- summary[, 2]
+      target <- calculate_sets(scaled, thre)
       
       for (cha in colnames(short_list))
-      {
-        associated <- short_list[[cha]]
-        
-        set_types <- unique(associated)
-        num_types <- length(set_types)
-        rowlen_final <- length(rownames_final)
-        
-        final <- rep(0, rowlen_final*num_types)
-        lookup <- match(associated, set_types)
-        lookup2 <- (lookup - 1) * rowlen_final
-        
-        for (len in 1:length(summary_i))
-        {
-          num_i <- summary_i[len]
-          index <- lookup2[num_i] + summary_j[len]
-          final[index] <- final[index] + 1
-        }
-        
-        final <- matrix(final, ncol=num_types)
-        
-        numbers <- rep(0, num_types)
-        for (a in lookup)
-          numbers[a] <- numbers[a] + 1
-        for (j in 1:num_types)
-          final[,j] <- final[,j] / numbers[j]
-        
-        colnames(final) <- set_types
-        rownames(final) <- rownames_final
-        final_saver[[cha]] <- final
-      }
+        final_saver[[cha]] <- gather_char(target, short_list[[cha]])
       
       saveRDS(final_saver, sprintf("Sets/Sets-%s_%s_%s.rds", ind, sca, cat))
     }
