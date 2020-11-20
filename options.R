@@ -58,8 +58,6 @@ outline <- my_empty_list(name_cat)
 select_ids <- NULL
 # create the outline
 cols_unique <- my_empty_list(name_cat)
-# count max number of characteristics
-max_cat_num <- 0
 
 # create the outline
 for (cat in name_cat)
@@ -81,7 +79,6 @@ for (cat in name_cat)
     opt <- get_opt(order_gen[[filchar]])
     outline[[cat]][[filchar]] <- opt
     select_ids <- c(select_ids, get_select(cat, filchar))
-    max_cat_num <- max(length(opt), max_cat_num)
   }
   
 }
@@ -314,10 +311,10 @@ input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP
                  ceiling(length(perplexity_types)/2))
   ),
   do.call(conditionalPanel, c(
-    condition = "input.embedding == 'Sets'", thre_opts, list(
+    condition = "input.embedding == 'Sets'", 
+    thre_panels_ui(thre_opts), list(
       numericRangeInput("set_f1", "Fraction of Samples", c(0.5,1)),
-      numericRangeInput("set_f2", "Fraction of Characteristics", c(0,1))
-    )
+      numericRangeInput("set_f2", "Fraction of Characteristics", c(0,1)))
   ))
 )
 
