@@ -116,14 +116,25 @@ server <- function(input, output, session) {
   # manages height and numPlots
   numPlots <- reactiveVal(1)
   height <- reactive({
-    if (length(input$height) < 1 || is.na(input$height) ||
-        input$height < 1 || input$height > 4000)
+    if (range_invalid(input$height, 1, 4000))
     {
       notif("Warning: Graph height is not in [1, 4000].", 6, "error")
       return(graph_height)
     }
     
     round(input$height, digits=0)
+  })
+  
+  # validates input
+  observeEvent(input$set_f1, {
+    if (range_invalid(input$set_f1, 0, 1))
+      notif("Warning: Fraction of Samples is not in [0,1].")
+  })
+  
+  # validates input
+  observeEvent(input$set_f2, {
+    if (range_invalid(input$set_f2, 0, 1))
+      notif("Warning: Fraction of Samples is not in [0,1].")
   })
   
   # -------
@@ -170,7 +181,7 @@ server <- function(input, output, session) {
   output$plainTitleUI <- renderUI({
     if (title_access())
       return("")
-    return(HTML(sprintf("<br><b>Intended Title:</b><br>%s", title_text())))
+    return(HTML(sprintf("<h3><b>Title:</b> %s</h3>", title_text())))
   })
   
   # renders a non-embedded legend nicely
@@ -1170,8 +1181,8 @@ server <- function(input, output, session) {
     updatePickerInput(session, inputId = "dendrogram", selected = data[["dendrogram"]])
     updatePickerInput(session, inputId = "palette", selected = data[["palette"]])
     updateTabsetPanel(session, inputId = "plotPanels", selected = data[["plotPanels"]])
-    updateSliderInput(session, inputId = "set_f1", value = data[["set_f1"]])
-    updateSliderInput(session, inputId = "set_f2", value = data[["set_f2"]])
+    updateNumericRangeInput(session, inputId = "set_f1", value = data[["set_f1"]])
+    updateNumericRangeInput(session, inputId = "set_f2", value = data[["set_f2"]])
     updateSliderInput(session, inputId = "pc1", value = data[["pc1"]])
     updateSliderInput(session, inputId = "pc2", value = data[["pc2"]])
     updateSliderInput(session, inputId = "pc3", value = data[["pc3"]])
