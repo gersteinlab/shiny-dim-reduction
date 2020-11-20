@@ -390,6 +390,7 @@ ui <- function(request){
         downloadButton('downloadData', 'Numeric Data'),
         downloadButton('downloadMetadata', 'Metadata')
       ),
+      uiOutput("plainTitleUI"),
       tabBox(
         width="100%",
         id = 'plotPanels',
@@ -410,7 +411,6 @@ ui <- function(request){
         downloadButton('downloadInstructions', 'Instructions'),
         downloadButton('downloadCitations', 'Citations')
       ),
-      uiOutput("plainTitleUI"),
       div(id="legend_out_spin", DTOutput("legend_out", width="100%") %>% my_spin())
     )
   )
