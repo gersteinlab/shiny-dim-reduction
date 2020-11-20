@@ -35,7 +35,7 @@ rowSum_filter_bin <- function(data, lower, upper)
   data[between(rowSums(data), lower, upper), , drop = FALSE]
 }
 
-# bounds a matrix for Sets heatmap
+# bounds a matrix for Sets heatmap by replacing all unsatisfactory values with NaN
 frac_bound <- function(data, lower, upper)
 {
   for (j in 1:ncol(data))
@@ -51,13 +51,21 @@ rowSum_filter_dat <- function(data, lower, upper)
   data[between(rowSums(!is.nan(data)), lower, upper), , drop = FALSE]
 }
 
+# checks if a value is invalid with respect to a range
+range_invalid <- function(value, min, max)
+{
+  length(value) < 1 || is.na(value) || is.nan(value) || value < min || value > max
+}
+
 # Gets the option set for a group of samples
-get_opt <- function(samples) {
+get_opt <- function(samples) 
+{
   lapply(unique(samples), function(x){make_opt(x, sum(x == samples))})
 }
 
 # Formats an option for app selection
-make_opt <- function(a,b) {
+make_opt <- function(a,b) 
+{
   sprintf("%s (%s)", a, b)
 }
 
@@ -75,22 +83,6 @@ parse_opt <- function(checkbox)
 calc_feat <- function(pc_cap, feat, total)
 {
   pc_cap + ceiling(feat * (total - pc_cap))
-}
-
-# retrieves a subset
-get_my_subset <- function(decor, cat, sub)
-{
-  for (dec_group in decor)
-  {
-    if (cat %in% dec_group$Categories)
-    {
-      ref <- dec_group$Subsets$Reference
-      ind <- dec_group$Subsets[[sub]]
-      return(ref[ind])
-    }
-  }
-  
-  return(NULL)
 }
 
 # Useful function for changing "PC 1" to "prcomp 1", getting length, etc.
