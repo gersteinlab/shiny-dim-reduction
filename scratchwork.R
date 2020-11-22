@@ -662,21 +662,22 @@ Type anything else and press enter to specify a new root.")
 
 set_root()
 
+# Sets
 # --------------
 # USER VARIABLES
 # --------------
 
-# Only allow filtering on a characteristic with <= num_filters distinct values.
-num_filters <- 60
-# the maximum number of rows for a Sets matrix. Depends on browser strength.
-max_points <- 20000
+# the maximum number of rows per chunk
+max_feat_chunk <- 20000
 
 setwd(pro_loc)
 dog <- name_cat
 for (cat in dog)
 {
   combined <- readRDS(sprintf("combined/combined_%s.rds", cat))
+  print(sprintf("Category: %s", cat))
   
+  start <- my_timer()
   for (sub in sub_groups[[cat]])
   {
     scaled <- get_safe_sub(sub, combined, decorations, cat)
@@ -684,26 +685,20 @@ for (cat in dog)
     for (sca in sca_options) 
     {
       scaled <- combined %>% do_scal(sca, .) %>% do_norm(nor_options[1], .)
-      sca_ind <- which(sca_options == sca)
+      cur_feat <- ncol(scaled)
+      num_chunks <- ceiling(cur_feat/max_feat_chunk)
       
-      if (ncol(scaled) > max_points)
+      for (i in 1:num_chunks)
       {
-        for (mar in mar_options)
-        {
-          scaled <- do_mark(mar, scaled, max_points)
-          mar_ind <- which(mar_options == mar)
-          
-          saveRDS(t(scaled),
-                  sprintf("Sets/%s_%s_%s_%s.rds", cat, sub, sca_ind, mar_ind))
-        }
-      }
-      else
-      {
-        saveRDS(t(scaled),
-                sprintf("Sets/%s_%s_%s_0.rds", cat, sub, sca_ind))
+        min_ind <- (i-1)*max_feat_chunk
+        max_ind <- max(cur_feat, i*max_feat_chunk)
+        saveRDS(scaled[,min_ind:max_ind,drop=FALSE], 
+                "Sets/Sets_%s_%s_%s_%s.rds", i, sca, sub, cat)
       }
     }
   }
+  
+  print(my_timer(start))
 }
 
 if (length(my_chars()) < 1)
