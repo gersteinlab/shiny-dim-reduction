@@ -552,13 +552,6 @@ plot_success <- function(delta_time)
 Seconds elapsed: %s", delta_time), 6, "message")
 }
 
-# prints a message that indicates a truncated matrix
-truncated_msg <- function()
-{
-  notif("Warning: This matrix is too large to plot.<br>
-         A truncated version will be presented.", 6, "warning")
-}
-
 # prints a failure message once a plot has been completed.
 plot_fail <- function() 
 {
