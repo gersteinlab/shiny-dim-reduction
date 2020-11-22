@@ -118,7 +118,7 @@ server <- function(input, output, session) {
   height <- reactive({
     if (range_invalid(input$height, 1, 4000))
     {
-      notif("Warning: Graph height is not in [1, 4000].", 6, "error")
+      notif("Warning: Graph height is not in [1, 4000].", 6, "warning")
       return(graph_height)
     }
     
@@ -128,13 +128,13 @@ server <- function(input, output, session) {
   # validates input
   observeEvent(input$set_f1, {
     if (range_invalid(input$set_f1, 0, 1))
-      notif("Warning: Fraction of Samples is not in [0,1].")
+      notif("Warning: Fraction of Samples is not in [0,1].", 6, "warning")
   })
   
   # validates input
   observeEvent(input$set_f2, {
-    if (range_invalid(input$set_f2, 0, 1))
-      notif("Warning: Fraction of Samples is not in [0,1].")
+    if (range_invalid(input$set_f2, 0, num_filters))
+      notif("Warning: Number of Characteristics is not in [0,num_filters].", 6, "warning")
   })
   
   # -------
@@ -558,8 +558,10 @@ server <- function(input, output, session) {
         data <- data[1:floor(max_points/ncol(data)),]
       }
       
-      data <- data %>% frac_convert(input$set_f1[1], input$set_f1[2]) %>% 
-        rowSum_filter_bin(input$set_f2[1], input$set_f2[2]) %>% data.frame()
+      data <- data %>% set_f1_f2(input$set_f1, input$set_f2) %>% num_nan_binary()
+        
+        # frac_convert(input$set_f1[1], input$set_f1[2]) %>% 
+        # rowSum_filter_bin(input$set_f2[1], input$set_f2[2]) %>% data.frame()
       
       if (nrow(data) < 8)
         return(NULL)
