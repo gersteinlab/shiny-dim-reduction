@@ -726,3 +726,153 @@ Type anything else and press enter to specify a new root.")
 }
 
 set_root()
+
+# --------------
+# USER VARIABLES
+# --------------
+
+# Only allow filtering on a characteristic with <= num_filters distinct values.
+num_filters <- 60
+# the maximum number of rows for a Sets matrix. Depends on browser strength.
+max_points <- 20000
+
+setwd(pro_loc)
+dog <- name_cat
+for (cat in dog)
+{
+  combined <- readRDS(sprintf("combined/combined_%s.rds", cat))
+  
+  for (sub in sub_groups[[cat]])
+  {
+    scaled <- get_safe_sub(sub, combined, decorations, cat)
+    
+    for (sca in sca_options) 
+    {
+      scaled <- combined %>% do_scal(sca, .) %>% do_norm(nor_options[1], .)
+      sca_ind <- which(sca_options == sca)
+      
+      if (ncol(scaled) > max_points)
+      {
+        for (mar in mar_options)
+        {
+          scaled <- do_mark(mar, scaled, max_points)
+          mar_ind <- which(mar_options == mar)
+          
+          saveRDS(t(scaled),
+                  sprintf("Sets/%s_%s_%s_%s.rds", cat, sub, sca_ind, mar_ind))
+        }
+      }
+      else
+      {
+        saveRDS(t(scaled),
+                sprintf("Sets/%s_%s_%s_0.rds", cat, sub, sca_ind))
+      }
+    }
+  }
+}
+
+if (length(my_chars()) < 1)
+  return(NULL)
+
+my_sub <- get_my_subset(decorations, input$category, subi())
+
+sca_ind <- which(sca_options == input$scale)
+addr <- sprintf("Sets/%s_%s_%s_0.rds", input$category, subi(), sca_ind)
+
+if (length(my_sub) > max_points)
+{
+  mar_ind <- which(mar_options == input$mark)
+  addr <- sprintf("Sets/%s_%s_%s_%s.rds", cat, sub, sca_ind, mar_ind)
+  shinyjs::show("mark")
+}
+else
+{
+  shinyjs::hide("mark")
+}
+
+data <- readRDS(addr)
+thre_1 <- input$set_thre[1]
+thre_2 <- input$set_thre[2]
+
+# thresholds
+data <- data[,keep(),drop=FALSE] %>% between(thre_1, thre_2) %>%
+  matrix(nrow=nrow(data), dimnames = dimnames(data))
+
+target <- data %>% Matrix(sparse = TRUE)
+summary <- summary(target)
+rownames_final <- target@Dimnames[[2]]
+summary_i <- summary[, 1]
+summary_j <- summary[, 2]
+
+associated <- order()[[filterby()]][keep()]
+set_types <- unique(associated)
+rowlen_final <- length(rownames_final)
+
+final <- rep(0, rowlen_final*num_types)
+lookup <- match(associated, set_types)
+lookup2 <- (lookup - 1) * rowlen_final
+
+for (len in 1:length(summary_i))
+{
+  num_i <- summary_i[len]
+  index <- lookup2[num_i] + summary_j[len]
+  final[index] <- final[index] + 1
+}
+
+final <- matrix(final, ncol=num_types)
+
+numbers <- rep(0, num_types)
+for (a in lookup)
+  numbers[a] <- numbers[a] + 1
+for (j in 1:num_types)
+  final[,j] <- final[,j] / numbers[j]
+
+colnames(final) <- set_types
+rownames(final) <- rownames_final
+
+if (ncol(final) < 1 || nrow(final) < 8)
+  return(NULL)
+
+data <- final %>% frac_convert(input$set_f1[1], input$set_f1[2]) %>% 
+  rowSum_filter_bin(input$set_f2[1], input$set_f2[2]) %>% data.frame()
+
+if (nrow(data) < 8)
+  return(NULL)
+
+downloadData(data)
+
+if (ncol(data) == 1)
+  return(venn1_custom(data, legend()))
+
+if (ncol(data) == 2)
+  return(venn2_custom(data, legend()))
+
+return(upset_custom(data, legend(), ifelse(upse(), "freq", "degree")))
+
+# -------
+# MARKING
+# -------
+
+# selects the top num columns of scaled, based on the numerical output of fun
+select_top_cols <- function(scaled, num, fun)
+{
+  outcomes <- apply(scaled, 2, fun)
+  sorted <- sort(outcomes, decreasing=TRUE, index.return=TRUE)$ix[1:num]
+  scaled[,sorted,drop=FALSE]
+}
+
+# performs feature marking
+do_mark <- function(mar, scaled, num)
+{
+  if (mar == mar_options[1])
+    return(scaled[,sample(1:ncol(scaled), num),drop=FALSE])
+  if (mar == mar_options[2])
+    return(select_top_cols(scaled, num, var))
+  if (mar == mar_options[3])
+    return(select_top_cols(scaled, num, mean))
+  if (mar == mar_options[4])
+    return(select_top_cols(scaled, num, max))
+}
+
+# options for set selection (marking features)
+mar_options <- c("Random", "Variance", "Mean", "Maximum")
