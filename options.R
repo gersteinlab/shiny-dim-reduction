@@ -314,7 +314,23 @@ input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP
     condition = "input.embedding == 'Sets'", 
     thre_panels_ui(thre_opts), list(
       numericRangeInput("set_f1", "Fraction of Samples", c(0.5,1)),
-      numericRangeInput("set_f2", "Number of Characteristics", c(1,num_filters)))
+      numericRangeInput("set_f2", "Number of Characteristics", c(1,num_filters)),
+      conditionalPanel(
+        condition = "input.plotPanels == 'ggplot2'",
+        numericInput("set_feat_upse", "Maximum Features", value=max_upse, min=pc_cap)
+      ),
+      conditionalPanel(
+        condition = "input.plotPanels != 'ggplot2'",
+        conditionalPanel(
+          condition = "input.dendrogram == 'Variance'",
+          numericInput("set_feat_heat", "Maximum Features", value=max_heat, min=pc_cap)
+        ),
+        conditionalPanel(
+          condition = "input.dendrogram == 'Correlation'",
+          numericInput("set_feat_dend", "Maximum Features", value=max_dend, min=pc_cap)
+        )
+      )
+    )
   ))
 )
 
