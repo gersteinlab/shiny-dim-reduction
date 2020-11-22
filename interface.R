@@ -39,7 +39,8 @@ den_options <- c("Variance", "Correlation")
 # upset plot options
 ups_options <- c("Frequency", "Degree")
 # settings options
-my_settings <- c("Embed Title", "Embed Legend", "Notifications", "Uninverted Colors")
+my_settings <- c("Embed Title", "Embed Legend", 
+                 "Boost Graphics", "Notifications", "Uninverted Colors")
 
 # ----------
 # LONG TEXTS
@@ -131,7 +132,8 @@ To save all other output, right click the image and 'Save image as ...'
 If 'Embed Title' is checked, then the title of the plot will be included within the 
 plot graphic. Otherwise, it will be displayed as plaintext below the plot. Embedded 
 titles are not supported for UpSetR. If 'Show Legend' is  checked, then the plot will 
-contain a legend. Otherwise, no legend will be included. If 'Notifications' is 
+contain a legend. Otherwise, no legend will be included. If 'Boost Graphics' is checked,
+certain plots will be drawn with more expensive methods. If 'Notifications' is 
 checked, then relevant notifications will appear in the bottom-right corner over time. 
 Otherwise, no notifications will appear. If 'Uninverted Colors' is not checked, 
 then color scales will be reversed.
