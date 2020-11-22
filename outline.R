@@ -126,8 +126,6 @@ nor_options <- c("Global Min-Max", "Local Min-Max",
                  "Quantile")
 # feature options
 fea_options <- c("100%", "10%", "1%")
-# options for set selection (marking features)
-mar_options <- c("Random", "Variance", "Mean", "Maximum")
 # embedding options
 emb_options <- c("PCA", "VAE", "UMAP", "PHATE", "Sets")
 # visualization options
