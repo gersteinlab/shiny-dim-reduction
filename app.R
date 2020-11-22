@@ -1,4 +1,6 @@
 # The goal of this app is to perform dimensionality reduction.
+# setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
+# source("pipeline.R", encoding="UTF-8")
 
 source("options.R", encoding="UTF-8")
 
