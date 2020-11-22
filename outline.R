@@ -86,6 +86,22 @@ get_my_subset <- function(decor, cat, sub)
   return(NULL)
 }
 
+# performs safe subsetting, default by columns
+get_safe_sub <- function(sub, df, dec, cat, margin=2)
+{
+  if (sub != "Total")
+  {
+    indices <- get_my_subset(dec, cat, sub)
+    
+    if (margin == 1)
+      return(df[rownames(df) %in% indices,,drop=FALSE])
+    if (margin == 2)
+      return(df[,colnames(df) %in% indices,drop=FALSE])
+  }
+  
+  df
+}
+
 # saves an object to Amazon AWS
 save_db <- function(dat, bucket, filename){
   my_amazon_obj <- dat
