@@ -314,7 +314,7 @@ input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP
     condition = "input.embedding == 'Sets'", 
     thre_panels_ui(thre_opts), list(
       numericRangeInput("set_f1", "Fraction of Samples", c(0.5,1)),
-      numericRangeInput("set_f2", "Fraction of Characteristics", c(0,1)))
+      numericRangeInput("set_f2", "Number of Characteristics", c(1,num_filters)))
   ))
 )
 
