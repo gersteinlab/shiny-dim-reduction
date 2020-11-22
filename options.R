@@ -288,15 +288,6 @@ dataSelectionMenu <- menuItem(
 input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP'",
     select_panel("visualize", "Method of Visualization", vis_options)
   ),
-  conditionalPanel(
-    condition = "input.embedding == 'Sets'",
-    conditionalPanel(
-      condition = "input.plotPanels == 'ggplot2'",
-      select_panel("upsetpref", "Method of Visualization", ups_options)),
-    conditionalPanel(
-      condition = "input.plotPanels == 'plotly2' || input.plotPanels == 'plotly3'",
-      select_panel("dendrogram", "Method of Visualization", den_options))
-  ),
   select_panel("scale", "Scale", sca_options),
   conditionalPanel(
     condition = "input.embedding != 'Sets'",
