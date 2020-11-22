@@ -559,9 +559,6 @@ server <- function(input, output, session) {
       }
       
       data <- data %>% set_f1_f2(input$set_f1, input$set_f2) %>% num_nan_binary()
-        
-        # frac_convert(input$set_f1[1], input$set_f1[2]) %>% 
-        # rowSum_filter_bin(input$set_f2[1], input$set_f2[2]) %>% data.frame()
       
       if (nrow(data) < 8)
         return(NULL)
@@ -690,8 +687,7 @@ server <- function(input, output, session) {
         data <- data[1:floor(max_points/ncol(data)),]
       }
       
-      data <- data %>% frac_bound(input$set_f1[1], input$set_f1[2]) %>% 
-        rowSum_filter_dat(input$set_f2[1], input$set_f2[2])
+      data <- data %>% set_f1_f2(input$set_f1, input$set_f2)
       
       if (dend())
       {
@@ -834,8 +830,7 @@ server <- function(input, output, session) {
         data <- data[1:floor(max_points/ncol(data)),]
       }
       
-      data <- data %>% frac_bound(input$set_f1[1], input$set_f1[2]) %>% 
-        rowSum_filter_dat(input$set_f2[1], input$set_f2[2])
+      data <- data %>% set_f1_f2(input$set_f1, input$set_f2)
       
       if (dend())
       {
