@@ -995,7 +995,8 @@ server <- function(input, output, session) {
         select_array_c, 
         thre_array_c
       ),
-      sMenu=input$sMenu, 
+      sMenu=input$sMenu,
+      height=input$height,
       category=input$category, 
       scale=input$scale, 
       normalize=input$normalize, 
@@ -1003,8 +1004,9 @@ server <- function(input, output, session) {
       embedding=input$embedding, 
       visualize=input$visualize, 
       perplexity=input$perplexity, 
-      upsetpref=input$upsetpref, 
-      dendrogram=input$dendrogram, 
+      set_feat_upse=input$set_feat_upse,
+      set_feat_heat=input$set_feat_heat,
+      set_feat_dend=input$set_feat_dend,
       palette=input$palette, 
       plotPanels=input$plotPanels, 
       set_f1=input$set_f1, 
@@ -1114,6 +1116,7 @@ server <- function(input, output, session) {
     
     # simpler
     updatePickerInput(session, inputId = "sMenu", selected = data[["sMenu"]])
+    updateNumericInput(session, inputId = "height", value = data[["height"]])
     updatePickerInput(session, inputId = "category", selected = data[["category"]])
     updatePickerInput(session, inputId = "scale", selected = data[["scale"]])
     updatePickerInput(session, inputId = "normalize", selected = data[["normalize"]])
@@ -1121,6 +1124,9 @@ server <- function(input, output, session) {
     updatePickerInput(session, inputId = "embedding", selected = data[["embedding"]])
     updatePickerInput(session, inputId = "visualize", selected = data[["visualize"]])
     updatePickerInput(session, inputId = "perplexity", selected = data[["perplexity"]])
+    updateNumericInput(session, inputId = "set_feat_upse", value = data[["set_feat_upse"]])
+    updateNumericInput(session, inputId = "set_feat_heat", value = data[["set_feat_heat"]])
+    updateNumericInput(session, inputId = "set_feat_dend", value = data[["set_feat_dend"]])
     updatePickerInput(session, inputId = "upsetpref", selected = data[["upsetpref"]])
     updatePickerInput(session, inputId = "dendrogram", selected = data[["dendrogram"]])
     updatePickerInput(session, inputId = "palette", selected = data[["palette"]])
