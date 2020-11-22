@@ -181,7 +181,6 @@ bookmark_exclude_vector <- c(
   
   "sidebar_menu",
   "sidebarCollapsed",
-  "height",
   "sidebarItemExpanded",
   
   sprintf("subsetby_%s", name_cat),
@@ -193,7 +192,7 @@ bookmark_exclude_vector <- c(
   get_thre(name_cat, "Logarithmic"), get_thre(name_cat, "Linear"), 
   
   "start", "stop", "toggle", "central_nav", "instructions", "citations", 
-  "sMenu", "category", "scale", "normalize", "features", "embedding", 
+  "sMenu", "height", "category", "scale", "normalize", "features", "embedding", 
   "visualize", "perplexity", "set_feat_upse", "set_feat_heat", "set_feat_dend",
   "palette", "plotPanels", "username", "password", "toggle_password",
   "attempt_login", "set_f1", "set_f2", "pc1", "pc2", "pc3"
