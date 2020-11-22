@@ -853,14 +853,6 @@ return(upset_custom(data, legend(), ifelse(upse(), "freq", "degree")))
 # MARKING
 # -------
 
-# selects the top num columns of scaled, based on the numerical output of fun
-select_top_cols <- function(scaled, num, fun)
-{
-  outcomes <- apply(scaled, 2, fun)
-  sorted <- sort(outcomes, decreasing=TRUE, index.return=TRUE)$ix[1:num]
-  scaled[,sorted,drop=FALSE]
-}
-
 # performs feature marking
 do_mark <- function(mar, scaled, num)
 {
