@@ -20,12 +20,12 @@ num_labels <- 60
 num_filters <- 60
 # The height of a graph by default. Depends on browser interpretation.
 graph_height <- 520
-# the maximum size of a matrix (prevent memory overflow)
-max_points <- 16777216 # 2^24
-# the maximum number of points on a heatmap
-max_heatma <- 1048576 # 2^20
+# the maximum number of rows on an upset plot
+max_upse <- 50000
+# the maximum number of rows on a heatmap
+max_heat <- 50000
 # the maximum number of columns on a dendrogram
-max_dendro <- 512 # 2^9
+max_dend <- 500
 
 # plot panel options
 pan_options <- c("ggplot2", "plotly2", "plotly3", "beeswarm")
