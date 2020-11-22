@@ -410,10 +410,10 @@ server <- function(input, output, session) {
   # Reactive variables corresponding to parsed input
   title_access <- reactive("Embed Title" %in% input$sMenu)
   legend <- reactive("Embed Legend" %in% input$sMenu)
+  boost <- reactive("Boost Graphics" %in% input$sMenu)
   notifq <- reactive("Notifications" %in% input$sMenu)
   not_rev <- reactive("Uninverted Colors" %in% input$sMenu)
-  dend <- reactive("Correlation" %in% input$dendrogram)
-  upse <- reactive("Frequency" %in% input$upsetpref)
+  
   subi <- reactive(parse_opt(input[[sprintf("subsetby_%s", input$category)]]))
   feat <- reactive(rem_perc(input$features))
   per_ind <- reactive(which(as.character(perplexity_types) == input$perplexity))
@@ -579,6 +579,8 @@ server <- function(input, output, session) {
         data <- data[rownames(data) %in% get_my_subset(
           decorations, input$category, subi()),,drop=FALSE]
       
+      downloadData(data)
+      
       if (nrow(data) > upse_feat())
         data <- data[1:upse_feat(),,drop=FALSE]
       
@@ -586,9 +588,7 @@ server <- function(input, output, session) {
       
       if (ncol(data) < 1 || nrow(data) < 8)
         return(NULL)
-      
-      downloadData(data)
-      
+
       if (ncol(data) == 1)
         return(venn1_custom(data, legend()))
       
@@ -690,35 +690,18 @@ server <- function(input, output, session) {
         data <- data[rownames(data) %in% get_my_subset(
           decorations, input$category, subi()),,drop=FALSE]
       
-      if (dend())
-      {
-        if (nrow(data) > dend_feat())
-          data <- data[1:dend_feat(),,drop=FALSE]
-        
-        data <- data %>% set_f1_f2(input$set_f1, input$set_f2)
-        
-        if (ncol(data) < 1 || nrow(data) < 1)
-          return(NULL)
-        
-        downloadData(data)
-        
-        return(plotly_heatmap_dendrogram(data, paint(), title(), legend(), FALSE))
-      } 
-      else
-      {
-        if (nrow(data) > heat_feat())
-          data <- data[1:heat_feat(),,drop=FALSE]
-       
-         data <- data[base::order(rowSums(data),decreasing=T),] %>% 
-           set_f1_f2(input$set_f1, input$set_f2)
-        
-        if (ncol(data) < 1 || nrow(data) < 1)
-          return(NULL)
-        
-        downloadData(data)
-        
-        return(plotly_heatmap_variance(data, paint(), title(), legend(), FALSE))
-      }
+      downloadData(data)
+      
+      if (nrow(data) > heat_feat())
+        data <- data[1:heat_feat(),,drop=FALSE]
+     
+       data <- data[base::order(rowSums(data),decreasing=T),] %>% 
+         set_f1_f2(input$set_f1, input$set_f2)
+      
+      if (ncol(data) < 1 || nrow(data) < 1)
+        return(NULL)
+      
+      return(plotly_heatmap_variance(data, paint(), title(), legend(), boost()))
     }
     
     addr <- make_aws_name(input$category, subi(),
@@ -818,35 +801,17 @@ server <- function(input, output, session) {
         data <- data[rownames(data) %in% get_my_subset(
           decorations, input$category, subi()),,drop=FALSE]
       
-      if (dend())
-      {
-        if (nrow(data) > dend_feat())
-          data <- data[1:dend_feat(),,drop=FALSE]
-        
-        data <- data %>% set_f1_f2(input$set_f1, input$set_f2)
-        
-        if (ncol(data) < 1 || nrow(data) < 1)
-          return(NULL)
-        
-        downloadData(data)
-        
-        return(plotly_heatmap_dendrogram(data, paint(), title(), legend(), TRUE))
-      } 
-      else
-      {
-        if (nrow(data) > heat_feat())
-          data <- data[1:heat_feat(),,drop=FALSE]
-        
-        data <- data[base::order(rowSums(data),decreasing=T),] %>% 
-          set_f1_f2(input$set_f1, input$set_f2)
-        
-        if (ncol(data) < 1 || nrow(data) < 1)
-          return(NULL)
-        
-        downloadData(data)
-        
-        return(plotly_heatmap_variance(data, paint(), title(), legend(), TRUE))
-      }
+      downloadData(data)
+      
+      if (nrow(data) > dend_feat())
+        data <- data[1:dend_feat(),,drop=FALSE]
+      
+      data <- data %>% set_f1_f2(input$set_f1, input$set_f2)
+      
+      if (ncol(data) < 1 || nrow(data) < 1)
+        return(NULL)
+      
+      return(plotly_heatmap_dendrogram(data, paint(), title(), legend(), boost()))
     }
     
     addr <- make_aws_name(input$category, subi(),
