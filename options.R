@@ -84,6 +84,78 @@ for (cat in name_cat)
 }
 rm(filchar, filterable, order_gen)
 
+# the option boxes that will be presented to the user
+color_opts <- vector(mode = "list", length = num_cat)
+shape_opts <- vector(mode = "list", length = num_cat)
+label_opts <- vector(mode = "list", length = num_cat)
+filter_opts <- vector(mode = "list", length = num_cat)
+select_opts <- vector(mode = "list", length = length(select_ids))
+thre_opts <- vector(mode = "list", length = 2*num_cat)
+
+# create the option boxes
+gen_index <- 0
+for (cn in 1:num_cat)
+{
+  order_gen <- order_total[[cn]]
+  cat <- name_cat[cn]
+  cols_unique_gen <- cols_unique[[cat]]
+  order_names <- colnames(order_gen)
+  
+  # colors
+  colors <- order_names[between(cols_unique_gen, 2, num_colors)]
+  if (length(colors) < 1) 
+    colors <- "Unknown"
+  color_opts[[cn]] <- list("1"=cat, "2"=colors)
+  
+  # shapes
+  shapes <- order_names[between(cols_unique_gen, 2, num_shapes)]
+  if (length(shapes) < 1) 
+    shapes <- "Unknown"
+  shape_opts[[cn]] <- list("1"=cat, "2"=shapes)
+  
+  # labels
+  labels <- order_names[between(cols_unique_gen, 2, num_labels)]
+  if (length(labels) < 1) 
+    labels<- "Unknown"
+  label_opts[[cn]] <- list("1"=cat, "2"=labels)
+  
+  # filters
+  filter_opts[[cn]] <- list(
+    "1"=cat,
+    "2"=names(outline[[cat]])
+  )
+  
+  # selections
+  for (char in names(outline[[cat]]))
+  {
+    gen_index <- gen_index + 1
+    
+    select_opts[[gen_index]] <- conditionalPanel(
+      condition=sprintf(
+        "input.category == '%s' && input.filterby_%s == '%s'", cat, cat, char),
+      check_panel(get_select(cat, char), sprintf("Filter By (%s)", cat),
+                  outline[[cat]][[char]])
+    )
+  }
+  
+  # thresholds
+  for (sn in 1:2)
+  {
+    sca <- sca_options[sn]
+    thre_temp <- 0:1
+    if (!is.null(thresholds) && !is.null(thresholds[[sca]])
+        && !is.null(thresholds[[sca]][[cat]])) 
+      thre_temp <- thresholds[[sca]][[cat]]
+    
+    thre_opts[[2*cn-2+sn]] <- list(
+      "1"=cat,
+      "2"=sca,
+      "3"=round(thre_temp[1], 4),
+      "4"=round(thre_temp[2], 4)
+    )
+  }
+}
+
 # -----------------
 # BOOKMARK OUTLINES
 # -----------------
@@ -122,7 +194,7 @@ bookmark_exclude_vector <- c(
   
   "start", "stop", "toggle", "central_nav", "instructions", "citations", 
   "sMenu", "category", "scale", "normalize", "features", "embedding", 
-  "visualize", "perplexity", "upsetpref", "dendrogram", 
+  "visualize", "perplexity", "set_feat_upse", "set_feat_heat", "set_feat_dend",
   "palette", "plotPanels", "username", "password", "toggle_password",
   "attempt_login", "set_f1", "set_f2", "pc1", "pc2", "pc3"
 )
@@ -203,78 +275,6 @@ thre_panels_ui <- function(thres){
         ticks = FALSE)
     )
   })
-}
-
-# the option boxes that will be presented to the user
-color_opts <- vector(mode = "list", length = num_cat)
-shape_opts <- vector(mode = "list", length = num_cat)
-label_opts <- vector(mode = "list", length = num_cat)
-filter_opts <- vector(mode = "list", length = num_cat)
-select_opts <- vector(mode = "list", length = length(select_ids))
-thre_opts <- vector(mode = "list", length = 2*num_cat)
-
-# create the option boxes
-gen_index <- 0
-for (cn in 1:num_cat)
-{
-  order_gen <- order_total[[cn]]
-  cat <- name_cat[cn]
-  cols_unique_gen <- cols_unique[[cat]]
-  order_names <- colnames(order_gen)
-  
-  # colors
-  colors <- order_names[between(cols_unique_gen, 2, num_colors)]
-  if (length(colors) < 1) 
-    colors <- "Unknown"
-  color_opts[[cn]] <- list("1"=cat, "2"=colors)
-  
-  # shapes
-  shapes <- order_names[between(cols_unique_gen, 2, num_shapes)]
-  if (length(shapes) < 1) 
-    shapes <- "Unknown"
-  shape_opts[[cn]] <- list("1"=cat, "2"=shapes)
-  
-  # labels
-  labels <- order_names[between(cols_unique_gen, 2, num_labels)]
-  if (length(labels) < 1) 
-    labels<- "Unknown"
-  label_opts[[cn]] <- list("1"=cat, "2"=labels)
-  
-  # filters
-  filter_opts[[cn]] <- list(
-    "1"=cat,
-    "2"=names(outline[[cat]])
-  )
-  
-  # selections
-  for (char in names(outline[[cat]]))
-  {
-    gen_index <- gen_index + 1
-    
-    select_opts[[gen_index]] <- conditionalPanel(
-      condition=sprintf(
-        "input.category == '%s' && input.filterby_%s == '%s'", cat, cat, char),
-      check_panel(get_select(cat, char), sprintf("Filter By (%s)", cat),
-                  outline[[cat]][[char]])
-    )
-  }
-  
-  # thresholds
-  for (sn in 1:2)
-  {
-    sca <- sca_options[sn]
-    thre_temp <- 0:1
-    if (!is.null(thresholds) && !is.null(thresholds[[sca]])
-        && !is.null(thresholds[[sca]][[cat]])) 
-      thre_temp <- thresholds[[sca]][[cat]]
-    
-    thre_opts[[2*cn-2+sn]] <- list(
-      "1"=cat,
-      "2"=sca,
-      "3"=round(thre_temp[1], 4),
-      "4"=round(thre_temp[2], 4)
-    )
-  }
 }
 
 dataSelectionMenu <- menuItem(
