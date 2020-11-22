@@ -50,24 +50,14 @@ binary_search <- function(data, target, numdigits)
   round((lower+upper)/2,numdigits)
 }
 
-# ----------
-# THRESHOLDS
-# ----------
-
-thresholds <- my_empty_list(sca_options)
-for (sca in sca_options)
-  thresholds[[sca]] <- my_empty_list(name_cat)
-
-# ------------
-# SET ANALYSIS
-# ------------
-
+# selects only worthwhile characteristics
 select_chars <- function(order){
   select_if(order, function(x){
     between(length(unique(x)), 2, num_filters)
   })
 }
 
+# rearranges a target matrix based on associated metadata
 gather_char <- function(target, associated){
   rownames_final <- colnames(target)
   summary <- summary(Matrix(target, sparse = TRUE))
@@ -100,6 +90,14 @@ gather_char <- function(target, associated){
   dimnames(final) <- list(rownames_final, set_types)
   final
 }
+
+# ------------
+# SET ANALYSIS
+# ------------
+
+thresholds <- my_empty_list(sca_options)
+for (sca in sca_options)
+  thresholds[[sca]] <- my_empty_list(name_cat)
 
 setwd(pro_loc)
 dog <- name_cat
