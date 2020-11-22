@@ -308,17 +308,17 @@ input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP
       conditionalPanel(
         condition = "input.plotPanels == 'ggplot2'",
         numericInput("set_feat_upse", "Maximum Features", 
-                     value=max_upse/10, min=pc_cap, max=max_upse)
+                     value=max_upse, min=pc_cap, max=2^24)
       ),
       conditionalPanel(
         condition = "input.plotPanels == 'plotly2'",
         numericInput("set_feat_heat", "Maximum Features", 
-                     value=max_heat/10, min=pc_cap, max=max_heat)
+                     value=max_heat, min=pc_cap, max=2^24)
       ),
       conditionalPanel(
         condition = "input.plotPanels == 'plotly3'",
         numericInput("set_feat_dend", "Maximum Features", 
-                     value=max_dend/10, min=pc_cap, max=max_dend)
+                     value=max_dend, min=pc_cap, max=2^24)
       )
     )
   ))

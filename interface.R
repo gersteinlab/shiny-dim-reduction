@@ -20,12 +20,12 @@ num_labels <- 60
 num_filters <- 60
 # The height of a graph by default. Depends on browser interpretation.
 graph_height <- 520
-# the maximum number of rows on an upset plot
-max_upse <- 100000
-# the maximum number of rows on a heatmap
-max_heat <- 100000
-# the maximum number of columns on a dendrogram
-max_dend <- 1000
+# the initial number of rows on an upset plot
+max_upse <- 5000
+# the initial number of rows on a heatmap
+max_heat <- 20000
+# the initial number of columns on a dendrogram
+max_dend <- 200
 
 # plot panel options
 pan_options <- c("ggplot2", "plotly2", "plotly3", "beeswarm")

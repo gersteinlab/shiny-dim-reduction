@@ -127,10 +127,10 @@ server <- function(input, output, session) {
   
   # validates input
   upse_feat <- reactive({
-    if (range_invalid(input$set_feat_upse, pc_cap, max_upse))
+    if (range_invalid(input$set_feat_upse, pc_cap, 2^24))
     {
-      notif("Warning: Maximum Features is not in [pc_cap,max_upse].", 6, "warning")
-      return(max_upse/4)
+      notif("Warning: Maximum Features is not in [pc_cap,2^24].", 6, "warning")
+      return(max_upse)
     }
       
     round(input$set_feat_upse, digits=0)
@@ -138,10 +138,10 @@ server <- function(input, output, session) {
   
   # validates input
   heat_feat <- reactive({
-    if (range_invalid(input$set_feat_heat, pc_cap, max_heat))
+    if (range_invalid(input$set_feat_heat, pc_cap, 2^24))
     {
-      notif("Warning: Maximum Features is not in [pc_cap,max_heat].", 6, "warning")
-      return(max_heat/4)
+      notif("Warning: Maximum Features is not in [pc_cap,2^24].", 6, "warning")
+      return(max_heat)
     }
     
     round(input$set_feat_heat, digits=0)
@@ -149,10 +149,10 @@ server <- function(input, output, session) {
   
   # validates input
   dend_feat <- reactive({
-    if (range_invalid(input$set_feat_dend, pc_cap, max_dend))
+    if (range_invalid(input$set_feat_dend, pc_cap, 2^24))
     {
-      notif("Warning: Maximum Features is not in [pc_cap,max_dend].", 6, "warning")
-      return(max_dend/4)
+      notif("Warning: Maximum Features is not in [pc_cap,2^24].", 6, "warning")
+      return(max_dend)
     }
     
     round(input$set_feat_dend, digits=0)
