@@ -411,7 +411,6 @@ server <- function(input, output, session) {
   title_access <- reactive("Embed Title" %in% input$sMenu)
   legend <- reactive("Embed Legend" %in% input$sMenu)
   notifq <- reactive("Notifications" %in% input$sMenu)
-  memguard <- reactive("Limit Memory Use" %in% input$sMenu)
   not_rev <- reactive("Uninverted Colors" %in% input$sMenu)
   dend <- reactive("Correlation" %in% input$dendrogram)
   upse <- reactive("Frequency" %in% input$upsetpref)
