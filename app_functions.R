@@ -23,7 +23,7 @@ require("DT")
 # is between f2[1], f2[2] and omit empty columns
 set_f1_f2 <- function(data, f1, f2)
 {
-  if (ncol(data) < 1)
+  if (class(data) != "matrix" || length(data) < 1 || ncol(data) < 1)
     return(matrix(nrow=0, ncol=0))
   for (j in 1:ncol(data))
     data[,j] <- ifelse(between(data[,j], f1[1], f1[2]), data[,j], NaN)
@@ -396,13 +396,13 @@ plotly_3d <- function(x, y, z, x_axis, y_axis, z_axis,
 # -----------------------
 
 # Creates an UpSetR plot with the desired aesthetic.
-upset_custom <- function(data, legend, ordering) 
+upset_custom <- function(data, legend) 
 {
   upset(data, nsets = ncol(data), nintersects = 50, 
         sets.x.label = "Features Per Factor Level", 
         mainbar.y.label = "Features Per Factor Subset", 
         show.numbers = ifelse(legend, "yes", "no"),
-        order.by = ordering, decreasing = T, mb.ratio = c(0.7, 0.3), text.scale = 1,
+        order.by = "freq", decreasing = T, mb.ratio = c(0.7, 0.3), text.scale = 1,
         line.size = 0.1, point.size = 2.1, shade.alpha = 0.4, matrix.dot.alpha = 0.5, 
         matrix.color = "royalblue4", main.bar.color = "royalblue4",
         sets.bar.color = "royalblue4", shade.color = "lightskyblue")
