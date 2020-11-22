@@ -23,6 +23,8 @@ require("DT")
 # is between f2[1], f2[2] and omit empty columns
 set_f1_f2 <- function(data, f1, f2)
 {
+  if (ncol(data) < 1)
+    return(matrix(nrow=0, ncol=0))
   for (j in 1:ncol(data))
     data[,j] <- ifelse(between(data[,j], f1[1], f1[2]), data[,j], NaN)
   valid <- !is.nan(data)
