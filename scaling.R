@@ -128,18 +128,6 @@ do_scal <- function(sca, scaled)
   return(scaled)
 }
 
-# performs safe subsetting
-get_safe_sub <- function(sub, df, dec, cat)
-{
-  if (sub == "Total")
-    return(df)
-  else
-  {
-    cols <- get_my_subset(dec, cat, sub)
-    return(df[,colnames(df) %in% cols,drop=FALSE])
-  }
-}
-
 # rTSNE on dim dimensions for tuning perplexity, iterations
 my_rTSNE <- function(data, dim, perp) {
   max_perp <- floor((nrow(data)-1)/3)
