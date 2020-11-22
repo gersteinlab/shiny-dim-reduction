@@ -18,43 +18,33 @@ require("DT")
 # COMPUTATION
 # -----------
 
-# Converts a matrix into a binary matrix: 1 if lower <= x <= upper, 0 otherwise.
-frac_convert <- function(data, lower, upper)
+# given a matrix and two ranges f1, f2,
+# return the rows where the of number of entries between f1[1], f1[2]
+# is between f2[1], f2[2] and omit empty columns
+set_f1_f2 <- function(data, f1, f2)
 {
   for (j in 1:ncol(data))
-    data[,j] <- between(data[,j], lower, upper)
-  storage.mode(data) <- "numeric"
-  data[rowSums(data) > 0, colSums(data) > 0, drop = FALSE]
+    data[,j] <- ifelse(between(data[,j], f1[1], f1[2]), data[,j], NaN)
+  valid <- !is.nan(data)
+  data[between(rowSums(valid), f2[1], f2[2]), colSums(valid) > 0, drop = FALSE]
 }
 
-# filters a binary matrix by the number of entries in each column
-rowSum_filter_bin <- function(data, lower, upper)
+# given a matrix, returns a data frame where
+# all non-NaN entries become 1 and all NaN entries become 0
+num_nan_binary <- function(data)
 {
-  lower <- ceiling(lower*ncol(data))
-  upper <- floor(upper*ncol(data))
-  data[between(rowSums(data), lower, upper), , drop = FALSE]
-}
-
-# bounds a matrix for Sets heatmap by replacing all unsatisfactory values with NaN
-frac_bound <- function(data, lower, upper)
-{
-  for (j in 1:ncol(data))
-    data[,j] <- ifelse(between(data[,j], lower, upper), data[,j], NaN)
-  data[rowSums(!is.nan(data)) > 0, colSums(!is.nan(data)) > 0, drop = FALSE]
-}
-
-# filters a binary matrix by the number of non-NaN entries in each column
-rowSum_filter_dat <- function(data, lower, upper)
-{
-  lower <- ceiling(lower*ncol(data))
-  upper <- floor(upper*ncol(data))
-  data[between(rowSums(!is.nan(data)), lower, upper), , drop = FALSE]
+  data[!is.nan(data)] <- 1
+  data[is.nan(data)] <- 0
+  data.frame(data)
 }
 
 # checks if a value is invalid with respect to a range
 range_invalid <- function(value, min, max)
 {
-  length(value) < 1 || is.na(value) || is.nan(value) || value < min || value > max
+  if (length(value) == 2)
+    return(range_invalid(value[1], min, max) || range_invalid(value[2], min, max))
+  
+  length(value) != 1 || is.na(value) || is.nan(value) || value < min || value > max
 }
 
 # Gets the option set for a group of samples
