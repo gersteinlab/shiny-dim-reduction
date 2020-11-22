@@ -575,11 +575,8 @@ server <- function(input, output, session) {
       if (length(addr) < 1)
         return(NULL)
       
-      data <- load_db(addr, aws_bucket)[,my_chars(),drop=FALSE]
-      
-      if (subi() != "Total")
-        data <- data[rownames(data) %in% get_my_subset(
-          decorations, input$category, subi()),,drop=FALSE]
+      data <- load_db(addr, aws_bucket)[,my_chars(),drop=FALSE] %>% 
+        get_safe_sub(subi(), ., decorations, input$category, 1)
       
       downloadData(data)
       
@@ -686,11 +683,8 @@ server <- function(input, output, session) {
       if (length(addr) < 1)
         return(NULL)
       
-      data <- load_db(addr, aws_bucket)[,my_chars(),drop=FALSE]
-      
-      if (subi() != "Total")
-        data <- data[rownames(data) %in% get_my_subset(
-          decorations, input$category, subi()),,drop=FALSE]
+      data <- load_db(addr, aws_bucket)[,my_chars(),drop=FALSE] %>% 
+        get_safe_sub(subi(), ., decorations, input$category, 1)
       
       downloadData(data)
       
@@ -797,11 +791,8 @@ server <- function(input, output, session) {
       if (length(addr) < 1)
         return(NULL)
       
-      data <- load_db(addr, aws_bucket)[,my_chars(),drop=FALSE]
-      
-      if (subi() != "Total")
-        data <- data[rownames(data) %in% get_my_subset(
-          decorations, input$category, subi()),,drop=FALSE]
+      data <- load_db(addr, aws_bucket)[,my_chars(),drop=FALSE] %>% 
+        get_safe_sub(subi(), ., decorations, input$category, 1)
       
       downloadData(data)
       
