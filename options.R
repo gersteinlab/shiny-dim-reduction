@@ -317,17 +317,20 @@ input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP
       numericRangeInput("set_f2", "Number of Characteristics", c(1,num_filters)),
       conditionalPanel(
         condition = "input.plotPanels == 'ggplot2'",
-        numericInput("set_feat_upse", "Maximum Features", value=max_upse, min=pc_cap)
+        numericInput("set_feat_upse", "Maximum Features", 
+                     value=max_upse/4, min=pc_cap, max=max_upse)
       ),
       conditionalPanel(
         condition = "input.plotPanels != 'ggplot2'",
         conditionalPanel(
           condition = "input.dendrogram == 'Variance'",
-          numericInput("set_feat_heat", "Maximum Features", value=max_heat, min=pc_cap)
+          numericInput("set_feat_heat", "Maximum Features", 
+                       value=max_heat/4, min=pc_cap, max=max_heat)
         ),
         conditionalPanel(
           condition = "input.dendrogram == 'Correlation'",
-          numericInput("set_feat_dend", "Maximum Features", value=max_dend, min=pc_cap)
+          numericInput("set_feat_dend", "Maximum Features", 
+                       value=max_dend/4, min=pc_cap, max=max_dend)
         )
       )
     )
