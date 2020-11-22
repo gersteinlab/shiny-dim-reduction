@@ -1,76 +1,43 @@
-library(UpSetR)
-library(plotly)
-library(viridis)
-library(dplyr)
+# run the app first to load libraries
 
-# Creates an UpSetR plot with the desired aesthetic.
-upset_custom <- function(data, legend) {
-  upset(data, nsets = ncol(data), nintersects = 50, 
-        sets.x.label = "Number of Samples", 
-        mainbar.y.label = "Number of Shared Characteristics", 
-        show.numbers = ifelse(legend, "yes", "no"),
-        order.by = "freq", decreasing = T, mb.ratio = c(0.7, 0.3), text.scale = 1,
-        line.size = 0.1, point.size = 2.1, shade.alpha = 0.4, matrix.dot.alpha = 0.5, 
-        matrix.color = "royalblue4", main.bar.color = "royalblue4",
-        sets.bar.color = "royalblue4", shade.color = "lightskyblue")
+# lists memory usage (not used in app)
+.ls.objects <- function (pos = 1, pattern, order.by, decreasing=FALSE, head=FALSE, n=5) 
+{
+  napply <- function(names, fn) sapply(names, function(x)
+    fn(get(x, pos = pos)))
+  names <- ls(pos = pos, pattern = pattern)
+  obj.class <- napply(names, function(x) as.character(class(x))[1])
+  obj.mode <- napply(names, mode)
+  obj.type <- ifelse(is.na(obj.class), obj.mode, obj.class)
+  obj.prettysize <- napply(names, function(x) {
+    format(utils::object.size(x), units = "auto") })
+  obj.size <- napply(names, object.size)
+  obj.dim <- t(napply(names, function(x)
+    as.numeric(dim(x))[1:2]))
+  vec <- is.na(obj.dim)[, 1] & (obj.type != "function")
+  obj.dim[vec, 1] <- napply(names, length)[vec]
+  out <- data.frame(obj.type, obj.size, obj.prettysize, obj.dim)
+  names(out) <- c("Type", "Size", "PrettySize", "Length/Rows", "Columns")
+  if (!missing(order.by))
+    out <- out[order(out[[order.by]], decreasing=decreasing), ]
+  if (head)
+    out <- head(out, n)
+  out
 }
 
-# Creates a heatmap for sets on plotly2.
-plotly2_binary <- function(binary, title, legend){
-  binary <- binary[order(rowSums(binary),decreasing=T),]
-  rows <- sprintf("X:%s", substring(rownames(binary), 0, 50))
-  cols <- sprintf("Y:%s", substring(colnames(binary), 0, 50))
-  rownames(binary) <- NULL
-  colnames(binary) <- NULL
-  plot_ly(x = rows, y = cols, z = t(binary), type="heatmap",
-          colors=viridis_pal(option="magma", direction=-1)(5)) %>%
-    layout(title = title, showlegend = legend)
+# shorthand (not used in app)
+lsos <- function(..., n=10) 
+{
+  .ls.objects(..., order.by="Size", decreasing=TRUE, head=TRUE, n=n)
 }
 
-# Converts a matrix into a binary matrix: 1 if lower <= x <= upper, 0 otherwise.
-frac_convert <- function(data, lower, upper){
-  target <- data %>% apply(1:2, function(i){as.numeric(between(i, lower, upper))})
-  target[rowSums(target) > 0, colSums(target) > 0, drop = FALSE]
-}
-
-# example matrix
+# example upset
 data <- data.frame(matrix(sample(0:1, 100000, replace=TRUE), ncol = 4))
 colnames(data) <- c("ENC001", "ENC002", "ENC003", "ENC004")
 rownames(data) <- sprintf("Gene %s", 1:nrow(data))
+upset <- upset_custom(data.frame(data), TRUE)
 
-# convert to binary, depending on range of expression
-binary <- frac_convert(data, 0.5, 0.8)
-
-plotly <- plotly2_binary(data.frame(data), "Example Plotly", TRUE)
-upset <- upset_custom(data.frame(binary), TRUE)
-
-# displays upset plot
-upset
-# displays plotly
-# plotly
-
-# For each sample in "samples", is it present in "selected"?
-get_filter <- function(samples, selected) {
-  sapply(samples, function(i){any(grepl(i,selected))})
-}
-
-# Let's race!
-start <- Sys.time()
-b1 <- sapply(lol, function(i){any(grepl(i,lol2))})
-print(as.numeric(Sys.time())-as.numeric(start))
-
-start <- Sys.time()
-b2 <- sapply(lol, function(i){i %in% lol2})
-print(as.numeric(Sys.time())-as.numeric(start))
-
-start <- Sys.time()
-b3 <- lol %in% lol2
-print(as.numeric(Sys.time())-as.numeric(start))
-
-start <- Sys.time()
-b4 <- filter(lol, contains(lol2))
-print(as.numeric(Sys.time())-as.numeric(start))
-
+# I have no idea what the purpose of this is
 data <- data.frame(matrix(sample(0:1, 16384, replace=TRUE), ncol = 4))
 colnames(data) <- c("ENC001", "ENC002", "ENC003", "ENC004")
 # View(data)
@@ -112,38 +79,6 @@ upset_custom(data)
 rownames(target) <- 1:nrow(target)
 colnames(target) <- c("ENC001", "ENC002", "ENC003", "ENC004")
 upset_custom(data.frame(target))
-
-# lists memory usage (not used in app)
-.ls.objects <- function (pos = 1, pattern, order.by, decreasing=FALSE, head=FALSE, n=5) 
-{
-  napply <- function(names, fn) sapply(names, function(x)
-    fn(get(x, pos = pos)))
-  names <- ls(pos = pos, pattern = pattern)
-  obj.class <- napply(names, function(x) as.character(class(x))[1])
-  obj.mode <- napply(names, mode)
-  obj.type <- ifelse(is.na(obj.class), obj.mode, obj.class)
-  obj.prettysize <- napply(names, function(x) {
-    format(utils::object.size(x), units = "auto") })
-  obj.size <- napply(names, object.size)
-  obj.dim <- t(napply(names, function(x)
-    as.numeric(dim(x))[1:2]))
-  vec <- is.na(obj.dim)[, 1] & (obj.type != "function")
-  obj.dim[vec, 1] <- napply(names, length)[vec]
-  out <- data.frame(obj.type, obj.size, obj.prettysize, obj.dim)
-  names(out) <- c("Type", "Size", "PrettySize", "Length/Rows", "Columns")
-  if (!missing(order.by))
-    out <- out[order(out[[order.by]], decreasing=decreasing), ]
-  if (head)
-    out <- head(out, n)
-  out
-}
-
-# shorthand (not used in app)
-lsos <- function(..., n=10) 
-{
-  .ls.objects(..., order.by="Size", decreasing=TRUE, head=TRUE, n=n)
-}
-
 
 # df_keep_cols <- function(m)
 # {
