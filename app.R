@@ -126,6 +126,39 @@ server <- function(input, output, session) {
   })
   
   # validates input
+  upse_feat <- reactive({
+    if (range_invalid(input$set_feat_upse, pc_cap, max_upse))
+    {
+      notif("Warning: Maximum Features is not in [pc_cap,max_upse].", 6, "warning")
+      return(max_upse/4)
+    }
+      
+    round(input$set_feat_upse, digits=0)
+  })
+  
+  # validates input
+  heat_feat <- reactive({
+    if (range_invalid(input$set_feat_heat, pc_cap, max_heat))
+    {
+      notif("Warning: Maximum Features is not in [pc_cap,max_heat].", 6, "warning")
+      return(max_heat/4)
+    }
+    
+    round(input$set_feat_heat, digits=0)
+  })
+  
+  # validates input
+  dend_feat <- reactive({
+    if (range_invalid(input$set_feat_dend, pc_cap, max_dend))
+    {
+      notif("Warning: Maximum Features is not in [pc_cap,max_dend].", 6, "warning")
+      return(max_dend/4)
+    }
+    
+    round(input$set_feat_dend, digits=0)
+  })
+  
+  # validates input
   observeEvent(input$set_f1, {
     if (range_invalid(input$set_f1, 0, 1))
       notif("Warning: Fraction of Samples is not in [0,1].", 6, "warning")
@@ -528,7 +561,6 @@ server <- function(input, output, session) {
     
     if (input$embedding == "Sets")
     {
-      truncated <- FALSE
       if (is.null(thresholds) || is.null(my_chars())) 
         return(NULL)
       
@@ -548,32 +580,15 @@ server <- function(input, output, session) {
         data <- data[rownames(data) %in% get_my_subset(
           decorations, input$category, subi()),,drop=FALSE]
       
-      if (ncol(data) < 1 || nrow(data) < 8)
-        return(NULL)
-      
-      if (memguard() && (nrow(data) * ncol(data) > max_points))
-      {
-        truncated <- TRUE
-        data <- data[base::order(rowSums(data),decreasing=T),]
-        data <- data[1:floor(max_points/ncol(data)),]
-      }
+      if (nrow(data) > upse_feat())
+        data <- data[1:upse_feat(),,drop=FALSE]
       
       data <- data %>% set_f1_f2(input$set_f1, input$set_f2) %>% num_nan_binary()
       
-      if (nrow(data) < 8)
+      if (ncol(data) < 1 || nrow(data) < 8)
         return(NULL)
       
-      if (memguard() && (nrow(data) * ncol(data) > max_heatma))
-      {
-        truncated <- TRUE
-        data <- data[base::order(rowSums(data),decreasing=T),]
-        data <- data[1:floor(max_heatma/ncol(data)),]
-      }
-      
       downloadData(data)
-      
-      if (truncated)
-        truncated_msg()
       
       if (ncol(data) == 1)
         return(venn1_custom(data, legend()))
@@ -581,7 +596,7 @@ server <- function(input, output, session) {
       if (ncol(data) == 2)
         return(venn2_custom(data, legend()))
       
-      return(upset_custom(data, legend(), ifelse(upse(), "freq", "degree")))
+      return(upset_custom(data, legend()))
     }
     
     addr <- make_aws_name(input$category, subi(),
@@ -657,7 +672,6 @@ server <- function(input, output, session) {
     
     if (input$embedding == "Sets")
     {
-      truncated <- FALSE
       if (is.null(thresholds) || is.null(my_chars())) 
         return(NULL)
       
@@ -677,48 +691,32 @@ server <- function(input, output, session) {
         data <- data[rownames(data) %in% get_my_subset(
           decorations, input$category, subi()),,drop=FALSE]
       
-      if (ncol(data) < 1 || nrow(data) < 1)
-        return(NULL)
-      
-      if (memguard() && (nrow(data) * ncol(data) > max_points))
-      {
-        truncated <- TRUE
-        data <- data[base::order(rowSums(data),decreasing=T),]
-        data <- data[1:floor(max_points/ncol(data)),]
-      }
-      
-      data <- data %>% set_f1_f2(input$set_f1, input$set_f2)
-      
       if (dend())
       {
-        if (memguard() && (nrow(data) > max_dendro))
-        {
-          truncated <- TRUE
-          data <- data[base::order(rowSums(data),decreasing=T),]
-          data <- data[1:max_dendro,]
-        }
+        if (nrow(data) > dend_feat())
+          data <- data[1:dend_feat(),,drop=FALSE]
+        
+        data <- data %>% set_f1_f2(input$set_f1, input$set_f2)
+        
+        if (ncol(data) < 1 || nrow(data) < 1)
+          return(NULL)
         
         downloadData(data)
-        
-        if (truncated)
-          truncated_msg()
         
         return(plotly_heatmap_dendrogram(data, paint(), title(), legend(), FALSE))
       } 
       else
       {
-        data <- data[base::order(rowSums(data),decreasing=T),]
+        if (nrow(data) > heat_feat())
+          data <- data[1:heat_feat(),,drop=FALSE]
+       
+         data <- data[base::order(rowSums(data),decreasing=T),] %>% 
+           set_f1_f2(input$set_f1, input$set_f2)
         
-        if (memguard() && (nrow(data) * ncol(data) > max_heatma))
-        {
-          truncated <- TRUE
-          data <- data[1:floor(max_heatma/ncol(data)),]
-        }
+        if (ncol(data) < 1 || nrow(data) < 1)
+          return(NULL)
         
         downloadData(data)
-        
-        if (truncated)
-          truncated_msg()
         
         return(plotly_heatmap_variance(data, paint(), title(), legend(), FALSE))
       }
@@ -821,47 +819,32 @@ server <- function(input, output, session) {
         data <- data[rownames(data) %in% get_my_subset(
           decorations, input$category, subi()),,drop=FALSE]
       
-      if (ncol(data) < 1 || nrow(data) < 1)
-        return(NULL)
-      
-      if ((memguard() && (nrow(data) * ncol(data) > max_points)))
-      {
-        truncated <- TRUE
-        data <- data[1:floor(max_points/ncol(data)),]
-      }
-      
-      data <- data %>% set_f1_f2(input$set_f1, input$set_f2)
-      
       if (dend())
       {
-        if (memguard() && (nrow(data) > max_dendro))
-        {
-          truncated <- TRUE
-          data <- data[base::order(rowSums(data),decreasing=T),]
-          data <- data[1:max_dendro,]
-        }
+        if (nrow(data) > dend_feat())
+          data <- data[1:dend_feat(),,drop=FALSE]
+        
+        data <- data %>% set_f1_f2(input$set_f1, input$set_f2)
+        
+        if (ncol(data) < 1 || nrow(data) < 1)
+          return(NULL)
         
         downloadData(data)
-        
-        if (truncated)
-          truncated_msg()
         
         return(plotly_heatmap_dendrogram(data, paint(), title(), legend(), TRUE))
       } 
       else
       {
-        data <- data[base::order(rowSums(data),decreasing=T),]
+        if (nrow(data) > heat_feat())
+          data <- data[1:heat_feat(),,drop=FALSE]
         
-        if (memguard() && (nrow(data) * ncol(data) > max_heatma))
-        {
-          truncated <- TRUE
-          data <- data[1:floor(max_heatma/ncol(data)),]
-        }
+        data <- data[base::order(rowSums(data),decreasing=T),] %>% 
+          set_f1_f2(input$set_f1, input$set_f2)
+        
+        if (ncol(data) < 1 || nrow(data) < 1)
+          return(NULL)
         
         downloadData(data)
-        
-        if (truncated)
-          truncated_msg()
         
         return(plotly_heatmap_variance(data, paint(), title(), legend(), TRUE))
       }
