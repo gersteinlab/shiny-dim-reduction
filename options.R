@@ -54,22 +54,16 @@ for (cat in name_cat)
 
 for (dec_group in decorations)
 {
-  if (length(dec_group$Categories) > 0)
-  {
-    subset <- dec_group$Subsets[-1]
+  subset <- dec_group$Subsets[-1]
+  mapping <- mapply(
+    function(a,b){
+      sprintf("%s (%s)", b, length(a))
+    }, subset, names(subset)
+  ) 
+  names(mapping) <- NULL
     
-    for (good_cat in dec_group$Categories)
-    {
-      mapping <- mapply(
-        function(a,b){
-          sprintf("%s (%s)", b, length(a))
-        }, subset, names(subset)
-      ) 
-      
-      names(mapping) <- NULL
-      sub_groups[[good_cat]] <- c(sub_groups[[good_cat]], mapping) 
-    }
-  }
+  for (good_cat in dec_group$Categories)
+    sub_groups[[good_cat]] <- c(sub_groups[[good_cat]], mapping) 
 }
 
 # an outline of characteristics
