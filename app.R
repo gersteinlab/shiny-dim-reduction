@@ -1111,8 +1111,6 @@ server <- function(input, output, session) {
     updateNumericInput(session, inputId = "set_feat_upse", value = data[["set_feat_upse"]])
     updateNumericInput(session, inputId = "set_feat_heat", value = data[["set_feat_heat"]])
     updateNumericInput(session, inputId = "set_feat_dend", value = data[["set_feat_dend"]])
-    updatePickerInput(session, inputId = "upsetpref", selected = data[["upsetpref"]])
-    updatePickerInput(session, inputId = "dendrogram", selected = data[["dendrogram"]])
     updatePickerInput(session, inputId = "palette", selected = data[["palette"]])
     updateTabsetPanel(session, inputId = "plotPanels", selected = data[["plotPanels"]])
     updateNumericRangeInput(session, inputId = "set_f1", value = data[["set_f1"]])
