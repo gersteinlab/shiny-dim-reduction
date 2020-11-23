@@ -443,11 +443,9 @@ server <- function(input, output, session) {
     keep <- rep(TRUE, nrow(order()))
 
     for (char in names(outline[[input$category]]))
-    {
-      filter <- order()[[char]] %in% parse_opt(input[[get_select(input$category, char)]])
-      keep <- keep & filter
-    }
-    
+      keep <- keep & (
+        order()[[char]] %in% parse_opt(input[[get_select(input$category, char)]]))
+
     keep
   })
   
