@@ -134,7 +134,7 @@ server <- function(input, output, session) {
       notif("Warning: Maximum Features is not in [pc_cap,2^24].", 6, "warning")
       return(max_upse)
     }
-      
+    
     round(input$set_feat_upse, digits=0)
   })
   
@@ -427,7 +427,10 @@ server <- function(input, output, session) {
   shapeby <- reactive(input[[sprintf("shapeby_%s", input$category)]])
   labelby <- reactive(input[[sprintf("labelby_%s", input$category)]])
   filterby <- reactive(input[[sprintf("filterby_%s", input$category)]])
-  thre <- reactive(input[[get_thre(input$category, input$scale)]])
+  thre_ind <- reactive({
+    which(thre_seqs[[input$scale]][[input$category]] == 
+            input[[get_thre(input$category, input$scale)]])
+  })
   
   # reactives that follow from filter-related reactives
   colors <- reactive(order()[keep(), colorby()])
@@ -562,14 +565,10 @@ server <- function(input, output, session) {
     
     if (input$embedding == "Sets")
     {
-      if (is.null(thresholds) || is.null(my_chars())) 
+      if (is.null(my_chars())) 
         return(NULL)
       
-      thre_temp <- thresholds[[input$scale]][[input$category]]
-      diff <- (thre_temp[2] - thre_temp[1])/10
-      chord <- round(0:10*diff+thre_temp[1], 4)
-      addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", 
-                      which(chord == thre()), 
+      addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(), 
                       which(sca_options == input$scale), filterby(), input$category)
       
       if (length(addr) < 1)
@@ -587,7 +586,7 @@ server <- function(input, output, session) {
       
       if (ncol(data) < 1 || nrow(data) < 8)
         return(NULL)
-
+      
       if (ncol(data) == 1)
         return(venn1_custom(data, legend()))
       
@@ -670,14 +669,10 @@ server <- function(input, output, session) {
     
     if (input$embedding == "Sets")
     {
-      if (is.null(thresholds) || is.null(my_chars())) 
+      if (is.null(my_chars())) 
         return(NULL)
       
-      thre_temp <- thresholds[[input$scale]][[input$category]]
-      diff <- (thre_temp[2] - thre_temp[1])/10
-      chord <- round(0:10*diff+thre_temp[1], 4)
-      addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", 
-                      which(chord == thre()), 
+      addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(), 
                       which(sca_options == input$scale), filterby(), input$category)
       
       if (length(addr) < 1)
@@ -690,9 +685,9 @@ server <- function(input, output, session) {
       
       if (nrow(data) > heat_feat())
         data <- data[1:heat_feat(),,drop=FALSE]
-     
-       data <- data[base::order(rowSums(data),decreasing=T),] %>% 
-         set_f1_f2(input$set_f1, input$set_f2)
+      
+      data <- data[base::order(rowSums(data),decreasing=T),] %>% 
+        set_f1_f2(input$set_f1, input$set_f2)
       
       if (ncol(data) < 1 || nrow(data) < 1)
         return(NULL)
@@ -778,14 +773,10 @@ server <- function(input, output, session) {
     if (input$embedding == "Sets")
     {
       truncated <- FALSE
-      if (is.null(thresholds) || is.null(my_chars())) 
+      if (is.null(my_chars())) 
         return(NULL)
       
-      thre_temp <- thresholds[[input$scale]][[input$category]]
-      diff <- (thre_temp[2] - thre_temp[1])/10
-      chord <- round(0:10*diff+thre_temp[1], 4)
-      addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", 
-                      which(chord == thre()), 
+      addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(), 
                       which(sca_options == input$scale), filterby(), input$category)
       
       if (length(addr) < 1)
