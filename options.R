@@ -10,27 +10,47 @@ require("shinydashboard")
 require("shinyjs")
 
 # ----------------
+# FIX DEPENDENCIES
+# ----------------
+
+# order_total
+for (cat in name_cat)
+{
+  if (is.null(order_total[[cat]]))
+  {
+    addr <- make_aws_name(
+      cat, "Total", sca_options[1], nor_options[1], 
+      rem_perc(fea_options[1]), emb_options[1], vis_options[1], 2, 1)
+  
+    data <- load_db(addr, aws_bucket)
+    order_total[[cat]] <- data.frame("Unknown" = rep("Unknown", nrow(data)))
+  }
+}
+
+# thresholds
+thre_seqs <- rep(list(my_empty_list(name_cat)), 2)
+names(thre_seqs) <- sca_options
+for (sca in sca_options)
+{
+  for (cat in name_cat)
+  {
+    if (is.null(thresholds[[sca]][[cat]]))
+      thre_temp <- 0:10/10
+    else
+      thre_temp <- seq(thre[1], thre[2], (thre[2]-thre[1])/10)
+    
+    thre_seqs[[sca]][[cat]] <- thre_temp %>% round(4) %>% format(nsmall=4)
+  }
+}
+
+# ----------------
 # GENERATE OUTLINE
 # ----------------
 
 sub_groups <- my_empty_list(name_cat)
 
 for (cat in name_cat)
-{
-  # create sub_groups
   sub_groups[[cat]] <- sprintf("Total (%s)", categories[[cat]])
-  
-  # for redundancy
-  if (is.null(order_total[[cat]]))
-  {
-    addr <- make_aws_name(
-      cat, "Total", sca_options[1], nor_options[1], 
-      rem_perc(fea_options[1]), emb_options[1], vis_options[1], 2, perplexity_types[1])
-    
-    data <- load_db(addr, aws_bucket)
-    order_total[[cat]] <- data.frame("Unknown" = rep("Unknown", nrow(data)))
-  }
-}
 
 for (dec_group in decorations)
 {
@@ -54,7 +74,7 @@ for (dec_group in decorations)
 
 # an outline of characteristics
 outline <- my_empty_list(name_cat)
-# all the IDs that will be compressed for the URL, made from the outline
+# all the IDs that will be compressed for the URL, made from filters
 select_ids <- NULL
 # create the outline
 cols_unique <- my_empty_list(name_cat)
@@ -82,7 +102,6 @@ for (cat in name_cat)
   }
   
 }
-rm(filchar, filterable, order_gen)
 
 # the option boxes that will be presented to the user
 color_opts <- vector(mode = "list", length = num_cat)
@@ -93,7 +112,8 @@ select_opts <- vector(mode = "list", length = length(select_ids))
 thre_opts <- vector(mode = "list", length = 2*num_cat)
 
 # create the option boxes
-gen_index <- 0
+filt_ind <- 0
+thre_ind <- 0
 for (cn in 1:num_cat)
 {
   order_gen <- order_total[[cn]]
@@ -128,9 +148,9 @@ for (cn in 1:num_cat)
   # selections
   for (char in names(outline[[cat]]))
   {
-    gen_index <- gen_index + 1
+    filt_ind <- filt_ind + 1
     
-    select_opts[[gen_index]] <- conditionalPanel(
+    select_opts[[filt_ind]] <- conditionalPanel(
       condition=sprintf(
         "input.category == '%s' && input.filterby_%s == '%s'", cat, cat, char),
       check_panel(get_select(cat, char), sprintf("Filter By (%s)", cat),
@@ -139,26 +159,21 @@ for (cn in 1:num_cat)
   }
   
   # thresholds
-  for (sn in 1:2)
+  for (sca in sca_options)
   {
-    sca <- sca_options[sn]
-    thre_temp <- 0:1
-    if (!is.null(thresholds) && !is.null(thresholds[[sca]])
-        && !is.null(thresholds[[sca]][[cat]])) 
-      thre_temp <- thresholds[[sca]][[cat]]
-    
-    thre_opts[[2*cn-2+sn]] <- list(
-      "1"=cat,
-      "2"=sca,
-      "3"=round(thre_temp[1], 4),
-      "4"=round(thre_temp[2], 4)
-    )
+    thre_ind <- thre_ind + 1
+    thre_opts[[thre_ind]] <- list("1"=cat, "2"=sca)
   }
 }
 
 # -----------------
 # BOOKMARK OUTLINES
 # -----------------
+
+# all the IDs that will be compressed for the URL, made from thresholds
+thre_ids <- NULL
+for (sca in sca_options)
+  thre_ids <- c(thre_ids, get_thre(name_cat, sca))
 
 bookmark_cat <- my_empty_list(name_cat)
 bookmark_thre <- my_empty_list(name_cat)
@@ -188,8 +203,7 @@ bookmark_exclude_vector <- c(
   sprintf("shapeby_%s", name_cat), 
   sprintf("labelby_%s", name_cat), 
   sprintf("filterby_%s", name_cat), 
-  select_ids, 
-  get_thre(name_cat, "Logarithmic"), get_thre(name_cat, "Linear"), 
+  select_ids, thre_ids,
   
   "start", "stop", "toggle", "central_nav", "instructions", "citations", 
   "sMenu", "height", "category", "scale", "normalize", "features", "embedding", 
@@ -265,13 +279,12 @@ filter_panels_ui <- function(filters){
 # Creates the UI for threshold panels.
 thre_panels_ui <- function(thres){
   lapply(thres, function(x){
+    thre_seq <- thre_seqs[[x[[2]]]][[x[[1]]]]
+    mid <- ceiling(length(thre_seq)/2)
+    
     conditionalPanel(
-      condition = sprintf("input.category == '%s' && input.scale == '%s'",
-                          x[[1]], x[[2]]),
-      sliderInput(
-        get_thre(x[[1]], x[[2]]), "Threshold", min=x[[3]], max=x[[4]],
-        value=(x[[3]]+x[[4]])/2, step=(x[[4]]-x[[3]])/10, round=-4,
-        ticks = FALSE)
+      condition = sprintf("input.category == '%s' && input.scale == '%s'", x[[1]], x[[2]]),
+      select_panel(get_thre(x[[1]], x[[2]]), "Threshold", thre_seq, mid)
     )
   })
 }
