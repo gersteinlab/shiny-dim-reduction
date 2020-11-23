@@ -441,13 +441,11 @@ server <- function(input, output, session) {
   # calculate which samples to keep
   keep <- reactive({
     keep <- rep(TRUE, nrow(order()))
-    
-    chars <- outline[[input$category]]
-    for (char in names(chars))
+
+    for (char in names(outline[[input$category]]))
     {
-      keep <- (
-        order()[[char]] %in% parse_opt(input[[get_select(input$category, char)]])
-      ) & keep
+      filter <- order()[[char]] %in% parse_opt(input[[get_select(input$category, char)]])
+      keep <- keep & filter
     }
     
     keep
