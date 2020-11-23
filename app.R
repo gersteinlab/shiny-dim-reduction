@@ -569,9 +569,6 @@ server <- function(input, output, session) {
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(), 
                       which(sca_options == input$scale), filterby(), input$category)
       
-      if (length(addr) < 1)
-        return(NULL)
-      
       data <- load_db(addr, aws_bucket)[,my_chars(),drop=FALSE] %>% 
         get_safe_sub(subi(), ., decorations, input$category, 1)
       
@@ -673,9 +670,6 @@ server <- function(input, output, session) {
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(), 
                       which(sca_options == input$scale), filterby(), input$category)
       
-      if (length(addr) < 1)
-        return(NULL)
-      
       data <- load_db(addr, aws_bucket)[,my_chars(),drop=FALSE] %>% 
         get_safe_sub(subi(), ., decorations, input$category, 1)
       
@@ -770,15 +764,11 @@ server <- function(input, output, session) {
     
     if (input$embedding == "Sets")
     {
-      truncated <- FALSE
       if (is.null(my_chars())) 
         return(NULL)
       
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(), 
                       which(sca_options == input$scale), filterby(), input$category)
-      
-      if (length(addr) < 1)
-        return(NULL)
       
       data <- load_db(addr, aws_bucket)[,my_chars(),drop=FALSE] %>% 
         get_safe_sub(subi(), ., decorations, input$category, 1)
