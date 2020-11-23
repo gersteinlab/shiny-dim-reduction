@@ -400,6 +400,12 @@ assign_keys(amazon_keys)
 # create categories
 init_cat(categories_full)
 
+# metadata
+get_from_dir("order_total", my_empty_list(name_cat))
+
+# thresholds for sets
+get_from_dir("thresholds", NULL)
+
 # a bit of exposition regarding decoration:
 # first of all, each decoration in the list has a name
 # and then two entries:
@@ -408,14 +414,8 @@ init_cat(categories_full)
 # (b) indices of that reference vector that constitute subsets
 get_from_dir("decorations", NULL)
 
-# metadata
-get_from_dir("order_total", my_empty_list(name_cat))
-
 # perplexity types for particular analyses
 get_from_dir("perplexity_types", 1:5)
-
-# thresholds for sets
-get_from_dir("thresholds", NULL)
 
 # app title
 get_from_dir("app_title", "Dimensionality Reduction Tool")
