@@ -64,18 +64,17 @@ get_opt <- function(samples)
 }
 
 # Formats an option for app selection
-make_opt <- function(a,b) 
+make_opt <- function(a, b) 
 {
   sprintf("%s (%s)", a, b)
 }
 
-# Suppose a checkbox created by get_opt() returns the string "Sputum (100)". 
-# This function parses that string to "Sputum".
-parse_opt <- function(checkbox)
+# Suppose we have a vector of strings of the form "A (B)", 
+# where A and B are strings that do not contain '(' or ')'. 
+# Return all As if ind = 1 or all Bs if ind = 2.
+parse_opt <- function(str, ind=1)
 {
-  if (is.null(checkbox)) 
-    return(NULL)
-  checkbox %>% strsplit(" \\(") %>% lapply(function(i){i[1]}) %>% unlist()
+  strsplit(str, "( \\(|\\))") %>% lapply(function(i){i[ind]}) %>% unlist()
 }
 
 # calculates the number of truncated features given pc_cap, 
