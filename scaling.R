@@ -37,8 +37,12 @@ for (cat in name_cat)
   sub_groups[[cat]] <- "Total"
 
 for (dec_group in decorations)
+{
+  mapping <- names(dec_group$Subsets)[-1]
+  
   for (gc in dec_group$Categories)
-    sub_groups[[gc]] <- c(sub_groups[[gc]], names(dec_group$Subsets)[-1])
+    sub_groups[[gc]] <- c(sub_groups[[gc]], mapping)
+}
 
 # creates an empty list for neighbors
 perplexity_list <- my_empty_list(sprintf("P%s", perplexity_types))
