@@ -40,8 +40,8 @@ for (dec_group in decorations)
 {
   mapping <- names(dec_group$Subsets)[-1]
   
-  for (gc in dec_group$Categories)
-    sub_groups[[gc]] <- c(sub_groups[[gc]], mapping)
+  for (good_cat in dec_group$Categories)
+    sub_groups[[good_cat]] <- c(sub_groups[[good_cat]], mapping)
 }
 
 # creates an empty list for neighbors
