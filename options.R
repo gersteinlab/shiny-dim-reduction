@@ -35,11 +35,9 @@ for (sca in sca_options)
   for (cat in name_cat)
   {
     if (is.null(thresholds[[sca]][[cat]]))
-      thre_temp <- 0:10/10
+      thre_seqs[[sca]][[cat]] <- (0:10/10) %>% format(nsmall=4)
     else
-      thre_temp <- seq(thre[1], thre[2], (thre[2]-thre[1])/10)
-    
-    thre_seqs[[sca]][[cat]] <- thre_temp %>% round(4) %>% format(nsmall=4)
+      thre_seqs[[sca]][[cat]] <- thresholds[[sca]][[cat]] %>% format(nsmall=4)
   }
 }
 
