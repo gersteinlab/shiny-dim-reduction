@@ -106,7 +106,7 @@ for (cat in dog)
   short_list <- select_chars(order_total[[cat]])
   
   final_saver <- my_empty_list(colnames(short_list))
-  print(sprintf("For %s: %s", cat, names(final_saver)))
+  print(sprintf("For %s: %s", cat, paste(names(final_saver), collapse=" ")))
   
   combined <- readRDS(sprintf("combined/combined_%s.rds", cat))
   
@@ -125,14 +125,13 @@ for (cat in dog)
     
     print(sprintf("(%s, %s) for %s", local_lower, local_upper, sca))
     
-    thresholds[[sca]][[cat]] <- c(local_lower, local_upper)
-    diff <- (local_lower - local_upper)/len_inter
-    chord <- round(seq(local_upper, local_lower, diff), 4)
+    diff <- (local_upper - local_lower)/len_inter
+    chord <- round(seq(local_lower, local_upper, diff), 4)
+    thresholds[[sca]][[cat]] <- chord
     
-    for (ind in (len_inter+1):1)
+    for (ind in 1:(len_inter+1))
     {
-      thre <- chord[length(chord)-ind+1]
-      target <- calculate_sets(scaled, thre)
+      target <- calculate_sets(scaled, chord[ind])
       
       for (cha in colnames(short_list))
         final_saver[[cha]] <- gather_char(target, short_list[[cha]])
