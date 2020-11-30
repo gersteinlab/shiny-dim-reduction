@@ -29,7 +29,7 @@ self_save <- function(filenames, compress=TRUE)
 self_load <- function(filenames)
 {
   for (filename in filenames)
-    get_from_dir("dAct", NULL, dir=getwd())
+    get_from_dir(filename, NULL, dir=getwd())
   return(NULL)
 }
 
