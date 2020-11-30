@@ -908,3 +908,17 @@ any_binary <- function(x){
   })
   x[m,,drop=FALSE]
 }
+
+# sorts a list by names
+sort_by_names <- function(target)
+{
+  target[base::order(names(target))]
+}
+
+# selects the top num columns of scaled, based on the numerical output of fun
+select_top_cols <- function(scaled, num, fun)
+{
+  outcomes <- apply(scaled, 2, fun)
+  sorted <- sort(outcomes, decreasing=TRUE, index.return=TRUE)$ix[1:num]
+  scaled[,sorted,drop=FALSE]
+}

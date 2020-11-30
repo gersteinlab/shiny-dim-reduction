@@ -40,14 +40,6 @@ num_nan_binary <- function(data)
   data.frame(data)
 }
 
-# selects the top num columns of scaled, based on the numerical output of fun
-select_top_cols <- function(scaled, num, fun)
-{
-  outcomes <- apply(scaled, 2, fun)
-  sorted <- sort(outcomes, decreasing=TRUE, index.return=TRUE)$ix[1:num]
-  scaled[,sorted,drop=FALSE]
-}
-
 # checks if a value is invalid with respect to a range
 range_invalid <- function(value, min, max)
 {
@@ -90,12 +82,6 @@ pc <- function(name)
   if (missing(name))
     name <- "1"
   sprintf("Component %s", name)
-}
-
-# sorts a list by names
-sort_by_names <- function(target)
-{
-  target[base::order(names(target))]
 }
 
 # --------------

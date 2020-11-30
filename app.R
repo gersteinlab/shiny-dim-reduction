@@ -502,7 +502,7 @@ server <- function(input, output, session) {
     if (input$palette=="Custom" && !is.null(custom_color_scales) &&
         colorby() %in% names(custom_color_scales) && input$visualize != "Summarize")
     {
-      new <- custom_color_scales[[colorby()]] %>% sort_by_names() %>% unlist()
+      new <- custom_color_scales[[colorby()]] %>% unlist()
       present <- TRUE
       
       for (color in colors())
