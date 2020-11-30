@@ -7,6 +7,10 @@ source("converter.R", encoding="UTF-8")
 
 library(Matrix)
 
+dec_pro <- sprintf("%s/decorations", pro_loc)
+if (!dir.exists(dec_pro))
+  dir.create(dec_pro)
+
 # ---------
 # FUNCTIONS
 # ---------
@@ -426,7 +430,7 @@ combined_H3K27ac <- readRDS("combined/combined_H3K27ac.rds")
 ref <- colnames(combined_H3K27ac)
 rm(combined_H3K27ac)
 
-setwd(sprintf("%s/Decorations", raw_loc))
+setwd(sprintf("%s/decorations", raw_loc))
 file_names <- list.files()
 all_decorations <- my_empty_list(file_names)
 
@@ -451,14 +455,30 @@ formal_names <- c(
 
 names(all_decorations) <- formal_names
 
+# extract all row names and clean them
 clean_decor <- my_empty_list(formal_names)
 for (file in formal_names)
   clean_decor[[file]] <- all_decorations[[file]][,1] %>% EH38D_removal()
 
+# convert rest of the matrices to numeric
 for (file in formal_names)
-  all_decorations[[file]] <- all_decorations[[file]][,-1]
-for (file in formal_names)
-  all_decorations[[file]] <- apply(all_decorations[[file]], 1:2, as.numeric)
+  all_decorations[[file]] <- apply(all_decorations[[file]][,-1], 1:2, as.numeric)
+
+# save
+setwd(dec_pro)
+self_save("all_decorations")
+self_save("clean_decor")
+self_save("folder_full")
+self_save("union_full")
+
+# recovery
+setwd(sprintf("%s/decorations", pro_loc))
+all_decorations <- readRDS("all_decorations.rds")
+clean_decor <- readRDS("clean_decor.rds")
+folder_full <- readRDS("folder_full.rds")
+union_full <- readRDS("union_full.rds")
+formal_names <- names(all_decorations)
+
 
 ind_decor <- my_empty_list(formal_names)
 for (file in formal_names)
