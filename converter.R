@@ -20,7 +20,8 @@ read_tsv_text <- function(filename)
 self_save <- function(filenames, compress=TRUE)
 {
   for (filename in filenames)
-    saveRDS(get(filename), sprintf("%s.rds", filename), compress=compress)
+    if (exists(filename))
+      saveRDS(get(filename), sprintf("%s.rds", filename), compress=compress)
   return(NULL)
 }
 
