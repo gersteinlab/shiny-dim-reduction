@@ -380,13 +380,12 @@ for (cat in name_cat)
     c("1", "2", "3", "4"))
 }
 
-# -----------
-# DECORATIONS
-# -----------
+# ------------------
+# DECORATIONS PART 1
+# ------------------
 
 setwd(raw_loc)
-ED_mapping <- read_tsv_text("GRCh38-ccREs.bed")
-ED_mapping <- do.call(rbind, ED_mapping)
+ED_mapping <- do.call(rbind, read_tsv_text("GRCh38-ccREs.bed"))
 input_E <- ED_mapping[,5] %>% EH38E_removal()
 output_D <- ED_mapping[,4] %>% EH38D_removal()
 
@@ -395,8 +394,7 @@ ED_map <- function(vec_x)
   output_D[input_E %in% vec_x]
 }
 
-setwd(raw_loc)
-setwd("allele_specific")
+setwd(sprintf("%s/allele_specific", raw_loc))
 
 folder_list <- list.files()
 folder_full <- my_empty_list(folder_list)
@@ -470,6 +468,11 @@ self_save("all_decorations")
 self_save("clean_decor")
 self_save("folder_full")
 self_save("union_full")
+self_save("ref")
+
+# ------------------
+# DECORATIONS PART 2
+# ------------------
 
 # recovery
 setwd(sprintf("%s/decorations", pro_loc))
@@ -477,8 +480,8 @@ all_decorations <- readRDS("all_decorations.rds")
 clean_decor <- readRDS("clean_decor.rds")
 folder_full <- readRDS("folder_full.rds")
 union_full <- readRDS("union_full.rds")
+ref <- readRDS("ref.rds")
 formal_names <- names(all_decorations)
-
 
 ind_decor <- my_empty_list(formal_names)
 for (file in formal_names)
@@ -608,6 +611,38 @@ decorations <- list(
   )
 )
 
+# -----------------
+# SAVE DEPENDENCIES
+# -----------------
+
+setwd(dep_loc)
+
+self_save("decorations")
+self_save("categories_full")
+self_save("order_total")
+
+# shiny-app-entex
+amazon_keys <- c("AKIAVI2HZGPON64RUYYJ",
+                 "1AE4Jlbrp0Sfuq8Ew1gYNFkWOaqgrDVVvCJqCz8b",
+                 "shiny-app-data-justin-entex")
+app_title <- "Dimensionality Reduction Plotting Tool for the ENTEx Project"
+app_citations <- 
+  "<u>ENCODE Paper 1:</u> ENCODE Project Consortium. An integrated encyclopedia of 
+DNA elements in the human genome. Nature. 2012;489(7414):57-74. 
+<a href=\"doi:10.1038/nature11247\" target=\"_blank\">
+doi:10.1038/nature11247</a>
+<br>
+<u>ENCODE Paper 2:</u> Davis CA, Hitz BC, Sloan CA, et al. The Encyclopedia of 
+DNA elements (ENCODE): data portal update. Nucleic Acids Res. 2018;46(D1):D794-D801. 
+<a href=\"doi:10.1093/nar/gkx1081\" target=\"_blank\">
+doi:10.1093/nar/gkx1081</a>
+<br><br>
+In addition, the ENCODE Consortium and several ENCODE production laboratories
+graciously generated these datasets." 
+perplexity_types <- c(2, 4, 6, 12, 20)
+pc_cap <- 10
+user_credentials <- list("guest" = my_hash("All@2019")) 
+
 custom_color_scales <- list(
   "TISSUE"=list(
     'skeletal muscle tissue'='#7A67EE',
@@ -651,38 +686,6 @@ custom_color_scales <- list(
     'upper lobe of left lung'='#9ACD32'
   )
 )
-
-# -----------------
-# SAVE DEPENDENCIES
-# -----------------
-
-setwd(dep_loc)
-
-self_save("decorations")
-self_save("categories_full")
-self_save("order_total")
-
-# shiny-app-entex
-amazon_keys <- c("AKIAVI2HZGPON64RUYYJ",
-                 "1AE4Jlbrp0Sfuq8Ew1gYNFkWOaqgrDVVvCJqCz8b",
-                 "shiny-app-data-justin-entex")
-app_title <- "Dimensionality Reduction Plotting Tool for the ENTEx Project"
-app_citations <- 
-  "<u>ENCODE Paper 1:</u> ENCODE Project Consortium. An integrated encyclopedia of 
-DNA elements in the human genome. Nature. 2012;489(7414):57-74. 
-<a href=\"doi:10.1038/nature11247\" target=\"_blank\">
-doi:10.1038/nature11247</a>
-<br>
-<u>ENCODE Paper 2:</u> Davis CA, Hitz BC, Sloan CA, et al. The Encyclopedia of 
-DNA elements (ENCODE): data portal update. Nucleic Acids Res. 2018;46(D1):D794-D801. 
-<a href=\"doi:10.1093/nar/gkx1081\" target=\"_blank\">
-doi:10.1093/nar/gkx1081</a>
-<br><br>
-In addition, the ENCODE Consortium and several ENCODE production laboratories
-graciously generated these datasets." 
-perplexity_types <- c(2, 4, 6, 12, 20)
-pc_cap <- 10
-user_credentials <- list("guest" = my_hash("All@2019")) 
 
 self_save("amazon_keys")
 self_save("app_title")
