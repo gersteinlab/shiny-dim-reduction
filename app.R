@@ -161,6 +161,17 @@ server <- function(input, output, session) {
   })
   
   # validates input
+  nintersect <- reactive({
+    if (range_invalid(input$nintersect, 3, 2^num_filters))
+    {
+      notif("Warning: Number of Intersections is not in [3,2^num_filters].", 6, "warning")
+      return(40)
+    }
+    
+    round(input$nintersect, digits=0)
+  })
+  
+  # validates input
   observeEvent(input$set_f1, {
     if (range_invalid(input$set_f1, 0, 1))
       notif("Warning: Fraction of Samples is not in [0,1].", 6, "warning")
@@ -583,10 +594,7 @@ server <- function(input, output, session) {
       if (ncol(data) == 1)
         return(venn1_custom(data, legend()))
       
-      if (ncol(data) == 2)
-        return(venn2_custom(data, legend()))
-      
-      return(upset_custom(data, legend()))
+      return(upset_custom(data, legend(), nintersect()))
     }
     
     addr <- make_aws_name(input$category, subi(),
@@ -967,6 +975,7 @@ server <- function(input, output, session) {
       ),
       sMenu=input$sMenu,
       height=input$height,
+      nintersect=input$nintersect,
       category=input$category, 
       scale=input$scale, 
       normalize=input$normalize, 
@@ -1087,6 +1096,7 @@ server <- function(input, output, session) {
     # simpler
     updatePickerInput(session, inputId = "sMenu", selected = data[["sMenu"]])
     updateNumericInput(session, inputId = "height", value = data[["height"]])
+    updateNumericInput(session, inputId = "nintersect", value = data[["nintersect"]])
     updatePickerInput(session, inputId = "category", selected = data[["category"]])
     updatePickerInput(session, inputId = "scale", selected = data[["scale"]])
     updatePickerInput(session, inputId = "normalize", selected = data[["normalize"]])

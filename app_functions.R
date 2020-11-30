@@ -66,6 +66,8 @@ make_opt <- function(a, b)
 # Return all As if ind = 1 or all Bs if ind = 2.
 parse_opt <- function(str, ind=1)
 {
+  if (length(str) < 1 || !is.character(str))
+    return(NULL)
   strsplit(str, "( \\(|\\))") %>% lapply(function(i){i[ind]}) %>% unlist()
 }
 
@@ -381,9 +383,9 @@ plotly_3d <- function(x, y, z, x_axis, y_axis, z_axis,
 # -----------------------
 
 # Creates an UpSetR plot with the desired aesthetic.
-upset_custom <- function(data, legend) 
+upset_custom <- function(data, legend, nintersects) 
 {
-  upset(data, nsets = ncol(data), nintersects = 50, 
+  upset(data, nsets = ncol(data), nintersects = nintersects, 
         sets.x.label = "Features Per Factor Level", 
         mainbar.y.label = "Features Per Factor Subset", 
         show.numbers = ifelse(legend, "yes", "no"),
@@ -408,31 +410,6 @@ venn1_custom <- function(data, legend)
     col = "black", label.col = "black", cat.col = "black",
     fontface = "plain", fontfamily = "serif", 
     cat.fontface = "plain", cat.fontfamily = "serif")
-}
-
-# Draws a two set venn diagram, where data is a two-column matrix/data frame
-# Note: there is a glitch with this package ... only the first title is displayed
-venn2_custom <- function(data, legend) 
-{
-  draw.pairwise.venn(
-    sum(data[,1]), sum(data[,2]), sum(data[,1]*data[,2]), 
-    category = ifelse(legend, colnames(data), rep("", 2)),
-    lwd = rep(2, 2), lty = rep("solid", 2), cex = rep(1, 3),  
-    fill = c("#0064C8", "#C9788E"), alpha = rep(0.5, 2), 
-    
-    euler.d = TRUE, scaled = TRUE, inverted = FALSE, ext.text = FALSE, 
-    sep.dist = 0.1, offset = 0, 
-    
-    # unsure at the moment
-    cex.prop = NULL, print.mode = "raw", sigdigs = 3, 
-    
-    ind = TRUE, margin = 0.025, cat.just = rep(list(c(0.5, 0.5)), 2), 
-    cat.default.pos = "outer", cat.prompts = FALSE, 
-    cat.pos = c(0, 180), cat.dist = rep(0.025, 2), cat.cex = rep(1, 2), 
-    rotation.degree = 0, rotation.centre = c(0.5, 0.5),
-    col = rep("black", 2), label.col = rep("black", 3), cat.col = rep("black", 2),
-    fontface = rep("plain", 3), fontfamily = rep("serif", 3), 
-    cat.fontface = rep("plain", 2), cat.fontfamily = rep("serif", 2))
 }
 
 # creates a variance-based heatmap for sets on plotly

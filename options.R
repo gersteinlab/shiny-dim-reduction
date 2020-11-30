@@ -335,6 +335,10 @@ settingsMenu <- menuItem(
   select_panel("palette", "Color Palette", pal_options),
   numericInput("height", "Graph Height", value=graph_height, min=1, max=4000),
   conditionalPanel(
+    condition = "input.plotPanels == 'ggplot2' && input.embedding == 'Sets'",
+    numericInput("nintersect", "Number of Intersections", value=40, min=3, max=2^num_filters)
+  ),
+  conditionalPanel(
     condition = "input.visualize == 'Explore' && (input.embedding == 'PCA' ||
 input.embedding == 'VAE' || input.embedding == 'UMAP')",
     pc_slider(1, pc_cap),
