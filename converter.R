@@ -23,6 +23,13 @@ self_save <- function(filename, compress=TRUE)
   return(NULL)
 }
 
+# attempts to load an object from the current directory to itself
+self_load <- function(filename)
+{
+  get_from_dir("dAct", NULL, dir=getwd())
+  return(NULL)
+}
+
 # converts a matrix to a numeric matrix,
 # removing columns with no valid entries
 convert_to_num <- function(data){
