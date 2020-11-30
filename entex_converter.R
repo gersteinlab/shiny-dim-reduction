@@ -41,57 +41,6 @@ EH38E_removal <- function(char_vec)
   return(char_vec)
 }
 
-# apply to all of Fabio's data after EH38D removal
-factor_type_split <- function(data)
-{
-  splits <- strsplit(colnames(data), split="_", fixed=TRUE)
-  colnames(data) <- unlist(lapply(splits, function(x){x[1]}))
-  factor_types <- unlist(lapply(splits, function(x){x[2]}))
-  unique_factors <- unique(factor_types)
-  
-  target <- vector(mode="list", length=length(unique_factors))
-  names(target) <- unique_factors
-  
-  for (type in names(target))
-  {
-    matched <- which(factor_types == type)
-    print(sprintf("Number of %s: %s (%s)", type, length(matched), 
-                  round(length(matched)/length(colnames(data)), 3)
-    ))
-    target[[type]] <- data[,matched]
-  }
-  
-  target
-}
-
-# checks for decorations present in all tissues
-all_binary <- function(x){
-  m <- apply(x, 1, function(k){
-    
-    counter <- 0
-    for (i in 2:length(k))
-      if (k[i] == "1")
-        counter <- counter+1
-      
-      return(counter == length(k)-1)
-  })
-  x[m,,drop=FALSE]
-}
-
-# checks for decorations present in any tissue
-any_binary <- function(x){
-  m <- apply(x, 1, function(k){
-    
-    counter <- 0
-    for (i in 2:length(k))
-      if (k[i] == "1")
-        counter <- counter+1
-      
-      return(counter > 0)
-  })
-  x[m,,drop=FALSE]
-}
-
 # --------------
 # USER VARIABLES
 # --------------
@@ -476,11 +425,11 @@ self_save("ref")
 
 # recovery
 setwd(sprintf("%s/decorations", pro_loc))
-all_decorations <- readRDS("all_decorations.rds")
-clean_decor <- readRDS("clean_decor.rds")
-folder_full <- readRDS("folder_full.rds")
-union_full <- readRDS("union_full.rds")
-ref <- readRDS("ref.rds")
+self_load("all_decorations")
+self_load("clean_decor")
+self_load("folder_full")
+self_load("union_full")
+self_load("ref")
 formal_names <- names(all_decorations)
 
 ind_decor <- my_empty_list(formal_names)
@@ -694,3 +643,28 @@ self_save("perplexity_types")
 self_save("pc_cap")
 self_save("user_credentials")
 self_save("custom_color_scales")
+
+# ---------------
+# YUCHENG EXAMPLE
+# ---------------
+setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
+source("app_functions.R", encoding="UTF-8")
+
+dAct <- all_decorations$Active_Distal %>% set_f1_f2(c(0.4,1),c(0,60))
+dActPlot <- dAct %>% num_nan_binary() %>% upset_custom(TRUE)
+pAct <- all_decorations$Active_Proximal %>% set_f1_f2(c(0.4,1),c(0,60)) 
+pActPlot <- pAct %>% num_nan_binary() %>% upset_custom(TRUE)
+dRep <- all_decorations$Repressive_Distal %>% set_f1_f2(c(0.4,1),c(0,60)) 
+dRepPlot <- dRep %>% num_nan_binary() %>% upset_custom(TRUE)
+pRep <- all_decorations$Repressive_Proximal %>% set_f1_f2(c(0.4,1),c(0,60)) 
+pRepPlot <- pRep %>% num_nan_binary() %>% upset_custom(TRUE)
+
+# save
+setwd(dec_pro)
+c("dAct", "dActPlot", "pAct", "pActPlot", 
+  "dRep", "dRepPlot", "pRep", "pRepPlot") %>% self_save()
+
+# recover
+setwd(dec_pro)
+c("dAct", "dActPlot", "pAct", "pActPlot", 
+  "dRep", "dRepPlot", "pRep", "pRepPlot") %>% self_load()

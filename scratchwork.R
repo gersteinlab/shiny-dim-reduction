@@ -858,3 +858,53 @@ frac_acceptable <- function(x, unacceptable=list(NA, NaN, NULL, "", "Unknown")){
 }
 
 # old entex converter functions
+# apply to all of Fabio's data after EH38D removal
+factor_type_split <- function(data)
+{
+  splits <- strsplit(colnames(data), split="_", fixed=TRUE)
+  colnames(data) <- unlist(lapply(splits, function(x){x[1]}))
+  factor_types <- unlist(lapply(splits, function(x){x[2]}))
+  unique_factors <- unique(factor_types)
+  
+  target <- vector(mode="list", length=length(unique_factors))
+  names(target) <- unique_factors
+  
+  for (type in names(target))
+  {
+    matched <- which(factor_types == type)
+    print(sprintf("Number of %s: %s (%s)", type, length(matched), 
+                  round(length(matched)/length(colnames(data)), 3)
+    ))
+    target[[type]] <- data[,matched]
+  }
+  
+  target
+}
+
+# checks for decorations present in all tissues
+all_binary <- function(x){
+  m <- apply(x, 1, function(k){
+    
+    counter <- 0
+    for (i in 2:length(k))
+      if (k[i] == "1")
+        counter <- counter+1
+      
+      return(counter == length(k)-1)
+  })
+  x[m,,drop=FALSE]
+}
+
+# checks for decorations present in any tissue
+any_binary <- function(x){
+  m <- apply(x, 1, function(k){
+    
+    counter <- 0
+    for (i in 2:length(k))
+      if (k[i] == "1")
+        counter <- counter+1
+      
+      return(counter > 0)
+  })
+  x[m,,drop=FALSE]
+}
