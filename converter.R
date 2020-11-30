@@ -1,13 +1,10 @@
 # The goal of this script is to store functions related 
 # to converting from raw data to combined data and metadata.
 # Actual converter.R files should source this file.
-# source("~/Justin-Tool/shiny-dim-reduction/converter.R")
+# source("converter.R", encoding="UTF-8")
 
-# --------------
-# USER VARIABLES
-# --------------
-
-source("~/Justin-Tool/shiny-dim-reduction/build.R")
+setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
+source("pipeline.R", encoding="UTF-8")
 
 # ---------
 # FUNCTIONS
