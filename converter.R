@@ -17,16 +17,18 @@ read_tsv_text <- function(filename)
 }
 
 # attempts to save an object with the given name to the current directory
-self_save <- function(filename, compress=TRUE)
+self_save <- function(filenames, compress=TRUE)
 {
-  saveRDS(get(filename), sprintf("%s.rds", filename), compress=compress)
+  for (filename in filenames)
+    saveRDS(get(filename), sprintf("%s.rds", filename), compress=compress)
   return(NULL)
 }
 
 # attempts to load an object from the current directory to itself
-self_load <- function(filename)
+self_load <- function(filenames)
 {
-  get_from_dir("dAct", NULL, dir=getwd())
+  for (filename in filenames)
+    get_from_dir("dAct", NULL, dir=getwd())
   return(NULL)
 }
 
