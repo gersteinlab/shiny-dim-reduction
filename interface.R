@@ -10,13 +10,7 @@ require("shinyWidgets")
 # BROWSER PARAMETERS
 # ------------------
 
-# Only allow "Color By" on a characteristic with <= num_colors distinct values.
-num_colors <- 60
-# Only allow "Shape By" on a characteristic with <= num_shapes distinct values.
-num_shapes <- 60
-# Only allow "Label By" on a characteristic with <= num_labels distinct values.
-num_labels <- 60
-# Only allow filtering on a characteristic with <= num_filters distinct values.
+# Only select characteristics with <= num_filters distinct values.
 num_filters <- 60
 # The height of a graph by default. Depends on browser interpretation.
 graph_height <- 520
@@ -422,6 +416,15 @@ thre_select_panel <- function(choices, cat, sca)
     condition = sprintf("input.category == '%s' && input.scale == '%s'", cat, sca),
     select_panel(get_thre(cat, sca), "Threshold", choices, ceiling(length(choices)/2))
   )
+}
+
+# creates a singular select panel that only appears given a certain category
+cat_select_panel <- function(cat, id, name, options, chosen)
+{
+  conditionalPanel(
+    condition = sprintf("input.category == '%s'",  cat),
+    select_panel(id, name, options, chosen)
+  ) 
 }
 
 # -----------------
