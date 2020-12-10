@@ -406,12 +406,21 @@ expand_cond_panel <- function(condition, ...)
   do.call(conditionalPanel, c(condition = condition, ...))
 }
 
-# creates a check panel of choices for a given category and characteristic
-opt_check_panel <- function(choices, cat, char)
+# creates a check panel of selections for a given category and characteristic
+select_check_panel <- function(choices, cat, char)
 {
   conditionalPanel(
     sprintf("input.category == '%s' && input.filterby_%s == '%s'", cat, cat, char),
-    check_panel(get_select(cat, char), sprintf("Filter By (%s)", cat), choices)
+    check_panel(get_select(cat, char), sprintf("Filter By (%s)", cat), get_opt(choices))
+  )
+}
+
+# creates a select panel of thresholds for a given category and scale
+thre_select_panel <- function(choices, cat, sca)
+{
+  conditionalPanel(
+    condition = sprintf("input.category == '%s' && input.scale == '%s'", cat, sca),
+    select_panel(get_thre(cat, sca), "Threshold", choices, ceiling(length(choices)/2))
   )
 }
 

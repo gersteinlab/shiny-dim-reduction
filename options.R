@@ -47,57 +47,28 @@ for (sca in sca_options)
     thre_seqs[[sca]][[cat]] <- assign_thre(thresholds[[sca]][[cat]])
 
 # ----------------
-# GENERATE OUTLINE
+# GENERATE OPTIONS
 # ----------------
 
-# an outline of characteristics
-outline <- my_empty_list(name_cat)
-# all the IDs that will be compressed for the URL, made from filters
+# all bookmarking IDs for selections and thresholds
 select_ids <- NULL
-# create the outline
-cols_unique <- my_empty_list(name_cat)
+thre_ids <- NULL
 
-# create the outline
-for (cat in name_cat)
-{
-  order_gen <- order_total[[cat]]
-  
-  # number of factor levels per characteristic
-  cols_unique[[cat]] <- apply(order_gen, 2, function(i) length(unique(i)))
-  
-  # characteristics with a factor number in the range 2 <= x <= num_filters
-  filterable <- colnames(order_gen)[between(cols_unique[[cat]], 2, num_filters)]
-  
-  if (length(filterable) < 1)
-    filterable <- "Unknown"
-  
-  outline[[cat]] <- my_empty_list(filterable)
-  for (filchar in filterable)
-  {
-    opt <- get_opt(order_gen[[filchar]])
-    outline[[cat]][[filchar]] <- opt
-    select_ids <- c(select_ids, get_select(cat, filchar))
-  }
-  
-}
-
-# the option boxes that will be presented to the user
+# empty lists for option boxes, to be presented to the user
 sub_opts <- vector(mode = "list", length = num_cat)
 color_opts <- vector(mode = "list", length = num_cat)
 shape_opts <- vector(mode = "list", length = num_cat)
 label_opts <- vector(mode = "list", length = num_cat)
 filter_opts <- vector(mode = "list", length = num_cat)
-select_opts <- vector(mode = "list", length = length(select_ids))
+select_opts <- vector(mode = "list", length = num_filters*num_cat) # initially oversize
 thre_opts <- vector(mode = "list", length = 2*num_cat)
 
 # create the option boxes
-filt_ind <- 0
-thre_ind <- 0
 for (cn in 1:num_cat)
 {
-  order_gen <- order_total[[cn]]
   cat <- name_cat[cn]
-  cols_unique_gen <- cols_unique[[cat]]
+  order_gen <- order_total[[cat]]
+  cols_unique_gen <- apply(order_gen, 2, function(i) length(unique(i)))
   order_names <- colnames(order_gen)
   
   # subsets
@@ -139,41 +110,38 @@ for (cn in 1:num_cat)
       labels, 1))
   
   # filters
+  filters <- order_names[between(cols_unique_gen, 2, num_filters)]
+  if (length(filters) < 1)
+    filters <- "Unknown"
   filter_opts[[cn]] <- conditionalPanel(
     condition = sprintf("input.category == '%s'", cat),
     select_panel(
       sprintf("filterby_%s", cat), sprintf("Current Filter (%s)", cat),
-      names(outline[[cat]])))
+      filters, 1))
   
   # selections
-  for (char in names(outline[[cat]]))
+  for (char in filters)
   {
-    filt_ind <- filt_ind + 1
-    select_opts[[filt_ind]] <- opt_check_panel(outline[[cat]][[char]], cat, char)
+    select_ids <- c(select_ids, get_select(cat, char))
+    select_opts[[length(select_ids)]] <- select_check_panel(order_gen[[char]], cat, char)
   }
   
   # thresholds
   for (sca in sca_options)
   {
-    thre_ind <- thre_ind + 1
-    thre_seq <- thre_seqs[[sca]][[cat]]
-    mid <- ceiling(length(thre_seq)/2)
-    thre_opts[[thre_ind]] <- conditionalPanel(
-      condition = sprintf("input.category == '%s' && input.scale == '%s'", cat, sca),
-      select_panel(get_thre(cat, sca), "Threshold", thre_seq, mid)
-    )
+    thre_ids <- c(thre_ids, get_thre(cat, sca))
+    thre_opts[[length(thre_ids)]] <- thre_select_panel(thre_seqs[[sca]][[cat]], cat, sca)
   }
 }
+
+# truncate select_opts
+select_opts <- select_opts[1:length(select_ids)]
 
 # -----------------
 # BOOKMARK OUTLINES
 # -----------------
 
-# all the IDs that will be compressed for the URL, made from thresholds
-thre_ids <- NULL
-for (sca in sca_options)
-  thre_ids <- c(thre_ids, get_thre(name_cat, sca))
-
+# the outlines used to decode lists of lists
 bookmark_cat <- my_empty_list(name_cat)
 bookmark_thre <- my_empty_list(name_cat)
 
@@ -183,6 +151,7 @@ for (cat in name_cat)
   bookmark_thre[[cat]] <- sca_options
 }
 
+# the vector of all inputs to exclude from manual bookmarking
 bookmark_exclude_vector <- c(
   table_exclude_vector(c(
     "num_data_table", "metadata_table", "legend_out"
