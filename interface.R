@@ -406,6 +406,15 @@ expand_cond_panel <- function(condition, ...)
   do.call(conditionalPanel, c(condition = condition, ...))
 }
 
+# creates a check panel of choices for a given category and characteristic
+opt_check_panel <- function(choices, cat, char)
+{
+  conditionalPanel(
+    sprintf("input.category == '%s' && input.filterby_%s == '%s'", cat, cat, char),
+    check_panel(get_select(cat, char), sprintf("Filter By (%s)", cat), choices)
+  )
+}
+
 # -----------------
 # LOAD DEPENDENCIES
 # -----------------

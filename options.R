@@ -128,12 +128,7 @@ for (cn in 1:num_cat)
   {
     filt_ind <- filt_ind + 1
     
-    select_opts[[filt_ind]] <- conditionalPanel(
-      condition=sprintf(
-        "input.category == '%s' && input.filterby_%s == '%s'", cat, cat, char),
-      check_panel(get_select(cat, char), sprintf("Filter By (%s)", cat),
-                  outline[[cat]][[char]])
-    )
+    select_opts[[filt_ind]] <- opt_check_panel(outline[[cat]][[char]], cat, char)
   }
   
   # thresholds
