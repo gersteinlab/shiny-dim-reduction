@@ -14,6 +14,7 @@ lib_list <- c(
   , "stringi"
   , "aws.s3"
   , "bcrypt"
+  , "evaluate"
   
   , "shinydashboard"
   , "shinyjs"
