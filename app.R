@@ -578,8 +578,8 @@ server <- function(input, output, session) {
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(), 
                       which(sca_options == input$scale), filterby(), input$category)
       
-      data <- load_db(addr, aws_bucket)[,my_chars(),drop=FALSE] %>% 
-        get_safe_sub(subi(), ., decorations, input$category, 1)
+      data <- load_db(addr)[,my_chars(),drop=FALSE] %>% 
+        get_safe_sub(input$category, subi(), 1)
       
       downloadData(data)
       
@@ -601,7 +601,7 @@ server <- function(input, output, session) {
                           input$scale, input$normalize, 
                           feat(), input$embedding, input$visualize, 2, per_ind())
     
-    data <- load_db(addr, aws_bucket)
+    data <- load_db(addr)
     
     if (input$embedding == "PHATE")
     {
@@ -676,8 +676,8 @@ server <- function(input, output, session) {
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(), 
                       which(sca_options == input$scale), filterby(), input$category)
       
-      data <- load_db(addr, aws_bucket)[,my_chars(),drop=FALSE] %>% 
-        get_safe_sub(subi(), ., decorations, input$category, 1)
+      data <- load_db(addr)[,my_chars(),drop=FALSE] %>% 
+        get_safe_sub(input$category, subi(), 1)
       
       downloadData(data)
       
@@ -697,7 +697,7 @@ server <- function(input, output, session) {
                           input$scale, input$normalize, 
                           feat(), input$embedding, input$visualize, 2, per_ind())
     
-    data <- load_db(addr, aws_bucket)
+    data <- load_db(addr)
     
     if (input$embedding == "PHATE")
     {
@@ -776,8 +776,8 @@ server <- function(input, output, session) {
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(), 
                       which(sca_options == input$scale), filterby(), input$category)
       
-      data <- load_db(addr, aws_bucket)[,my_chars(),drop=FALSE] %>% 
-        get_safe_sub(subi(), ., decorations, input$category, 1)
+      data <- load_db(addr)[,my_chars(),drop=FALSE] %>% 
+        get_safe_sub(input$category, subi(), 1)
       
       downloadData(data)
       
@@ -796,7 +796,7 @@ server <- function(input, output, session) {
                           input$scale, input$normalize, 
                           feat(), input$embedding, input$visualize, 3, per_ind())
     
-    data <- load_db(addr, aws_bucket)
+    data <- load_db(addr)
     
     if (input$embedding == "PHATE")
     {
@@ -873,7 +873,7 @@ server <- function(input, output, session) {
                           input$scale, input$normalize, 
                           feat(), input$embedding, input$visualize, 2, per_ind())
     
-    data <- load_db(addr, aws_bucket)[keep(),input$pc1]
+    data <- load_db(addr)[keep(),input$pc1]
     
     if (length(data) < 1)
       return(NULL)
@@ -998,7 +998,7 @@ server <- function(input, output, session) {
     # get the vector of all session IDs
     num_sessions <- 0
     if (length(get_bucket(aws_bucket, prefix="Sessions/num_sessions.rds")) > 0)
-      num_sessions <- load_db("Sessions/num_sessions.rds", aws_bucket)
+      num_sessions <- load_db("Sessions/num_sessions.rds")
     
     # find a session ID that is not used
     i <- 1
@@ -1006,8 +1006,8 @@ server <- function(input, output, session) {
       i <- i+1
     
     # add the session ID to the list and save the session
-    save_db(c(num_sessions, i), aws_bucket, "Sessions/num_sessions.rds")
-    save_db(encoded_form, aws_bucket, sprintf("Sessions/session_%s.rds", i))
+    save_db(c(num_sessions, i), "Sessions/num_sessions.rds")
+    save_db(encoded_form, sprintf("Sessions/session_%s.rds", i))
     
     # the bookmark is simply the numerical ID for the session
     state$values$user_id <- i
@@ -1018,7 +1018,7 @@ server <- function(input, output, session) {
     # get the vector of all session IDs
     num_sessions <- 0
     if (length(get_bucket(aws_bucket, prefix="Sessions/num_sessions.rds")) > 0)
-      num_sessions <- load_db("Sessions/num_sessions.rds", aws_bucket)
+      num_sessions <- load_db("Sessions/num_sessions.rds")
     
     # if the ID is invalid, load nothing
     id <- state$values$user_id
@@ -1026,7 +1026,7 @@ server <- function(input, output, session) {
       return(NULL)
     
     # otherwise, load the appropriate item
-    data <- load_db(sprintf("Sessions/session_%s.rds", id), aws_bucket)
+    data <- load_db(sprintf("Sessions/session_%s.rds", id))
     complex <- data$complex
     data$complex <- NULL
     

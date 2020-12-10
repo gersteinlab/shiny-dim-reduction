@@ -94,12 +94,12 @@ get_safe_sub <- function(data, cat, sub, margin=2)
 {
   if (sub != "Total")
   {
-    indices <- get_my_subset(cat, sub)
+    indices <- get_decor_subset(cat, sub)
     
     if (margin == 1)
-      return(data[rownames(df) %in% indices,,drop=FALSE])
+      return(data[rownames(data) %in% indices,,drop=FALSE])
     if (margin == 2)
-      return(data[,colnames(df) %in% indices,drop=FALSE])
+      return(data[,colnames(data) %in% indices,drop=FALSE])
   }
   
   data
