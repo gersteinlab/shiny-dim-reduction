@@ -399,7 +399,9 @@ authenticator_modal <- function() {
   )
 }
 
-expandCondPanel <- function(condition, ...)
+# assumes that the non-conditional arguments are lists of arguments, which
+# can be concatenated to replicate the behavior of conditionalPanel
+expand_cond_panel <- function(condition, ...)
 {
   do.call(conditionalPanel, c(condition = condition, ...))
 }

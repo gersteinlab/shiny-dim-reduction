@@ -290,7 +290,7 @@ input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP
     select_panel("perplexity", "Perplexity", perplexity_types, 
                  ceiling(length(perplexity_types)/2))
   ),
-  expandCondPanel(
+  expand_cond_panel(
     condition = "input.embedding == 'Sets'", 
     thre_panels_ui(thre_opts), list(
       numericRangeInput("set_f1", "Fraction of Samples", c(0.5,1)),
@@ -341,23 +341,23 @@ input.embedding == 'VAE' || input.embedding == 'UMAP')",
 
 filtersMenu <- menuItem(
   "Filters",
-  expandCondPanel(
+  expand_cond_panel(
     condition = "input.embedding != 'Sets' && (input.embedding == 'PHATE' ||
       input.visualize != 'Summarize')",
     color_panels_ui(color_opts)
   ),
-  expandCondPanel(
+  expand_cond_panel(
     condition = "input.embedding != 'Sets' && input.plotPanels == 'ggplot2' &&
   (input.embedding == 'PHATE' || input.visualize != 'Summarize')",
     shape_panels_ui(shape_opts)
   ),
-  expandCondPanel(
+  expand_cond_panel(
     condition = "input.embedding != 'Sets' && input.plotPanels != 'beeswarm' &&
         input.plotPanels != 'ggplot2' &&
   (input.embedding == 'PHATE' || input.visualize != 'Summarize')",
     label_panels_ui(label_opts)
   ),
-  expandCondPanel(
+  expand_cond_panel(
     condition = "input.visualize != 'Summarize' ||
       input.embedding == 'Sets' || input.embedding == 'PHATE'",
     filter_panels_ui(filter_opts),
