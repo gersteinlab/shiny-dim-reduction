@@ -125,8 +125,8 @@ load_db <- function(filename){
 # assigns Amazon Web Service keys
 assign_keys <- function(aws_keys)
 {
-  if (length(amazon_keys) != 3)
-    stop("Not all amazon keys provided.")
+  if (length(aws_keys) != 3)
+    stop("Not all AWS keys provided.")
   
   Sys.setenv("AWS_ACCESS_KEY_ID" = aws_keys[1],
              "AWS_SECRET_ACCESS_KEY" = aws_keys[2])
@@ -208,8 +208,9 @@ make_aws_name <- function(cat, sub, sca, nor, fea, emb, vis, dim_ind, per_ind)
 }
 
 # creates category-related data
+# assumes the existence of an object named 'categories_full'
 # to remove: rm(cat_groups, name_cat, num_cat, categories)
-init_cat <- function(categories_full)
+init_cat <- function()
 {
   # cat groups
   assign("cat_groups", lapply(categories_full, names), envir = .GlobalEnv)
@@ -226,6 +227,30 @@ init_cat <- function(categories_full)
   categories <- unlist(categories_full, recursive=FALSE)
   names(categories) <- name_cat
   assign("categories", categories, envir = .GlobalEnv)
+  
+  invisible()
+}
+
+# creates subset-related data, using a subset_map function that
+# converts a list of vectors into a vector of characters
+# assumes the existence of objects named 'decorations' and 'categories'
+# to remove: rm(sub_groups)
+init_sub <- function(subset_map)
+{
+  sub_groups <- my_empty_list(name_cat)
+  
+  for (cat in name_cat)
+    sub_groups[[cat]] <- sprintf("Total (%s)", categories[[cat]])
+  
+  for (dec_group in decorations)
+  {
+    mapping <- dec_group$Subsets[-1] %>% subset_map()
+ 
+    for (good_cat in dec_group$Categories)
+      sub_groups[[good_cat]] <- c(sub_groups[[good_cat]], mapping) 
+  }
+  
+  assign("sub_groups", sub_groups, envir = .GlobalEnv)
   
   invisible()
 }

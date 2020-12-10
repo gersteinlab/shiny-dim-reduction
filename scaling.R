@@ -15,34 +15,19 @@ library(Rtsne)
 # --------------
 setwd(app_loc)
 
-# essential
-get_from_dir("categories_full", NULL)
-get_from_dir("decorations", NULL)
-get_from_dir("amazon_keys", NULL)
-get_from_dir("order_total", NULL)
-
-# optional
-get_from_dir("perplexity_types", 1:5)
-get_from_dir("pc_cap", 3)
+# open from dependencies
+get_from_dir("categories_full")
+get_from_dir("decorations")
+get_from_dir("amazon_keys")
+get_from_dir("order_total")
+get_from_dir("perplexity_types")
+get_from_dir("pc_cap")
 
 assign_keys(amazon_keys)
 
-# create categories
-init_cat(categories_full)
-
-# create subsets
-sub_groups <- my_empty_list(name_cat)
-
-for (cat in name_cat)
-  sub_groups[[cat]] <- "Total"
-
-for (dec_group in decorations)
-{
-  mapping <- names(dec_group$Subsets)[-1]
-  
-  for (good_cat in dec_group$Categories)
-    sub_groups[[good_cat]] <- c(sub_groups[[good_cat]], mapping)
-}
+# create categories and subsets
+init_cat()
+init_sub(names)
 
 # creates an empty list for neighbors
 perplexity_list <- my_empty_list(sprintf("P%s", perplexity_types))
