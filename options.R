@@ -46,13 +46,18 @@ for (sca in sca_options)
   for (cat in name_cat)
     thre_seqs[[sca]][[cat]] <- assign_thre(thresholds[[sca]][[cat]])
 
-# ----------------
-# GENERATE OPTIONS
-# ----------------
+# ------------------------------
+# GENERATE OPTIONS AND BOOKMARKS
+# ------------------------------
 
 # all bookmarking IDs for selections and thresholds
 select_ids <- NULL
 thre_ids <- NULL
+
+# the outlines used to decode lists of lists
+outline <- my_empty_list(name_cat)
+bookmark_char <- my_empty_list(name_cat)
+bookmark_thre <- my_empty_list(name_cat)
 
 # empty lists for option boxes, to be presented to the user
 sub_opts <- vector(mode = "list", length = num_cat)
@@ -72,59 +77,38 @@ for (cn in 1:num_cat)
   order_names <- colnames(order_gen)
   
   # subsets
-  sub_opts[[cn]] <- conditionalPanel(
-    condition = sprintf("input.category == '%s'",  cat),
-    select_panel(
-      sprintf("subsetby_%s", cat), sprintf("Feature Subset (%s)", cat),
-      sub_groups[[cat]])
-  )
-  
-  # colors
-  colors <- order_names[between(cols_unique_gen, 2, num_colors)]
-  if (length(colors) < 1) 
-    colors <- "Unknown"
-  color_opts[[cn]] <- conditionalPanel(
-    condition = sprintf("input.category == '%s'", cat),
-    select_panel(
-      sprintf("colorby_%s", cat), sprintf("Color By (%s)", cat),
-      colors, 1))
-  
-  # shapes
-  shapes <- order_names[between(cols_unique_gen, 2, num_shapes)]
-  if (length(shapes) < 1) 
-    shapes <- "Unknown"
-  shape_opts[[cn]] <- conditionalPanel(
-    condition = sprintf("input.category == '%s'",  cat),
-    select_panel(
-      sprintf("shapeby_%s", cat), sprintf("Shape By (%s)", cat),
-      shapes, 2)) 
-  
-  # labels
-  labels <- order_names[between(cols_unique_gen, 2, num_labels)]
-  if (length(labels) < 1) 
-    labels <- "Unknown"
-  label_opts[[cn]] <- conditionalPanel(
-    condition = sprintf("input.category == '%s'",  cat),
-    select_panel(
-      sprintf("labelby_%s", cat), sprintf("Label By (%s)", cat),
-      labels, 1))
+  subsets <- sub_groups[[cat]]
+  sub_opts[[cn]] <- cat_select_panel(
+    cat, sprintf("subsetby_%s", cat), sprintf("Feature Subset (%s)", cat), subsets, 1)
   
   # filters
   filters <- order_names[between(cols_unique_gen, 2, num_filters)]
   if (length(filters) < 1)
     filters <- "Unknown"
-  filter_opts[[cn]] <- conditionalPanel(
-    condition = sprintf("input.category == '%s'", cat),
-    select_panel(
-      sprintf("filterby_%s", cat), sprintf("Current Filter (%s)", cat),
-      filters, 1))
+  filter_opts[[cn]] <- cat_select_panel(
+    cat, sprintf("filterby_%s", cat), sprintf("Current Filter (%s)", cat), filters, 1)
+  
+  # colors
+  color_opts[[cn]] <- cat_select_panel(
+    cat, sprintf("colorby_%s", cat), sprintf("Color By (%s)", cat), filters, 1)
+  
+  # shapes
+  shape_opts[[cn]] <- cat_select_panel(
+    cat, sprintf("shapeby_%s", cat), sprintf("Shape By (%s)", cat), filters, 2)
+  
+  # labels
+  label_opts[[cn]] <- cat_select_panel(
+    cat, sprintf("labelby_%s", cat), sprintf("Label By (%s)", cat), filters, 1)
   
   # selections
+  outline[[cat]] <- my_empty_list(filters)
   for (char in filters)
   {
     select_ids <- c(select_ids, get_select(cat, char))
+    outline[[cat]][[char]] <- order_gen[[char]]
     select_opts[[length(select_ids)]] <- select_check_panel(order_gen[[char]], cat, char)
   }
+  bookmark_char[[cat]] <- filters
   
   # thresholds
   for (sca in sca_options)
@@ -132,24 +116,11 @@ for (cn in 1:num_cat)
     thre_ids <- c(thre_ids, get_thre(cat, sca))
     thre_opts[[length(thre_ids)]] <- thre_select_panel(thre_seqs[[sca]][[cat]], cat, sca)
   }
+  bookmark_thre[[cat]] <- sca_options
 }
 
 # truncate select_opts
 select_opts <- select_opts[1:length(select_ids)]
-
-# -----------------
-# BOOKMARK OUTLINES
-# -----------------
-
-# the outlines used to decode lists of lists
-bookmark_cat <- my_empty_list(name_cat)
-bookmark_thre <- my_empty_list(name_cat)
-
-for (cat in name_cat)
-{
-  bookmark_cat[[cat]] <- names(outline[[cat]])
-  bookmark_thre[[cat]] <- sca_options
-}
 
 # the vector of all inputs to exclude from manual bookmarking
 bookmark_exclude_vector <- c(
