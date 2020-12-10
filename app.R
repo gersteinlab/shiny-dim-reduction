@@ -540,7 +540,8 @@ server <- function(input, output, session) {
           num <- 6
       }
     }
-    return(color_seq(num, input$palette, not_rev()))
+    
+    color_seq(num, input$palette, !not_rev())
   })
   
   # shapes for ggplot2, plotly
