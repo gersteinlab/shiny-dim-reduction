@@ -31,19 +31,20 @@ for (cat in name_cat)
   if (is.null(order_total[[cat]]))
     order_total[[cat]] <- getEmptyCatMeta(cat)
 
+# assigns thresholds (if NULL, return a useful placeholder)
+assign_thre <- function(thre)
+{
+  if (is.null(thre))
+    return((0:10/10) %>% format(nsmall=4))
+  return(thre %>% format(nsmall=4))
+}
+
 # thresholds
 thre_seqs <- rep(list(my_empty_list(name_cat)), 2)
 names(thre_seqs) <- sca_options
 for (sca in sca_options)
-{
   for (cat in name_cat)
-  {
-    if (is.null(thresholds[[sca]][[cat]]))
-      thre_seqs[[sca]][[cat]] <- (0:10/10) %>% format(nsmall=4)
-    else
-      thre_seqs[[sca]][[cat]] <- thresholds[[sca]][[cat]] %>% format(nsmall=4)
-  }
-}
+      thre_seqs[[sca]][[cat]] <- assign_thre(thresholds[[sca]][[cat]])
 
 # ----------------
 # GENERATE OUTLINE
