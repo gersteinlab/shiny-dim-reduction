@@ -82,6 +82,7 @@ for (cat in name_cat)
 }
 
 # the option boxes that will be presented to the user
+sub_opts <- vector(mode = "list", length = num_cat)
 color_opts <- vector(mode = "list", length = num_cat)
 shape_opts <- vector(mode = "list", length = num_cat)
 label_opts <- vector(mode = "list", length = num_cat)
@@ -99,35 +100,55 @@ for (cn in 1:num_cat)
   cols_unique_gen <- cols_unique[[cat]]
   order_names <- colnames(order_gen)
   
+  # subsets
+  sub_opts[[cn]] <- conditionalPanel(
+    condition = sprintf("input.category == '%s'",  cat),
+    select_panel(
+      sprintf("subsetby_%s", cat), sprintf("Feature Subset (%s)", cat),
+      sub_groups[[cat]])
+  )
+  
   # colors
   colors <- order_names[between(cols_unique_gen, 2, num_colors)]
   if (length(colors) < 1) 
     colors <- "Unknown"
-  color_opts[[cn]] <- list("1"=cat, "2"=colors)
+  color_opts[[cn]] <- conditionalPanel(
+    condition = sprintf("input.category == '%s'", cat),
+    select_panel(
+      sprintf("colorby_%s", cat), sprintf("Color By (%s)", cat),
+      colors, 1))
   
   # shapes
   shapes <- order_names[between(cols_unique_gen, 2, num_shapes)]
   if (length(shapes) < 1) 
     shapes <- "Unknown"
-  shape_opts[[cn]] <- list("1"=cat, "2"=shapes)
+  shape_opts[[cn]] <- conditionalPanel(
+    condition = sprintf("input.category == '%s'",  cat),
+    select_panel(
+      sprintf("shapeby_%s", cat), sprintf("Shape By (%s)", cat),
+      shapes, 2)) 
   
   # labels
   labels <- order_names[between(cols_unique_gen, 2, num_labels)]
   if (length(labels) < 1) 
-    labels<- "Unknown"
-  label_opts[[cn]] <- list("1"=cat, "2"=labels)
+    labels <- "Unknown"
+  label_opts[[cn]] <- conditionalPanel(
+    condition = sprintf("input.category == '%s'",  cat),
+    select_panel(
+      sprintf("labelby_%s", cat), sprintf("Label By (%s)", cat),
+      labels, 1))
   
   # filters
-  filter_opts[[cn]] <- list(
-    "1"=cat,
-    "2"=names(outline[[cat]])
-  )
+  filter_opts[[cn]] <- conditionalPanel(
+    condition = sprintf("input.category == '%s'", cat),
+    select_panel(
+      sprintf("filterby_%s", cat), sprintf("Current Filter (%s)", cat),
+      names(outline[[cat]])))
   
   # selections
   for (char in names(outline[[cat]]))
   {
     filt_ind <- filt_ind + 1
-    
     select_opts[[filt_ind]] <- opt_check_panel(outline[[cat]][[char]], cat, char)
   }
   
@@ -135,7 +156,12 @@ for (cn in 1:num_cat)
   for (sca in sca_options)
   {
     thre_ind <- thre_ind + 1
-    thre_opts[[thre_ind]] <- list("1"=cat, "2"=sca)
+    thre_seq <- thre_seqs[[sca]][[cat]]
+    mid <- ceiling(length(thre_seq)/2)
+    thre_opts[[thre_ind]] <- conditionalPanel(
+      condition = sprintf("input.category == '%s' && input.scale == '%s'", cat, sca),
+      select_panel(get_thre(cat, sca), "Threshold", thre_seq, mid)
+    )
   }
 }
 
@@ -189,83 +215,11 @@ bookmark_exclude_vector <- c(
 # ASSEMBLE THE UI
 # ---------------
 
-# Creates the UI for subsets.
-sub_panels_ui <- function(name_cat, sub_groups){
-  sub_panels <- my_empty_list(name_cat)
-  for (cat in name_cat)
-  {
-    sub_panels[[cat]] <- conditionalPanel(
-      condition = sprintf("input.category == '%s'",  cat),
-      select_panel(
-        sprintf("subsetby_%s", cat), sprintf("Feature Subset (%s)", cat),
-        sub_groups[[cat]])
-    )
-  }
-  sub_panels
-}
-
-# Creates the UI for colors.
-color_panels_ui <- function(colors){
-  lapply(colors, function(x){
-    conditionalPanel(
-      condition = sprintf("input.category == '%s'", x[[1]]),
-      select_panel(
-        sprintf("colorby_%s", x[[1]]), sprintf("Color By (%s)", x[[1]]),
-        x[[2]], 1))
-  })
-}
-
-# Creates the UI for shapes.
-shape_panels_ui <- function(shapes){
-  lapply(shapes, function(x){
-    conditionalPanel(
-      condition = sprintf("input.category == '%s'",  x[[1]]),
-      select_panel(
-        sprintf("shapeby_%s", x[[1]]), sprintf("Shape By (%s)", x[[1]]),
-        x[[2]], 2))
-  })
-}
-
-# Creates the UI for labels.
-label_panels_ui <- function(labels){
-  lapply(labels, function(x){
-    conditionalPanel(
-      condition = sprintf("input.category == '%s'",  x[[1]]),
-      select_panel(
-        sprintf("labelby_%s", x[[1]]), sprintf("Label By (%s)", x[[1]]),
-        x[[2]], 1))
-  })
-}
-
-# Creates the UI for filter panels.
-filter_panels_ui <- function(filters){
-  lapply(filters, function(x){
-    conditionalPanel(
-      condition = sprintf("input.category == '%s'",  x[[1]]),
-      select_panel(
-        sprintf("filterby_%s", x[[1]]), sprintf("Current Filter (%s)", x[[1]]),
-        x[[2]]))
-  })
-}
-
-# Creates the UI for threshold panels.
-thre_panels_ui <- function(thres){
-  lapply(thres, function(x){
-    thre_seq <- thre_seqs[[x[[2]]]][[x[[1]]]]
-    mid <- ceiling(length(thre_seq)/2)
-    
-    conditionalPanel(
-      condition = sprintf("input.category == '%s' && input.scale == '%s'", x[[1]], x[[2]]),
-      select_panel(get_thre(x[[1]], x[[2]]), "Threshold", thre_seq, mid)
-    )
-  })
-}
-
 dataSelectionMenu <- menuItem(
   startExpanded=TRUE,
   "Data Selection",
   select_panel("category", "Category", cat_groups),
-  sub_panels_ui(name_cat, sub_groups),
+  sub_opts,
   select_panel("embedding", "Method of Dimensionality Reduction", emb_options),
   conditionalPanel(
     condition = "
@@ -287,7 +241,8 @@ input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP
   ),
   expand_cond_panel(
     condition = "input.embedding == 'Sets'", 
-    thre_panels_ui(thre_opts), list(
+    thre_opts, 
+    list(
       numericRangeInput("set_f1", "Fraction of Samples", c(0.5,1)),
       numericRangeInput("set_f2", "Number of Characteristics", c(1,num_filters)),
       conditionalPanel(
@@ -339,23 +294,23 @@ filtersMenu <- menuItem(
   expand_cond_panel(
     condition = "input.embedding != 'Sets' && (input.embedding == 'PHATE' ||
       input.visualize != 'Summarize')",
-    color_panels_ui(color_opts)
+    color_opts
   ),
   expand_cond_panel(
     condition = "input.embedding != 'Sets' && input.plotPanels == 'ggplot2' &&
   (input.embedding == 'PHATE' || input.visualize != 'Summarize')",
-    shape_panels_ui(shape_opts)
+    shape_opts
   ),
   expand_cond_panel(
-    condition = "input.embedding != 'Sets' && input.plotPanels != 'beeswarm' &&
+    condition = "input.embedding != 'Sets' && input.plotPanels != 'boxplot' &&
         input.plotPanels != 'ggplot2' &&
   (input.embedding == 'PHATE' || input.visualize != 'Summarize')",
-    label_panels_ui(label_opts)
+    label_opts
   ),
   expand_cond_panel(
     condition = "input.visualize != 'Summarize' ||
       input.embedding == 'Sets' || input.embedding == 'PHATE'",
-    filter_panels_ui(filter_opts),
+    filter_opts,
     select_opts
   )
 )
