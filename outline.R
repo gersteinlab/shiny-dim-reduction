@@ -9,6 +9,7 @@ require("dplyr")
 require("stringi")
 require("aws.s3")
 require("bcrypt")
+require("evaluate")
 
 # ---------
 # FUNCTIONS
@@ -102,11 +103,13 @@ get_safe_sub <- function(sub, df, dec, cat, margin=2)
   df
 }
 
-# saves an object to Amazon AWS
+# saves an object to Amazon AWS, returning whether the process succeeded
 save_db <- function(dat, bucket, filename){
   my_amazon_obj <- dat
-  s3save(my_amazon_obj, bucket=bucket, object=filename)
+  evaluation <-evaluate::evaluate(quote(
+    s3save(my_amazon_obj, bucket=bucket, object=filename)), stop_on_error = 1)
   my_amazon_obj <- NULL
+  length(evaluation) == 1
 }
 
 # loads an object from Amazon AWS
