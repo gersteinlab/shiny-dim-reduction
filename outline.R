@@ -17,11 +17,11 @@ require("evaluate")
 
 # returns the current time in seconds, rounded to 4 digits
 # If a start time is given, returns the elapsed time
-my_timer <- function(start){
+my_timer <- function(start, num_digits = 4){
   if (missing(start))
     start <- 0
   
-  round(as.numeric(Sys.time()) - start, 4)
+  round(as.numeric(Sys.time()) - start, num_digits)
 }
 
 # creates an empty list with names
@@ -62,19 +62,20 @@ rem_perc <- function(str)
   repStr(str, "%", "") %>% as.numeric()
 }
 
-# attempts to retrieve a file from a directory, returning a default otherwise
-get_from_dir <- function(filename, default, dir = "dependencies")
+# attempts to retrieve the file with the given name and assign it to itself
+get_from_dir <- function(filename, default = NULL, dir = "dependencies")
 {
   if (sprintf("%s.rds", filename) %in% list.files(dir))
     default <- readRDS(sprintf("%s/%s.rds", dir, filename))
   assign(filename, default, envir = .GlobalEnv)
-  return(NULL)
+  invisible()
 }
 
-# retrieves a subset based on the list of subsets, the subset name, and the category 
-get_my_subset <- function(decor, cat, sub)
+# retrieves a subset based on the list of subsets, the subset name, and the category
+# assumes the existence of an object named 'decorations'
+get_decor_subset <- function(cat, sub)
 {
-  for (dec_group in decor)
+  for (dec_group in decorations)
   {
     if (cat %in% dec_group$Categories)
     {
@@ -87,44 +88,50 @@ get_my_subset <- function(decor, cat, sub)
   return(NULL)
 }
 
-# performs safe subsetting, default by columns
-get_safe_sub <- function(sub, df, dec, cat, margin=2)
+# obtains a subset of data's rows (margin 1) / columns (margin 2)
+# assumes the existence of an object named 'decorations'
+get_safe_sub <- function(data, cat, sub, margin=2)
 {
   if (sub != "Total")
   {
-    indices <- get_my_subset(dec, cat, sub)
+    indices <- get_my_subset(cat, sub)
     
     if (margin == 1)
-      return(df[rownames(df) %in% indices,,drop=FALSE])
+      return(data[rownames(df) %in% indices,,drop=FALSE])
     if (margin == 2)
-      return(df[,colnames(df) %in% indices,drop=FALSE])
+      return(data[,colnames(df) %in% indices,drop=FALSE])
   }
   
-  df
+  data
 }
 
 # saves an object to Amazon AWS, returning whether the process succeeded
-save_db <- function(dat, bucket, filename){
+# assumes the existence of an object called 'aws_bucket'
+save_db <- function(dat, filename){
   my_amazon_obj <- dat
   evaluation <- evaluate::evaluate(quote(
-    s3save(my_amazon_obj, bucket=bucket, object=filename)), stop_on_error = 1)
+    s3save(my_amazon_obj, bucket=aws_bucket, object=filename)), stop_on_error = 1)
   my_amazon_obj <- NULL
   length(evaluation) == 1
 }
 
 # loads an object from Amazon AWS
-load_db <- function(filename, bucket){
-  s3load(filename, bucket)
+# assumes the existence of an object called 'aws_bucket'
+load_db <- function(filename){
+  s3load(filename, aws_bucket)
   my_amazon_obj
 }
 
-# assigns Amazon keys
-assign_keys <- function(amazon_keys)
+# assigns Amazon Web Service keys
+assign_keys <- function(aws_keys)
 {
-  Sys.setenv("AWS_ACCESS_KEY_ID" = amazon_keys[1],
-             "AWS_SECRET_ACCESS_KEY" = amazon_keys[2])
-  assign("aws_bucket", amazon_keys[3], envir = .GlobalEnv)
-  return(NULL)
+  if (length(amazon_keys) != 3)
+    stop("Not all amazon keys provided.")
+  
+  Sys.setenv("AWS_ACCESS_KEY_ID" = aws_keys[1],
+             "AWS_SECRET_ACCESS_KEY" = aws_keys[2])
+  assign("aws_bucket", aws_keys[3], envir = .GlobalEnv)
+  invisible()
 }
 
 # straightforward password hashing
@@ -220,5 +227,5 @@ init_cat <- function(categories_full)
   names(categories) <- name_cat
   assign("categories", categories, envir = .GlobalEnv)
   
-  return(NULL)
+  invisible()
 }
