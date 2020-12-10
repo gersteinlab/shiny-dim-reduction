@@ -9,23 +9,27 @@ source("interface.R", encoding="UTF-8")
 require("shinydashboard")
 require("shinyjs")
 
+# create categories and subsets
+init_cat()
+init_sub(name_num_map)
+
 # ----------------
 # FIX DEPENDENCIES
 # ----------------
 
-# order_total
-for (cat in name_cat)
-{
-  if (is.null(order_total[[cat]]))
-  {
-    addr <- make_aws_name(
-      cat, "Total", sca_options[1], nor_options[1], 
-      rem_perc(fea_options[1]), emb_options[1], vis_options[1], 2, 1)
-  
-    data <- load_db(addr, aws_bucket)
-    order_total[[cat]] <- data.frame("Unknown" = rep("Unknown", nrow(data)))
-  }
+# gets the very first file associated with a category, counts the number of rows,
+# and creates an empty metadata table for that category
+getEmptyCatMeta <- function(cat){
+  addr <- make_aws_name(
+    cat, "Total", sca_options[1], nor_options[1], 
+    rem_perc(fea_options[1]), emb_options[1], vis_options[1], 2, 1)
+  data.frame("Unknown" = rep("Unknown", nrow(load_db(addr))))
 }
+
+# fills in order_total in the event of missing portions
+for (cat in name_cat)
+  if (is.null(order_total[[cat]]))
+    order_total[[cat]] <- getEmptyCatMeta(cat)
 
 # thresholds
 thre_seqs <- rep(list(my_empty_list(name_cat)), 2)
@@ -44,25 +48,6 @@ for (sca in sca_options)
 # ----------------
 # GENERATE OUTLINE
 # ----------------
-
-sub_groups <- my_empty_list(name_cat)
-
-for (cat in name_cat)
-  sub_groups[[cat]] <- sprintf("Total (%s)", categories[[cat]])
-
-for (dec_group in decorations)
-{
-  subset <- dec_group$Subsets[-1]
-  mapping <- mapply(
-    function(a,b){
-      sprintf("%s (%s)", b, length(a))
-    }, subset, names(subset)
-  ) 
-  names(mapping) <- NULL
-    
-  for (good_cat in dec_group$Categories)
-    sub_groups[[good_cat]] <- c(sub_groups[[good_cat]], mapping) 
-}
 
 # an outline of characteristics
 outline <- my_empty_list(name_cat)

@@ -417,9 +417,6 @@ get_from_dir("categories_full")
 get_from_dir("amazon_keys")
 assign_keys(amazon_keys)
 
-# create categories
-init_cat(categories_full)
-
 # metadata
 get_from_dir("order_total", my_empty_list(name_cat))
 
