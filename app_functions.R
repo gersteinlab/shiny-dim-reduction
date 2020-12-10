@@ -237,38 +237,36 @@ table_exclude_vector <- function(table_id)
 # Generates a color sequence of length n_colors with the given type.
 # "Base"=c("Rainbow", "Heat", "Terrain", "Topography", "CM"),
 # "Viridis"=c("Viridis", "Magma", "Plasma", "Inferno", "Cividis")
-color_seq <- function(n_colors, color_type, keep) 
+color_seq <- function(n_colors, color_type = "Rainbow", reverse = FALSE) 
 {
-  rev_opt <- !keep
-  
+  # returns bulldog blue if only one color is needed
   if (n_colors < 2)
     return("#00356B")
   
-  if (color_type == "Rainbow" || color_type == "Custom")
-  {
-    if (rev_opt)
-      return(hcl(n_colors:1 * (360/(n_colors+1))-15, 160, 60))
-    else
-      return(hcl(1:n_colors * (360/(n_colors+1))-15, 160, 60))
-  }
   if (color_type == "Heat")
-    return(heat.colors(n_colors, rev=rev_opt))
+    return(heat.colors(n_colors, rev=reverse))
   if (color_type == "Terrain")
-    return(terrain.colors(n_colors, rev=rev_opt))
+    return(terrain.colors(n_colors, rev=reverse))
   if (color_type == "Topography")
-    return(topo.colors(n_colors, rev=rev_opt))
+    return(topo.colors(n_colors, rev=reverse))
   if (color_type == "CM")
-    return(cm.colors(n_colors, rev=rev_opt))
+    return(cm.colors(n_colors, rev=reverse))
   if (color_type == "Viridis")
-    return(viridis::viridis(n_colors, direction = ifelse(rev_opt, -1, 1)))
+    return(viridis::viridis(n_colors, direction = ifelse(reverse, -1, 1)))
   if (color_type == "Magma")
-    return(viridis::magma(n_colors, direction = ifelse(rev_opt, -1, 1)))
+    return(viridis::magma(n_colors, direction = ifelse(reverse, -1, 1)))
   if (color_type == "Plasma")
-    return(plasma(n_colors, direction = ifelse(rev_opt, -1, 1)))
+    return(plasma(n_colors, direction = ifelse(reverse, -1, 1)))
   if (color_type == "Inferno")
-    return(inferno(n_colors, direction = ifelse(rev_opt, -1, 1)))
+    return(inferno(n_colors, direction = ifelse(reverse, -1, 1)))
   if (color_type == "Cividis")
-    return(cividis(n_colors, direction = ifelse(rev_opt, -1, 1)))
+    return(cividis(n_colors, direction = ifelse(reverse, -1, 1)))
+  
+  # rainbow, the default (also returned to cover for custom color scales)
+  if (reverse)
+    return(hcl(n_colors:1 * (360/(n_colors+1))-15, 160, 60))
+  else
+    return(hcl(1:n_colors * (360/(n_colors+1))-15, 160, 60))
 }
 
 # my personal favorite ordering of the 25 default R plot shapes
@@ -469,26 +467,6 @@ my_datatable <- function(df)
 # ------------
 # USER WIDGETS
 # ------------
-
-# Return the UI for a modal dialog that attempts to authenticate the user
-authenticator_modal <- function() {
-  modalDialog(
-    title = HTML("<b>Authentication</b>"),
-    HTML("Need access? Please make a request to 
-    <a href=\"justin.chang@yale.edu\" target=\"_blank\">
-    justin.chang@yale.edu</a>.<br><br>"),
-    wellPanel(
-      style="background-color: #E0F0FF; border-color: #00356B",
-      textInput("username", "Username", 
-                placeholder="Please enter your username ...", value="guest"),
-      textInput("password", "Password (is invisible)", 
-                placeholder="", value=""),
-      action("attempt_login", "Login", "unlock", "#FFFFFF", "#0064C8", "#00356B"),
-      actionButton("toggle_password", "Show/Hide Password")
-    ),
-    footer = tagList()
-  )
-}
 
 # shows a notification (form can be default, message, warning, error)
 # in general: warnings and errors are self-explanatory, defaults are used

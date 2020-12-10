@@ -332,6 +332,13 @@ my_spin <- function(content)
   content %>% withSpinner(type = 6)
 }
 
+# makes a slider for the nth principal component
+pc_slider <- function(n, pc_cap)
+{
+  sliderInput(sprintf("pc%s", n), sprintf("Displayed Component %s", n),
+              min=1, max=pc_cap, value=n, step=1, ticks = FALSE)
+}
+
 # Creates a selectizeInput panel with only one option allowed.
 select_panel <- function(id, name, options, chosen)
 {
@@ -363,13 +370,6 @@ check_panel <- function(id, name, inputs)
   )
 }
 
-# makes a slider for the nth principal component
-pc_slider <- function(n, pc_cap)
-{
-  sliderInput(sprintf("pc%s", n), sprintf("Displayed Component %s", n),
-              min=1, max=pc_cap, value=n, step=1, ticks = FALSE)
-}
-
 # Creates an action button with the given id, name, icon name,
 # color, background color, and border color.
 action <- function(id, name, icon_name, color, bk, br)
@@ -377,6 +377,26 @@ action <- function(id, name, icon_name, color, bk, br)
   actionButton(
     inputId = id, label = name, icon = icon(icon_name), style=
       sprintf("color: %s; background-color: %s; border-color: %s", color, bk, br))
+}
+
+# Return the UI for a modal dialog that attempts to authenticate the user
+authenticator_modal <- function() {
+  modalDialog(
+    title = HTML("<b>Authentication</b>"),
+    HTML("Need access? Please make a request to 
+    <a href=\"justin.chang@yale.edu\" target=\"_blank\">
+    justin.chang@yale.edu</a>.<br><br>"),
+    wellPanel(
+      style="background-color: #E0F0FF; border-color: #00356B",
+      textInput("username", "Username", 
+                placeholder="Please enter your username ...", value="guest"),
+      textInput("password", "Password (is invisible)", 
+                placeholder="", value=""),
+      action("attempt_login", "Login", "unlock", "#FFFFFF", "#0064C8", "#00356B"),
+      actionButton("toggle_password", "Show/Hide Password")
+    ),
+    footer = tagList()
+  )
 }
 
 # -----------------
@@ -391,10 +411,10 @@ action <- function(id, name, icon_name, color, bk, br)
 # note that all categories MUST be unique, even if in different groups
 # also, the value of categories_full$cCREs$H3K27ac must be the number of
 # features originally in that dataset before dimensionality reduction
-get_from_dir("categories_full", NULL)
+get_from_dir("categories_full")
 
 # amazon keys (REQUIRED)
-get_from_dir("amazon_keys", NULL)
+get_from_dir("amazon_keys")
 assign_keys(amazon_keys)
 
 # create categories
@@ -404,7 +424,7 @@ init_cat(categories_full)
 get_from_dir("order_total", my_empty_list(name_cat))
 
 # thresholds for sets
-get_from_dir("thresholds", NULL)
+get_from_dir("thresholds")
 
 # a bit of exposition regarding decoration:
 # first of all, each decoration in the list has a name
@@ -412,7 +432,7 @@ get_from_dir("thresholds", NULL)
 # (i) a vector of categories to which the decoration applies
 # (ii) a list containing (a) a reference character vector and 
 # (b) indices of that reference vector that constitute subsets
-get_from_dir("decorations", NULL)
+get_from_dir("decorations")
 
 # perplexity types for particular analyses
 get_from_dir("perplexity_types", 1:5)
@@ -428,7 +448,7 @@ citations <- bibliography(app_citations)
 get_from_dir("pc_cap", 3)
 
 # user credentials, only needed for online version
-get_from_dir("user_credentials", NULL)
+get_from_dir("user_credentials")
 
 # custom color scales, frequently omitted
-get_from_dir("custom_color_scales", NULL)
+get_from_dir("custom_color_scales")
