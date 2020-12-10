@@ -399,6 +399,11 @@ authenticator_modal <- function() {
   )
 }
 
+expandCondPanel <- function(condition, ...)
+{
+  do.call(conditionalPanel, c(condition = condition, ...))
+}
+
 # -----------------
 # LOAD DEPENDENCIES
 # -----------------

@@ -44,7 +44,7 @@ thre_seqs <- rep(list(my_empty_list(name_cat)), 2)
 names(thre_seqs) <- sca_options
 for (sca in sca_options)
   for (cat in name_cat)
-      thre_seqs[[sca]][[cat]] <- assign_thre(thresholds[[sca]][[cat]])
+    thre_seqs[[sca]][[cat]] <- assign_thre(thresholds[[sca]][[cat]])
 
 # ----------------
 # GENERATE OUTLINE
@@ -199,13 +199,12 @@ sub_panels_ui <- function(name_cat, sub_groups){
   sub_panels <- my_empty_list(name_cat)
   for (cat in name_cat)
   {
-    subsets_temp <- sub_groups[[cat]]
-    names(subsets_temp) <- NULL
     sub_panels[[cat]] <- conditionalPanel(
       condition = sprintf("input.category == '%s'",  cat),
       select_panel(
         sprintf("subsetby_%s", cat), sprintf("Feature Subset (%s)", cat),
-        subsets_temp))
+        sub_groups[[cat]])
+    )
   }
   sub_panels
 }
@@ -291,7 +290,7 @@ input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP
     select_panel("perplexity", "Perplexity", perplexity_types, 
                  ceiling(length(perplexity_types)/2))
   ),
-  do.call(conditionalPanel, c(
+  expandCondPanel(
     condition = "input.embedding == 'Sets'", 
     thre_panels_ui(thre_opts), list(
       numericRangeInput("set_f1", "Fraction of Samples", c(0.5,1)),
@@ -312,7 +311,7 @@ input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP
                      value=max_dend, min=pc_cap, max=2^24)
       )
     )
-  ))
+  )
 )
 
 settingsMenu <- menuItem(
@@ -342,28 +341,28 @@ input.embedding == 'VAE' || input.embedding == 'UMAP')",
 
 filtersMenu <- menuItem(
   "Filters",
-  do.call(conditionalPanel, c(
+  expandCondPanel(
     condition = "input.embedding != 'Sets' && (input.embedding == 'PHATE' ||
       input.visualize != 'Summarize')",
     color_panels_ui(color_opts)
-  )),
-  do.call(conditionalPanel, c(
+  ),
+  expandCondPanel(
     condition = "input.embedding != 'Sets' && input.plotPanels == 'ggplot2' &&
   (input.embedding == 'PHATE' || input.visualize != 'Summarize')",
     shape_panels_ui(shape_opts)
-  )),
-  do.call(conditionalPanel, c(
+  ),
+  expandCondPanel(
     condition = "input.embedding != 'Sets' && input.plotPanels != 'beeswarm' &&
         input.plotPanels != 'ggplot2' &&
   (input.embedding == 'PHATE' || input.visualize != 'Summarize')",
     label_panels_ui(label_opts)
-  )),
-  do.call(conditionalPanel, c(
+  ),
+  expandCondPanel(
     condition = "input.visualize != 'Summarize' ||
       input.embedding == 'Sets' || input.embedding == 'PHATE'",
     filter_panels_ui(filter_opts),
     select_opts
-  ))
+  )
 )
 
 ui <- function(request){
