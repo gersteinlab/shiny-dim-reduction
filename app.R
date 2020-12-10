@@ -453,7 +453,7 @@ server <- function(input, output, session) {
   keep <- reactive({
     keep <- rep(TRUE, nrow(order()))
 
-    for (char in names(outline[[input$category]]))
+    for (char in bookmark_char[[input$category]])
       keep <- keep & (
         order()[[char]] %in% parse_opt(input[[get_select(input$category, char)]]))
 
@@ -938,7 +938,7 @@ server <- function(input, output, session) {
       
       for (cat in name_cat)
         target[[cat]] <- match(input[[sprintf("%sby_%s", types[i], cat)]], 
-                               names(outline[[cat]])) %>% indices_fifstr()
+                               bookmark_char[[cat]]) %>% indices_fifstr()
       
       color_shape_label_filter[i] <- paste(unlist(target), collapse=sep_chars[3])
     }
@@ -1043,7 +1043,7 @@ server <- function(input, output, session) {
     filters <- strsplit(complex[[5]], sep_chars[3])[[1]] %>% as.list()
     names(filters) <- name_cat
     
-    checkboxes <- decode_lol(complex[[6]], bookmark_cat)
+    checkboxes <- decode_lol(complex[[6]], bookmark_char)
     thres <- decode_lol(complex[[7]], bookmark_thre)
     
     for (cat in name_cat)
