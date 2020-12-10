@@ -71,6 +71,12 @@ parse_opt <- function(str, ind=1)
   strsplit(str, "( \\(|\\))") %>% lapply(function(i){i[ind]}) %>% unlist()
 }
 
+# given a list of numeric vectors, returns make_opt(name, length) for each vector
+name_num_map <- function(list_num)
+{
+  mapply(make_opt, names(list_num), lapply(list_num, length), USE.NAMES = FALSE) 
+}
+
 # calculates the number of truncated features given pc_cap, 
 # the inputted feature fraction (feat), and the total number of features.
 calc_feat <- function(pc_cap, feat, total)
