@@ -105,8 +105,9 @@ for (cn in 1:num_cat)
   for (char in filters)
   {
     select_ids <- c(select_ids, get_select(cat, char))
-    outline[[cat]][[char]] <- order_gen[[char]]
-    select_opts[[length(select_ids)]] <- select_check_panel(order_gen[[char]], cat, char)
+    opt <- get_opt(order_gen[[char]])
+    outline[[cat]][[char]] <- opt
+    select_opts[[length(select_ids)]] <- select_check_panel(opt, cat, char)
   }
   bookmark_char[[cat]] <- filters
   
@@ -148,7 +149,7 @@ bookmark_exclude_vector <- c(
   "sMenu", "height", "category", "scale", "normalize", "features", "embedding", 
   "visualize", "perplexity", "set_feat_upse", "set_feat_heat", "set_feat_dend",
   "palette", "plotPanels", "username", "password", "toggle_password",
-  "attempt_login", "set_f1", "set_f2", "pc1", "pc2", "pc3"
+  "attempt_login", "set_f1", "set_f2", "nintersect", "pc1", "pc2", "pc3"
 )
 
 # ---------------

@@ -405,7 +405,7 @@ select_check_panel <- function(choices, cat, char)
 {
   conditionalPanel(
     sprintf("input.category == '%s' && input.filterby_%s == '%s'", cat, cat, char),
-    check_panel(get_select(cat, char), sprintf("Filter By (%s)", cat), get_opt(choices))
+    check_panel(get_select(cat, char), sprintf("Filter By (%s)", cat), choices)
   )
 }
 
