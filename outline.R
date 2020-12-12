@@ -32,6 +32,12 @@ my_empty_list <- function(names)
   target
 }
 
+# straightforward password hashing
+my_hash <- function(password)
+{
+  bcrypt::hashpw(password, gensalt(12))
+}
+
 # fixed pattern replacement in a vector of strings
 repStr <- function(x_stringi, pattern, replacement)
 {
@@ -62,48 +68,9 @@ rem_perc <- function(str)
   repStr(str, "%", "") %>% as.numeric()
 }
 
-# attempts to retrieve the file with the given name and assign it to itself
-get_from_dir <- function(filename, default = NULL, dir = "dependencies")
-{
-  if (sprintf("%s.rds", filename) %in% list.files(dir))
-    default <- readRDS(sprintf("%s/%s.rds", dir, filename))
-  assign(filename, default, envir = .GlobalEnv)
-  invisible()
-}
-
-# retrieves a subset based on the list of subsets, the subset name, and the category
-# assumes the existence of an object named 'decorations'
-get_decor_subset <- function(cat, sub)
-{
-  for (dec_group in decorations)
-  {
-    if (cat %in% dec_group$Categories)
-    {
-      ref <- dec_group$Subsets$Reference
-      ind <- dec_group$Subsets[[sub]]
-      return(ref[ind])
-    }
-  }
-  
-  return(NULL)
-}
-
-# obtains a subset of data's rows (margin 1) / columns (margin 2)
-# assumes the existence of an object named 'decorations'
-get_safe_sub <- function(data, cat, sub, margin=2)
-{
-  if (sub != "Total")
-  {
-    indices <- get_decor_subset(cat, sub)
-    
-    if (margin == 1)
-      return(data[rownames(data) %in% indices,,drop=FALSE])
-    if (margin == 2)
-      return(data[,colnames(data) %in% indices,drop=FALSE])
-  }
-  
-  data
-}
+# --------------
+# AWS S3 STORAGE
+# --------------
 
 # saves an object to Amazon AWS, returning whether the process succeeded
 # assumes the existence of an object called 'aws_bucket'
@@ -134,15 +101,9 @@ assign_keys <- function(aws_keys)
   invisible()
 }
 
-# straightforward password hashing
-my_hash <- function(password)
-{
-  bcrypt::hashpw(password, gensalt(12))
-}
-
-# -----------------------
-# CONSTANT INITIALIZATION
-# -----------------------
+# ----------------
+# ANALYSIS OPTIONS
+# ----------------
 
 # scale options 
 sca_options <- c("Logarithmic", "Linear")
@@ -205,6 +166,53 @@ make_aws_name <- function(cat, sub, sca, nor, fea, emb, vis, dim_ind, per_ind)
   sprintf("Dim_Red/%s/%s/%s_%s_%s_%s_%s_%s_%s.rds",
           cat, sub, sca_ind, nor_ind, fea_ind, emb_ind, vis_ind, 
           dim_ind, per_ind)
+}
+
+# ------------------
+# DEPENDENCY LOADING
+# ------------------
+
+# attempts to retrieve the file with the given name and assign it to itself
+get_from_dir <- function(filename, default = NULL, dir = "dependencies")
+{
+  if (sprintf("%s.rds", filename) %in% list.files(dir))
+    default <- readRDS(sprintf("%s/%s.rds", dir, filename))
+  assign(filename, default, envir = .GlobalEnv)
+  invisible()
+}
+
+# retrieves a subset based on the list of subsets, the subset name, and the category
+# assumes the existence of an object named 'decorations'
+get_decor_subset <- function(cat, sub)
+{
+  for (dec_group in decorations)
+  {
+    if (cat %in% dec_group$Categories)
+    {
+      ref <- dec_group$Subsets$Reference
+      ind <- dec_group$Subsets[[sub]]
+      return(ref[ind])
+    }
+  }
+  
+  return(NULL)
+}
+
+# obtains a subset of data's rows (margin 1) / columns (margin 2)
+# assumes the existence of an object named 'decorations'
+get_safe_sub <- function(data, cat, sub, margin=2)
+{
+  if (sub != "Total")
+  {
+    indices <- get_decor_subset(cat, sub)
+    
+    if (margin == 1)
+      return(data[rownames(data) %in% indices,,drop=FALSE])
+    if (margin == 2)
+      return(data[,colnames(data) %in% indices,drop=FALSE])
+  }
+  
+  data
 }
 
 # creates category-related data
