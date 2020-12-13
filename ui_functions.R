@@ -85,6 +85,15 @@ expand_cond_panel <- function(condition, ...)
   do.call(conditionalPanel, c(condition = condition, ...))
 }
 
+# parses several terms in a string intended to be JS
+repJs <- function(string)
+{
+  repStr(
+    string, c("[EMB]", "[VIS]", "[SUM]", "[PAN]", "[PAN1]", "[PAN2]", "[PAN3]", "[PAN4]"), 
+    c("input.embedding", "input.visualize", "Summarize", "input.plotPanels", pan_options)
+  )
+}
+
 # Creates a selectizeInput panel with only one option allowed.
 select_panel <- function(id, name, options, chosen)
 {
