@@ -50,16 +50,16 @@ range_invalid <- function(value, min, max)
   length(value) != 1 || is.na(value) || is.nan(value) || value < min || value > max
 }
 
-# Formats an option for app selection
-make_opt <- function(a, b) 
+# formats an element (opt) and the number of times it appears in a vector (samples)
+get_opt <- function(opt, samples) 
 {
-  sprintf("%s (%s)", a, b)
+  sprintf("%s (%s)", opt, sum(samples %in% opt))
 }
 
-# Gets the option set for a group of samples
-get_opt <- function(samples) 
+# performs get_opt on every unique member of a vector (samples)
+get_opts <- function(samples) 
 {
-  lapply(unique(samples), function(x){make_opt(x, sum(x == samples))}) %>% unlist()
+  unlist(lapply(unique(samples), function(sample){get_opt(sample, samples)}))
 }
 
 # Suppose we have a vector of strings of the form "A (B)", 
