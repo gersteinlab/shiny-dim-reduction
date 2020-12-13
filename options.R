@@ -123,34 +123,70 @@ for (cn in 1:num_cat)
 # truncate select_opts
 select_opts <- select_opts[1:length(select_ids)]
 
+picker_input_ids <- c(
+  "sMenu",
+  "category",
+  "scale",
+  "normalize",
+  "features",
+  "embedding",
+  "visualize",
+  "perplexity",
+  "palette",
+  sprintf("subsetby_%s", name_cat),
+  sprintf("colorby_%s", name_cat),
+  sprintf("shapeby_%s", name_cat),
+  sprintf("labelby_%s", name_cat),
+  sprintf("filterby_%s", name_cat),
+  select_ids, 
+  thre_ids
+)
+
+numeric_input_ids <- c(
+  "height", 
+  "nintersect", 
+  "set_feat_upse", 
+  "set_feat_heat", 
+  "set_feat_dend"
+)
+
 # the vector of all inputs to exclude from manual bookmarking
 bookmark_exclude_vector <- c(
-  table_exclude_vector(c(
-    "num_data_table", "metadata_table", "legend_out"
-  )),
+  table_exclude_vector(
+    "num_data_table", 
+    "metadata_table", 
+    "legend_out"
+  ),
   
   ".clientValue-default-plotlyCrosstalkOpts",
   "plotly_hover-A",
   "plotly_afterplot-A",
   "plotly_relayout-A",
   
-  "sidebar_menu",
+  "sidebarMenu",
   "sidebarCollapsed",
   "sidebarItemExpanded",
   
-  sprintf("subsetby_%s", name_cat),
-  sprintf("colorby_%s", name_cat), 
-  sprintf("shapeby_%s", name_cat), 
-  sprintf("labelby_%s", name_cat), 
-  sprintf("filterby_%s", name_cat), 
-  select_ids, thre_ids,
+  picker_input_ids,
+  numeric_input_ids,
+  numeric_input_range_ids,
+  tabset_panel_ids,
+  slider_input_ids,
   
-  "start", "stop", "toggle", "central_nav", "instructions", "citations", 
-  "sMenu", "height", "category", "scale", "normalize", "features", "embedding", 
-  "visualize", "perplexity", "set_feat_upse", "set_feat_heat", "set_feat_dend",
-  "palette", "plotPanels", "username", "password", "toggle_password",
-  "attempt_login", "set_f1", "set_f2", "nintersect", "pc1", "pc2", "pc3"
+  "start", 
+  "stop", 
+  "instructions", 
+  "citations", 
+  
+  "username", 
+  "password", 
+  "toggle_password", 
+  "attempt_login"
 )
+
+numeric_input_range_ids <- c("set_f1", "set_f2")
+tabset_panel_ids <- "plotPanels"
+slider_input_ids <- c("pc1", "pc2", "pc3")
 
 # ---------------
 # ASSEMBLE THE UI
@@ -263,7 +299,6 @@ ui <- function(request){
     dashboardSidebar(
       width=300,
       sidebarMenu(
-        id = "sidebar_menu",
         dataSelectionMenu,
         settingsMenu,
         filtersMenu

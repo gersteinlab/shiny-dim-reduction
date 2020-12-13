@@ -9,10 +9,6 @@ source("options.R", encoding="UTF-8")
 # ------------------------------------------
 
 server <- function(input, output, session) {
-  # pushes the subtitle to the right
-  shinyjs::addClass(id = "central_nav", class = "navbar-right")
-  shinyjs::hide("legend_out_spin")
-  
   # performs setup for authentication
   auth_default <- 1
   authenticated <- reactiveVal(auth_default)
@@ -919,82 +915,29 @@ server <- function(input, output, session) {
   
   # store compressed data on bookmarking
   onBookmark(function(state) {
-    # subsets
-    target <- my_empty_list(name_cat)
-    
-    for (cat in name_cat)
-      target[[cat]] <- match(input[[sprintf("subsetby_%s", cat)]], 
-                             sub_groups[[cat]]) %>% indices_fifstr()
-    
-    subset_c <- paste(unlist(target), collapse=sep_chars[3])
-    
-    # colors, shapes, labels, filters
-    color_shape_label_filter <- rep("", 4)
-    types <- c("color", "shape", "label", "filter")
-    
-    for (i in 1:4)
-    {
-      target <- my_empty_list(name_cat)
-      
-      for (cat in name_cat)
-        target[[cat]] <- match(input[[sprintf("%sby_%s", types[i], cat)]], 
-                               bookmark_char[[cat]]) %>% indices_fifstr()
-      
-      color_shape_label_filter[i] <- paste(unlist(target), collapse=sep_chars[3])
-    }
-    
-    # selections
-    select_array_c <- my_empty_list(name_cat)
-    for (cat in name_cat)
-    {
-      chars <- outline[[cat]]
-      select_array_c[[cat]] <- lapply(names(chars), function(char){
-        match(input[[get_select(cat, char)]], chars[[char]]) %>% indices_fifstr()
-      })
-    }
-    select_array_c <- encode_lol(select_array_c)
-    
-    # thresholds
-    thre_array_c <- my_empty_list(name_cat)
-    for (cat in name_cat)
-    {
-      target <- my_empty_list(sca_options)
-      for (sca in sca_options)
-        target[[sca]] <- encode_num(input[[get_thre(cat, sca)]])
-      
-      thre_array_c[[cat]] <- target
-    }
-    thre_array_c <- encode_lol(thre_array_c)
-    
-    # encoded
-    encoded_form <- list(
-      "complex"=c(
-        subset_c, 
-        color_shape_label_filter, 
-        select_array_c, 
-        thre_array_c
-      ),
-      sMenu=input$sMenu,
-      height=input$height,
-      nintersect=input$nintersect,
-      category=input$category, 
-      scale=input$scale, 
-      normalize=input$normalize, 
-      features=input$features, 
-      embedding=input$embedding, 
-      visualize=input$visualize, 
-      perplexity=input$perplexity, 
-      set_feat_upse=input$set_feat_upse,
-      set_feat_heat=input$set_feat_heat,
-      set_feat_dend=input$set_feat_dend,
-      palette=input$palette, 
-      plotPanels=input$plotPanels, 
-      set_f1=input$set_f1, 
-      set_f2=input$set_f2, 
-      pc1=input$pc1, 
-      pc2=input$pc2, 
-      pc3=input$pc3
+    # retrieve all input types accordingly
+    session_data <- list(
+      "pickerInput"=list(),
+      "numericInput"=list(),
+      "numericRangeInput"=list(),
+      "sliderInput"=list(),
+      "tabsetPanel"=list()
     )
+    
+    for (id in picker_input_ids)
+      session_data[["pickerInput"]][[id]] <- input[[id]]
+    
+    for (id in numeric_input_ids)
+      session_data[["pickerInput"]][[id]] <- input[[id]]
+    
+    for (id in numeric_range_input_ids)
+      session_data[["pickerInput"]][[id]] <- input[[id]]
+    
+    for (id in slider_input_ids)
+      session_data[["pickerInput"]][[id]] <- input[[id]]
+    
+    for (id in tabset_panel_ids)
+      session_data[["pickerInput"]][[id]] <- input[[id]]
     
     # get the vector of all session IDs
     num_sessions <- 0
@@ -1008,7 +951,7 @@ server <- function(input, output, session) {
     
     # add the session ID to the list and save the session
     save_db(c(num_sessions, i), "Sessions/num_sessions.rds")
-    save_db(encoded_form, sprintf("Sessions/session_%s.rds", i))
+    save_db(session_data, sprintf("Sessions/session_%s.rds", i))
     
     # the bookmark is simply the numerical ID for the session
     state$values$user_id <- i
@@ -1027,94 +970,28 @@ server <- function(input, output, session) {
       return(NULL)
     
     # otherwise, load the appropriate item
-    data <- load_db(sprintf("Sessions/session_%s.rds", id))
-    complex <- data$complex
-    data$complex <- NULL
+    session_data <- load_db(sprintf("Sessions/session_%s.rds", id))
     
-    # subsets, colors, shapes, filters, selections, thresholds
-    subsets <- strsplit(complex[[1]], sep_chars[3])[[1]] %>% as.list()
-    names(subsets) <- name_cat
-    colors <- strsplit(complex[[2]], sep_chars[3])[[1]] %>% as.list()
-    names(colors) <- name_cat
-    shapes <- strsplit(complex[[3]], sep_chars[3])[[1]] %>% as.list()
-    names(shapes) <- name_cat
-    labels <- strsplit(complex[[4]], sep_chars[3])[[1]] %>% as.list()
-    names(labels) <- name_cat
-    filters <- strsplit(complex[[5]], sep_chars[3])[[1]] %>% as.list()
-    names(filters) <- name_cat
+    # update all input types accordingly
+    picker_input_data <- session_data[["pickerInput"]]
+    for (name in names(picker_input_data))
+       updatePickerInput(session, name, selected = picker_input_data[[name]])
     
-    checkboxes <- decode_lol(complex[[6]], bookmark_char)
-    thres <- decode_lol(complex[[7]], bookmark_thre)
+    numeric_input_data <- session_data[["numericInput"]]
+    for (name in names(numeric_input_data))
+      updateNumericInput(session, name, value = numeric_input_data[[name]])
     
-    for (cat in name_cat)
-    {
-      chars <- outline[[cat]]
-      
-      # subsets
-      updatePickerInput(
-        session, inputId = sprintf("subsetby_%s", cat), 
-        selected = sub_groups[[cat]][fifstr_indices(subsets[[cat]])]
-      )
-      
-      # colors
-      updatePickerInput(
-        session, inputId = sprintf("colorby_%s", cat), 
-        selected = names(chars)[fifstr_indices(colors[[cat]])]
-      )
-      
-      # shapes
-      updatePickerInput(
-        session, inputId = sprintf("shapeby_%s", cat), 
-        selected = names(chars)[fifstr_indices(shapes[[cat]])]
-      )
-      
-      # labels
-      updatePickerInput(
-        session, inputId = sprintf("labelby_%s", cat), 
-        selected = names(chars)[fifstr_indices(labels[[cat]])]
-      )
-      
-      # filters
-      updatePickerInput(
-        session, inputId = sprintf("filterby_%s", cat), 
-        selected = names(chars)[fifstr_indices(filters[[cat]])]
-      )
-      
-      # selections
-      for (char in names(chars))
-        updatePickerInput(
-          session, inputId = get_select(cat, char), 
-          selected = chars[[char]][fifstr_indices(checkboxes[[cat]][[char]])]
-        ) 
-      
-      # thresholds
-      for (sca in sca_options)
-        updateSliderInput(
-          session, inputId = get_thre(cat, sca), value = 
-            as.numeric(thres[[cat]][[sca]]) / 10000)
-    }
+    numeric_range_input_data <- session_data[["numericRangeInput"]]
+    for (name in names(numeric_range_input_data))
+      updateNumericRangeInput(session, name, value = numeric_range_input_data[[name]])
     
-    # simpler
-    updatePickerInput(session, inputId = "sMenu", selected = data[["sMenu"]])
-    updateNumericInput(session, inputId = "height", value = data[["height"]])
-    updateNumericInput(session, inputId = "nintersect", value = data[["nintersect"]])
-    updatePickerInput(session, inputId = "category", selected = data[["category"]])
-    updatePickerInput(session, inputId = "scale", selected = data[["scale"]])
-    updatePickerInput(session, inputId = "normalize", selected = data[["normalize"]])
-    updatePickerInput(session, inputId = "features", selected = data[["features"]])
-    updatePickerInput(session, inputId = "embedding", selected = data[["embedding"]])
-    updatePickerInput(session, inputId = "visualize", selected = data[["visualize"]])
-    updatePickerInput(session, inputId = "perplexity", selected = data[["perplexity"]])
-    updateNumericInput(session, inputId = "set_feat_upse", value = data[["set_feat_upse"]])
-    updateNumericInput(session, inputId = "set_feat_heat", value = data[["set_feat_heat"]])
-    updateNumericInput(session, inputId = "set_feat_dend", value = data[["set_feat_dend"]])
-    updatePickerInput(session, inputId = "palette", selected = data[["palette"]])
-    updateTabsetPanel(session, inputId = "plotPanels", selected = data[["plotPanels"]])
-    updateNumericRangeInput(session, inputId = "set_f1", value = data[["set_f1"]])
-    updateNumericRangeInput(session, inputId = "set_f2", value = data[["set_f2"]])
-    updateSliderInput(session, inputId = "pc1", value = data[["pc1"]])
-    updateSliderInput(session, inputId = "pc2", value = data[["pc2"]])
-    updateSliderInput(session, inputId = "pc3", value = data[["pc3"]])
+    slider_input_data <- session_data[["sliderInput"]]
+    for (name in names(slider_input_data))
+      updateSliderInput(session, name, value = slider_input_data[[name]])
+    
+    tabset_panel_data <- session_data[["tabsetPanel"]]
+    for (name in names(tabset_panel_data))
+      updateTabsetPanel(session, name, selected = tabset_panel_data[[name]])
   })
 }
 

@@ -41,6 +41,7 @@ num_nan_binary <- function(data)
 }
 
 # checks if a value is invalid with respect to a range
+# if given an ordered pair, returns whether either value is invalid
 range_invalid <- function(value, min, max)
 {
   if (length(value) == 2)
@@ -49,16 +50,16 @@ range_invalid <- function(value, min, max)
   length(value) != 1 || is.na(value) || is.nan(value) || value < min || value > max
 }
 
-# Gets the option set for a group of samples
-get_opt <- function(samples) 
-{
-  lapply(unique(samples), function(x){make_opt(x, sum(x == samples))})
-}
-
 # Formats an option for app selection
 make_opt <- function(a, b) 
 {
   sprintf("%s (%s)", a, b)
+}
+
+# Gets the option set for a group of samples
+get_opt <- function(samples) 
+{
+  lapply(unique(samples), function(x){make_opt(x, sum(x == samples))}) %>% unlist()
 }
 
 # Suppose we have a vector of strings of the form "A (B)", 
@@ -108,121 +109,11 @@ get_thre <- function(category, scale)
   sprintf("thre_%s_%s", category, scale)
 }
 
-# To make short bookmarks, we must use URL-safe characters.
-# These characters are:
-# safe_URL_separators <- ".-_~"
-# safe_URL_numbers <- "0123456789"
-# safe_URL_LETTERS <- "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-# safe_URL_letters <- "abcdefghijklmnopqrstuvwxyz"
-
-# Bookmarking:
-# i) A single variable "data" should completely capture the state of the app
-# ii) data should be encoded and presented in onBookmark
-# iii) data should be decoded and used to update input widgets in onRestored
-# iv) all variables should be converted into (arrays of) numerics, which should be
-#     collapsed into a vector of strings and then converted into one string.
-# v) The following separators should be used, from highest level to lowest level.
-sep_chars <- c("~", "_", "-")
-
-# chars <- sample(sample(c(as.character(0:9), LETTERS[1:22])))
-# reserved: lowercase letters, W, X, Y, Z
-chars <- c("6","J","F","K","2","R","M","O",
-           "5","A","9","U","7","0","B","1",
-           "V","T","D","P","8","H","S","I",
-           "4","3","Q","L","N","G","E","C")
-
-# converts an array of indices into a base 32 string
-indices_fifstr <- function(indices)
-{
-  if (length(indices) < 1)
-    return("*")
-  fif <- rep(0, length=ceiling(max(indices)/5))
-  for (i in indices)
-  {
-    fifi <- floor((i-1)/5)+1
-    modulo <- (i-1) %% 5
-    fif[fifi] <- fif[fifi] + 2^modulo
-  }
-  
-  cipher <- fif
-  
-  for (i in 1:length(fif))
-    cipher[i] <- chars[fif[i]+1]
-  
-  paste(rev(cipher), collapse = '')
-}
-
-# converts a base 32 string into an array of indices
-fifstr_indices <- function(fifstr)
-{
-  if (fifstr == "*")
-    return(integer(0))
-  
-  cipher <- rev(strsplit(fifstr, ""))[[1]]
-  fif <- rep(0, length(cipher))
-  for (i in 1:length(cipher))
-    fif[i] <- which(chars == cipher[i])-1
-  
-  bin <- rep(0, 5*length(fif))
-  for (i in 1:length(fif))
-  {
-    temp <- fif[i]
-    bin[5*i-4] <- floor(temp / 16)
-    temp <- temp %% 16
-    bin[5*i-3] <- floor(temp / 8)
-    temp <- temp %% 8
-    bin[5*i-2] <- floor(temp / 4)
-    temp <- temp %% 4
-    bin[5*i-1] <- floor(temp / 2)
-    temp <- temp %% 2
-    bin[5*i] <- floor(temp)
-  }
-  length(bin)-which(bin > 0)+1
-}
-
-# encodes a vector of numbers (length < 2 ok)
-encode_num <- function(data)
-{
-  if (length(data) < 1 || class(data) != "numeric")
-    return(0)
-  paste(data*10000, collapse=sep_chars[3])
-}
-
-# decodes a vector of numbers (length < 2 ok)
-decode_num <- function(data)
-{
-  strsplit(data, sep_chars[3])[[1]] %>% as.numeric() / 10000
-}
-
-# encodes a list of lists into a string with two separators
-encode_lol <- function(lol)
-{
-  for (item in names(lol))
-    lol[[item]] <- paste(unlist(lol[[item]]), collapse=sep_chars[3])
-  
-  paste(unlist(lol), collapse=sep_chars[2])
-}
-
-# decodes a list of lists from a string with two separators
-decode_lol <- function(list_string, outline)
-{
-  lol <- as.list(strsplit(list_string, sep_chars[2])[[1]])
-  names(lol) <- names(outline)
-  
-  for (item in names(lol))
-  {
-    inner <- as.list(strsplit(lol[[item]], sep_chars[3])[[1]])
-    names(inner) <- outline[[item]]
-    lol[[item]] <- inner
-  }
-  
-  lol
-}
-
 # creates a vector of inputs that should be excluded 
 # from bookmarking, based on the table's ID
-table_exclude_vector <- function(table_id)
+table_exclude_vector <- function(...)
 {
+  table_id <- list(...)
   c(
     sprintf("%s_search", table_id),
     sprintf("%s_state", table_id),
