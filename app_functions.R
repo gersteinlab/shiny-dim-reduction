@@ -97,6 +97,11 @@ pc <- function(name)
 # GENERAL GRAPHS / TOOLS
 # ----------------------
 
+make_transparent <- function(color, alpha = 0.5)
+{
+  sprintf("%s44", substr(color, start=1, stop=7))
+}
+
 # Generates a color sequence of length n_colors with the given type.
 # "Base"=c("Rainbow", "Heat", "Terrain", "Topography", "CM"),
 # "Viridis"=c("Viridis", "Magma", "Plasma", "Inferno", "Cividis")
