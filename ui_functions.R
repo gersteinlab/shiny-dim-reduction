@@ -9,6 +9,28 @@ require("shinyWidgets")
 # INPUT SELECTION
 # ---------------
 
+# formats an element (opt) and the number of times it appears in a vector (samples)
+get_opt <- function(opt, samples) 
+{
+  sprintf("%s (%s)", opt, sum(samples %in% opt))
+}
+
+# performs get_opt on every unique member of a vector (samples)
+get_opts <- function(samples) 
+{
+  unlist(lapply(unique(samples), function(sample){get_opt(sample, samples)}))
+}
+
+# Suppose we have a vector of strings of the form "A (B)", 
+# where A and B are strings that do not contain '(' or ')'. 
+# Return all As if ind = 1 or all Bs if ind = 2.
+parse_opt <- function(str, ind=1)
+{
+  if (length(str) < 1 || !is.character(str))
+    return(NULL)
+  strsplit(str, "( \\(|\\))") %>% lapply(function(i){i[ind]}) %>% unlist()
+}
+
 # Useful for finding select IDs
 get_select <- function(category, character) 
 {
