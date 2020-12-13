@@ -206,22 +206,19 @@ dataSelectionMenu <- menuItem(
   sub_opts,
   select_panel("embedding", "Method of Dimensionality Reduction", emb_options),
   conditionalPanel(
-    condition = "
-input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP'",
+    repJs("[EMB] == 'PCA' || [EMB] == 'VAE' || [EMB] == 'UMAP'"),
     select_panel("visualize", "Method of Visualization", vis_options)
   ),
   select_panel("scale", "Scale", sca_options),
   conditionalPanel(
     condition = "input.embedding != 'Sets'",
     select_panel("normalize", "Normalization", nor_options),
-    select_panel("features", "Percentage of Features Used", fea_options)
-  ),
-  conditionalPanel(
-    condition = "input.embedding != 'Sets' &&
-(input.embedding == 'PHATE' || input.visualize == 'tSNE' ||
-(input.embedding == 'UMAP' && input.visualize != 'Summarize'))",
-    select_panel("perplexity", "Perplexity", perplexity_types, 
-                 ceiling(length(perplexity_types)/2))
+    select_panel("features", "Percentage of Features Used", fea_options),
+    conditionalPanel(
+      repJs("[EMB] == 'PHATE' || [VIS] == 'tSNE' || ([EMB] == 'UMAP' && [VIS] != '[SUM]')"),
+      select_panel("perplexity", "Perplexity", perplexity_types, 
+                   ceiling(length(perplexity_types)/2))
+    )
   ),
   expand_cond_panel(
     condition = "input.embedding == 'Sets'", 
@@ -230,17 +227,17 @@ input.embedding == 'PCA' || input.embedding == 'VAE' || input.embedding == 'UMAP
       numericRangeInput("set_f1", "Fraction of Samples", c(0.5,1)),
       numericRangeInput("set_f2", "Number of Characteristics", c(1,num_filters)),
       conditionalPanel(
-        condition = "input.plotPanels == 'ggplot2'",
+        repJs("[PAN] == '[PAN1]'"),
         numericInput("set_feat_upse", "Maximum Features", 
                      value=max_upse, min=pc_cap, max=2^24)
       ),
       conditionalPanel(
-        condition = "input.plotPanels == 'plotly2'",
+        repJs("[PAN] == '[PAN2]'"),
         numericInput("set_feat_heat", "Maximum Features", 
                      value=max_heat, min=pc_cap, max=2^24)
       ),
       conditionalPanel(
-        condition = "input.plotPanels == 'plotly3'",
+        repJs("[PAN] == '[PAN3]'"),
         numericInput("set_feat_dend", "Maximum Features", 
                      value=max_dend, min=pc_cap, max=2^24)
       )
@@ -254,20 +251,18 @@ settingsMenu <- menuItem(
   select_panel("palette", "Color Palette", pal_options),
   numericInput("height", "Graph Height", value=graph_height, min=1, max=4000),
   conditionalPanel(
-    condition = "input.plotPanels == 'ggplot2' && input.embedding == 'Sets'",
-    numericInput("nintersect", "Number of Intersections", value=40, min=3, max=2^num_filters)
+    repJs("[PAN] == '[PAN1]' && [EMB] == 'Sets'"),
+    numericInput("nintersect", "Number of Columns", value=40, min=3, max=2^num_filters)
   ),
   conditionalPanel(
-    condition = "input.visualize == 'Explore' && (input.embedding == 'PCA' ||
-input.embedding == 'VAE' || input.embedding == 'UMAP')",
+    repJs("[VIS] == 'Explore' && ([EMB] == 'PCA' || [EMB] == 'VAE' || [EMB] == 'UMAP')"),
     pc_slider(1, pc_cap),
     conditionalPanel(
-      condition = "input.plotPanels == 'ggplot2' ||
-    input.plotPanels == 'plotly2' || input.plotPanels == 'plotly3'",
+      repJs("[PAN] == '[PAN1]' || [PAN] == '[PAN2]' || [PAN] == '[PAN3]'"), 
       pc_slider(2, pc_cap)
     ),
     conditionalPanel(
-      condition = "input.plotPanels == 'plotly3'",
+      condition = repJs("[PAN] == '[PAN3]'"),
       pc_slider(3, pc_cap)
     )
   )
@@ -275,25 +270,24 @@ input.embedding == 'VAE' || input.embedding == 'UMAP')",
 
 filtersMenu <- menuItem(
   "Filters",
-  expand_cond_panel(
-    condition = "input.embedding != 'Sets' && (input.embedding == 'PHATE' ||
-      input.visualize != 'Summarize')",
-    color_opts
+  conditionalPanel(
+    condition = "input.embedding != 'Sets'",
+    expand_cond_panel(
+      condition = "input.visualize != 'Summarize' || input.embedding == 'PHATE'",
+      color_opts
+    ),
+    expand_cond_panel(
+      repJs("[PAN] == '[PAN1]' && ([EMB] == 'PHATE' || [VIS] != '[SUM')"),
+      shape_opts
+    ),
+    expand_cond_panel(
+      repJs("[PAN] == '[PAN2]' && [PAN] == '[PAN3]' && 
+      ([EMB] == 'PHATE' || [VIS] != 'SUM')"),
+      label_opts
+    )
   ),
   expand_cond_panel(
-    condition = "input.embedding != 'Sets' && input.plotPanels == 'ggplot2' &&
-  (input.embedding == 'PHATE' || input.visualize != 'Summarize')",
-    shape_opts
-  ),
-  expand_cond_panel(
-    condition = "input.embedding != 'Sets' && input.plotPanels != 'boxplot' &&
-        input.plotPanels != 'ggplot2' &&
-  (input.embedding == 'PHATE' || input.visualize != 'Summarize')",
-    label_opts
-  ),
-  expand_cond_panel(
-    condition = "input.visualize != 'Summarize' ||
-      input.embedding == 'Sets' || input.embedding == 'PHATE'",
+    repJs("[VIS] != '[SUM]' || [EMB] == 'Sets' || [EMB] == 'PHATE'"),
     filter_opts,
     select_opts
   )
@@ -327,10 +321,10 @@ ui <- function(request){
       tabBox(
         width="100%",
         id = 'plotPanels',
-        tabPanel("ggplot2", uiOutput("ggplot2UI")),
-        tabPanel("plotly2", uiOutput("plotly2UI")),
-        tabPanel("plotly3", uiOutput("plotly3UI")),
-        tabPanel("boxplot", uiOutput("beeswarmUI")),
+        tabPanel(pan_options[1], uiOutput("ggplot2UI")),
+        tabPanel(pan_options[2], uiOutput("plotly2UI")),
+        tabPanel(pan_options[3], uiOutput("plotly3UI")),
+        tabPanel(pan_options[4], uiOutput("beeswarmUI")),
         tabPanel("Numeric Data", id="num_data",
                  DTOutput("num_data_table", width="100%") %>% my_spin()),
         tabPanel("Metadata", id="metadata",
