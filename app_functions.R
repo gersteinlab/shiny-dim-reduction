@@ -93,40 +93,6 @@ pc <- function(name)
   sprintf("Component %s", name)
 }
 
-# --------------
-# INPUT ENCODING
-# --------------
-
-# Useful for finding select IDs
-get_select <- function(category, character) 
-{
-  sprintf("selectby_%s_%s", category, character)
-}
-
-# Useful for finding thre IDs
-get_thre <- function(category, scale) 
-{
-  sprintf("thre_%s_%s", category, scale)
-}
-
-# creates a vector of inputs that should be excluded 
-# from bookmarking, based on the table's ID
-table_exclude_vector <- function(...)
-{
-  table_id <- list(...)
-  c(
-    sprintf("%s_search", table_id),
-    sprintf("%s_state", table_id),
-    sprintf("%s_cell_clicked", table_id),
-    sprintf("%s_search_columns", table_id),
-    sprintf("%s_rows_current", table_id),
-    sprintf("%s_rows_all", table_id),
-    sprintf("%s_rows_selected", table_id),
-    sprintf("%s_columns_selected", table_id),
-    sprintf("%s_cells_selected", table_id)
-  )
-}
-
 # ----------------------
 # GENERAL GRAPHS / TOOLS
 # ----------------------
@@ -186,15 +152,14 @@ ggplot2_null <- function()
 
 # Beeswarm / box plot, rel stands for relation
 boxplot_beeswarm <- function(data, rel, xlab, ylab, names, 
-                             box_colors, bee_colors)
+                             box_colors, bee_colors, title)
 {
-  boxplot(rel, data=data, xlab=xlab, ylab=ylab,
-          names=names, col=box_colors,
-          outline = FALSE, main='boxplot + beeswarm')
+  boxplot(rel, data=data, xlab=xlab, ylab=ylab, 
+          names=names, col=box_colors, outline = FALSE, main=title)
   
   beeswarm(rel, data=data, xlab=xlab, ylab=ylab,
            labels=names, col=bee_colors, corral="random",
-           main= 'beeswarm + bxplot', pch=16, add=TRUE) # filled circles
+           main=title, pch=16, add=TRUE) # filled circles
 }
 
 # -------------------
