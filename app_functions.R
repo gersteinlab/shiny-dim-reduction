@@ -1,5 +1,5 @@
 # The purpose of this file is to store libraries and functions
-# for the main app. None of these should depend on global variables!
+# for server-side logic. None of these should depend on global variables!
 # Each section is sorted from most algorithmic to least algorithmic,
 # though intended purpose may create a more reasonable ordering.
 
@@ -329,41 +329,4 @@ my_datatable <- function(df)
       autoWidth=FALSE
     )
   )
-}
-
-# ------------
-# USER WIDGETS
-# ------------
-
-# shows a notification (form can be default, message, warning, error)
-# in general: warnings and errors are self-explanatory, defaults are used
-# to begin actions, and messages are used to return results
-notif <- function(message, time, form) 
-{
-  showNotification(HTML(message), duration = time, closeButton = TRUE, type=form)
-}
-
-# prints a message once a plot begins generating.
-plot_start <- function(numPlots)
-{
-  notif(sprintf("Generating Plot #%s:<br>
-Please suspend plotting or wait for plotting to
-finish before attempting a new configuration.", numPlots), 4, "default")
-}
-
-# prints a success message once a plot has been completed.
-# note: start is the time when plotting begins, which can be found with Sys.time().
-plot_success <- function(delta_time) 
-{
-  notif(sprintf("Plot generation was successful.<br>
-Seconds elapsed: %s", delta_time), 6, "message")
-}
-
-# prints a failure message once a plot has been completed.
-plot_fail <- function() 
-{
-  notif("Plot generation failed.<br>
-Possible reasons:<br>
-(1) invalid configuration<br>
-(2) empty dataset", 6, "error")
 }
