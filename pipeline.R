@@ -81,6 +81,7 @@ uapp <- function(){
   update_app(c("app.R", 
                "interface.R", 
                "app_functions.R", 
+               "ui_functions.R", 
                "options.R", 
                "outline.R",
                "installer.R"))
