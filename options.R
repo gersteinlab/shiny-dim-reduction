@@ -54,11 +54,6 @@ for (sca in sca_options)
 select_ids <- NULL
 thre_ids <- NULL
 
-# the outlines used to decode lists of lists
-outline <- my_empty_list(name_cat)
-bookmark_char <- my_empty_list(name_cat)
-bookmark_thre <- my_empty_list(name_cat)
-
 # empty lists for option boxes, to be presented to the user
 sub_opts <- vector(mode = "list", length = num_cat)
 color_opts <- vector(mode = "list", length = num_cat)
@@ -81,35 +76,33 @@ for (cn in 1:num_cat)
   sub_opts[[cn]] <- cat_select_panel(
     cat, sprintf("subsetby_%s", cat), sprintf("Feature Subset (%s)", cat), subsets, 1)
   
+  # characteristics
+  chars <- order_names[between(cols_unique_gen, 2, num_filters)]
+  if (length(chars) < 1)
+    chars <- "Unknown"
+  
   # filters
-  filters <- order_names[between(cols_unique_gen, 2, num_filters)]
-  if (length(filters) < 1)
-    filters <- "Unknown"
   filter_opts[[cn]] <- cat_select_panel(
-    cat, sprintf("filterby_%s", cat), sprintf("Current Filter (%s)", cat), filters, 1)
+    cat, sprintf("filterby_%s", cat), sprintf("Current Filter (%s)", cat), chars, 1)
   
   # colors
   color_opts[[cn]] <- cat_select_panel(
-    cat, sprintf("colorby_%s", cat), sprintf("Color By (%s)", cat), filters, 1)
+    cat, sprintf("colorby_%s", cat), sprintf("Color By (%s)", cat), chars, 1)
   
   # shapes
   shape_opts[[cn]] <- cat_select_panel(
-    cat, sprintf("shapeby_%s", cat), sprintf("Shape By (%s)", cat), filters, 2)
+    cat, sprintf("shapeby_%s", cat), sprintf("Shape By (%s)", cat), chars, 2)
   
   # labels
   label_opts[[cn]] <- cat_select_panel(
-    cat, sprintf("labelby_%s", cat), sprintf("Label By (%s)", cat), filters, 1)
+    cat, sprintf("labelby_%s", cat), sprintf("Label By (%s)", cat), chars, 1)
   
   # selections
-  outline[[cat]] <- my_empty_list(filters)
-  for (char in filters)
+  for (char in chars)
   {
     select_ids <- c(select_ids, get_select(cat, char))
-    opt <- get_opt(order_gen[[char]])
-    outline[[cat]][[char]] <- opt
-    select_opts[[length(select_ids)]] <- select_check_panel(opt, cat, char)
+    select_opts[[length(select_ids)]] <- select_check_panel(order_gen[[char]], cat, char)
   }
-  bookmark_char[[cat]] <- filters
   
   # thresholds
   for (sca in sca_options)
@@ -117,11 +110,14 @@ for (cn in 1:num_cat)
     thre_ids <- c(thre_ids, get_thre(cat, sca))
     thre_opts[[length(thre_ids)]] <- thre_select_panel(thre_seqs[[sca]][[cat]], cat, sca)
   }
-  bookmark_thre[[cat]] <- sca_options
 }
 
 # truncate select_opts
 select_opts <- select_opts[1:length(select_ids)]
+
+# -----------
+# BOOKMARKING
+# -----------
 
 picker_input_ids <- c(
   "sMenu",
@@ -150,43 +146,54 @@ numeric_input_ids <- c(
   "set_feat_dend"
 )
 
+numeric_range_input_ids <- c(
+  "set_f1", 
+  "set_f2"
+)
+
+tabset_panel_ids <- c(
+  "plotPanels"
+)
+
+slider_input_ids <- c(
+  "pc1", 
+  "pc2", 
+  "pc3"
+)
+
 # the vector of all inputs to exclude from manual bookmarking
 bookmark_exclude_vector <- c(
-  table_exclude_vector(
-    "num_data_table", 
-    "metadata_table", 
-    "legend_out"
-  ),
-  
   ".clientValue-default-plotlyCrosstalkOpts",
   "plotly_hover-A",
   "plotly_afterplot-A",
   "plotly_relayout-A",
   
+  "username", 
+  "password", 
+  "toggle_password", 
+  "attempt_login",
+  
   "sidebarMenu",
   "sidebarCollapsed",
   "sidebarItemExpanded",
-  
-  picker_input_ids,
-  numeric_input_ids,
-  numeric_input_range_ids,
-  tabset_panel_ids,
-  slider_input_ids,
   
   "start", 
   "stop", 
   "instructions", 
   "citations", 
   
-  "username", 
-  "password", 
-  "toggle_password", 
-  "attempt_login"
+  table_exclude_vector(
+    "num_data_table", 
+    "metadata_table", 
+    "legend_out"
+  ),
+  
+  picker_input_ids,
+  numeric_input_ids,
+  numeric_range_input_ids,
+  slider_input_ids,
+  tabset_panel_ids
 )
-
-numeric_input_range_ids <- c("set_f1", "set_f2")
-tabset_panel_ids <- "plotPanels"
-slider_input_ids <- c("pc1", "pc2", "pc3")
 
 # ---------------
 # ASSEMBLE THE UI
