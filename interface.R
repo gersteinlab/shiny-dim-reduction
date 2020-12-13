@@ -19,16 +19,12 @@ max_heat <- 20000
 max_dend <- 200
 
 # plot panel options
-pan_options <- c("ggplot2", "plotly2", "plotly3", "beeswarm")
+pan_options <- c("Static 2D", "Interactive 2D", "Interactive 3D", "Boxplot")
 # palette options
 pal_options <- list(
   "Base"=c("Custom", "Rainbow", "Heat", "Terrain", "Topography", "CM"),
   "Viridis"=c("Viridis", "Magma", "Plasma", "Inferno", "Cividis")
 )
-# dendrogram options
-den_options <- c("Variance", "Correlation")
-# upset plot options
-ups_options <- c("Frequency", "Degree")
 # settings options
 my_settings <- c("Embed Title", "Embed Legend", 
                  "Boost Graphics", "Notifications", "Uninverted Colors")
