@@ -887,7 +887,7 @@ server <- function(input, output, session) {
     boxplot_beeswarm(data, get(pc_name) ~ get(colorby()), 
                      colorby(), pc_name, names, 
                      sprintf("%s44", substr(paint(), start=1, stop=7)), 
-                     paint())
+                     paint(), title())
   })
   
   # generates data to accompany graphs
