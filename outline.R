@@ -72,23 +72,6 @@ rem_perc <- function(str)
 # AWS S3 STORAGE
 # --------------
 
-# saves an object to Amazon AWS, returning whether the process succeeded
-# assumes the existence of an object called 'aws_bucket'
-save_db <- function(dat, filename){
-  my_amazon_obj <- dat
-  evaluation <- evaluate::evaluate(quote(
-    s3save(my_amazon_obj, bucket=aws_bucket, object=filename)), stop_on_error = 1)
-  my_amazon_obj <- NULL
-  length(evaluation) == 1
-}
-
-# loads an object from Amazon AWS
-# assumes the existence of an object called 'aws_bucket'
-load_db <- function(filename){
-  s3load(filename, aws_bucket)
-  my_amazon_obj
-}
-
 # assigns Amazon Web Service keys
 assign_keys <- function(aws_keys)
 {
@@ -99,6 +82,34 @@ assign_keys <- function(aws_keys)
              "AWS_SECRET_ACCESS_KEY" = aws_keys[2])
   assign("aws_bucket", aws_keys[3], envir = .GlobalEnv)
   invisible()
+}
+
+# checks if a single line evaluation is successful
+single_line_eval <- function(single_line)
+{
+  evaluation <- evaluate::evaluate(quote(single_line))
+  sum("error" %in% unlist(lapply(evaluation, class))) == 0
+}
+
+# saves a single object to AWS.s3 - modified from s3save
+# assumes the existence of an object called 'aws_bucket'
+custom_s3save <- function(data, object, bucket) 
+{
+  tmp <- tempfile(fileext = ".rdata")
+  on.exit(unlink(tmp))
+  save(data, file = tmp, envir = parent.frame())
+  put_object(file = tmp, bucket = aws_bucket, object = object)
+}
+
+# loads a single object from AWS.s3 - modified from s3load
+# assumes the existence of an object called 'aws_bucket'
+custom_s3load <- function(object, bucket) 
+{
+  tmp <- tempfile(fileext = ".rdata")
+  on.exit(unlink(tmp))
+  save_object(bucket = aws_bucket, object = object, file = tmp)
+  load(tmp, envir = parent.frame())
+  data
 }
 
 # ----------------
@@ -249,11 +260,11 @@ init_sub <- function(subset_map)
   
   for (cat in name_cat)
     sub_groups[[cat]] <- list("Total"=rep(0, categories[[cat]])) %>% subset_map()
-      
+  
   for (dec_group in decorations)
   {
     mapping <- dec_group$Subsets[-1] %>% subset_map()
- 
+    
     for (good_cat in dec_group$Categories)
       sub_groups[[good_cat]] <- c(sub_groups[[good_cat]], mapping) 
   }
