@@ -5,139 +5,120 @@ project_name <- "exRNA"
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
 source("converter.R", encoding="UTF-8")
 
+# place in a convenient folder to start - try not to jump around too much
+setwd(raw_loc)
+
+# -------------------
+# IMPORTING FUNCTIONS
+# -------------------
+
+# given a list representing a table, remove the preamble
+# (such as the exRNA data access policy) and make a data frame
+# the preamble is identified by not having at least min_size entries
+rem_preamble <- function(tsv_list, min_size)
+{
+  selected_rows <- sapply(tsv_list, length) > min_size
+  shortened <- tsv_list[selected_rows]
+  do.call(rbind, shortened) %>% r1_to_cols() %>% data.frame()
+}
+
+# removes duplicate rows from a matrix
+rem_dupe_rows <- function(data)
+{
+  data[!duplicated(data),,drop=FALSE]
+}
+
+# orders the rows of a matrix by the entries in a column
+order_by_col <- function(data, column)
+{
+  data[order(data[,column]),,drop=FALSE]
+}
+
+# combines several functions to make an import pipeline for exRNA
+import_pipeline <- function(filenames)
+{
+  m_list <- my_empty_list(filenames)
+  for (filename in filenames)
+    m_list[[filename]] <- filename %>% read_tsv_text() %>% rem_preamble(10) 
+  dplyr::bind_rows(m_list) %>% rem_dupe_rows() %>% order_by_col("FASTQ.IDENTIFIER")
+}
+
 # ---------------------------
-# DOWNLOAD AND CLEAN METADATA
+# SPLIT INTO COMMON / URL_LOC
 # ---------------------------
 
+bios_ref <- sprintf("Metadata_Raw/Bios_%s.tsv", 1:3) %>% import_pipeline()
+expe_ref <- sprintf("Metadata_Raw/Expe_%s.tsv", 1:3) %>% import_pipeline()
+dono_ref <- sprintf("Metadata_Raw/Dono_%s.tsv", 1:3) %>% import_pipeline()
+rrna_ref <- sprintf("Metadata_Raw/rRNA_%s.tsv", 1:3) %>% import_pipeline()
+gene_ref <- sprintf("Metadata_Raw/Gene_%s.tsv", 1:3) %>% import_pipeline()
+
+# all common metadata columns; only needed once
+common <- bios_ref[,c(1, 3:18)]
+colnames(common) <- c(
+  "DOWNLOAD_NAME", "BIO_NAME", "CONDITION", "BIOFLUID", 
+  "RNA_SOURCE", "RNA_KIT", "ANATOMICAL", "CELL_SOURCE", "PROFILING", 
+  "SPECIES", "STANDARDS", "REFERENCE", "TRANSCRIPTOME", "RATIO", 
+  "BIO_ID", "DATASET", "FASTQ_IDENTIFIER")
+
+# folders, URLs, and filenames for downloading
+dest_folders <- sprintf("Metadata_Cleaned/%s_Mass", 
+                        c("Bios", "Expe", "Dono", "rRNA", "Gene"))
+
+url_lists <- list(
+  "Bios" = bios_ref[,2], 
+  "Expe" = expe_ref[,2], 
+  "Dono" = dono_ref[,2], 
+  "rRNA" = rrna_ref[,2],
+  "GeneE" = gene_ref[,2]
+)
+
+loc_lists <- my_empty_list(c("Bios", "Expe", "Dono", "rRNA", "Gene"))
+
+for (i in 1:5)
+{
+  # make destination folders
+  if (!dir.exists(dest_folders[i]))
+    dir.create(dest_folders[i])
+  # determine download locations
+  range <- 1:length(url_lists[[i]])
+  loc_lists[[i]] <- sprintf("%s/%s/M%s.txt", raw_loc, dest_folders[i], range)
+}
+
+rm(bios_ref, expe_ref, dono_ref, rrna_ref, gene_ref)
+
+# -------------------
+# DOWNLOAD - FRAGILE!
+# -------------------
+
+download_status <- my_empty_list(c("Bios", "Expe", "Dono", "rRNA", "Gene"))
+
+# first download - batches of 100
 for (i in 1:5)
   download_status[[i]] <- mass_download(url_lists[[i]], loc_lists[[i]], 100)
 
 setwd(sprintf("%s/Metadata_Cleaned", raw_loc))
 self_save("download_status")
+self_load("download_status")
 
+# second download - batches of 1 and catch missing entries
 for (i in 1:5)
 {
   urls <- url_lists[[i]]
   locs <- loc_lists[[i]]
   miss <- download_status[[i]][-1]
-  indices <- trymass_download(urls[miss], locs[miss], 10)
-}
-
-# given a TSV downloaded straight from the Atlas, parse it
-parse_ref <- function(list_of)
-{
-  lengths <- lapply(list_of, length)
-  shortened <- list_of[lengths > 1]
+  mass_download(urls[miss], locs[miss], 1)
   
-  if (shortened[[1]][1] == "#DOWNLOAD NAME")
-    shortened[[1]][1] <- "DOWNLOAD NAME"
-  
-  do.call(rbind, shortened) %>% r1_to_cols() %>% data.frame()
+  for (j in miss)
+    if (file.exists(locs[miss]))
+      download_status[[i]] <- setdiff(download_status[[i]], j)
 }
 
-bios_list <- my_empty_list(sprintf("M%s", 1:3))
-expe_list <- bios_list
-dono_list <- bios_list
-rrna_list <- bios_list
-gene_list <- bios_list
+setwd(sprintf("%s/Metadata_Cleaned", raw_loc))
+self_save("common")
+self_load("common")
 
-setwd(sprintf("%s/Metadata_Raw", raw_loc))
-
-for (i in 1:3)
-{
-  bios_list[[i]] <- read_tsv_text(sprintf("Bios_%s.tsv", i)) %>% parse_ref()
-  expe_list[[i]] <- read_tsv_text(sprintf("Expe_%s.tsv", i)) %>% parse_ref()
-  dono_list[[i]] <- read_tsv_text(sprintf("Dono_%s.tsv", i)) %>% parse_ref()
-  rrna_list[[i]] <- read_tsv_text(sprintf("rRNA_%s.tsv", i)) %>% parse_ref()
-  gene_list[[i]] <- read_tsv_text(sprintf("Gene_%s.tsv", i)) %>% parse_ref()
-}
-
-order_by_col <- function(data, column)
-{
-  data[order(data[,column]),]
-}
-
-bind_fancy <- function(my_list)
-{
-  ref <- dplyr::bind_rows(my_list)
-  ref[!duplicated(ref), ] %>% order_by_col("FASTQ.IDENTIFIER")
-}
-
-bios_ref <- bind_fancy(bios_list)
-expe_ref <- bind_fancy(expe_list)
-dono_ref <- bind_fancy(dono_list)
-rrna_ref <- bind_fancy(rrna_list)
-gene_ref <- bind_fancy(gene_list)
-
-common <- dono_ref[,3:18]
-colnames(common) <- c(
-  "BIO_NAME", "CONDITION", "BIOFLUID", "RNA_SOURCE", "RNA_KIT", 
-  "ANATOMICAL", "CELL_SOURCE", "PROFILING", "SPECIES", "STANDARDS", 
-  "REFERENCE", "TRANSCRIPTOME", "RATIO", "BIO_ID", "DATASET", "FASTQ_IDENTIFIER")
-
-stitched <- list("BIOS" = bios_ref[,1:2], 
-                 "EXPE" = expe_ref[,1:2], 
-                 "DONO" = dono_ref[,1:2], 
-                 "RRNA" = rrna_ref[,1:2],
-                 "GENE" = gene_ref[,1:2])
-
-dest_folders <- sprintf("Metadata_Cleaned/%s_Mass", 
-                        c("Bios", "Expe", "Dono", "rRNA", "Gene"))
-
-rm(bios_ref,bios_list,
-   expe_ref,expe_list,
-   dono_ref,dono_list,
-   rrna_ref,rrna_list,
-   gene_ref,gene_list)
-
-# --------------------
-# DOWNLOAD AND CONVERT
-# --------------------
-
-url_lists <- my_empty_list(c("Bios", "Expe", "Dono", "rRNA", "Gene"))
-loc_lists <- url_lists
-download_status <- url_lists
-
-for (i in 1:5)
-{
-  if (!dir.exists(dest_folders[i]))
-    dir.create(dest_folders[i])
-  file_name_list <- stitched[[i]][[1]]
-  url_list <- stitched[[i]][[2]]
-  loc_list <- sprintf("%s/%s/M%s.txt", raw_loc, dest_folders[i], 1:length(url_list))
-  url_lists[[i]] <- url_list
-  loc_lists[[i]] <- loc_list
-}
-
-# catch the missing ones
-for (i in 1:5)
-{
-  file_name_list <- stitched[[i]][[1]]
-  url_list <- stitched[[i]][[2]]
-  file_parts <- strsplit(file_name_list[1], ".", fixed=TRUE)[[1]]
-  file_extension <- rev(unlist(file_parts))[1]
-  final_len <- length(url_list)
-  sequence <- c(seq(1, final_len, 40), final_len+1)  
-  dest_list <- sprintf("%s/%s/M%s.%s", raw_loc, 
-                       dest_folders[i], 1:final_len, file_extension)
-  
-  for (j in 1:length(dest_list))
-  {
-    if (!file.exists(dest_list[j]))
-    {
-      tryCatch(
-        download.file(url_list[j], dest_list[j], quiet=TRUE), 
-        warning = function(e){
-          print(sprintf("W: %s, %s", i, j))
-        },
-        error = function(e){
-          print(sprintf("E: %s, %s", i, j))
-        },
-        finally=NULL
-      )
-    }
-  }
-}
+rm(url_lists, loc_lists, download_status)
 
 # --------------
 # CLEAN ALL DATA
@@ -283,11 +264,6 @@ saveRDS(specific_ex_genomes, "specific_ex_genomes.rds")
 saveRDS(cumulative_ex_ribosomes, "cumulative_ex_ribosomes.rds")
 saveRDS(specific_ex_ribosomes, "specific_ex_ribosomes.rds")
 saveRDS(gencode, "gencode.rds")
-
-# ---------------------
-# METADATA AND TAXONOMY
-# ---------------------
-
 
 # ----------------
 # BIOS, DONO, EXPE
