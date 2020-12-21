@@ -22,7 +22,7 @@ self_save <- function(filenames, compress=TRUE)
   for (filename in filenames)
     if (exists(filename))
       saveRDS(get(filename), sprintf("%s.rds", filename), compress=compress)
-  return(NULL)
+  return(invisible())
 }
 
 # attempts to load an object from the current directory to itself
@@ -30,7 +30,7 @@ self_load <- function(filenames)
 {
   for (filename in filenames)
     get_from_dir(filename, NULL, dir=getwd())
-  return(NULL)
+  return(invisible())
 }
 
 # converts a matrix to a numeric matrix,
@@ -51,4 +51,55 @@ r1_to_cols <- function(data){
   }
   colnames(data) <- data[1,]
   data[-1,,drop=FALSE]
+}
+
+# a function that attempts a mass download, 
+# returning all indices that the download failed at
+# url_vec: a vector of URLs
+# loc_vec: a vector of corresponding locations to write to
+# chunk_size: the number of concurrent downloads to be tried at a time
+mass_download <- function(url_vec, loc_vec, chunk_size = 100)
+{
+  # input validation
+  len <- length(url_vec)
+  
+  if (len != length(loc_vec))
+    stop("Length of URL vector does not equal length of location vector.")
+  
+  failed_indices <- 0
+  
+  if (len < 1)
+    return(failed_indices)
+  
+  # separate into chunks
+  chunk_indices <- c(seq(1, len, chunk_size), len+1)
+  num_chunks <- length(chunk_indices)-1
+  
+  start <- my_timer()
+  
+  for (i in 1:num_chunks)
+  {
+    print_clean(sprintf("Downloading chunk: %s/%s", i, num_chunks))
+    
+    chunk <- chunk_indices[i]:(chunk_indices[i+1]-1)
+    
+    suppressWarnings(
+      download.file(url_vec[chunk], loc_vec[chunk], method="libcurl", quiet=TRUE)
+    )
+    
+    for (j in chunk)
+      if (!file.exists(loc_vec[j]))
+        failed_indices <- c(failed_indices, j)
+    
+    print_clean(sprintf(
+      "Number of items failed: %s", length(failed_indices)-1
+    ))
+    
+    print_clean(sprintf(
+      "Seconds per item: %s", 
+      round(my_timer(start)/max(i*chunk_size, len), digits=4)
+    ))
+  }
+  
+  failed_indices
 }
