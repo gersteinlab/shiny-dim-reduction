@@ -53,6 +53,23 @@ r1_to_cols <- function(data){
   data[-1,,drop=FALSE]
 }
 
+# a very permissive tryCatch that ignores all errors and warnings
+try_catch_ignore <- function(expr)
+{
+  tryCatch(
+    expr, 
+    warning = function(e){
+      return()
+    },
+    error = function(e){
+      return()
+    },
+    finally=NULL
+  )
+  
+  return(invisible())
+}
+
 # a function that attempts a mass download, 
 # returning all indices that the download failed at
 # url_vec: a vector of URLs
@@ -83,7 +100,7 @@ mass_download <- function(url_vec, loc_vec, chunk_size = 100)
     
     chunk <- chunk_indices[i]:(chunk_indices[i+1]-1)
     
-    suppressWarnings(
+    try_catch_ignore(
       download.file(url_vec[chunk], loc_vec[chunk], method="libcurl", quiet=TRUE)
     )
     
