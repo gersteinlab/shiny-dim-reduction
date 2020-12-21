@@ -1,10 +1,143 @@
-# This script has two goals:
-# (i) convert raw data into pure numeric data matrices that satisfy scaling.R
-# (ii) use the raw data to process metadata dependencies for the app
-# warning: varies highly based on data source.
+# The goal of this script is to convert raw exRNA data
+# into numeric data and metadata.
 
 project_name <- "exRNA"
-source("~/Justin-Tool/shiny-dim-reduction/converter.R")
+setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
+source("converter.R", encoding="UTF-8")
+
+# ---------------------------
+# DOWNLOAD AND CLEAN METADATA
+# ---------------------------
+
+for (i in 1:5)
+  download_status[[i]] <- mass_download(url_lists[[i]], loc_lists[[i]], 100)
+
+setwd(sprintf("%s/Metadata_Cleaned", raw_loc))
+self_save("download_status")
+
+for (i in 1:5)
+{
+  urls <- url_lists[[i]]
+  locs <- loc_lists[[i]]
+  miss <- download_status[[i]][-1]
+  indices <- trymass_download(urls[miss], locs[miss], 10)
+}
+
+# given a TSV downloaded straight from the Atlas, parse it
+parse_ref <- function(list_of)
+{
+  lengths <- lapply(list_of, length)
+  shortened <- list_of[lengths > 1]
+  
+  if (shortened[[1]][1] == "#DOWNLOAD NAME")
+    shortened[[1]][1] <- "DOWNLOAD NAME"
+  
+  do.call(rbind, shortened) %>% r1_to_cols() %>% data.frame()
+}
+
+bios_list <- my_empty_list(sprintf("M%s", 1:3))
+expe_list <- bios_list
+dono_list <- bios_list
+rrna_list <- bios_list
+gene_list <- bios_list
+
+setwd(sprintf("%s/Metadata_Raw", raw_loc))
+
+for (i in 1:3)
+{
+  bios_list[[i]] <- read_tsv_text(sprintf("Bios_%s.tsv", i)) %>% parse_ref()
+  expe_list[[i]] <- read_tsv_text(sprintf("Expe_%s.tsv", i)) %>% parse_ref()
+  dono_list[[i]] <- read_tsv_text(sprintf("Dono_%s.tsv", i)) %>% parse_ref()
+  rrna_list[[i]] <- read_tsv_text(sprintf("rRNA_%s.tsv", i)) %>% parse_ref()
+  gene_list[[i]] <- read_tsv_text(sprintf("Gene_%s.tsv", i)) %>% parse_ref()
+}
+
+order_by_col <- function(data, column)
+{
+  data[order(data[,column]),]
+}
+
+bind_fancy <- function(my_list)
+{
+  ref <- dplyr::bind_rows(my_list)
+  ref[!duplicated(ref), ] %>% order_by_col("FASTQ.IDENTIFIER")
+}
+
+bios_ref <- bind_fancy(bios_list)
+expe_ref <- bind_fancy(expe_list)
+dono_ref <- bind_fancy(dono_list)
+rrna_ref <- bind_fancy(rrna_list)
+gene_ref <- bind_fancy(gene_list)
+
+common <- dono_ref[,3:18]
+colnames(common) <- c(
+  "BIO_NAME", "CONDITION", "BIOFLUID", "RNA_SOURCE", "RNA_KIT", 
+  "ANATOMICAL", "CELL_SOURCE", "PROFILING", "SPECIES", "STANDARDS", 
+  "REFERENCE", "TRANSCRIPTOME", "RATIO", "BIO_ID", "DATASET", "FASTQ_IDENTIFIER")
+
+stitched <- list("BIOS" = bios_ref[,1:2], 
+                 "EXPE" = expe_ref[,1:2], 
+                 "DONO" = dono_ref[,1:2], 
+                 "RRNA" = rrna_ref[,1:2],
+                 "GENE" = gene_ref[,1:2])
+
+dest_folders <- sprintf("Metadata_Cleaned/%s_Mass", 
+                        c("Bios", "Expe", "Dono", "rRNA", "Gene"))
+
+rm(bios_ref,bios_list,
+   expe_ref,expe_list,
+   dono_ref,dono_list,
+   rrna_ref,rrna_list,
+   gene_ref,gene_list)
+
+# --------------------
+# DOWNLOAD AND CONVERT
+# --------------------
+
+url_lists <- my_empty_list(c("Bios", "Expe", "Dono", "rRNA", "Gene"))
+loc_lists <- url_lists
+download_status <- url_lists
+
+for (i in 1:5)
+{
+  if (!dir.exists(dest_folders[i]))
+    dir.create(dest_folders[i])
+  file_name_list <- stitched[[i]][[1]]
+  url_list <- stitched[[i]][[2]]
+  loc_list <- sprintf("%s/%s/M%s.txt", raw_loc, dest_folders[i], 1:length(url_list))
+  url_lists[[i]] <- url_list
+  loc_lists[[i]] <- loc_list
+}
+
+# catch the missing ones
+for (i in 1:5)
+{
+  file_name_list <- stitched[[i]][[1]]
+  url_list <- stitched[[i]][[2]]
+  file_parts <- strsplit(file_name_list[1], ".", fixed=TRUE)[[1]]
+  file_extension <- rev(unlist(file_parts))[1]
+  final_len <- length(url_list)
+  sequence <- c(seq(1, final_len, 40), final_len+1)  
+  dest_list <- sprintf("%s/%s/M%s.%s", raw_loc, 
+                       dest_folders[i], 1:final_len, file_extension)
+  
+  for (j in 1:length(dest_list))
+  {
+    if (!file.exists(dest_list[j]))
+    {
+      tryCatch(
+        download.file(url_list[j], dest_list[j], quiet=TRUE), 
+        warning = function(e){
+          print(sprintf("W: %s, %s", i, j))
+        },
+        error = function(e){
+          print(sprintf("E: %s, %s", i, j))
+        },
+        finally=NULL
+      )
+    }
+  }
+}
 
 # --------------
 # CLEAN ALL DATA
@@ -155,126 +288,6 @@ saveRDS(gencode, "gencode.rds")
 # METADATA AND TAXONOMY
 # ---------------------
 
-parse_ref <- function(list_of)
-{
-  lengths <- lapply(list_of, length)
-  shortened <- list_of[lengths > 1]
-  
-  if (shortened[[1]][1] == "#DOWNLOAD NAME")
-    shortened[[1]][1] <- "DOWNLOAD NAME"
-  
-  do.call(rbind, shortened) %>% r1_to_cols() %>% data.frame()
-}
-
-bios_list <- my_empty_list(sprintf("M%s", 1:3))
-expe_list <- bios_list
-dono_list <- bios_list
-rrna_list <- bios_list
-gene_list <- bios_list
-
-for (i in 1:3)
-{
-  setwd(sprintf("%s/Metadata_Taxonomy/Ref_New", raw_loc))
-  bios_list[[i]] <- read_tsv_text(sprintf("Bios_%s.tsv", i)) %>% parse_ref()
-  expe_list[[i]] <- read_tsv_text(sprintf("Expe_%s.tsv", i)) %>% parse_ref()
-  dono_list[[i]] <- read_tsv_text(sprintf("Dono_%s.tsv", i)) %>% parse_ref()
-  rrna_list[[i]] <- read_tsv_text(sprintf("rRNA_%s.tsv", i)) %>% parse_ref()
-  gene_list[[i]] <- read_tsv_text(sprintf("Gene_%s.tsv", i)) %>% parse_ref()
-}
-
-order_by_col <- function(data, column)
-{
-  data[order(data[,column]),]
-}
-
-bind_fancy <- function(my_list)
-{
-  ref <- dplyr::bind_rows(my_list)
-  ref[!duplicated(ref), ] %>% order_by_col("FASTQ.IDENTIFIER")
-}
-
-bios_ref <- bind_fancy(bios_list)
-expe_ref <- bind_fancy(expe_list)
-dono_ref <- bind_fancy(dono_list)
-rrna_ref <- bind_fancy(rrna_list)
-gene_ref <- bind_fancy(gene_list)
-
-common <- dono_ref[,3:18]
-colnames(common) <- c(
-  "BIO_NAME", "CONDITION", "BIOFLUID", "RNA_SOURCE", "RNA_KIT", 
-  "ANATOMICAL", "CELL_SOURCE", "PROFILING", "SPECIES", "STANDARDS", 
-  "REFERENCE", "TRANSCRIPTOME", "RATIO", "BIO_ID", "DATASET", "FASTQ_IDENTIFIER")
-
-stitched <- list("BIOS" = bios_ref[,1:2], 
-                 "EXPE" = expe_ref[,1:2], 
-                 "DONO" = dono_ref[,1:2], 
-                 "RRNA" = rrna_ref[,1:2],
-                 "GENE" = gene_ref[,1:2])
-
-dest_folders <- sprintf("Metadata_Taxonomy/%s_Mass", 
-                        c("Bios", "Expe", "Dono", "rRNA", "Gene"))
-
-rm(bios_ref,bios_list,
-   expe_ref,expe_list,
-   dono_ref,dono_list,
-   rrna_ref,rrna_list,
-   gene_ref,gene_list)
-
-# --------------------
-# DOWNLOAD AND CONVERT
-# --------------------
-
-setwd(raw_loc)
-
-# download a ton of URLs
-for (i in 1:5)
-{
-  dir.create(dest_folders[i])
-  file_name_list <- stitched[[i]][[1]]
-  url_list <- stitched[[i]][[2]]
-  file_parts <- strsplit(file_name_list[1], ".", fixed=TRUE)[[1]]
-  file_extension <- rev(unlist(file_parts))[1]
-  final_len <- length(url_list)
-  sequence <- c(seq(1, final_len, 40), final_len+1)  
-  dest_list <- sprintf("%s/%s/M%s.%s", raw_loc, 
-                       dest_folders[i], 1:final_len, file_extension)
-  
-  # some parts might be missing after this ... gonna have to redo them
-  for (j in 1:(length(sequence)-1))
-    download.file(url_list[sequence[j]:(sequence[j+1]-1)], 
-                  dest_list[sequence[j]:(sequence[j+1]-1)], 
-                  method="libcurl", quiet=FALSE)
-}
-
-# catch the missing ones
-for (i in 1:5)
-{
-  file_name_list <- stitched[[i]][[1]]
-  url_list <- stitched[[i]][[2]]
-  file_parts <- strsplit(file_name_list[1], ".", fixed=TRUE)[[1]]
-  file_extension <- rev(unlist(file_parts))[1]
-  final_len <- length(url_list)
-  sequence <- c(seq(1, final_len, 40), final_len+1)  
-  dest_list <- sprintf("%s/%s/M%s.%s", raw_loc, 
-                       dest_folders[i], 1:final_len, file_extension)
-  
-  for (j in 1:length(dest_list))
-  {
-    if (!file.exists(dest_list[j]))
-    {
-      tryCatch(
-        download.file(url_list[j], dest_list[j], quiet=TRUE), 
-        warning = function(e){
-          print(sprintf("W: %s, %s", i, j))
-        },
-        error = function(e){
-          print(sprintf("E: %s, %s", i, j))
-        },
-        finally=NULL
-      )
-    }
-  }
-}
 
 # ----------------
 # BIOS, DONO, EXPE
