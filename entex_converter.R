@@ -3,7 +3,7 @@
 
 project_name <- "ENTEx"
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
-source("entex_constants.R")
+source("entex_constants.R", encoding="UTF-8")
 source("converter.R", encoding="UTF-8")
 
 library(Matrix)
