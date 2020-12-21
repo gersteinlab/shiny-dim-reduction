@@ -3,6 +3,7 @@
 
 project_name <- "exRNA"
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
+source("exrna_constants.R", encoding="UTF-8")
 source("converter.R", encoding="UTF-8")
 
 # place in a convenient folder to start - try not to jump around too much
@@ -43,6 +44,20 @@ import_pipeline <- function(filenames)
   dplyr::bind_rows(m_list) %>% rem_dupe_rows() %>% order_by_col("FASTQ.IDENTIFIER")
 }
 
+# An empty data frame that is well-suited as a placeholder for binds
+empty_df <- matrix(0, nrow=1, ncol=1) %>% data.frame()
+colnames(empty_df) <- "Unknown"
+
+# takes read_tsv_text from bed_txt and assembles it into a metadata df
+bed_assemble <- function(bed_res){
+  if (is.null(bed_res))
+    return(empty_df)
+  
+  bed_res[,1] <- make.unique(bed_res[,1])
+  
+  bed_res %>% t() %>% r1_to_cols() %>% data.frame()
+}
+
 # ---------------------------
 # SPLIT INTO COMMON / URL_LOC
 # ---------------------------
@@ -53,13 +68,10 @@ dono_ref <- sprintf("Metadata_Raw/Dono_%s.tsv", 1:3) %>% import_pipeline()
 rrna_ref <- sprintf("Metadata_Raw/rRNA_%s.tsv", 1:3) %>% import_pipeline()
 gene_ref <- sprintf("Metadata_Raw/Gene_%s.tsv", 1:3) %>% import_pipeline()
 
-# all common metadata columns; only needed once
-common <- bios_ref[,c(1, 3:18)]
-colnames(common) <- c(
-  "DOWNLOAD_NAME", "BIO_NAME", "CONDITION", "BIOFLUID", 
-  "RNA_SOURCE", "RNA_KIT", "ANATOMICAL", "CELL_SOURCE", "PROFILING", 
-  "SPECIES", "STANDARDS", "REFERENCE", "TRANSCRIPTOME", "RATIO", 
-  "BIO_ID", "DATASET", "FASTQ_IDENTIFIER")
+common_bed <- bios_ref[,c(1, 3:18)]
+common_rg <- gene_ref[,c(1, 3:18)]
+colnames(common_bed) <- common_cols
+colnames(common_rg) <- common_cols
 
 # folders, URLs, and filenames for downloading
 dest_folders <- sprintf("Metadata_Cleaned/%s_Mass", 
@@ -85,6 +97,7 @@ for (i in 1:5)
   loc_lists[[i]] <- sprintf("%s/%s/M%s.txt", raw_loc, dest_folders[i], range)
 }
 
+rm(range)
 rm(bios_ref, expe_ref, dono_ref, rrna_ref, gene_ref)
 
 # -------------------
@@ -97,7 +110,6 @@ download_status <- my_empty_list(c("Bios", "Expe", "Dono", "rRNA", "Gene"))
 for (i in 1:5)
   download_status[[i]] <- mass_download(url_lists[[i]], loc_lists[[i]], 100)
 
-setwd(sprintf("%s/Metadata_Cleaned", raw_loc))
 self_save("download_status")
 self_load("download_status")
 
@@ -114,217 +126,43 @@ for (i in 1:5)
       download_status[[i]] <- setdiff(download_status[[i]], j)
 }
 
-setwd(sprintf("%s/Metadata_Cleaned", raw_loc))
-self_save("common")
-self_load("common")
+self_save(c("common_bed", "common_rg"))
 
-rm(url_lists, loc_lists, download_status)
-
-# --------------
-# CLEAN ALL DATA
-# --------------
-
-# set your directory to a folder with tgz files ... this will untar all
-for (file in list.files())
-{
-  dir.create(repStr(file, ".tgz", ""))
-  untar(file, exdir=repStr(file, ".tgz", ""))
-}
-
-# then create the folders Cleaned, Raw, Data
-dir.create("Cleaned")
-dir.create("Raw")
-dir.create("Data")
-
-# move all the .tgz files into Raw and all the folders into Data
-# Then run this code to make cleaned versions of all folders
-base_data_loc <- getwd()
-file_list <- list.files(sprintf("%s/Data", base_data_loc))
-
-for (folder in file_list)
-{
-  subaddr <- sprintf("%s/Data/%s", base_data_loc, folder)
-  finaddr <- sprintf("%s/Cleaned/%s", base_data_loc, folder)
-  if (!file.exists(finaddr))
-    dir.create(finaddr)
-  
-  memes <- list.files(subaddr)
-  splitup <- strsplit(memes, "_exceRpt_", fixed=TRUE)
-  actual_names <- unlist(lapply(splitup, function(x){x[2]}))
-  processed_names <- gsub("ReadsPerMillion", "RPM", 
-                          gsub("TaxonomyTrees", "TAXTREE", 
-                               gsub("exogenousGenomes", "EXO-GENO", 
-                                    gsub("exogenousRibosomal", "EXO-RIBO",
-                                         actual_names))))
-  initial_data_locs <- sprintf("%s/%s", subaddr, memes)
-  final_data_locs <- sprintf("%s/%s", finaddr, processed_names)
-  file.copy(from = initial_data_locs, to = final_data_locs)
-}
-
-# -----------------------
-# PROCESS SUMMARY REPORTS
-# -----------------------
-
-setwd(sprintf("%s/Summary_Reports", raw_loc))
-
-list_of_fragments <- NULL
-
-for (folder in list.files())
-{
-  for (file in list.files(sprintf("%s/Cleaned", folder)))
-  {
-    list_of_fragments <- c(list_of_fragments, 
-                           sprintf("%s/Cleaned/%s/smallRNAQuants_RPM.RData", 
-                                   folder, file))
-  }
-}
-
-# function for converting raw to a data frame
-raw_to_df <- function(rpm) {
-  df <- as.data.frame(t(rpm))
-  df <- cbind(rownames(df), data.frame(df, row.names=NULL))
-  colnames(df)[1] <- "CORNER_CORNER"
-  df
-}
-
-# load all data and aggregate it
-miRNA <- my_empty_list(sprintf("M%s", 1:length(list_of_fragments)))
-piRNA <- miRNA
-tRNA <- miRNA
-circRNA <- miRNA
-ex_miRNA <- miRNA
-cumulative_ex_genomes <- miRNA
-specific_ex_genomes <- miRNA
-cumulative_ex_ribosomes <- miRNA
-specific_ex_ribosomes <- miRNA
-gencode <- miRNA
-
-for (i in 1:length(list_of_fragments))
-{
-  load(list_of_fragments[i])
-  miRNA[[i]] <- exprs.miRNA.rpm %>% raw_to_df()
-  piRNA[[i]] <- exprs.piRNA.rpm %>% raw_to_df()
-  tRNA[[i]] <- exprs.tRNA.rpm %>% raw_to_df()
-  circRNA[[i]] <- exprs.circRNA.rpm %>% raw_to_df()
-  ex_miRNA[[i]] <- exprs.exogenous_miRNA.rpm %>% raw_to_df()
-  cumulative_ex_genomes[[i]] <- exprs.exogenousGenomes_cumulative.rpm %>% raw_to_df()
-  specific_ex_genomes[[i]] <- exprs.exogenousGenomes_specific.rpm %>% raw_to_df()
-  cumulative_ex_ribosomes[[i]] <- exprs.exogenousRibosomal_cumulative.rpm %>% raw_to_df()
-  specific_ex_ribosomes[[i]] <- exprs.exogenousRibosomal_specific.rpm %>% raw_to_df()
-  gencode[[i]] <- exprs.gencode.rpm %>% raw_to_df()
-}
-
-miRNA <- dplyr::bind_rows(miRNA)
-piRNA <- dplyr::bind_rows(piRNA)
-tRNA <- dplyr::bind_rows(tRNA)
-circRNA <- dplyr::bind_rows(circRNA)
-ex_miRNA <- dplyr::bind_rows(ex_miRNA)
-cumulative_ex_genomes <- dplyr::bind_rows(cumulative_ex_genomes)
-specific_ex_genomes <- dplyr::bind_rows(specific_ex_genomes)
-cumulative_ex_ribosomes <- dplyr::bind_rows(cumulative_ex_ribosomes)
-specific_ex_ribosomes <- dplyr::bind_rows(specific_ex_ribosomes)
-gencode <- dplyr::bind_rows(gencode)
-
-rm(
-  exprs.miRNA.rpm
-  , exprs.piRNA.rpm
-  , exprs.tRNA.rpm,exprs.circRNA.rpm
-  , exprs.exogenous_miRNA.rpm
-  , exprs.exogenousGenomes_cumulative.rpm
-  , exprs.exogenousGenomes_specific.rpm
-  , exprs.exogenousRibosomal_cumulative.rpm
-  , exprs.exogenousRibosomal_specific.rpm
-  , exprs.gencode.rpm
-)
-
-# remove duplicated FASTQ entries
-rem_dup <- function(data){
-  data[which(!duplicated(data[,1])),]
-}
-
-miRNA <- rem_dup(miRNA)
-piRNA <- rem_dup(piRNA)
-tRNA <- rem_dup(tRNA)
-circRNA <- rem_dup(circRNA)
-ex_miRNA <- rem_dup(ex_miRNA)
-cumulative_ex_genomes <- rem_dup(cumulative_ex_genomes)
-specific_ex_genomes <- rem_dup(specific_ex_genomes)
-cumulative_ex_ribosomes <- rem_dup(cumulative_ex_ribosomes)
-specific_ex_ribosomes <- rem_dup(specific_ex_ribosomes)
-gencode <- rem_dup(gencode)
-
-setwd(sprintf("%s/Summary_Cleaned", raw_loc))
-saveRDS(miRNA, "miRNA.rds")
-saveRDS(piRNA, "piRNA.rds")
-saveRDS(tRNA, "tRNA.rds")
-saveRDS(circRNA, "circRNA.rds")
-saveRDS(ex_miRNA, "ex_miRNA.rds")
-saveRDS(cumulative_ex_genomes, "cumulative_ex_genomes.rds")
-saveRDS(specific_ex_genomes, "specific_ex_genomes.rds")
-saveRDS(cumulative_ex_ribosomes, "cumulative_ex_ribosomes.rds")
-saveRDS(specific_ex_ribosomes, "specific_ex_ribosomes.rds")
-saveRDS(gencode, "gencode.rds")
+rm(urls, locs, url_lists, loc_lists)
 
 # ----------------
-# BIOS, DONO, EXPE
+# BIOS, EXPE, DONO
 # ----------------
+
 bed_txt <- my_empty_list(c("Bios", "Expe", "Dono"))
 
 for (i in 1:3)
 {
   print(sprintf("i: %s", i))
-  
-  file_name_list <- stitched[[i]][[1]]
-  url_list <- stitched[[i]][[2]]
-  file_parts <- strsplit(file_name_list[1], ".", fixed=TRUE)[[1]]
-  file_extension <- rev(unlist(file_parts))[1]
-  final_len <- length(url_list)
-  bed_txt[[i]] <- my_empty_list(sprintf("M%s.%s", 1:final_len, file_extension))
-  dest_list <- sprintf("%s/%s/M%s.%s", raw_loc, 
-                       dest_folders[i], 1:final_len, file_extension)
+  final_len <- nrow(common_bed)
+  filenames <- sprintf("M%s.txt", 1:final_len)
+  bed_txt[[i]] <- my_empty_list(filenames)
+  file_locs <- sprintf("%s/%s/%s", raw_loc, dest_folders[i], filenames)
   
   for (j in 1:final_len)
   {
     if (j %% 1000 == 0)
       print(sprintf("j: %s", j))
-    bed_txt[[i]][[j]] <- do.call(rbind, read_tsv_text(dest_list[j]))
+    bed_txt[[i]][[j]] <- do.call(rbind, read_tsv_text(file_locs[j]))
   }
 }
 
-empty_df <- matrix(0, nrow=1, ncol=1) %>% data.frame()
-colnames(empty_df) <- "Unknown"
+bios_total <- lapply(bed_txt[[1]], bed_assemble) %>% dplyr::bind_rows()
+expe_total <- lapply(bed_txt[[2]], bed_assemble) %>% dplyr::bind_rows()
+dono_total <- lapply(bed_txt[[3]], bed_assemble) %>% dplyr::bind_rows()
 
-bed_total <- my_empty_list(c("Bios", "Expe", "Dono"))
-for (i in 1:3)
-{
-  hmm <- lapply(bed_txt[[i]], function(x){
-    if (is.null(x))
-      return(empty_df)
-    x[,1] <- make.unique(x[,1])
-    t(x) %>% r1_to_cols() %>% data.frame()
-  })
-  
-  bed_total[[i]] <- dplyr::bind_rows(hmm)
-}
 
-setwd(raw_loc)
-saveRDS(bed_total, "Metadata_Taxonomy/bed_total.rds")
 
-setwd(raw_loc)
-bed_total <- readRDS("Metadata_Taxonomy/bed_total.rds")
 
-bios_total <- bed_total[[1]]
-expe_total <- bed_total[[2]]
-dono_total <- bed_total[[3]]
 
-frac_acceptable <- function(derp){
-  x1 <- length(which(is.na(derp)))
-  x2 <- length(which(is.null(derp)))
-  x3 <- length(which(is.nan(derp)))
-  x4 <- length(which(derp == ""))
-  x5 <- length(which(derp == "Unknown"))
-  1-(x1+x2+x3+x4+x5)/length(derp)
-}
+
+
+
 
 check_garbo <- function(data, min) {
   select_if(data, function(x){frac_acceptable(x) > min})
@@ -556,23 +394,19 @@ rg_txt <- my_empty_list(c("rRNA", "Gene"))
 for (i in 4:5)
 {
   print(sprintf("i: %s", i))
-  
-  file_name_list <- stitched[[i]][[1]]
-  url_list <- stitched[[i]][[2]]
-  file_parts <- strsplit(file_name_list[1], ".", fixed=TRUE)[[1]]
-  file_extension <- rev(unlist(file_parts))[1]
-  final_len <- length(url_list)
-  rg_txt[[i-3]] <- my_empty_list(sprintf("M%s.%s", 1:final_len, file_extension))
-  dest_list <- sprintf("%s/%s/M%s.%s", raw_loc, 
-                       dest_folders[i], 1:final_len, file_extension)
+  final_len <- nrow(common_rg)
+  filenames <- sprintf("M%s.txt", 1:final_len)
+  rg_txt[[i-3]] <- my_empty_list(filenames)
+  file_locs <- sprintf("%s/%s/%s", raw_loc, dest_folders[i], filenames)
   
   for (j in 1:final_len)
   {
     if (j %% 1000 == 0)
       print(sprintf("j: %s", j))
-    rg_txt[[i-3]][[j]] <- do.call(rbind, read_tsv_text(dest_list[j]))
+    rg_txt[[i-3]][[j]] <- do.call(rbind, read_tsv_text(file_locs[j]))
   }
 }
+
 for (i in 1:2)
 {
   for (j in 1:length(rg_txt[[i]]))
@@ -645,7 +479,7 @@ for (n in 1:2)
       print(sprintf("k: %s", k))
       print(sprintf("Average: %s", my_timer(start)/k))
     }
-      
+    
     test <- rg_txt[[n]][[k]]
     
     if (length(test) < 1 || nrow(test) < 1 || ncol(test) != 7)
@@ -710,32 +544,14 @@ for (i in 1:2)
   rg_assoc[[i]] <- rg_assoc[[i]][good_indices[[i]]]
 }
 
-# quickly binds rows
-iterative_bind_rows <- function(data)
-{
-  len <- length(data)
-  
-  if (len < 512)
-  {
-    print(len)
-    return(dplyr::bind_rows(data))
-  }
-  
-  midpoint <- floor(len/2)
-  d1 <- data[1:midpoint]
-  d2 <- data[(midpoint+1):len]
-  
-  dplyr::bind_rows(iterative_bind_rows(d1), iterative_bind_rows(d2))
-}
-
 # bind them all together!
-all_rRNA <- iterative_bind_rows(rg_txt2[[1]])
+all_rRNA <- recursive_bind_rows(rg_txt2[[1]])
 rownames(all_rRNA) <- good_indices[[1]]
-assoc_rRNA <- iterative_bind_rows(rg_assoc[[1]])
+assoc_rRNA <- recursive_bind_rows(rg_assoc[[1]])
 assoc_rRNA <- assoc_rRNA[!duplicated(assoc_rRNA$X25),]
-all_gene <- iterative_bind_rows(rg_txt2[[2]])
+all_gene <- recursive_bind_rows(rg_txt2[[2]])
 rownames(all_gene) <- good_indices[[2]]
-assoc_gene <- iterative_bind_rows(rg_assoc[[2]])
+assoc_gene <- recursive_bind_rows(rg_assoc[[2]])
 assoc_gene <- assoc_gene[!duplicated(assoc_gene$X25),]
 
 # saving
@@ -766,6 +582,151 @@ saveRDS(all_rRNA_clean, "Metadata_Taxonomy/all_rrna_clean.rds")
 saveRDS(assoc_rRNA_clean, "Metadata_Taxonomy/assoc_rrna_clean.rds")
 saveRDS(all_gene_clean, "Metadata_Taxonomy/all_gene_clean.rds")
 saveRDS(assoc_gene_clean, "Metadata_Taxonomy/assoc_gene_clean.rds")
+
+# --------------
+# CLEAN ALL DATA
+# --------------
+
+# set your directory to a folder with tgz files ... this will untar all
+for (file in list.files())
+{
+  dir.create(repStr(file, ".tgz", ""))
+  untar(file, exdir=repStr(file, ".tgz", ""))
+}
+
+# then create the folders Cleaned, Raw, Data
+dir.create("Cleaned")
+dir.create("Raw")
+dir.create("Data")
+
+# move all the .tgz files into Raw and all the folders into Data
+# Then run this code to make cleaned versions of all folders
+base_data_loc <- getwd()
+file_list <- list.files(sprintf("%s/Data", base_data_loc))
+
+for (folder in file_list)
+{
+  subaddr <- sprintf("%s/Data/%s", base_data_loc, folder)
+  finaddr <- sprintf("%s/Cleaned/%s", base_data_loc, folder)
+  if (!file.exists(finaddr))
+    dir.create(finaddr)
+  
+  memes <- list.files(subaddr)
+  splitup <- strsplit(memes, "_exceRpt_", fixed=TRUE)
+  actual_names <- unlist(lapply(splitup, function(x){x[2]}))
+  processed_names <- gsub("ReadsPerMillion", "RPM", 
+                          gsub("TaxonomyTrees", "TAXTREE", 
+                               gsub("exogenousGenomes", "EXO-GENO", 
+                                    gsub("exogenousRibosomal", "EXO-RIBO",
+                                         actual_names))))
+  initial_data_locs <- sprintf("%s/%s", subaddr, memes)
+  final_data_locs <- sprintf("%s/%s", finaddr, processed_names)
+  file.copy(from = initial_data_locs, to = final_data_locs)
+}
+
+# -----------------------
+# PROCESS SUMMARY REPORTS
+# -----------------------
+
+setwd(sprintf("%s/Summary_Reports", raw_loc))
+
+list_of_fragments <- NULL
+
+for (folder in list.files())
+{
+  for (file in list.files(sprintf("%s/Cleaned", folder)))
+  {
+    list_of_fragments <- c(list_of_fragments, 
+                           sprintf("%s/Cleaned/%s/smallRNAQuants_RPM.RData", 
+                                   folder, file))
+  }
+}
+
+# function for converting raw to a data frame
+raw_to_df <- function(rpm) {
+  df <- as.data.frame(t(rpm))
+  df <- cbind(rownames(df), data.frame(df, row.names=NULL))
+  colnames(df)[1] <- "CORNER_CORNER"
+  df
+}
+
+# load all data and aggregate it
+miRNA <- my_empty_list(sprintf("M%s", 1:length(list_of_fragments)))
+piRNA <- miRNA
+tRNA <- miRNA
+circRNA <- miRNA
+ex_miRNA <- miRNA
+cumulative_ex_genomes <- miRNA
+specific_ex_genomes <- miRNA
+cumulative_ex_ribosomes <- miRNA
+specific_ex_ribosomes <- miRNA
+gencode <- miRNA
+
+for (i in 1:length(list_of_fragments))
+{
+  load(list_of_fragments[i])
+  miRNA[[i]] <- exprs.miRNA.rpm %>% raw_to_df()
+  piRNA[[i]] <- exprs.piRNA.rpm %>% raw_to_df()
+  tRNA[[i]] <- exprs.tRNA.rpm %>% raw_to_df()
+  circRNA[[i]] <- exprs.circRNA.rpm %>% raw_to_df()
+  ex_miRNA[[i]] <- exprs.exogenous_miRNA.rpm %>% raw_to_df()
+  cumulative_ex_genomes[[i]] <- exprs.exogenousGenomes_cumulative.rpm %>% raw_to_df()
+  specific_ex_genomes[[i]] <- exprs.exogenousGenomes_specific.rpm %>% raw_to_df()
+  cumulative_ex_ribosomes[[i]] <- exprs.exogenousRibosomal_cumulative.rpm %>% raw_to_df()
+  specific_ex_ribosomes[[i]] <- exprs.exogenousRibosomal_specific.rpm %>% raw_to_df()
+  gencode[[i]] <- exprs.gencode.rpm %>% raw_to_df()
+}
+
+miRNA <- dplyr::bind_rows(miRNA)
+piRNA <- dplyr::bind_rows(piRNA)
+tRNA <- dplyr::bind_rows(tRNA)
+circRNA <- dplyr::bind_rows(circRNA)
+ex_miRNA <- dplyr::bind_rows(ex_miRNA)
+cumulative_ex_genomes <- dplyr::bind_rows(cumulative_ex_genomes)
+specific_ex_genomes <- dplyr::bind_rows(specific_ex_genomes)
+cumulative_ex_ribosomes <- dplyr::bind_rows(cumulative_ex_ribosomes)
+specific_ex_ribosomes <- dplyr::bind_rows(specific_ex_ribosomes)
+gencode <- dplyr::bind_rows(gencode)
+
+rm(
+  exprs.miRNA.rpm
+  , exprs.piRNA.rpm
+  , exprs.tRNA.rpm,exprs.circRNA.rpm
+  , exprs.exogenous_miRNA.rpm
+  , exprs.exogenousGenomes_cumulative.rpm
+  , exprs.exogenousGenomes_specific.rpm
+  , exprs.exogenousRibosomal_cumulative.rpm
+  , exprs.exogenousRibosomal_specific.rpm
+  , exprs.gencode.rpm
+)
+
+# remove duplicated FASTQ entries
+rem_dup <- function(data){
+  data[which(!duplicated(data[,1])),]
+}
+
+miRNA <- rem_dup(miRNA)
+piRNA <- rem_dup(piRNA)
+tRNA <- rem_dup(tRNA)
+circRNA <- rem_dup(circRNA)
+ex_miRNA <- rem_dup(ex_miRNA)
+cumulative_ex_genomes <- rem_dup(cumulative_ex_genomes)
+specific_ex_genomes <- rem_dup(specific_ex_genomes)
+cumulative_ex_ribosomes <- rem_dup(cumulative_ex_ribosomes)
+specific_ex_ribosomes <- rem_dup(specific_ex_ribosomes)
+gencode <- rem_dup(gencode)
+
+setwd(sprintf("%s/Summary_Cleaned", raw_loc))
+saveRDS(miRNA, "miRNA.rds")
+saveRDS(piRNA, "piRNA.rds")
+saveRDS(tRNA, "tRNA.rds")
+saveRDS(circRNA, "circRNA.rds")
+saveRDS(ex_miRNA, "ex_miRNA.rds")
+saveRDS(cumulative_ex_genomes, "cumulative_ex_genomes.rds")
+saveRDS(specific_ex_genomes, "specific_ex_genomes.rds")
+saveRDS(cumulative_ex_ribosomes, "cumulative_ex_ribosomes.rds")
+saveRDS(specific_ex_ribosomes, "specific_ex_ribosomes.rds")
+saveRDS(gencode, "gencode.rds")
 
 # ---------
 # FINISHING
@@ -947,27 +908,6 @@ saveRDS(order_total, "order_total.rds")
 amazon_keys <- c("AKIAVI2HZGPODUFE62HE",
                  "V4LyDo0i1zv2cUZaFeIg9EFUFe+Fr+cv05U30efG",
                  "shiny-app-data-justin-exrna")
-app_title <- "Dimensionality Reduction Plotting Tool for the exRNA Atlas"
-app_citations <- "<u>ERCC:</u>
-Ainsztein AM, Brooks PJ, Dugan VG, et al. The NIH Extracellular RNA Communication 
-Consortium. J Extracell Vesicles. 2015;4:27493. Published 2015 Aug 28.
-<a href=\"doi:10.3402/jev.v4.27493\" target=\"_blank\">
-doi:10.3402/jev.v4.27493</a>
-<br>
-<u>exceRpt Tool:</u> Rozowsky J, Kitchen RR, Park JJ, et al. 
-exceRpt: A Comprehensive Analytic Platform for Extracellular RNA Profiling. 
-Cell Syst. 2019;8(4):352-357.e3. 
-<a href=\"doi:10.1016/j.cels.2019.03.004\" target=\"_blank\">
-doi:10.1016/j.cels.2019.03.004</a>
-<br>
-<u>exRNA Atlas:</u> Murillo OD, Thistlethwaite W, Rozowsky J, et al. 
-exRNA Atlas Analysis Reveals Distinct Extracellular RNA Cargo Types and 
-Their Carriers Present across Human Biofluids. Cell. 2019;177(2):463-477.e15. 
-<a href=\"doi:10.1016/j.cell.2019.02.018\" target=\"_blank\">
-doi:10.1016/j.cell.2019.02.018</a>
-<br><br>
-In addition, the NIH Common Fund, ERCC, and many ERCC producers
-graciously generated these datasets."
 perplexity_types <- c(10, 20, 30, 50, 100)
 pc_cap <- 10
 user_credentials <- list("guest"=my_hash("All@2019"))
