@@ -85,10 +85,12 @@ assign_keys <- function(aws_keys)
 }
 
 # checks if a single line evaluation is successful
-single_line_eval <- function(single_line)
+single_line_eval <- function(single_line, check_warnings = TRUE, check_errors = TRUE)
 {
   evaluation <- evaluate::evaluate(quote(single_line))
-  sum("error" %in% unlist(lapply(evaluation, class))) == 0
+  no_warnings <- sum("warning" %in% unlist(lapply(evaluation, class))) == 0
+  no_errors <- sum("error" %in% unlist(lapply(evaluation, class))) == 0
+  (!check_warnings || no_warnings) && (!check_errors || no_errors)
 }
 
 # saves a single object to AWS.s3 - modified from s3save
