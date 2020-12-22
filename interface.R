@@ -330,9 +330,6 @@ assign_keys(amazon_keys)
 # metadata
 get_from_dir("order_total", my_empty_list(name_cat))
 
-# thresholds for sets
-get_from_dir("thresholds")
-
 # a bit of exposition regarding decoration:
 # first of all, each decoration in the list has a name
 # and then two entries:
@@ -340,6 +337,12 @@ get_from_dir("thresholds")
 # (ii) a list containing (a) a reference character vector and 
 # (b) indices of that reference vector that constitute subsets
 get_from_dir("decorations")
+
+# component cap
+get_from_dir("pc_cap", 3)
+
+# thresholds for sets
+get_from_dir("thresholds")
 
 # perplexity types for particular analyses
 get_from_dir("perplexity_types", 1:5)
@@ -350,9 +353,6 @@ get_from_dir("app_title", "Dimensionality Reduction Tool")
 # create citations
 get_from_dir("app_citations", "No data citations could be found.")
 citations <- bibliography(app_citations)
-
-# component cap
-get_from_dir("pc_cap", 3)
 
 # user credentials, only needed for online version
 get_from_dir("user_credentials")
