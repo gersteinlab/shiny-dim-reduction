@@ -7,13 +7,7 @@
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
 source("outline.R", encoding="UTF-8")
 
-assign_keys(
-  c(
-    "AKIAVI2HZGPOEH4RVQIH",
-    "6cteE5iRcwkBIVBtZMm3x0u7J7ncPsbsjZ0PaU4o",
-    "shiny-app-data-justin-test"
-  )
-)
+assign_keys(tester_keys)
 
 
 # -----

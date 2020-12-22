@@ -72,6 +72,13 @@ rem_perc <- function(str)
 # AWS S3 STORAGE
 # --------------
 
+# keys linked to a test user
+tester_keys <- c(
+  "AKIAVI2HZGPOEH4RVQIH",
+  "6cteE5iRcwkBIVBtZMm3x0u7J7ncPsbsjZ0PaU4o",
+  "shiny-app-data-justin-test"
+)
+
 # assigns Amazon Web Service keys
 assign_keys <- function(aws_keys)
 {
