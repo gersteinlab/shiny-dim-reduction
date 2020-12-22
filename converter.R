@@ -6,6 +6,69 @@
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
 source("pipeline.R", encoding="UTF-8")
 
+# ------------
+# DEPENDENCIES
+# ------------
+
+# Lists the dependencies that ought to be generated for the app.
+# these are ordered from most to least necessary for app function.
+dependencies <- function()
+{
+  print_clean("DEPENDENCY 01 (REQUIRED): categories_full.rds")
+  print_clean("A list of groups (ex: cCREs, Expression, Proteomics), where each 
+group is a list of categories (ex: H3K27ac, H3K9me3, Methylation) and the value
+of each category is the number of features prior to dimensionality reduction.
+All categories must be unique, even if in different groups.")
+  print_clean("")
+  
+  print_clean("DEPENDENCY 02 (REQUIRED): amazon_keys.rds")
+  print_clean("A vector for AWS - access ID, access secret, and bucket.")
+  print_clean("")
+  
+  print_clean("DEPENDENCY 03 (OPTIONAL): order_total.rds")
+  print_clean("A list of data frames, one for each category.
+Each data frame has samples as rows and columns as metadata features.")
+  print_clean("")
+  
+  print_clean("DEPENDENCY 04 (OPTIONAL): decorations.rds")
+  print_clean("A list of decorations, where each decoration contains (i) a 
+vector of applicable categories and (ii) the subsets. Each subset contains
+(a) a reference character vector and (b) indices that constitute subsets.")
+  print_clean("")
+  
+  print_clean("DEPENDENCY 05 (OPTIONAL): pc_cap.rds")
+  print_clean("The number of principal components displayed, at least 3.")
+  print_clean("")
+  
+  print_clean("DEPENDENCY 06 (OPTIONAL): thresholds.rds")
+  print_clean("A list (sca_options) of lists (name_cat), with each entry
+being a vector of eleven numbers as thresholds for Sets.")
+  print_clean("")
+  
+  print_clean("DEPENDENCY 07 (OPTIONAL): perplexity_types.rds")
+  print_clean("A vector of five numbers denoting the options for the number of
+nearest neighbors employed by tSNE, UMAP, or PHATE.")
+  print_clean("")
+  
+  print_clean("DEPENDENCY 08 (OPTIONAL): app_title.rds")
+  print_clean("The title of the application.")
+  print_clean("")
+  
+  print_clean("DEPENDENCY 09 (OPTIONAL): app_citations.rds")
+  print_clean("The data-related citations for this application.")
+  print_clean("")
+  
+  print_clean("DEPENDENCY 10 (OPTIONAL): user_credentials.rds")
+  print_clean("A list of user credentials, where usernames are 
+names(user_credentials) and passwords are unlist(user_credentials).")
+  print_clean("")
+  
+  print_clean("DEPENDENCY 11 (OPTIONAL): custom_color_scales.rds")
+  print_clean("A list of custom color scales, where each scale is a list such that
+the labels are names(scale) and the colors are unlist(scale).")
+  print_clean("")
+}
+
 # ---------
 # FUNCTIONS
 # ---------

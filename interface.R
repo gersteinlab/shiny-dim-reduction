@@ -313,49 +313,15 @@ my_css_styling <- HTML("
 # LOAD DEPENDENCIES
 # -----------------
 
-# these are ordered from most to least necessary for app function.
-
-# a bit of exposition regarding categories_full (REQUIRED):
-# first, break up into groups (ex: cCREs, Expression, Proteomics)
-# second, break up into categories (ex: H3K27ac, H3K9me3, Methylation)
-# note that all categories MUST be unique, even if in different groups
-# also, the value of categories_full$cCREs$H3K27ac must be the number of
-# features originally in that dataset before dimensionality reduction
+# Please see converter.R for an explanation of these dependencies.
 get_from_dir("categories_full")
-
-# amazon keys (REQUIRED)
 get_from_dir("amazon_keys")
-assign_keys(amazon_keys)
-
-# metadata
 get_from_dir("order_total", my_empty_list(name_cat))
-
-# a bit of exposition regarding decoration:
-# first of all, each decoration in the list has a name
-# and then two entries:
-# (i) a vector of categories to which the decoration applies
-# (ii) a list containing (a) a reference character vector and 
-# (b) indices of that reference vector that constitute subsets
 get_from_dir("decorations")
-
-# component cap
 get_from_dir("pc_cap", 3)
-
-# thresholds for sets
 get_from_dir("thresholds")
-
-# perplexity types for particular analyses
 get_from_dir("perplexity_types", 1:5)
-
-# app title
 get_from_dir("app_title", "Dimensionality Reduction Tool")
-
-# create citations
 get_from_dir("app_citations", "No data citations could be found.")
-citations <- bibliography(app_citations)
-
-# user credentials, only needed for online version
 get_from_dir("user_credentials")
-
-# custom color scales, frequently omitted
 get_from_dir("custom_color_scales")
