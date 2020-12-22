@@ -520,26 +520,6 @@ for (cat in dog)
 # -R-Portable (DIR)  
 # -GoogleChromePortable (DIR)  
 
-# -------
-# MARKING
-# -------
-
-# performs feature marking
-do_mark <- function(mar, scaled, num)
-{
-  if (mar == mar_options[1])
-    return(scaled[,sample(1:ncol(scaled), num),drop=FALSE])
-  if (mar == mar_options[2])
-    return(select_top_cols(scaled, num, var))
-  if (mar == mar_options[3])
-    return(select_top_cols(scaled, num, mean))
-  if (mar == mar_options[4])
-    return(select_top_cols(scaled, num, max))
-}
-
-# options for set selection (marking features)
-mar_options <- c("Random", "Variance", "Mean", "Maximum")
-
 # --------------
 # SET THRESHOLDS
 # --------------
