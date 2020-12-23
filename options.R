@@ -9,6 +9,10 @@ source("interface.R", encoding="UTF-8")
 require("shinydashboard")
 require("shinyjs")
 
+# assign keys and create bibliography
+assign_keys(amazon_keys)
+citations <- bibliography(app_citations)
+
 # create categories and subsets
 init_cat()
 init_sub(name_num_map)
@@ -53,6 +57,7 @@ for (sca in sca_options)
 # all bookmarking IDs for selections and thresholds
 select_ids <- NULL
 thre_ids <- NULL
+selected_chars <- my_empty_list(name_cat)
 
 # empty lists for option boxes, to be presented to the user
 sub_opts <- vector(mode = "list", length = num_cat)
@@ -80,6 +85,7 @@ for (cn in 1:num_cat)
   chars <- order_names[between(cols_unique_gen, 2, num_filters)]
   if (length(chars) < 1)
     chars <- "Unknown"
+  selected_chars[[cat]] <- chars
   
   # filters
   filter_opts[[cn]] <- cat_select_panel(
