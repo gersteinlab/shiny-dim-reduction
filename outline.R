@@ -102,7 +102,7 @@ single_line_eval <- function(single_line, check_warnings = TRUE, check_errors = 
 
 # saves a single object to AWS.s3 - modified from s3save
 # assumes the existence of an object called 'aws_bucket'
-custom_s3save <- function(data, object, bucket) 
+custom_s3save <- function(data, object) 
 {
   tmp <- tempfile(fileext = ".rdata")
   on.exit(unlink(tmp))
@@ -112,7 +112,7 @@ custom_s3save <- function(data, object, bucket)
 
 # loads a single object from AWS.s3 - modified from s3load
 # assumes the existence of an object called 'aws_bucket'
-custom_s3load <- function(object, bucket) 
+custom_s3load <- function(object) 
 {
   tmp <- tempfile(fileext = ".rdata")
   on.exit(unlink(tmp))
