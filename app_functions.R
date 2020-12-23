@@ -50,10 +50,10 @@ range_invalid <- function(value, min, max)
   length(value) != 1 || is.na(value) || is.nan(value) || value < min || value > max
 }
 
-# given a list of numeric vectors, returns make_opt(name, length) for each vector
+# given a list of numeric vectors, returns get_opt(name, length) for each vector
 name_num_map <- function(list_num)
 {
-  mapply(make_opt, names(list_num), lapply(list_num, length), USE.NAMES = FALSE) 
+  mapply(get_opt, names(list_num), lapply(list_num, length), USE.NAMES = FALSE) 
 }
 
 # calculates the number of truncated features given pc_cap, 
