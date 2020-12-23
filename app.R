@@ -449,7 +449,7 @@ server <- function(input, output, session) {
   keep <- reactive({
     keep <- rep(TRUE, nrow(order()))
 
-    for (char in bookmark_char[[input$category]])
+    for (char in selected_chars[[input$category]])
       keep <- keep & (
         order()[[char]] %in% parse_opt(input[[get_select(input$category, char)]]))
 
