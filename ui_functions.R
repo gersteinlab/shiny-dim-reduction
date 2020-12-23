@@ -9,16 +9,16 @@ require("shinyWidgets")
 # INPUT SELECTION
 # ---------------
 
-# formats an element (opt) and the number of times it appears in a vector (samples)
-get_opt <- function(opt, samples) 
+# formats to 'opt (num)'
+get_opt <- function(opt, num) 
 {
-  sprintf("%s (%s)", opt, sum(samples %in% opt))
+  sprintf("%s (%s)", opt, num)
 }
 
-# performs get_opt on every unique member of a vector (samples)
-get_opts <- function(samples) 
+# performs get_opt on every unique member of a vector v
+get_opts <- function(v) 
 {
-  unlist(lapply(unique(samples), function(sample){get_opt(sample, samples)}))
+  unlist(lapply(unique(v), function(sample){get_opt(sample, sum(v %in% sample))}))
 }
 
 # Suppose we have a vector of strings of the form "A (B)", 
