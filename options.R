@@ -30,7 +30,7 @@ init_sub(name_num_map)
 
 # gets the very first file associated with a category, counts the number of rows,
 # and creates an empty metadata table for that category
-getEmptyCatMeta <- function(cat){
+get_empty_cat_meta <- function(cat){
   addr <- make_aws_name(
     cat, "Total", sca_options[1], nor_options[1], 
     rem_perc(fea_options[1]), emb_options[1], vis_options[1], 2, 1)
@@ -40,7 +40,7 @@ getEmptyCatMeta <- function(cat){
 # fills in order_total in the event of missing portions
 for (cat in name_cat)
   if (is.null(order_total[[cat]]))
-    order_total[[cat]] <- getEmptyCatMeta(cat)
+    order_total[[cat]] <- get_empty_cat_meta(cat)
 
 # assigns thresholds (if NULL, return a useful placeholder)
 assign_thre <- function(thre)
