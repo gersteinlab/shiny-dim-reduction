@@ -78,6 +78,20 @@ pc <- function(name)
   sprintf("Component %s", name)
 }
 
+# checks if every member of the vector colors is in the vector custom
+check_custom_colors <- function(colors, custom)
+{
+  present <- TRUE
+  
+  for (color in colors)
+  {
+    if (!(color %in% custom))
+      present <- FALSE
+  }
+  
+  present
+}
+
 # ----------------------
 # GENERAL GRAPHS / TOOLS
 # ----------------------

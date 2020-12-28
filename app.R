@@ -560,13 +560,8 @@ server <- function(input, output, session) {
         colorby() %in% names(custom_color_scales) && input$visualize != "Summarize")
     {
       new <- custom_color_scales[[colorby()]] %>% unlist()
-      present <- TRUE
       
-      for (color in colors())
-        if (!(color %in% names(new)))
-          present <- FALSE
-      
-      if (present)
+      if (check_custom_colors(colors(), names(new)))
         return(new)
     }
     
