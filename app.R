@@ -630,10 +630,8 @@ server <- function(input, output, session) {
       
       downloadData(data)
       
-      if (nrow(data) > upse_feat())
-        data <- data[1:upse_feat(),,drop=FALSE]
-      
-      data <- data %>% set_f1_f2(input$set_f1, input$set_f2) %>% num_nan_binary()
+      data <- truncate_rows(data, upse_feat()) %>%
+        set_f1_f2(input$set_f1, input$set_f2) %>% num_nan_binary()
       
       if (ncol(data) < 1 || nrow(data) < 8)
         return(NULL)
@@ -728,11 +726,8 @@ server <- function(input, output, session) {
       
       downloadData(data)
       
-      if (nrow(data) > heat_feat())
-        data <- data[1:heat_feat(),,drop=FALSE]
-      
-      data <- data[base::order(rowSums(data),decreasing=T),] %>% 
-        set_f1_f2(input$set_f1, input$set_f2)
+      data <- truncate_rows(data, heat_feat()) %>% 
+        sort_row_sums() %>% set_f1_f2(input$set_f1, input$set_f2)
       
       if (ncol(data) < 1 || nrow(data) < 1)
         return(NULL)
@@ -827,11 +822,8 @@ server <- function(input, output, session) {
         get_safe_sub(input$category, subi(), 1)
       
       downloadData(data)
-      
-      if (nrow(data) > dend_feat())
-        data <- data[1:dend_feat(),,drop=FALSE]
-      
-      data <- data %>% set_f1_f2(input$set_f1, input$set_f2)
+
+      data <- truncate_rows(data, dend_feat()) %>% set_f1_f2(input$set_f1, input$set_f2)
       
       if (ncol(data) < 1 || nrow(data) < 1)
         return(NULL)

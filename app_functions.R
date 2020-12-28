@@ -40,6 +40,20 @@ num_nan_binary <- function(data)
   data.frame(data)
 }
 
+# returns the first m rows of data unless m is too big
+truncate_rows <- function(data, m)
+{
+  if (m < nrow(data))
+    return(data[1:m,,drop=FALSE])
+  data
+}
+
+# sort the rows of data by their sums in decreasing order
+sort_row_sums <- function(data)
+{
+  data[base::order(rowSums(data),decreasing=T),,drop=FALSE]
+}
+
 # checks if a value is invalid with respect to a range
 # if given an ordered pair, returns whether either value is invalid
 range_invalid <- function(value, min, max)
