@@ -9,27 +9,9 @@ source("outline.R", encoding="UTF-8")
 
 assign_keys(tester_keys)
 
-
 # -----
 # TESTS
 # -----
-
-# saves an object to Amazon AWS, returning whether the process succeeded
-# assumes the existence of an object called 'aws_bucket'
-save_db <- function(dat, filename){
-  my_amazon_obj <- dat
-  evaluation <- evaluate::evaluate(quote(
-    s3save(my_amazon_obj, bucket=aws_bucket, object=filename)), stop_on_error = 1)
-  my_amazon_obj <- NULL
-  length(evaluation) == 1
-}
-
-# loads an object from Amazon AWS
-# assumes the existence of an object called 'aws_bucket'
-load_db <- function(filename){
-  s3load(filename, aws_bucket)
-  my_amazon_obj
-}
 
 test1 <- function()
 {
