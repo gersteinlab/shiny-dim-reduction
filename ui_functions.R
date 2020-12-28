@@ -194,8 +194,8 @@ cat_select_panel <- function(cat, id, name, options, chosen)
 select_check_panel <- function(choices, cat, char)
 {
   conditionalPanel(
-    sprintf("input.category == '%s' && input.filterby_%s == '%s'", cat, cat, char),
-    check_panel(get_select(cat, char), sprintf("Filter By (%s)", cat), get_opts(choices))
+    sprintf("input.category == '%s' && input.%s == '%s'", cat, id_filter(cat), char),
+    check_panel(id_select(cat, char), sprintf("Filter By (%s)", cat), get_opts(choices))
   )
 }
 
@@ -204,7 +204,7 @@ thre_select_panel <- function(choices, cat, sca)
 {
   conditionalPanel(
     condition = sprintf("input.category == '%s' && input.scale == '%s'", cat, sca),
-    select_panel(get_thre(cat, sca), "Threshold", choices, ceiling(length(choices)/2))
+    select_panel(id_thre(cat, sca), "Threshold", choices, ceiling(length(choices)/2))
   )
 }
 
