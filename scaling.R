@@ -105,8 +105,8 @@ log_scale <- function(data)
 # uses only a fraction of features
 feature_start <- function(data, fraction)
 {
-  features <- floor(fraction * (ncol(data)-pc_cap) + pc_cap)
-  data[,1:features]
+  num_features <- calc_feat(pc_cap, fraction, ncol(data))
+  data[,1:num_features, drop=FALSE]
 }
 
 # performs scaling

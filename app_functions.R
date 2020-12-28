@@ -56,13 +56,6 @@ name_num_map <- function(list_num)
   mapply(get_opt, names(list_num), lapply(list_num, length), USE.NAMES = FALSE) 
 }
 
-# calculates the number of truncated features given pc_cap, 
-# the inputted feature fraction (feat), and the total number of features.
-calc_feat <- function(pc_cap, feat, total)
-{
-  pc_cap + ceiling(feat * (total - pc_cap))
-}
-
 # Useful function for changing "PC 1" to "prcomp 1", getting length, etc.
 pc <- function(name) 
 {
