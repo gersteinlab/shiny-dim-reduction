@@ -21,9 +21,7 @@ server <- function(input, output, session) {
   observeEvent(input$attempt_login, {
     notif("Attempting authentication ...", 1, "default")
     
-    if (length(input$username) == 1 && 
-        (input$username %in% names(user_credentials))
-        && checkpw(input$password, user_credentials[[input$username]]))
+    if (my_auth(input$username, input$password, user_credentials))
     {
       notif("Authentication was successful - welcome!", 3, "message")
       removeModal()
