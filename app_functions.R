@@ -235,6 +235,9 @@ plotly_3d <- function(x, y, z, x_axis, y_axis, z_axis,
 # Creates an UpSetR plot with the desired aesthetic.
 upset_custom <- function(data, legend, nintersects) 
 {
+  if (ncol(data) < 2 || nrow(data) < 8)
+    return(NULL)
+  
   upset(data, nsets = ncol(data), nintersects = nintersects, 
         sets.x.label = "Features Per Factor Level", 
         mainbar.y.label = "Features Per Factor Subset", 
@@ -281,6 +284,9 @@ plotly_heatmap_variance <- function(binary, colors, title, legend, smooth)
 # creates a correlation-based heatmap for sets on plotly
 plotly_heatmap_dendrogram <- function(binary, colors, title, legend, dend)
 {
+  if (nrow(binary) < 1 || ncol(binary) < 1)
+    return(NULL)
+  
   binary[is.na(binary)] <- 0
   heatmaply(
     t(binary),

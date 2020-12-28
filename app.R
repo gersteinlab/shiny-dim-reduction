@@ -619,9 +619,6 @@ server <- function(input, output, session) {
     
     if (input$embedding == "Sets")
     {
-      if (is.null(my_chars())) 
-        return(NULL)
-      
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(), 
                       which(sca_options == input$scale), filterby(), input$category)
       
@@ -632,9 +629,6 @@ server <- function(input, output, session) {
       
       data <- truncate_rows(data, upse_feat()) %>%
         set_f1_f2(input$set_f1, input$set_f2) %>% num_nan_binary()
-      
-      if (ncol(data) < 1 || nrow(data) < 8)
-        return(NULL)
       
       if (ncol(data) == 1)
         return(venn1_custom(data, legend()))
@@ -715,9 +709,6 @@ server <- function(input, output, session) {
     
     if (input$embedding == "Sets")
     {
-      if (is.null(my_chars())) 
-        return(NULL)
-      
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(), 
                       which(sca_options == input$scale), filterby(), input$category)
       
@@ -728,9 +719,6 @@ server <- function(input, output, session) {
       
       data <- truncate_rows(data, heat_feat()) %>% 
         sort_row_sums() %>% set_f1_f2(input$set_f1, input$set_f2)
-      
-      if (ncol(data) < 1 || nrow(data) < 1)
-        return(NULL)
       
       return(plotly_heatmap_variance(data, paint(), title(), legend(), boost()))
     }
@@ -812,9 +800,6 @@ server <- function(input, output, session) {
     
     if (input$embedding == "Sets")
     {
-      if (is.null(my_chars())) 
-        return(NULL)
-      
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(), 
                       which(sca_options == input$scale), filterby(), input$category)
       
@@ -824,9 +809,6 @@ server <- function(input, output, session) {
       downloadData(data)
 
       data <- truncate_rows(data, dend_feat()) %>% set_f1_f2(input$set_f1, input$set_f2)
-      
-      if (ncol(data) < 1 || nrow(data) < 1)
-        return(NULL)
       
       return(plotly_heatmap_dendrogram(data, paint(), title(), legend(), boost()))
     }
