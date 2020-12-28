@@ -86,7 +86,7 @@ for (cn in 1:num_cat)
   # subsets
   subsets <- sub_groups[[cat]]
   sub_opts[[cn]] <- cat_select_panel(
-    cat, sprintf("subsetby_%s", cat), sprintf("Feature Subset (%s)", cat), subsets, 1)
+    cat, id_subset(cat), sprintf("Feature Subset (%s)", cat), subsets, 1)
   
   # characteristics
   chars <- order_names[between(cols_unique_gen, 2, num_filters)]
@@ -96,19 +96,19 @@ for (cn in 1:num_cat)
   
   # filters
   filter_opts[[cn]] <- cat_select_panel(
-    cat, sprintf("filterby_%s", cat), sprintf("Current Filter (%s)", cat), chars, 1)
+    cat, id_filter(cat), sprintf("Current Filter (%s)", cat), chars, 1)
   
   # colors
   color_opts[[cn]] <- cat_select_panel(
-    cat, sprintf("colorby_%s", cat), sprintf("Color By (%s)", cat), chars, 1)
+    cat, id_color(cat), sprintf("Color By (%s)", cat), chars, 1)
   
   # shapes
   shape_opts[[cn]] <- cat_select_panel(
-    cat, sprintf("shapeby_%s", cat), sprintf("Shape By (%s)", cat), chars, 2)
+    cat, id_shape(cat), sprintf("Shape By (%s)", cat), chars, 2)
   
   # labels
   label_opts[[cn]] <- cat_select_panel(
-    cat, sprintf("labelby_%s", cat), sprintf("Label By (%s)", cat), chars, 1)
+    cat, id_label(cat), sprintf("Label By (%s)", cat), chars, 1)
   
   # selections
   for (char in chars)
@@ -142,11 +142,11 @@ picker_input_ids <- c(
   "visualize",
   "perplexity",
   "palette",
-  sprintf("subsetby_%s", name_cat),
-  sprintf("colorby_%s", name_cat),
-  sprintf("shapeby_%s", name_cat),
-  sprintf("labelby_%s", name_cat),
-  sprintf("filterby_%s", name_cat),
+  id_subset(name_cat),
+  id_color(name_cat),
+  id_shape(name_cat),
+  id_label(name_cat),
+  id_filter(name_cat),
   select_ids, 
   thre_ids
 )
