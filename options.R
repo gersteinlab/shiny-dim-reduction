@@ -219,7 +219,7 @@ dataSelectionMenu <- menuItem(
   sub_opts,
   select_panel("embedding", "Method of Dimensionality Reduction", emb_options),
   conditionalPanel(
-    repJs("[EMB] == 'PCA' || [EMB] == 'VAE' || [EMB] == 'UMAP'"),
+    condition = "output.visualize_cond",
     select_panel("visualize", "Method of Visualization", vis_options)
   ),
   select_panel("scale", "Scale", sca_options),
@@ -228,7 +228,7 @@ dataSelectionMenu <- menuItem(
     select_panel("normalize", "Normalization", nor_options),
     select_panel("features", "Percentage of Features Used", fea_options),
     conditionalPanel(
-      repJs("[EMB] == 'PHATE' || [VIS] == 'tSNE' || ([EMB] == 'UMAP' && [VIS] != '[SUM]')"),
+      condition = "output.perplexity_cond",
       select_panel("perplexity", "Perplexity", perplexity_types, 
                    ceiling(length(perplexity_types)/2))
     )
@@ -240,17 +240,17 @@ dataSelectionMenu <- menuItem(
       numericRangeInput("set_f1", "Fraction of Samples", c(0.5,1)),
       numericRangeInput("set_f2", "Number of Characteristics", c(1,num_filters)),
       conditionalPanel(
-        repJs("[PAN] == '[PAN1]'"),
+        condition = "output.set_feat_upse_cond",
         numericInput("set_feat_upse", "Maximum Features", 
                      value=max_upse, min=pc_cap, max=2^24)
       ),
       conditionalPanel(
-        repJs("[PAN] == '[PAN2]'"),
+        condition = "output.set_feat_heat_cond",
         numericInput("set_feat_heat", "Maximum Features", 
                      value=max_heat, min=pc_cap, max=2^24)
       ),
       conditionalPanel(
-        repJs("[PAN] == '[PAN3]'"),
+        condition = "output.set_feat_dend_cond",
         numericInput("set_feat_dend", "Maximum Features", 
                      value=max_dend, min=pc_cap, max=2^24)
       )
@@ -264,18 +264,18 @@ settingsMenu <- menuItem(
   select_panel("palette", "Color Palette", pal_options),
   numericInput("height", "Graph Height", value=graph_height, min=1, max=4000),
   conditionalPanel(
-    repJs("[PAN] == '[PAN1]' && [EMB] == 'Sets'"),
+    condition = "output.nintersect_cond",
     numericInput("nintersect", "Number of Columns", value=40, min=3, max=2^num_filters)
   ),
   conditionalPanel(
-    repJs("[VIS] == 'Explore' && ([EMB] == 'PCA' || [EMB] == 'VAE' || [EMB] == 'UMAP')"),
+    condition = "output.pc_sliders_cond",
     pc_slider(1, pc_cap),
     conditionalPanel(
-      repJs("[PAN] == '[PAN1]' || [PAN] == '[PAN2]' || [PAN] == '[PAN3]'"), 
+      condition = "output.pc_slider2_cond", 
       pc_slider(2, pc_cap)
     ),
     conditionalPanel(
-      condition = repJs("[PAN] == '[PAN3]'"),
+      condition = "output.pc_slider3_cond",
       pc_slider(3, pc_cap)
     )
   )
@@ -284,23 +284,24 @@ settingsMenu <- menuItem(
 filtersMenu <- menuItem(
   "Filters",
   conditionalPanel(
-    condition = "input.embedding != 'Sets'",
+    condition = "input.embedding != 'Sets' &&
+    (input.visualize != 'Summarize' || input.embedding == 'PHATE')",
     expand_cond_panel(
-      condition = "input.visualize != 'Summarize' || input.embedding == 'PHATE'",
+      condition = "true",
       color_opts
     ),
     expand_cond_panel(
-      repJs("[PAN] == '[PAN1]' && ([EMB] == 'PHATE' || [VIS] != '[SUM')"),
+      condition = "output.shape_opts_cond",
       shape_opts
     ),
     expand_cond_panel(
-      repJs("[PAN] == '[PAN2]' && [PAN] == '[PAN3]' && 
-      ([EMB] == 'PHATE' || [VIS] != 'SUM')"),
+      condition = "output.label_opts_cond",
       label_opts
     )
   ),
   expand_cond_panel(
-    repJs("[VIS] != '[SUM]' || [EMB] == 'Sets' || [EMB] == 'PHATE'"),
+    condition = "input.embedding == 'Sets' ||
+    (input.visualize != 'Summarize' || input.embedding == 'PHATE')",
     filter_opts,
     select_opts
   )

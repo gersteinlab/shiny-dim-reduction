@@ -76,6 +76,68 @@ server <- function(input, output, session) {
       shinyjs::show("legend_out_spin")
   })
   
+  # conditions that are too long to calculate otherwise
+  output$visualize_cond <- reactive({
+    input$embedding %in% c("PCA", "VAE", "UMAP")
+  })
+  
+  output$perplexity_cond <- reactive({
+    input$embedding == "PHATE" || input$visualize == "tSNE" || (
+      input$embedding == "UMAP" && input$visualize != "Summarize")
+  })
+  
+  output$set_feat_upse_cond <- reactive({
+    input$plotPanels == pan_options[1]
+  })
+  
+  output$set_feat_heat_cond <- reactive({
+    input$plotPanels == pan_options[2]
+  })
+  
+  output$set_feat_dend_cond <- reactive({
+    input$plotPanels == pan_options[3]
+  })
+  
+  output$nintersect_cond <- reactive({
+    input$plotPanels == pan_options[1] && input$embedding == "Sets"
+  })
+  
+  output$pc_sliders_cond <- reactive({
+    input$visualize == "Explore" && (input$embedding %in% c("PCA", "VAE", "UMAP"))
+  })
+  
+  output$pc_slider2_cond <- reactive({
+    input$plotPanels %in% pan_options[1:3]
+  })
+  
+  output$pc_slider3_cond <- reactive({
+    input$plotPanels == pan_options[3]
+  })
+  
+  output$shape_opts_cond <- reactive({
+    input$plotPanels == pan_options[1]
+  })
+  
+  output$label_opts_cond <- reactive({
+    input$plotPanels %in% pan_options[2:3]
+  })
+  
+  for (cond in c(
+    "visualize_cond",
+    "perplexity_cond",
+    "set_feat_upse_cond",
+    "set_feat_heat_cond",
+    "set_feat_dend_cond",
+    "nintersect_cond", 
+    "pc_sliders_cond",
+    "pc_slider2_cond",
+    "pc_slider3_cond",
+    "shape_opts_cond",
+    "label_opts_cond"))
+  {
+    outputOptions(output, cond, suspendWhenHidden = FALSE)
+  }
+  
   # constants for reactive plotting
   default <- 1
   
