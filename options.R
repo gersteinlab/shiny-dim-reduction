@@ -113,14 +113,14 @@ for (cn in 1:num_cat)
   # selections
   for (char in chars)
   {
-    select_ids <- c(select_ids, get_select(cat, char))
+    select_ids <- c(select_ids, id_select(cat, char))
     select_opts[[length(select_ids)]] <- select_check_panel(order_gen[[char]], cat, char)
   }
   
   # thresholds
   for (sca in sca_options)
   {
-    thre_ids <- c(thre_ids, get_thre(cat, sca))
+    thre_ids <- c(thre_ids, id_thre(cat, sca))
     thre_opts[[length(thre_ids)]] <- thre_select_panel(thre_seqs[[sca]][[cat]], cat, sca)
   }
 }
