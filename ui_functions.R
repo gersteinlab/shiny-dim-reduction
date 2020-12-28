@@ -31,14 +31,44 @@ parse_opt <- function(str, ind=1)
   strsplit(str, "( \\(|\\))") %>% lapply(function(i){i[ind]}) %>% unlist()
 }
 
+# Useful for finding subset IDs
+id_subset <- function(category)
+{
+  sprintf("subsetby_%s", category)
+}
+
+# Useful for finding color IDs
+id_color <- function(category)
+{
+  sprintf("colorby_%s", category)
+}
+
+# Useful for finding shape IDs
+id_shape <- function(category)
+{
+  sprintf("shapeby_%s", category)
+}
+
+# Useful for finding label IDs
+id_label <- function(category)
+{
+  sprintf("labelby_%s", category)
+}
+
+# Useful for finding filter IDs
+id_filter <- function(category)
+{
+  sprintf("filterby_%s", category)
+}
+
 # Useful for finding select IDs
-get_select <- function(category, character) 
+id_select <- function(category, character) 
 {
   sprintf("selectby_%s_%s", category, character)
 }
 
 # Useful for finding thre IDs
-get_thre <- function(category, scale) 
+id_thre <- function(category, scale) 
 {
   sprintf("thre_%s_%s", category, scale)
 }
