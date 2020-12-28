@@ -43,7 +43,7 @@ my_auth <- function(username, password, user_credentials)
 {
   length(username) == 1 && length(password) == 1 && is.character(username) &&
     is.character(password) && (username %in% names(user_credentials)) && 
-    checkpw(input$password, user_credentials[[input$username]])
+    checkpw(password, user_credentials[[username]])
 }
 
 # fixed pattern replacement in a vector of strings
