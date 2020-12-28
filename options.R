@@ -9,9 +9,16 @@ source("interface.R", encoding="UTF-8")
 require("shinydashboard")
 require("shinyjs")
 
+# convert perplexity types to character
+perplexity_types <- as.character(perplexity_types)
+
 # assign keys and create bibliography
 assign_keys(amazon_keys)
 citations <- bibliography(app_citations)
+
+# creates a print version of the instructions / citations
+print_instructions <- rem_html_tags(instructions)
+print_citations <- rem_html_tags(citations)
 
 # create categories and subsets
 init_cat()

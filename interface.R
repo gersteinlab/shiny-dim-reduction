@@ -325,7 +325,3 @@ get_from_dir("app_title", "Dimensionality Reduction Tool")
 get_from_dir("app_citations", "No data citations could be found.")
 get_from_dir("user_credentials")
 get_from_dir("custom_color_scales")
-
-# creates a print version of the instructions / citations
-print_instructions <- rem_html_tags(instructions)
-print_citations <- rem_html_tags(citations)

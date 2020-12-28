@@ -419,7 +419,7 @@ server <- function(input, output, session) {
   
   subi <- reactive(parse_opt(input[[sprintf("subsetby_%s", input$category)]]))
   feat <- reactive(rem_perc(input$features))
-  per_ind <- reactive(which(as.character(perplexity_types) == input$perplexity))
+  per_ind <- reactive(which(perplexity_types == input$perplexity))
   notify <- reactive(notifq() && running())
   
   # filter-related reactives from user input selections
