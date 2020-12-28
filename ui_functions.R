@@ -85,6 +85,12 @@ expand_cond_panel <- function(condition, ...)
   do.call(conditionalPanel, c(condition = condition, ...))
 }
 
+# removes all parts of the form <tag> from a text
+rem_html_tags <- function(html)
+{
+  regStr(html, "<[^>]*>", "")
+}
+
 # parses several terms in a string intended to be JS
 repJs <- function(string)
 {

@@ -392,21 +392,17 @@ server <- function(input, output, session) {
   
   # download button for instructions
   output$downloadInstructions <- downloadHandler(
-    filename = function(){
-      "instructions.txt"
-    },
+    filename = "instructions.txt",
     content = function(file){
-      writeLines(regStr(instructions, "<[^>]*>", ""), file)
+      writeLines(print_instructions, file)
     }
   )
   
   # download button for citations
   output$downloadCitations <- downloadHandler(
-    filename = function(){
-      "citations.txt"
-    },
+    filename = "citations.txt",
     content = function(file){
-      writeLines(regStr(citations, "<[^>]*>", ""), file)
+      writeLines(print_citations, file)
     }
   )
   
