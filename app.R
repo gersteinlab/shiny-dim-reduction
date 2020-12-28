@@ -504,11 +504,11 @@ server <- function(input, output, session) {
   # calculate which samples to keep
   keep <- reactive({
     keep <- rep(TRUE, nrow(order()))
-
+    
     for (char in selected_chars[[input$category]])
       keep <- keep & (
         order()[[char]] %in% parse_opt(input[[id_select(input$category, char)]]))
-
+    
     keep
   })
   
@@ -1023,7 +1023,7 @@ server <- function(input, output, session) {
     # update all input types accordingly
     picker_input_data <- session_data[["pickerInput"]]
     for (name in names(picker_input_data))
-       updatePickerInput(session, name, selected = picker_input_data[[name]])
+      updatePickerInput(session, name, selected = picker_input_data[[name]])
     
     numeric_input_data <- session_data[["numericInput"]]
     for (name in names(numeric_input_data))
