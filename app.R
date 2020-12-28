@@ -417,27 +417,27 @@ server <- function(input, output, session) {
   notifq <- reactive("Notifications" %in% input$sMenu)
   not_rev <- reactive("Uninverted Colors" %in% input$sMenu)
   
-  subi <- reactive(parse_opt(input[[sprintf("subsetby_%s", input$category)]]))
+  subi <- reactive(parse_opt(input[[id_subset(input$category)]]))
   feat <- reactive(rem_perc(input$features))
   per_ind <- reactive(which(perplexity_types == input$perplexity))
   notify <- reactive(notifq() && running())
   
   # filter-related reactives from user input selections
   order <- reactive(order_total[[input$category]])
-  colorby <- reactive(input[[sprintf("colorby_%s", input$category)]])
-  shapeby <- reactive(input[[sprintf("shapeby_%s", input$category)]])
-  labelby <- reactive(input[[sprintf("labelby_%s", input$category)]])
-  filterby <- reactive(input[[sprintf("filterby_%s", input$category)]])
+  colorby <- reactive(input[[id_color(input$category)]])
+  shapeby <- reactive(input[[id_shape(input$category)]])
+  labelby <- reactive(input[[id_label(input$category)]])
+  filterby <- reactive(input[[id_filter(input$category)]])
   thre_ind <- reactive({
     which(thre_seqs[[input$scale]][[input$category]] == 
-            input[[get_thre(input$category, input$scale)]])
+            input[[id_thre(input$category, input$scale)]])
   })
   
   # reactives that follow from filter-related reactives
   colors <- reactive(order()[keep(), colorby()])
   shapes <- reactive(order()[keep(), shapeby()])
   labels <- reactive(sprintf("%s: %s", labelby(), order()[keep(), labelby()]))
-  my_chars <- reactive(parse_opt(input[[get_select(input$category, filterby())]]))
+  my_chars <- reactive(parse_opt(input[[id_select(input$category, filterby())]]))
   
   # calculate which samples to keep
   keep <- reactive({
@@ -445,24 +445,18 @@ server <- function(input, output, session) {
 
     for (char in selected_chars[[input$category]])
       keep <- keep & (
-        order()[[char]] %in% parse_opt(input[[get_select(input$category, char)]]))
+        order()[[char]] %in% parse_opt(input[[id_select(input$category, char)]]))
 
     keep
   })
   
   # the number of features before dimensionality reduction
-  features <- reactive({
-    if (subi() == "Total")
-      num_feat <- categories[[input$category]]
-    else
-    {
-      for (dec_group in decorations)
-      {
-        if (input$category %in% dec_group$Categories)
-          num_feat <- length(dec_group$Subsets[[subi()]])
-      }
-    }
-    calc_feat(pc_cap, feat()/100, num_feat)
+  num_feat <- reactive({
+    ifelse(
+      subi() == "Total",
+      categories[[input$category]],
+      length(get_decor_subset(input$category, subi()))
+    ) %>% calc_feat(pc_cap, feat()/100, .)
   })
   
   # the title of the plot
@@ -488,7 +482,7 @@ server <- function(input, output, session) {
     sprintf("%s%s on %s.%s (%s Samples, %s Features%s)", 
             ifelse(input$embedding == "PHATE", "", 
                    repStr(input$visualize, vis_options, vis_nouns)), 
-            input$embedding, input$category, subi(), sum(keep()), features(), nei)
+            input$embedding, input$category, subi(), sum(keep()), num_feat(), nei)
   })
   
   # the title of the plot
