@@ -221,11 +221,11 @@ plotly_3d <- function(x, y, z, x_axis, y_axis, z_axis,
             "<b>%{text}</b>",
             "<br>(%{x:.4f}, %{y:.4f}, %{z:.4f})",
             "<extra></extra>"), type="scatter3d") %>% layout(
-            title = title,
-            scene = list(xaxis = list(title = x_axis),
-                         yaxis = list(title = y_axis),
-                         zaxis = list(title = z_axis)),
-            showlegend = legend)
+              title = title,
+              scene = list(xaxis = list(title = x_axis),
+                           yaxis = list(title = y_axis),
+                           zaxis = list(title = z_axis)),
+              showlegend = legend)
 }
 
 # -----------------------
