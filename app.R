@@ -19,18 +19,18 @@ server <- function(input, output, session) {
   
   # if the user attempts to log in ...
   observeEvent(input$attempt_login, {
-    notif("Attempting authentication ...", 1, "default")
+    notif("Attempting authentication ...", "default")
     
     if (my_auth(input$username, input$password, user_credentials))
     {
-      notif("Authentication was successful - welcome!", 3, "message")
+      notif("Authentication was successful - welcome!", "message")
       removeModal()
       authenticated(1)
     }
     else
     {
       Sys.sleep(0.3)
-      notif("Authentication was unsuccessful.", 2, "error")
+      notif("Authentication was unsuccessful.", "error")
     }
   })
   
@@ -122,21 +122,8 @@ server <- function(input, output, session) {
     input$plotPanels %in% pan_options[2:3]
   })
   
-  for (cond in c(
-    "visualize_cond",
-    "perplexity_cond",
-    "set_feat_upse_cond",
-    "set_feat_heat_cond",
-    "set_feat_dend_cond",
-    "nintersect_cond", 
-    "pc_sliders_cond",
-    "pc_slider2_cond",
-    "pc_slider3_cond",
-    "shape_opts_cond",
-    "label_opts_cond"))
-  {
+  for (cond in output_conditions)
     outputOptions(output, cond, suspendWhenHidden = FALSE)
-  }
   
   notif <- reactive({
     function(message, form)

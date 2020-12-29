@@ -210,6 +210,19 @@ bookmark_exclude_vector <- c(
   tabset_panel_ids
 )
 
+output_conditions <- c(
+  "visualize_cond",
+  "perplexity_cond",
+  "set_feat_upse_cond",
+  "set_feat_heat_cond",
+  "set_feat_dend_cond",
+  "nintersect_cond", 
+  "pc_sliders_cond",
+  "pc_slider2_cond",
+  "pc_slider3_cond",
+  "shape_opts_cond",
+  "label_opts_cond")
+
 # ---------------
 # ASSEMBLE THE UI
 # ---------------
