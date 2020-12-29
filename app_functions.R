@@ -101,6 +101,20 @@ smallest_missing <- function(vec)
   small
 }
 
+# given a vector of values, generate a table for the legend
+generate_legend_table <- function(vec)
+{
+  unique_vals <- unique(vec)
+  
+  if (length(unique_vals) < 1)
+    return(NULL)
+  
+  table <- cbind.data.frame(1:length(unique_vals), unique_vals)
+  colnames(table) <- c("Number", "Value")
+  
+  table
+}
+
 # ----------------------
 # GENERAL GRAPHS / TOOLS
 # ----------------------
