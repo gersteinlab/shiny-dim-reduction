@@ -364,10 +364,8 @@ ui <- function(request){
         tabPanel(pan_options[2], uiOutput("plotly2UI")),
         tabPanel(pan_options[3], uiOutput("plotly3UI")),
         tabPanel(pan_options[4], uiOutput("beeswarmUI")),
-        tabPanel("Numeric Data", id="num_data",
-                 DTOutput("num_data_table", width="100%") %>% my_spin()),
-        tabPanel("Metadata", id="metadata",
-                 DTOutput("metadata_table", width="100%") %>% my_spin())
+        tabPanel("Numeric Data", uiOutput("num_dataUI")),
+        tabPanel("Metadata", uiOutput("metadataUI"))
       ),
       box(
         title = "Documentation",

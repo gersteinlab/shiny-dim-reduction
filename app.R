@@ -980,9 +980,7 @@ Possible reasons:<br>
       num_sessions <- load_db("Sessions/num_sessions.rds")
     
     # find a session ID that is not used
-    i <- 1
-    while (i %in% num_sessions)
-      i <- i+1
+    i <- smallest_missing(num_sessions)
     
     # add the session ID to the list and save the session
     save_db(c(num_sessions, i), "Sessions/num_sessions.rds")
