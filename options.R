@@ -210,6 +210,14 @@ bookmark_exclude_vector <- c(
   tabset_panel_ids
 )
 
+session_data_template <- list(
+  "pickerInput"=list(),
+  "numericInput"=list(),
+  "numericRangeInput"=list(),
+  "sliderInput"=list(),
+  "tabsetPanel"=list()
+)
+
 output_conditions <- c(
   "visualize_cond",
   "perplexity_cond",

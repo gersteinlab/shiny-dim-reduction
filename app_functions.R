@@ -92,23 +92,38 @@ check_custom_colors <- function(colors, custom)
   present
 }
 
+# find the smallest positive integer not in the vector
+smallest_missing <- function(vec)
+{
+  small <- 1
+  while (small %in% vec)
+    small <- small+1
+  small
+}
+
 # ----------------------
 # GENERAL GRAPHS / TOOLS
 # ----------------------
 
-make_transparent <- function(color, alpha = 0.5)
+# adds a transparency of alpha = 0.5 to a color
+make_transparent <- function(color)
 {
   sprintf("%s44", substr(color, start=1, stop=7))
 }
+
+# bulldog blue
+single_color_seq <- "#00356B"
+# adds harvard crimson
+double_color_seq <- c("#C90016", single_color_seq)
 
 # Generates a color sequence of length n_colors with the given type.
 # "Base"=c("Rainbow", "Heat", "Terrain", "Topography", "CM"),
 # "Viridis"=c("Viridis", "Magma", "Plasma", "Inferno", "Cividis")
 color_seq <- function(n_colors, color_type = "Rainbow", reverse = FALSE) 
 {
-  # returns bulldog blue if only one color is needed
+  # returns single color seq if only one color needed
   if (n_colors < 2)
-    return("#00356B")
+    return(single_color_seq)
   
   if (color_type == "Heat")
     return(heat.colors(n_colors, rev=reverse))
