@@ -375,7 +375,7 @@ ui <- function(request){
         downloadButton('downloadInstructions', 'Instructions'),
         downloadButton('downloadCitations', 'Citations')
       ),
-      div(id="legend_out_spin", DTOutput("legend_out", width="100%") %>% my_spin())
+      uiOutput("legendUI")
     )
   )
 }

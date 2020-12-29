@@ -87,13 +87,6 @@ server <- function(input, output, session) {
     }
   )
   
-  observeEvent(input$sMenu, {
-    if ("Embed Legend" %in% input$sMenu)
-      shinyjs::hide("legend_out_spin")
-    else
-      shinyjs::show("legend_out_spin")
-  })
-  
   # logical conditions too complicated to hard-code
   output$visualize_cond <- reactive({
     input$embedding %in% c("PCA", "VAE", "UMAP")
@@ -843,7 +836,20 @@ Possible reasons:<br>
     my_datatable(data.frame(order()[keep(),]))
   })
   
-  # render panels
+  legend_current <- reactiveVal()
+  output$legend_out <- renderDT({
+    if (!authenticated() || legend()) 
+      return(NULL)
+    
+    if (running())
+      return(my_datatable(legend_data()))
+    else
+      return(my_datatable(legend_current()))
+  })
+  
+  # ------------------------
+  # PRESENT DYNAMIC ELEMENTS
+  # ------------------------
   output$ggplot2UI <- renderUI({
     plotOutput("ggplot2_out", width="100%", height=height()) %>% my_spin()
   })
@@ -868,11 +874,14 @@ Possible reasons:<br>
     DTOutput("metadata_table", width="100%", height=height()) %>% my_spin()
   })
   
-  # other outputs
   output$plainTitleUI <- renderUI({
     if (title_access())
       return("")
     return(HTML(sprintf("<h3><b>Title:</b> %s</h3>", title_text())))
+  })
+  
+  output$legendUI <- renderUI({
+    DTOutput("legend_out", width="100%") %>% my_spin()
   })
   
   output$downloadData <- downloadHandler(
@@ -896,17 +905,6 @@ Possible reasons:<br>
       write.csv(order()[keep(),], file)
     }
   )
-  
-  legend_current <- reactiveVal()
-  output$legend_out <- renderDT({
-    if (!authenticated() || legend()) 
-      return(NULL)
-    
-    if (running())
-      return(my_datatable(legend_data()))
-    else
-      return(my_datatable(legend_current()))
-  })
   
   # -----------
   # BOOKMARKING
