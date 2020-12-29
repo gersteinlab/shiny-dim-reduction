@@ -4,33 +4,43 @@
 
 source("options.R", encoding="UTF-8")
 
-# ------------------------------------------
-# REACTIVE SERVER: INITIALIZATION, OBSERVERS
-# ------------------------------------------
+# ------------------------------
+# REACTIVE SERVER INITIALIZATION
+# ------------------------------
+
+auth_default <- TRUE # is the user already authenticated?
+run_default <- TRUE # should plots generate automatically?
 
 server <- function(input, output, session) {
-  # performs setup for authentication
-  auth_default <- 1
+  # set up authentication
   authenticated <- reactiveVal(auth_default)
   if (!auth_default)
     showModal(authenticator_modal())
-  shinyjs::runjs(no_autofill)
-  addClass("password", "my-hidden-text")
+  shinyjs::runjs(no_autofill) # prevent google from autocompleting passwords
+  addClass("password", "my-hidden-text") # hide password text to start
   
-  # if the user attempts to log in ...
+  # set up control for reactive plotting algorithm
+  running <- reactiveVal(run_default)
+  if (run_default)
+    shinyjs::hide("start")
+  else
+    shinyjs::hide("stop")
+  
+  # handle login attempts
   observeEvent(input$attempt_login, {
-    notif("Attempting authentication ...", "default")
+    notification("Attempting authentication ...", 3, "default")
     
     if (my_auth(input$username, input$password, user_credentials))
     {
-      notif("Authentication was successful - welcome!", "message")
+      notification("Authentication was successful - welcome!", 3, "message")
       removeModal()
-      authenticated(1)
+      authenticated(TRUE)
     }
     else
     {
-      Sys.sleep(0.3)
-      notif("Authentication was unsuccessful.", "error")
+      Sys.sleep(0.5) # prevent repeated attempts too quickly
+      notification("Authentication was unsuccessful.", 6, "error")
+      authenticated(FALSE)
     }
   })
   
@@ -52,23 +62,31 @@ server <- function(input, output, session) {
     }
   })
   
-  # shows instructions
+  # ----------------
+  # DYNAMIC UI LOGIC
+  # ----------------
   observeEvent(input$instructions, {
-    showModal(modalDialog(
-      title = HTML("<b>Instructions</b>"), 
-      HTML(instructions)
-    ))
+    showModal(modalDialog(title = HTML("<b>Instructions</b>"), HTML(instructions)))
   })
   
-  # shows citations
   observeEvent(input$citations, {
-    showModal(modalDialog(
-      title = HTML("<b>Citations</b>"), 
-      HTML(citations)
-    ))
+    showModal(modalDialog(title = HTML("<b>Citations</b>"), HTML(citations)))
   })
   
-  # toggles legend table
+  output$downloadInstructions <- downloadHandler(
+    filename = "instructions.txt",
+    content = function(file){
+      writeLines(print_instructions, file)
+    }
+  )
+  
+  output$downloadCitations <- downloadHandler(
+    filename = "citations.txt",
+    content = function(file){
+      writeLines(print_citations, file)
+    }
+  )
+  
   observeEvent(input$sMenu, {
     if ("Embed Legend" %in% input$sMenu)
       shinyjs::hide("legend_out_spin")
@@ -76,7 +94,7 @@ server <- function(input, output, session) {
       shinyjs::show("legend_out_spin")
   })
   
-  # conditions that are too long to calculate otherwise
+  # logical conditions too complicated to hard-code
   output$visualize_cond <- reactive({
     input$embedding %in% c("PCA", "VAE", "UMAP")
   })
@@ -125,367 +143,83 @@ server <- function(input, output, session) {
   for (cond in output_conditions)
     outputOptions(output, cond, suspendWhenHidden = FALSE)
   
-  notif <- reactive({
-    function(message, form)
-    {
-      if (running())
-        notification(message, input$notif_time, form)
-    }
-  })
-  
-  # prints a message once a plot begins generating.
-  plot_start <- function(numPlots)
+  # reactive function, backbone of dynamic notification system
+  notif <- function(message, form)
   {
-    notif()(sprintf("Generating Plot #%s:<br>
-Please suspend plotting or wait for plotting to
-finish before attempting a new configuration.", numPlots), "default")
+    if (running())
+      notification(message, input$notif_time, form)
   }
   
-  # prints a success message once a plot has been completed.
-  # note: start is the time when plotting begins, which can be found with Sys.time().
-  plot_success <- function(delta_time) 
-  {
-    notif()(sprintf("Plot generation was successful.<br>
-Seconds elapsed: %s", delta_time), "message")
-  }
-  
-  # prints a failure message once a plot has been completed.
-  plot_fail <- function() 
-  {
-    notif()("Plot generation failed.<br>
-Possible reasons:<br>
-(1) invalid configuration<br>
-(2) empty dataset", "error")
-  }
-  
-  # constants for reactive plotting
-  default <- 1
-  
-  running <- reactiveVal(default)
-  if (default)
-    shinyjs::hide("start")
-  else
-    shinyjs::hide("stop")
-  
-  # starts the reactive plotting algorithm
-  observeEvent(input$start, {
-    shinyjs::show("stop")
-    running(1)
-    shinyjs::hide("start")
-  })
-  
-  # suspends the reactive plotting algorithm
-  observeEvent(input$stop, {
-    shinyjs::show("start")
-    running(0)
-    shinyjs::hide("stop")
-    
-    if (input$plotPanels == pan_options[1])
-      ggplot2_current(ggplot2_data())
-    if (input$plotPanels == pan_options[2])
-      plotly2_current(plotly2_data())
-    if (input$plotPanels == pan_options[3])
-      plotly3_current(plotly3_data())
-    if (input$plotPanels == pan_options[4])
-      beeswarm_current(beeswarm_data())
-    legend_current(legend_data())
-  })
-  
-  # manages height and numPlots
-  numPlots <- reactiveVal(1)
+  # input validation
   height <- reactive({
     if (range_invalid(input$height, 1, 4000))
     {
-      notif()("Warning: Graph height is not in [1, 4000].", "warning")
+      notif("Warning: Graph height is not in [1, 4000].", "warning")
       return(graph_height)
     }
     
     round(input$height, digits=0)
   })
   
-  # validates input
   upse_feat <- reactive({
     if (range_invalid(input$set_feat_upse, pc_cap, 2^24))
     {
-      notif()("Warning: Maximum Features is not in [pc_cap,2^24].", "warning")
+      notif("Warning: Maximum Features is not in [pc_cap,2^24].", "warning")
       return(max_upse)
     }
     
     round(input$set_feat_upse, digits=0)
   })
   
-  # validates input
   heat_feat <- reactive({
     if (range_invalid(input$set_feat_heat, pc_cap, 2^24))
     {
-      notif()("Warning: Maximum Features is not in [pc_cap,2^24].", "warning")
+      notif("Warning: Maximum Features is not in [pc_cap,2^24].", "warning")
       return(max_heat)
     }
     
     round(input$set_feat_heat, digits=0)
   })
   
-  # validates input
   dend_feat <- reactive({
     if (range_invalid(input$set_feat_dend, pc_cap, 2^24))
     {
-      notif()("Warning: Maximum Features is not in [pc_cap,2^24].", "warning")
+      notif("Warning: Maximum Features is not in [pc_cap,2^24].", "warning")
       return(max_dend)
     }
     
     round(input$set_feat_dend, digits=0)
   })
   
-  # validates input
   nintersect <- reactive({
     if (range_invalid(input$nintersect, 3, 2^num_filters))
     {
-      notif()("Warning: Number of Columns is not in [3,2^num_filters].", "warning")
+      notif("Warning: Number of Columns is not in [3,2^num_filters].", "warning")
       return(40)
     }
     
     round(input$nintersect, digits=0)
   })
   
-  # validates input
   bar_frac <- reactive({
     if (range_invalid(input$bar_frac, 0, 1))
     {
-      notif()("Warning: Bar Fraction is not in [0,1].", "warning")
+      notif("Warning: Bar Fraction is not in [0,1].", "warning")
       return(0.5)
     }
     
     input$bar_frac
   })
   
-  # validates input
   observeEvent(input$set_f1, {
     if (range_invalid(input$set_f1, 0, 1))
-      notif()("Warning: Fraction of Samples is not in [0,1].", "warning")
+      notif("Warning: Fraction of Samples is not in [0,1].", "warning")
   })
   
-  # validates input
   observeEvent(input$set_f2, {
     if (range_invalid(input$set_f2, 0, num_filters))
-      notif()("Warning: Number of Characteristics is not in [0,num_filters].", "warning")
+      notif("Warning: Number of Characteristics is not in [0,num_filters].", "warning")
   })
-  
-  # -------
-  # OUTPUTS
-  # -------
-  
-  # renders ggplot2 output
-  output$ggplot2UI <- renderUI({
-    plotOutput("ggplot2_out", width="100%", height=height()) %>% my_spin()
-  })
-  
-  # renders plotly2 output
-  output$plotly2UI <- renderUI({
-    plotlyOutput("plotly2_out", width="100%", height=height()) %>% my_spin()
-  })
-  
-  # renders plotly3 output
-  output$plotly3UI <- renderUI({
-    plotlyOutput("plotly3_out", width="100%", height=height()) %>% my_spin()
-  })
-  
-  # renders beeswarm output
-  output$beeswarmUI <- renderUI({
-    plotOutput("beeswarm_out", width="100%", height=height()) %>% my_spin()
-  })
-  
-  # renders the numeric data table reactively
-  output$num_data_table <- renderDT({
-    if (!authenticated())
-      return(my_datatable(NULL))
-    
-    my_datatable(data.frame(downloadData()))
-  })
-  
-  # renders the metadata table interactively
-  output$metadata_table <- renderDT({
-    if (!authenticated())
-      return(my_datatable(NULL))
-    
-    my_datatable(data.frame(order()[keep(),]))
-  })
-  
-  # renders the title in accessible plain text
-  output$plainTitleUI <- renderUI({
-    if (title_access())
-      return("")
-    return(HTML(sprintf("<h3><b>Title:</b> %s</h3>", title_text())))
-  })
-  
-  # renders a non-embedded legend nicely
-  legend_current <- reactiveVal()
-  output$legend_out <- renderDT({
-    if (!authenticated() || legend()) 
-      return(NULL)
-    
-    if (running())
-      return(my_datatable(legend_data()))
-    else
-      return(my_datatable(legend_current()))
-  })
-  
-  # renders the ggplot2 data reactively
-  ggplot2_current <- reactiveVal()
-  output$ggplot2_out <- renderPlot({
-    if (!authenticated())
-    {
-      downloadData(NULL)
-      return(ggplot2_null())
-    }
-    
-    num <- isolate(numPlots())
-    numPlots(num+1)
-    
-    plot_start(num)
-    start <- my_timer()
-    
-    if (running())
-      target <- ggplot2_data()
-    else
-      target <- ggplot2_current()
-    
-    if (is.null(target))
-    {
-      plot_fail()
-      return(ggplot2_null())
-    }
-    
-    plot_success(my_timer(start))
-    target
-  })
-  
-  # renders the plotly2 data reactively
-  plotly2_current <- reactiveVal()
-  output$plotly2_out <- renderPlotly({
-    if (!authenticated())
-    {
-      downloadData(NULL)
-      return(ggplot2_null())
-    }
-    
-    num <- isolate(numPlots())
-    numPlots(num+1)
-    
-    plot_start(num)
-    start <- my_timer()
-    
-    if (running())
-      target <- plotly2_data()
-    else
-      target <- plotly2_current()
-    
-    if (is.null(target))
-    {
-      plot_fail()
-      return(ggplot2_null())
-    }
-    
-    plot_success(my_timer(start))
-    target
-  })
-  
-  # renders the plotly3 data reactively
-  plotly3_current <- reactiveVal()
-  output$plotly3_out <- renderPlotly({ 
-    if (!authenticated())
-    {
-      downloadData(NULL)
-      return(ggplot2_null())
-    }
-    
-    num <- isolate(numPlots())
-    numPlots(num+1)
-    
-    plot_start(num)
-    start <- my_timer()
-    
-    if (running())
-      target <- plotly3_data()
-    else
-      target <- plotly3_current()
-    
-    if (is.null(target))
-    {
-      plot_fail()
-      return(ggplot2_null())
-    }
-    
-    plot_success(my_timer(start))
-    target
-  })
-  
-  # renders the beeswarm data reactively
-  beeswarm_current <- reactiveVal()
-  output$beeswarm_out <- renderPlot({
-    if (!authenticated())
-      return(ggplot2_null())
-    
-    num <- isolate(numPlots())
-    numPlots(num+1)
-    
-    plot_start(num)
-    start <- my_timer()
-    
-    if (running())
-      target <- beeswarm_data()
-    else
-      target <- beeswarm_current()
-    
-    if (is.null(target))
-    {
-      plot_fail()
-      return(ggplot2_null())
-    }
-    
-    plot_success(my_timer(start))
-    target
-  })
-  
-  # download button for data
-  downloadData <- reactiveVal()
-  output$downloadData <- downloadHandler(
-    filename = function() {
-      sprintf("%s_num_data.csv", repStr(title_text(), " ", "_"))
-    },
-    content = function(file) {
-      if (!authenticated())
-        return(NULL)
-      write.csv(downloadData(), file)
-    }
-  )
-  
-  # download button for metadata
-  output$downloadMetadata <- downloadHandler(
-    filename = function() {
-      sprintf("%s_metadata.csv", repStr(title_text(), " ", "_"))
-    },
-    content = function(file) {
-      if (!authenticated())
-        return(NULL)
-      write.csv(order()[keep(),], file)
-    }
-  )
-  
-  # download button for instructions
-  output$downloadInstructions <- downloadHandler(
-    filename = "instructions.txt",
-    content = function(file){
-      writeLines(print_instructions, file)
-    }
-  )
-  
-  # download button for citations
-  output$downloadCitations <- downloadHandler(
-    filename = "citations.txt",
-    content = function(file){
-      writeLines(print_citations, file)
-    }
-  )
   
   # ----------------
   # INPUT PROCESSING
@@ -500,7 +234,6 @@ Possible reasons:<br>
   subi <- reactive(parse_opt(input[[id_subset(input$category)]]))
   feat <- reactive(rem_perc(input$features))
   per_ind <- reactive(which(perplexity_types == input$perplexity))
-  notify <- reactive(notifq() && running())
   
   # filter-related reactives from user input selections
   order <- reactive(order_total[[input$category]])
@@ -557,7 +290,7 @@ Possible reasons:<br>
     if (grepl("Transpose", input$category, fixed = TRUE))
       notif("This matrix has been transposed. Therefore, the current
             samples represent original features and the current
-            features represent original samples.", 6, "warning")
+            features represent original samples.", "warning")
     
     sprintf("%s%s on %s.%s (%s Samples, %s Features%s)", 
             ifelse(input$embedding == "PHATE", "", 
@@ -574,8 +307,8 @@ Possible reasons:<br>
   
   # used for custom color schemes
   paint <- reactive({
-    if (input$palette=="Custom" && !is.null(custom_color_scales) &&
-        colorby() %in% names(custom_color_scales) && input$visualize != "Summarize")
+    if (input$palette == "Custom" && input$visualize != "Summarize" && 
+        length(custom_color_scales) > 0 && colorby() %in% names(custom_color_scales))
     {
       new <- custom_color_scales[[colorby()]] %>% unlist()
       
@@ -592,9 +325,9 @@ Possible reasons:<br>
       if (input$visualize == "Summarize")
       {
         if (input$embedding == "PCA")
-          return("#00356B")
+          return(single_color_seq)
         if (input$embedding == "VAE")
-          return(c("#C90016", "#00356B"))
+          return(double_color_seq)
         if (input$embedding == "UMAP")
           num <- 6
       }
@@ -926,38 +659,264 @@ Possible reasons:<br>
   })
   
   # generates data to accompany graphs
-  legend_data <- reactive({
-    temp <- unique(colors())
+  legend_data <- reactive({generate_legend_table(colors())})
+  
+  # --------------
+  # RENDER WIDGETS
+  # --------------
+  
+  observeEvent(input$start, {
+    shinyjs::show("stop")
+    running(TRUE)
+    shinyjs::hide("start")
+  })
+  
+  observeEvent(input$stop, {
+    shinyjs::show("start")
+    running(FALSE)
+    shinyjs::hide("stop")
     
-    if (length(temp) < 1)
+    if (input$plotPanels == pan_options[1])
+      ggplot2_current(ggplot2_data())
+    if (input$plotPanels == pan_options[2])
+      plotly2_current(plotly2_data())
+    if (input$plotPanels == pan_options[3])
+      plotly3_current(plotly3_data())
+    if (input$plotPanels == pan_options[4])
+      beeswarm_current(beeswarm_data())
+    legend_current(legend_data())
+  })
+  
+  # the number of plots generated, including the current one
+  num_plots <- reactiveVal(1)
+  
+  # prints a message once a plot begins generating.
+  plot_start <- function(num_plots)
+  {
+    notif(sprintf("Generating Plot #%s:<br>
+Please suspend plotting or wait for plotting to
+finish before attempting a new configuration.", num_plots), "default")
+  }
+  
+  # prints a success message once a plot has been completed.
+  plot_success <- function(delta_time) 
+  {
+    notif(sprintf("Plot generation was successful.<br>
+Seconds elapsed: %s", delta_time), "message")
+  }
+  
+  # prints a failure message once a plot has been completed.
+  plot_fail <- function() 
+  {
+    notif("Plot generation failed.<br>
+Possible reasons:<br>
+(1) invalid configuration<br>
+(2) empty dataset", "error")
+  }
+
+  # generate panels
+  ggplot2_current <- reactiveVal()
+  output$ggplot2_out <- renderPlot({
+    if (!authenticated())
+    {
+      downloadData(NULL)
+      return(ggplot2_null())
+    }
+    
+    num <- isolate(num_plots())
+    num_plots(num+1)
+    
+    plot_start(num)
+    start <- my_timer()
+    
+    if (running())
+      target <- ggplot2_data()
+    else
+      target <- ggplot2_current()
+    
+    if (is.null(target))
+    {
+      plot_fail()
+      return(ggplot2_null())
+    }
+    
+    plot_success(my_timer(start))
+    target
+  })
+  
+  plotly2_current <- reactiveVal()
+  output$plotly2_out <- renderPlotly({
+    if (!authenticated())
+    {
+      downloadData(NULL)
+      return(ggplot2_null())
+    }
+    
+    num <- isolate(num_plots())
+    num_plots(num+1)
+    
+    plot_start(num)
+    start <- my_timer()
+    
+    if (running())
+      target <- plotly2_data()
+    else
+      target <- plotly2_current()
+    
+    if (is.null(target))
+    {
+      plot_fail()
+      return(ggplot2_null())
+    }
+    
+    plot_success(my_timer(start))
+    target
+  })
+  
+  plotly3_current <- reactiveVal()
+  output$plotly3_out <- renderPlotly({ 
+    if (!authenticated())
+    {
+      downloadData(NULL)
+      return(ggplot2_null())
+    }
+    
+    num <- isolate(num_plots())
+    num_plots(num+1)
+    
+    plot_start(num)
+    start <- my_timer()
+    
+    if (running())
+      target <- plotly3_data()
+    else
+      target <- plotly3_current()
+    
+    if (is.null(target))
+    {
+      plot_fail()
+      return(ggplot2_null())
+    }
+    
+    plot_success(my_timer(start))
+    target
+  })
+  
+  beeswarm_current <- reactiveVal()
+  output$beeswarm_out <- renderPlot({
+    if (!authenticated())
+      return(ggplot2_null())
+    
+    num <- isolate(num_plots())
+    num_plots(num+1)
+    
+    plot_start(num)
+    start <- my_timer()
+    
+    if (running())
+      target <- beeswarm_data()
+    else
+      target <- beeswarm_current()
+    
+    if (is.null(target))
+    {
+      plot_fail()
+      return(ggplot2_null())
+    }
+    
+    plot_success(my_timer(start))
+    target
+  })
+  
+  downloadData <- reactiveVal()
+  output$num_data_table <- renderDT({
+    if (!authenticated())
+      return(my_datatable(NULL))
+    
+    my_datatable(data.frame(downloadData()))
+  })
+  
+  output$metadata_table <- renderDT({
+    if (!authenticated())
+      return(my_datatable(NULL))
+    
+    my_datatable(data.frame(order()[keep(),]))
+  })
+  
+  # render panels
+  output$ggplot2UI <- renderUI({
+    plotOutput("ggplot2_out", width="100%", height=height()) %>% my_spin()
+  })
+  
+  output$plotly2UI <- renderUI({
+    plotlyOutput("plotly2_out", width="100%", height=height()) %>% my_spin()
+  })
+  
+  output$plotly3UI <- renderUI({
+    plotlyOutput("plotly3_out", width="100%", height=height()) %>% my_spin()
+  })
+  
+  output$beeswarmUI <- renderUI({
+    plotOutput("beeswarm_out", width="100%", height=height()) %>% my_spin()
+  })
+  
+  output$num_dataUI <- renderUI({
+    DTOutput("num_data_table", width="100%", height=height()) %>% my_spin()
+  })
+  
+  output$metadataUI <- renderUI({
+    DTOutput("metadata_table", width="100%", height=height()) %>% my_spin()
+  })
+  
+  # other outputs
+  output$plainTitleUI <- renderUI({
+    if (title_access())
+      return("")
+    return(HTML(sprintf("<h3><b>Title:</b> %s</h3>", title_text())))
+  })
+  
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      sprintf("%s_num_data.csv", repStr(title_text(), " ", "_"))
+    },
+    content = function(file) {
+      if (!authenticated())
+        return(NULL)
+      write.csv(downloadData(), file)
+    }
+  )
+  
+  output$downloadMetadata <- downloadHandler(
+    filename = function() {
+      sprintf("%s_metadata.csv", repStr(title_text(), " ", "_"))
+    },
+    content = function(file) {
+      if (!authenticated())
+        return(NULL)
+      write.csv(order()[keep(),], file)
+    }
+  )
+  
+  legend_current <- reactiveVal()
+  output$legend_out <- renderDT({
+    if (!authenticated() || legend()) 
       return(NULL)
     
-    table <- cbind.data.frame(1:length(temp), temp)
-    colnames(table) <- c("Number", "Value")
-    
-    table
+    if (running())
+      return(my_datatable(legend_data()))
+    else
+      return(my_datatable(legend_current()))
   })
   
   # -----------
   # BOOKMARKING
   # -----------
   
-  # kill app when window closes ... disable if testing bookmarks
   session$onSessionEnded(stopApp)
-  
-  # exclude all inputs from bookmarking
   setBookmarkExclude(bookmark_exclude_vector)
   
-  # store compressed data on bookmarking
   onBookmark(function(state) {
-    # retrieve all input types accordingly
-    session_data <- list(
-      "pickerInput"=list(),
-      "numericInput"=list(),
-      "numericRangeInput"=list(),
-      "sliderInput"=list(),
-      "tabsetPanel"=list()
-    )
+    session_data <- session_data_template
     
     for (id in picker_input_ids)
       session_data[["pickerInput"]][[id]] <- input[[id]]
