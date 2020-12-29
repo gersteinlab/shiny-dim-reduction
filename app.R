@@ -138,6 +138,39 @@ server <- function(input, output, session) {
     outputOptions(output, cond, suspendWhenHidden = FALSE)
   }
   
+  notif <- reactive({
+    function(message, form)
+    {
+      if (running())
+        notification(message, input$notif_time, form)
+    }
+  })
+  
+  # prints a message once a plot begins generating.
+  plot_start <- function(numPlots)
+  {
+    notif()(sprintf("Generating Plot #%s:<br>
+Please suspend plotting or wait for plotting to
+finish before attempting a new configuration.", numPlots), "default")
+  }
+  
+  # prints a success message once a plot has been completed.
+  # note: start is the time when plotting begins, which can be found with Sys.time().
+  plot_success <- function(delta_time) 
+  {
+    notif()(sprintf("Plot generation was successful.<br>
+Seconds elapsed: %s", delta_time), "message")
+  }
+  
+  # prints a failure message once a plot has been completed.
+  plot_fail <- function() 
+  {
+    notif()("Plot generation failed.<br>
+Possible reasons:<br>
+(1) invalid configuration<br>
+(2) empty dataset", "error")
+  }
+  
   # constants for reactive plotting
   default <- 1
   
@@ -176,7 +209,7 @@ server <- function(input, output, session) {
   height <- reactive({
     if (range_invalid(input$height, 1, 4000))
     {
-      notif("Warning: Graph height is not in [1, 4000].", 6, "warning")
+      notif()("Warning: Graph height is not in [1, 4000].", "warning")
       return(graph_height)
     }
     
@@ -187,7 +220,7 @@ server <- function(input, output, session) {
   upse_feat <- reactive({
     if (range_invalid(input$set_feat_upse, pc_cap, 2^24))
     {
-      notif("Warning: Maximum Features is not in [pc_cap,2^24].", 6, "warning")
+      notif()("Warning: Maximum Features is not in [pc_cap,2^24].", "warning")
       return(max_upse)
     }
     
@@ -198,7 +231,7 @@ server <- function(input, output, session) {
   heat_feat <- reactive({
     if (range_invalid(input$set_feat_heat, pc_cap, 2^24))
     {
-      notif("Warning: Maximum Features is not in [pc_cap,2^24].", 6, "warning")
+      notif()("Warning: Maximum Features is not in [pc_cap,2^24].", "warning")
       return(max_heat)
     }
     
@@ -209,7 +242,7 @@ server <- function(input, output, session) {
   dend_feat <- reactive({
     if (range_invalid(input$set_feat_dend, pc_cap, 2^24))
     {
-      notif("Warning: Maximum Features is not in [pc_cap,2^24].", 6, "warning")
+      notif()("Warning: Maximum Features is not in [pc_cap,2^24].", "warning")
       return(max_dend)
     }
     
@@ -220,7 +253,7 @@ server <- function(input, output, session) {
   nintersect <- reactive({
     if (range_invalid(input$nintersect, 3, 2^num_filters))
     {
-      notif("Warning: Number of Intersections is not in [3,2^num_filters].", 6, "warning")
+      notif()("Warning: Number of Columns is not in [3,2^num_filters].", "warning")
       return(40)
     }
     
@@ -228,15 +261,26 @@ server <- function(input, output, session) {
   })
   
   # validates input
+  bar_frac <- reactive({
+    if (range_invalid(input$bar_frac, 0, 1))
+    {
+      notif()("Warning: Bar Fraction is not in [0,1].", "warning")
+      return(0.5)
+    }
+    
+    input$bar_frac
+  })
+  
+  # validates input
   observeEvent(input$set_f1, {
     if (range_invalid(input$set_f1, 0, 1))
-      notif("Warning: Fraction of Samples is not in [0,1].", 6, "warning")
+      notif()("Warning: Fraction of Samples is not in [0,1].", "warning")
   })
   
   # validates input
   observeEvent(input$set_f2, {
     if (range_invalid(input$set_f2, 0, num_filters))
-      notif("Warning: Number of Characteristics is not in [0,num_filters].", 6, "warning")
+      notif()("Warning: Number of Characteristics is not in [0,num_filters].", "warning")
   })
   
   # -------
@@ -310,8 +354,7 @@ server <- function(input, output, session) {
     num <- isolate(numPlots())
     numPlots(num+1)
     
-    if (notify())
-      plot_start(num)
+    plot_start(num)
     start <- my_timer()
     
     if (running())
@@ -321,13 +364,11 @@ server <- function(input, output, session) {
     
     if (is.null(target))
     {
-      if (notify())
-        plot_fail()
+      plot_fail()
       return(ggplot2_null())
     }
     
-    if (notify())
-      plot_success(my_timer(start))
+    plot_success(my_timer(start))
     target
   })
   
@@ -343,8 +384,7 @@ server <- function(input, output, session) {
     num <- isolate(numPlots())
     numPlots(num+1)
     
-    if (notify())
-      plot_start(num)
+    plot_start(num)
     start <- my_timer()
     
     if (running())
@@ -354,13 +394,11 @@ server <- function(input, output, session) {
     
     if (is.null(target))
     {
-      if (notify())
-        plot_fail()
+      plot_fail()
       return(ggplot2_null())
     }
     
-    if (notify())
-      plot_success(my_timer(start))
+    plot_success(my_timer(start))
     target
   })
   
@@ -376,8 +414,7 @@ server <- function(input, output, session) {
     num <- isolate(numPlots())
     numPlots(num+1)
     
-    if (notify())
-      plot_start(num)
+    plot_start(num)
     start <- my_timer()
     
     if (running())
@@ -387,13 +424,11 @@ server <- function(input, output, session) {
     
     if (is.null(target))
     {
-      if (notify())
-        plot_fail()
+      plot_fail()
       return(ggplot2_null())
     }
     
-    if (notify())
-      plot_success(my_timer(start))
+    plot_success(my_timer(start))
     target
   })
   
@@ -406,8 +441,7 @@ server <- function(input, output, session) {
     num <- isolate(numPlots())
     numPlots(num+1)
     
-    if (notify())
-      plot_start(num)
+    plot_start(num)
     start <- my_timer()
     
     if (running())
@@ -417,13 +451,11 @@ server <- function(input, output, session) {
     
     if (is.null(target))
     {
-      if (notify())
-        plot_fail()
+      plot_fail()
       return(ggplot2_null())
     }
     
-    if (notify())
-      plot_success(my_timer(start))
+    plot_success(my_timer(start))
     target
   })
   
@@ -476,7 +508,6 @@ server <- function(input, output, session) {
   title_access <- reactive("Embed Title" %in% input$sMenu)
   legend <- reactive("Embed Legend" %in% input$sMenu)
   boost <- reactive("Boost Graphics" %in% input$sMenu)
-  notifq <- reactive("Notifications" %in% input$sMenu)
   not_rev <- reactive("Uninverted Colors" %in% input$sMenu)
   
   subi <- reactive(parse_opt(input[[id_subset(input$category)]]))
@@ -628,7 +659,7 @@ server <- function(input, output, session) {
       if (ncol(data) == 1)
         return(venn1_custom(data, legend()))
       
-      return(upset_custom(data, legend(), nintersect()))
+      return(upset_custom(data, legend(), nintersect(), c(bar_frac(), 1-bar_frac())))
     }
     
     addr <- make_aws_name(input$category, subi(),
@@ -802,7 +833,7 @@ server <- function(input, output, session) {
         get_safe_sub(input$category, subi(), 1)
       
       downloadData(data)
-
+      
       data <- truncate_rows(data, dend_feat()) %>% set_f1_f2(input$set_f1, input$set_f2)
       
       return(plotly_heatmap_dendrogram(data, paint(), title(), legend(), boost()))

@@ -27,7 +27,7 @@ pal_options <- list(
 )
 # settings options
 my_settings <- c("Embed Title", "Embed Legend", 
-                 "Boost Graphics", "Notifications", "Uninverted Colors")
+                 "Boost Graphics", "Uninverted Colors")
 
 # ----------
 # LONG TEXTS

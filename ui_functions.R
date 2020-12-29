@@ -208,39 +208,11 @@ thre_select_panel <- function(choices, cat, sca)
   )
 }
 
-# -------------
-# NOTIFICATIONS
-# -------------
-
 # shows a notification (form can be default, message, warning, error)
 # in general: warnings and errors are self-explanatory, defaults are used
 # to begin actions, and messages are used to return results
-notif <- function(message, time, form) 
+notification <- function(message, time, form) 
 {
-  showNotification(HTML(message), duration = time, closeButton = TRUE, type=form)
-}
-
-# prints a message once a plot begins generating.
-plot_start <- function(numPlots)
-{
-  notif(sprintf("Generating Plot #%s:<br>
-Please suspend plotting or wait for plotting to
-finish before attempting a new configuration.", numPlots), 4, "default")
-}
-
-# prints a success message once a plot has been completed.
-# note: start is the time when plotting begins, which can be found with Sys.time().
-plot_success <- function(delta_time) 
-{
-  notif(sprintf("Plot generation was successful.<br>
-Seconds elapsed: %s", delta_time), 6, "message")
-}
-
-# prints a failure message once a plot has been completed.
-plot_fail <- function() 
-{
-  notif("Plot generation failed.<br>
-Possible reasons:<br>
-(1) invalid configuration<br>
-(2) empty dataset", 6, "error")
+  if (time > 0)
+    showNotification(HTML(message), duration = time, closeButton = TRUE, type=form)
 }

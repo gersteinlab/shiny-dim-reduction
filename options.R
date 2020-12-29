@@ -153,7 +153,9 @@ picker_input_ids <- c(
 
 numeric_input_ids <- c(
   "height", 
+  "notif_time",
   "nintersect", 
+  "bar_frac",
   "set_feat_upse", 
   "set_feat_heat", 
   "set_feat_dend"
@@ -263,9 +265,11 @@ settingsMenu <- menuItem(
   check_panel("sMenu", "Settings", my_settings),
   select_panel("palette", "Color Palette", pal_options),
   numericInput("height", "Graph Height", value=graph_height, min=1, max=4000),
+  numericInput("notif_time", "Notification Time", value=6),
   conditionalPanel(
     condition = "output.nintersect_cond",
-    numericInput("nintersect", "Number of Columns", value=40, min=3, max=2^num_filters)
+    numericInput("nintersect", "Number of Columns", value=40, min=3, max=2^num_filters),
+    numericInput("bar_frac", "Bar Plot Fraction", value=0.7, min=0, max=1)
   ),
   conditionalPanel(
     condition = "output.pc_sliders_cond",
