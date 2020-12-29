@@ -304,7 +304,7 @@ my_css_styling <- HTML("
 }
 
 /* center title */
-#plainTitleUI {
+#title_out {
   text-align: center !important;
 }
 ")
