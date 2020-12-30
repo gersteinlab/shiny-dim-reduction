@@ -9,7 +9,7 @@ source("options.R", encoding="UTF-8")
 # ------------------------------
 
 auth_default <- TRUE # is the user already authenticated?
-run_default <- TRUE # should plots generate automatically?
+run_default <- TRUE # should inputs continue to update?
 
 server <- function(input, output, session) {
   # set up authentication
@@ -271,7 +271,8 @@ server <- function(input, output, session) {
     {
       return(sprintf(
         "%s-Grouped Features on %s.%s (%s Features, %s Characteristics)", 
-        filterby(), input$category, subi(), nrow(downloadData()), ncol(downloadData())
+        filterby(), input$category, subi(), 
+        nrow(num_data_data()), ncol(num_data_data())
       ))
     }
     
@@ -364,7 +365,7 @@ server <- function(input, output, session) {
       data <- load_db(addr)[,my_chars(),drop=FALSE] %>% 
         get_safe_sub(input$category, subi(), 1)
       
-      downloadData(data)
+      num_data_data(data)
       
       data <- truncate_rows(data, upse_feat()) %>%
         set_f1_f2(input$set_f1, input$set_f2) %>% num_nan_binary()
@@ -384,7 +385,7 @@ server <- function(input, output, session) {
     if (input$embedding == "PHATE")
     {
       data <- data[keep(),,drop=FALSE]
-      downloadData(data)
+      num_data_data(data)
       
       return(ggplot2_2d(
         data[,1], data[,2], pc("1"), pc("2"),
@@ -393,7 +394,7 @@ server <- function(input, output, session) {
     
     if (input$visualize == "Summarize")
     {
-      downloadData(data)
+      num_data_data(data)
       
       if (input$embedding == "PCA")
         return(ggplot2_2d(
@@ -424,7 +425,7 @@ server <- function(input, output, session) {
     }
     
     data <- data[keep(),,drop=FALSE]
-    downloadData(data)
+    num_data_data(data)
     
     if (input$visualize == "Explore")
     {
@@ -454,7 +455,7 @@ server <- function(input, output, session) {
       data <- load_db(addr)[,my_chars(),drop=FALSE] %>% 
         get_safe_sub(input$category, subi(), 1)
       
-      downloadData(data)
+      num_data_data(data)
       
       data <- truncate_rows(data, heat_feat()) %>% 
         sort_row_sums() %>% set_f1_f2(input$set_f1, input$set_f2)
@@ -472,7 +473,7 @@ server <- function(input, output, session) {
     {
       data <- data[keep(),,drop=FALSE]
       
-      downloadData(data)
+      num_data_data(data)
       
       return(plotly_2d(
         data[,1], data[,2], pc("1"), pc("2"), "markers",
@@ -482,7 +483,7 @@ server <- function(input, output, session) {
     
     if (input$visualize == "Summarize")
     {
-      downloadData(data)
+      num_data_data(data)
       
       if (input$embedding == "PCA")
         return(plotly_2d(
@@ -513,7 +514,7 @@ server <- function(input, output, session) {
     }
     
     data <- data[keep(),,drop=FALSE]
-    downloadData(data)
+    num_data_data(data)
     
     if (input$visualize == "Explore")
     {
@@ -545,7 +546,7 @@ server <- function(input, output, session) {
       data <- load_db(addr)[,my_chars(),drop=FALSE] %>% 
         get_safe_sub(input$category, subi(), 1)
       
-      downloadData(data)
+      num_data_data(data)
       
       data <- truncate_rows(data, dend_feat()) %>% set_f1_f2(input$set_f1, input$set_f2)
       
@@ -561,7 +562,7 @@ server <- function(input, output, session) {
     if (input$embedding == "PHATE")
     {
       data <- data[keep(),,drop=FALSE]
-      downloadData(data)
+      num_data_data(data)
       
       return(plotly_3d(
         data[,1], data[,2], data[,3], pc("1"), pc("2"), pc("3"),
@@ -571,7 +572,7 @@ server <- function(input, output, session) {
     
     if (input$visualize == "Summarize")
     {
-      downloadData(data)
+      num_data_data(data)
       
       if (input$embedding == "PCA")
         return(plotly_2d(
@@ -602,7 +603,7 @@ server <- function(input, output, session) {
     }
     
     data <- data[keep(),,drop=FALSE]
-    downloadData(data)
+    num_data_data(data)
     
     if (input$visualize == "Explore")
     {
