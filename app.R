@@ -172,7 +172,7 @@ server <- function(input, output, session) {
   }
   
   # warning for invalid numeric inputs
-  range_invalid_check <- function(value, name, min, max)
+  range_invalid_notif <- function(name, min, max)
   {
     notif(sprintf("Warning: %s is not in [%s, %s].", name, min, max), "warning")
   }
@@ -242,13 +242,14 @@ Possible reasons:<br>
   
   nintersect <- reactiveVal()
   observeEvent(inp()$nintersect, {
-    if (range_invalid(inp()$nintersect, 3, 2^num_filters))
-      range_invalid_notif("Number of Columns", 3, 2^num_filters)
+    if (range_invalid(inp()$nintersect, 3, max_set_col_num))
+      range_invalid_notif("Number of Columns", 3, max_set_col_num)
     else
       nintersect(round(inp()$nintersect, digits=0))
   })
   
-  bar_frac <- reactive({
+  bar_frac <- reactiveVal()
+  observeEvent(inp()$bar_frac, {
     if (range_invalid(inp()$bar_frac, 0, 1))
       range_invalid_notif("Bar Fraction", 0, 1)
     else
