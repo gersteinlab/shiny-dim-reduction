@@ -353,10 +353,10 @@ ui <- function(request){
         action("start", "Start Plotting", "chart-bar", "#FFF", "#0064C8", "#00356B"),
         action("stop", "Stop Plotting", "ban", "#FFF", "#C90016", "#00356B"),
         bookmarkButton(),
-        downloadButton('downloadData', 'Numeric Data'),
-        downloadButton('downloadMetadata', 'Metadata')
+        downloadButton('download_num_data', 'Numeric Data'),
+        downloadButton('download_metadata', 'Metadata')
       ),
-      uiOutput("plainTitleUI"),
+      htmlOutput("title_out"),
       tabBox(
         width="100%",
         id = 'plotPanels',
@@ -375,7 +375,7 @@ ui <- function(request){
         downloadButton('downloadInstructions', 'Instructions'),
         downloadButton('downloadCitations', 'Citations')
       ),
-      uiOutput("legendUI")
+      DTOutput("legend_out", width="100%") %>% my_spin()
     )
   )
 }
