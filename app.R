@@ -625,8 +625,7 @@ server <- function(input, output, session) {
   
   # generates beeswarm data
   beeswarm_data <- reactive({
-    if (!(input$visualize == 'Explore' && 
-          (input$embedding %in% c('PCA', 'VAE', 'UMAP'))))
+    if (!(input$embedding %in% c('PCA', 'VAE', 'UMAP')))
       return(NULL)
     
     addr <- make_aws_name(input$category, subi(),
