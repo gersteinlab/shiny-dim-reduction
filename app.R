@@ -161,6 +161,16 @@ server <- function(input, output, session) {
     inp(current_inputs)
   })
   
+  # console output
+  output$console_out <- renderPrint({
+    for (id in inp()$console)
+    {
+      print_clean(sprintf("Value of %s:", id))
+      print(input[[id]])
+      print_clean("")
+    }
+  })
+  
   # -------------------
   # NOTIFICATION SYSTEM
   # -------------------

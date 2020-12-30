@@ -139,11 +139,14 @@ select_panel <- function(id, name, options, chosen)
 }
 
 # Creates a group of checked boxes with the given id, name, and inputs
-check_panel <- function(id, name, inputs)
+check_panel <- function(id, name, inputs, indices)
 {
+  if (missing(indices))
+    indices <- 1:length(inputs)
+  
   pickerInput(
     inputId = id, label = name,
-    choices = inputs, selected = inputs, multiple = TRUE,
+    choices = inputs, selected = inputs[indices], multiple = TRUE,
     options = list(
       `actions-box` = TRUE,
       `selected-text-format` = "count > 1",

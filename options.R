@@ -142,6 +142,7 @@ picker_input_ids <- c(
   "visualize",
   "perplexity",
   "palette",
+  "console",
   id_subset(name_cat),
   id_color(name_cat),
   id_shape(name_cat),
@@ -307,7 +308,8 @@ settingsMenu <- menuItem(
       condition = "output.pc_slider3_cond",
       pc_slider(3, pc_cap)
     )
-  )
+  ),
+  check_panel("console", "Console Output", bookmarkable_ids, NULL)
 )
 
 filtersMenu <- menuItem(
@@ -371,6 +373,7 @@ ui <- function(request){
         tabPanel("Numeric Data", uiOutput("num_dataUI")),
         tabPanel("Metadata", uiOutput("metadataUI"))
       ),
+      DTOutput("legend_out", width="100%") %>% my_spin(),
       box(
         title = "Documentation",
         collapsible=TRUE, collapsed=FALSE, width="100%",
@@ -379,7 +382,7 @@ ui <- function(request){
         downloadButton('downloadInstructions', 'Instructions'),
         downloadButton('downloadCitations', 'Citations')
       ),
-      DTOutput("legend_out", width="100%") %>% my_spin()
+      verbatimTextOutput("console_out")
     )
   )
 }
