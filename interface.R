@@ -11,6 +11,10 @@ source("ui_functions.R", encoding="UTF-8")
 num_filters <- 60
 # The height of a graph by default. Depends on browser interpretation.
 graph_height <- 520
+# the default barplot/(barplot+matrix) ratio on an upset plot
+def_bar_frac <- 0.7
+# the default number of set columns on an upset plot
+def_set_col_num <- 40
 # the maximum number of set columns on an upset plot
 max_set_col_num <- 1000000
 # the initial number of rows on an upset plot
