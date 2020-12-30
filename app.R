@@ -218,52 +218,58 @@ Possible reasons:<br>
   # INPUT PROCESSING
   # ----------------
   
-  height <- reactiveVal()
-  observeEvent(inp()$height, {
+  height <- reactive({
     if (range_invalid(inp()$height, 1, 4000))
+    {
       range_invalid_notif("Graph Height", 1, 4000)
-    else
-      height(round(inp()$height, digits=0))
+      return(graph_height)
+    }
+    round(inp()$height, digits=0)
   })
   
-  upse_feat <- reactiveVal()
-  observeEvent(inp()$set_feat_upse, {
+  upse_feat <- reactive({
     if (range_invalid(inp()$set_feat_upse, pc_cap, 2^24))
+    {
       range_invalid_notif("Number of Features for Sets", pc_cap, 2^24)
-    else
-      upse_feat(round(inp()$set_feat_upse, digits=0))
+      return(max_upse)
+    }
+    round(inp()$set_feat_upse, digits=0)
   })
   
-  heat_feat <- reactiveVal()
-  observeEvent(inp()$set_feat_heat, {
+  heat_feat <- reactive({
     if (range_invalid(inp()$set_feat_heat, pc_cap, 2^24))
+    {
       range_invalid_notif("Number of Features for Sets", pc_cap, 2^24)
-    else
-      heat_feat(round(inp()$set_feat_heat, digits=0))
+      return(max_heat)
+    }
+    round(inp()$set_feat_heat, digits=0)
   })
   
-  dend_feat <- reactiveVal()
-  observeEvent(inp()$set_feat_dend, {
+  dend_feat <- reactive({
     if (range_invalid(inp()$set_feat_dend, pc_cap, 2^24))
+    {
       range_invalid_notif("Number of Features for Sets", pc_cap, 2^24)
-    else
-      dend_feat(round(inp()$set_feat_dend, digits=0))
+      return(max_dend)
+    }
+    round(inp()$set_feat_dend, digits=0)
   })
   
-  nintersect <- reactiveVal()
-  observeEvent(inp()$nintersect, {
+  nintersect <- reactive({
     if (range_invalid(inp()$nintersect, 3, max_set_col_num))
+    {
       range_invalid_notif("Number of Columns", 3, max_set_col_num)
-    else
-      nintersect(round(inp()$nintersect, digits=0))
+      return(def_set_col_num)
+    }
+    round(inp()$nintersect, digits=0)
   })
   
-  bar_frac <- reactiveVal()
-  observeEvent(inp()$bar_frac, {
+  bar_frac <- reactive({
     if (range_invalid(inp()$bar_frac, 0, 1))
+    {
       range_invalid_notif("Bar Fraction", 0, 1)
-    else
-      bar_frac(inp()$bar_frac)
+      return(def_bar_frac)
+    }
+    inp()$bar_frac
   })
   
   title_access <- reactive("Embed Title" %in% inp()$sMenu)

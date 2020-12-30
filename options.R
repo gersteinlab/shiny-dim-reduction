@@ -294,8 +294,9 @@ settingsMenu <- menuItem(
   numericInput("notif_time", "Notification Time", value=6),
   conditionalPanel(
     condition = "output.nintersect_cond",
-    numericInput("nintersect", "Number of Columns", value=40, min=3, max=2^num_filters),
-    numericInput("bar_frac", "Bar Plot Fraction", value=0.7, min=0, max=1)
+    numericInput("nintersect", "Number of Columns", 
+                 value=def_set_col_num, min=3, max=max_set_col_num),
+    numericInput("bar_frac", "Bar Plot Fraction", value=def_bar_frac, min=0, max=1)
   ),
   conditionalPanel(
     condition = "output.pc_sliders_cond",
