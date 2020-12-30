@@ -176,6 +176,14 @@ slider_input_ids <- c(
   "pc3"
 )
 
+bookmarkable_ids <- c(
+  picker_input_ids,
+  numeric_input_ids,
+  numeric_range_input_ids,
+  slider_input_ids,
+  tabset_panel_ids
+)
+
 # the vector of all inputs to exclude from manual bookmarking
 bookmark_exclude_vector <- c(
   ".clientValue-default-plotlyCrosstalkOpts",
@@ -203,11 +211,7 @@ bookmark_exclude_vector <- c(
     "legend_out"
   ),
   
-  picker_input_ids,
-  numeric_input_ids,
-  numeric_range_input_ids,
-  slider_input_ids,
-  tabset_panel_ids
+  bookmarkable_ids
 )
 
 session_data_template <- list(
