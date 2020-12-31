@@ -183,31 +183,35 @@ server <- function(input, output, session) {
     notif(sprintf("Warning: %s is not in [%s, %s].", name, min, max), "warning")
   }
   
-  # prints a message at the start of each plot's generation.
+  # the number of plots that have entered the queue for generation
   num_plots <- reactiveVal(1)
-  plot_start <- function()
+  # prep a (possibly NULL) plot for rendering and send notifications
+  prep_plot <- function(target)
   {
+    if (!isolate(authenticated()))
+      return(ggplot2_null())
+    
     num <- isolate(num_plots())
     notif(sprintf("Generating Plot #%s:<br>
 Please suspend plotting or wait for plotting to
 finish before attempting a new configuration.", num), "default")
     num_plots(num+1)
-  }
-  
-  # prints a success message if a plot has been successfully generated.
-  plot_success <- function(delta_time) 
-  {
-    notif(sprintf("Plot generation was successful.<br>
-Seconds elapsed: %s", delta_time), "message")
-  }
-  
-  # prints a failure message if a plot has failed to be generated.
-  plot_fail <- function() 
-  {
-    notif("Plot generation failed.<br>
+    
+    start <- my_timer()
+    
+    if (is.null(target))
+    {  
+      notif("Plot generation failed.<br>
 Possible reasons:<br>
 (1) invalid configuration<br>
 (2) empty dataset", "error")
+      return(ggplot2_null())
+    }
+    
+    notif(sprintf("Plot generation was successful.<br>
+Seconds elapsed: %s", my_timer(start)), "message")
+    
+    target
   }
   
   # ----------------
@@ -712,77 +716,10 @@ Possible reasons:<br>
     sprintf("<h3><b>Title:</b> %s</h3>", title_text()) %>% HTML()
   })
   
-  output$ggplot2_out <- renderPlot({
-    if (!authenticated())
-      return(ggplot2_null())
-    
-    plot_start()
-    start <- my_timer()
-    target <- ggplot2_data()
-    
-    if (is.null(target))
-    {
-      plot_fail()
-      return(ggplot2_null())
-    }
-    
-    plot_success(my_timer(start))
-    target
-  })
-  
-  output$plotly2_out <- renderPlotly({
-    if (!authenticated())
-      return(ggplot2_null())
-    
-    plot_start()
-    start <- my_timer()
-    target <- plotly2_data()
-    
-    if (is.null(target))
-    {
-      plot_fail()
-      return(ggplot2_null())
-    }
-    
-    plot_success(my_timer(start))
-    target
-  })
-  
-  output$plotly3_out <- renderPlotly({ 
-    if (!authenticated())
-      return(ggplot2_null())
-    
-    plot_start()
-    start <- my_timer()
-    target <- plotly3_data()
-    
-    if (is.null(target))
-    {
-      plot_fail()
-      return(ggplot2_null())
-    }
-    
-    plot_success(my_timer(start))
-    target
-  })
-  
-  output$beeswarm_out <- renderPlot({
-    if (!authenticated())
-      return(ggplot2_null())
-    
-    plot_start()
-    start <- my_timer()
-    target <- beeswarm_data()
-    
-    if (is.null(target))
-    {
-      plot_fail()
-      return(ggplot2_null())
-    }
-    
-    plot_success(my_timer(start))
-    target
-  })
+  output$ggplot2_out <- renderPlot({prep_plot(ggplot2_data())})
+  output$plotly2_out <- renderPlotly({prep_plot(plotly2_data())})
+  output$plotly3_out <- renderPlotly({prep_plot(plotly3_data())})
+  output$beeswarm_out <- renderPlot({prep_plot(beeswarm_data())})
   
   output$num_data_table <- renderDT({
     if (!authenticated())
