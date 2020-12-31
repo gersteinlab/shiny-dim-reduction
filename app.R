@@ -148,22 +148,18 @@ server <- function(input, output, session) {
     shinyjs::hide("stop")
   })
   
-  # a static list of inputs used for all plotting
-  inp <- reactiveVal(list())
+  # a copy of all reactives that can stop running
+  iplot <- reactiveValues()
   
   observe({
-    if (!running()) 
-      return() # if inputs are suspended, no updates will occur
-    
-    current_inputs <- inp()
-    for (id in bookmarkable_ids)
-      current_inputs[[id]] <- input[[id]]
-    inp(current_inputs)
+    if (running()) 
+      for (id in bookmarkable_ids)
+        iplot[[id]] <- input[[id]]
   })
   
   # console output
   output$console_out <- renderPrint({
-    for (id in inp()$console)
+    for (id in iplot$console)
     {
       print_clean(sprintf("Value of %s:", id))
       print(input[[id]])
@@ -178,7 +174,7 @@ server <- function(input, output, session) {
   # backbone of notification system with user-specified duration
   notif <- function(message, form)
   {
-    notification(message, inp()$notif_time, form)
+    notification(message, isolate(iplot$notif_time), form)
   }
   
   # warning for invalid numeric inputs
@@ -219,82 +215,82 @@ Possible reasons:<br>
   # ----------------
   
   height <- reactive({
-    if (range_invalid(inp()$height, 1, 4000))
+    if (range_invalid(iplot$height, 1, 4000))
     {
       range_invalid_notif("Graph Height", 1, 4000)
       return(graph_height)
     }
-    round(inp()$height, digits=0)
+    round(iplot$height, digits=0)
   })
   
   upse_feat <- reactive({
-    if (range_invalid(inp()$set_feat_upse, pc_cap, 2^24))
+    if (range_invalid(iplot$set_feat_upse, pc_cap, 2^24))
     {
       range_invalid_notif("Number of Features for Sets", pc_cap, 2^24)
       return(max_upse)
     }
-    round(inp()$set_feat_upse, digits=0)
+    round(iplot$set_feat_upse, digits=0)
   })
   
   heat_feat <- reactive({
-    if (range_invalid(inp()$set_feat_heat, pc_cap, 2^24))
+    if (range_invalid(iplot$set_feat_heat, pc_cap, 2^24))
     {
       range_invalid_notif("Number of Features for Sets", pc_cap, 2^24)
       return(max_heat)
     }
-    round(inp()$set_feat_heat, digits=0)
+    round(iplot$set_feat_heat, digits=0)
   })
   
   dend_feat <- reactive({
-    if (range_invalid(inp()$set_feat_dend, pc_cap, 2^24))
+    if (range_invalid(iplot$set_feat_dend, pc_cap, 2^24))
     {
       range_invalid_notif("Number of Features for Sets", pc_cap, 2^24)
       return(max_dend)
     }
-    round(inp()$set_feat_dend, digits=0)
+    round(iplot$set_feat_dend, digits=0)
   })
   
   nintersect <- reactive({
-    if (range_invalid(inp()$nintersect, 3, max_set_col_num))
+    if (range_invalid(iplot$nintersect, 3, max_set_col_num))
     {
       range_invalid_notif("Number of Columns", 3, max_set_col_num)
       return(def_set_col_num)
     }
-    round(inp()$nintersect, digits=0)
+    round(iplot$nintersect, digits=0)
   })
   
   bar_frac <- reactive({
-    if (range_invalid(inp()$bar_frac, 0, 1))
+    if (range_invalid(iplot$bar_frac, 0, 1))
     {
       range_invalid_notif("Bar Fraction", 0, 1)
       return(def_bar_frac)
     }
-    inp()$bar_frac
+    iplot$bar_frac
   })
   
-  title_access <- reactive("Embed Title" %in% inp()$sMenu)
-  legend <- reactive("Embed Legend" %in% inp()$sMenu)
-  boost <- reactive("Boost Graphics" %in% inp()$sMenu)
-  not_rev <- reactive("Uninverted Colors" %in% inp()$sMenu)
+  title_access <- reactive("Embed Title" %in% iplot$sMenu)
+  legend <- reactive("Embed Legend" %in% iplot$sMenu)
+  boost <- reactive("Boost Graphics" %in% iplot$sMenu)
+  not_rev <- reactive("Uninverted Colors" %in% iplot$sMenu)
   
-  cati <- reactive(inp()$category)
-  subi <- reactive(parse_opt(inp()[[id_subset(cati())]]))
-  feat <- reactive(rem_perc(inp()$features))
+  cati <- reactive(iplot$category)
+  subi <- reactive(parse_opt(iplot[[id_subset(cati())]]))
+  feat <- reactive(rem_perc(iplot$features))
   
   per_ind <- reactive(
-    which(perplexity_types == inp()$perplexity)
+    which(perplexity_types == iplot$perplexity)
   )
   sca_ind <- reactive(
-    which(sca_options == inp()$scale)
+    which(sca_options == iplot$scale)
   )
   thre_ind <- reactive(
-    which(thre_seqs[[inp()$scale]][[cati()]] == inp()[[id_thre(cati(), inp()$scale)]])
+    which(thre_seqs[[iplot$scale]][[cati()]] == iplot[[id_thre(cati(), iplot$scale)]])
   )
   
-  colorby <- reactive(inp()[[id_color(cati())]])
-  shapeby <- reactive(inp()[[id_shape(cati())]])
-  labelby <- reactive(inp()[[id_label(cati())]])
-  filterby <- reactive(inp()[[id_filter(cati())]])
+  colorby <- reactive(iplot[[id_color(cati())]])
+  shapeby <- reactive(iplot[[id_shape(cati())]])
+  labelby <- reactive(iplot[[id_label(cati())]])
+  filterby <- reactive(iplot[[id_filter(cati())]])
   
   # calculate which samples to keep after considering all metadata filters
   order <- reactive(order_total[[cati()]])
@@ -303,7 +299,7 @@ Possible reasons:<br>
     
     for (char in selected_chars[[cati()]])
       keep <- keep & (
-        order()[[char]] %in% parse_opt(inp()[[id_select(cati(), char)]]))
+        order()[[char]] %in% parse_opt(iplot[[id_select(cati(), char)]]))
     
     keep
   })
@@ -312,7 +308,7 @@ Possible reasons:<br>
   colors <- reactive(metadata()[, colorby()])
   shapes <- reactive(metadata()[, shapeby()])
   labels <- reactive(sprintf("%s: %s", labelby(), metadata()[, labelby()]))
-  my_chars <- reactive(parse_opt(inp()[[id_select(cati(), filterby())]]))
+  my_chars <- reactive(parse_opt(iplot[[id_select(cati(), filterby())]]))
   
   # the number of features before dimensionality reduction
   num_feat <- reactive({
@@ -328,7 +324,7 @@ Possible reasons:<br>
   
   # the title of the plot, to be embedded or displayed as plain text
   title_text <- reactive({
-    if (inp()$embedding == "Sets")
+    if (iplot$embedding == "Sets")
     {
       return(sprintf(
         "%s-Grouped Features on %s.%s (%s Features, %s Characteristics)", 
@@ -337,9 +333,9 @@ Possible reasons:<br>
     }
     
     nei <- ifelse(
-      (inp()$embedding == "UMAP" || inp()$embedding == "PHATE" || 
-         inp()$visualize == "tSNE") && (inp()$visualize != "Summarize"), 
-      sprintf(", %s Neighbors", inp()$perplexity), "")
+      (iplot$embedding == "UMAP" || iplot$embedding == "PHATE" || 
+         iplot$visualize == "tSNE") && (iplot$visualize != "Summarize"), 
+      sprintf(", %s Neighbors", iplot$perplexity), "")
     
     if (grepl("Transpose", cati(), fixed = TRUE))
       notif("This matrix has been transposed. Therefore, the current
@@ -347,9 +343,9 @@ Possible reasons:<br>
             features represent original samples.", "warning")
     
     sprintf("%s%s on %s.%s (%s Samples, %s Features%s)", 
-            ifelse(inp()$embedding == "PHATE", "", 
-                   repStr(inp()$visualize, vis_options, vis_nouns)), 
-            inp()$embedding, cati(), subi(), sum(keep()), num_feat(), nei)
+            ifelse(iplot$embedding == "PHATE", "", 
+                   repStr(iplot$visualize, vis_options, vis_nouns)), 
+            iplot$embedding, cati(), subi(), sum(keep()), num_feat(), nei)
   })
   
   title_embed <- reactive({
@@ -360,7 +356,7 @@ Possible reasons:<br>
   
   paint <- reactive({
     # for custom color schemes
-    if (inp()$palette == "Custom" && inp()$visualize != "Summarize" && 
+    if (iplot$palette == "Custom" && iplot$visualize != "Summarize" && 
         length(custom_color_scales) > 0 && colorby() %in% names(custom_color_scales))
     { 
       new <- custom_color_scales[[colorby()]] %>% unlist()
@@ -372,35 +368,35 @@ Possible reasons:<br>
     # otherwise pick a built-in palette
     num <- length(unique(colors()))
     
-    if (inp()$embedding == "Sets")
+    if (iplot$embedding == "Sets")
       num <- 5
     else
     {
-      if (inp()$visualize == "Summarize")
+      if (iplot$visualize == "Summarize")
       {
-        if (inp()$embedding == "PCA")
+        if (iplot$embedding == "PCA")
           return(single_color_seq)
-        if (inp()$embedding == "VAE")
+        if (iplot$embedding == "VAE")
           return(double_color_seq)
-        if (inp()$embedding == "UMAP")
+        if (iplot$embedding == "UMAP")
           num <- 6
       }
     }
     
-    color_seq(num, inp()$palette, !not_rev())
+    color_seq(num, iplot$palette, !not_rev())
   })
   
   shape_num <- reactive({
-    if (inp()$embedding == "Sets")
+    if (iplot$embedding == "Sets")
       return(NULL)
     
-    if (inp()$visualize == "Summarize")
+    if (iplot$visualize == "Summarize")
     {
-      if (inp()$embedding == "PCA")
+      if (iplot$embedding == "PCA")
         return(1)
-      if (inp()$embedding == "VAE")
+      if (iplot$embedding == "VAE")
         return(2)
-      if (inp()$embedding == "UMAP")
+      if (iplot$embedding == "UMAP")
         return(6)
     }
     
@@ -412,10 +408,10 @@ Possible reasons:<br>
   # ---------------
   
   ggplot2_data <- reactive({
-    if (inp()$embedding == "VAE" && which(nor_options == inp()$normalize) > 2)
+    if (iplot$embedding == "VAE" && which(nor_options == iplot$normalize) > 2)
       return(NULL)
     
-    if (inp()$embedding == "Sets")
+    if (iplot$embedding == "Sets")
     {
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(), 
                       sca_ind(), filterby(), cati())
@@ -426,7 +422,7 @@ Possible reasons:<br>
       num_data(data)
       
       data <- truncate_rows(data, upse_feat()) %>%
-        set_f1_f2(inp()$set_f1, inp()$set_f2) %>% num_nan_binary()
+        set_f1_f2(iplot$set_f1, iplot$set_f2) %>% num_nan_binary()
       
       if (ncol(data) == 1)
         return(venn1_custom(data, legend()))
@@ -434,12 +430,12 @@ Possible reasons:<br>
       return(upset_custom(data, legend(), nintersect(), c(bar_frac(), 1-bar_frac())))
     }
     
-    addr <- make_aws_name(cati(), subi(), inp()$scale, inp()$normalize, 
-                          feat(), inp()$embedding, inp()$visualize, 2, per_ind())
+    addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize, 
+                          feat(), iplot$embedding, iplot$visualize, 2, per_ind())
     
     data <- load_db(addr)
     
-    if (inp()$embedding == "PHATE")
+    if (iplot$embedding == "PHATE")
     {
       data <- data[keep(),,drop=FALSE]
       num_data(data)
@@ -449,11 +445,11 @@ Possible reasons:<br>
         colors(), shapes(), paint(), shape_num(), title_embed(), legend()))
     }
     
-    if (inp()$visualize == "Summarize")
+    if (iplot$visualize == "Summarize")
     {
       num_data(data)
       
-      if (inp()$embedding == "PCA")
+      if (iplot$embedding == "PCA")
         return(ggplot2_2d(
           data[,"Components"], data[,"Variance"], 
           "Number of Components", "Variance Captured", 
@@ -462,7 +458,7 @@ Possible reasons:<br>
           paint(), shape_num(), title_embed(), legend()
         ) + geom_smooth(se=FALSE, method="gam", formula = y ~ s(log(x))))
       
-      if (inp()$embedding == "VAE")
+      if (iplot$embedding == "VAE")
         return(ggplot2_2d(
           data[,"Training Iterations"], data[,"Loss Value"],
           "Number of Training Iterations", "Loss Function Output",
@@ -471,7 +467,7 @@ Possible reasons:<br>
           paint(), shape_num(), title_embed(), legend()
         ) + geom_smooth(se=FALSE, method="gam", formula = y ~ s(log(x))))
       
-      if (inp()$embedding == "UMAP")
+      if (iplot$embedding == "UMAP")
         return(ggplot2_2d(
           as.numeric(data[,1]), as.numeric(data[,2]), 
           "Number of Components", "Number of Noisy Samples", 
@@ -484,14 +480,14 @@ Possible reasons:<br>
     data <- data[keep(),,drop=FALSE]
     num_data(data)
     
-    if (inp()$visualize == "Explore")
+    if (iplot$visualize == "Explore")
     {
       return(ggplot2_2d(
-        data[,inp()$pc1], data[,inp()$pc2], pc(inp()$pc1), pc(inp()$pc2), 
+        data[,iplot$pc1], data[,iplot$pc2], pc(iplot$pc1), pc(iplot$pc2), 
         colors(), shapes(), paint(), shape_num(), title_embed(), legend()))
     }
     
-    if (inp()$visualize == "tSNE")
+    if (iplot$visualize == "tSNE")
     {
       return(ggplot2_2d(
         data[,1], data[,2], pc("1"), pc("2"), 
@@ -500,10 +496,10 @@ Possible reasons:<br>
   })
   
   plotly2_data <- reactive({
-    if (inp()$embedding == "VAE" && which(nor_options == inp()$normalize) > 2)
+    if (iplot$embedding == "VAE" && which(nor_options == iplot$normalize) > 2)
       return(NULL)
     
-    if (inp()$embedding == "Sets")
+    if (iplot$embedding == "Sets")
     {
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(), 
                       sca_ind(), filterby(), cati())
@@ -514,17 +510,17 @@ Possible reasons:<br>
       num_data(data)
       
       data <- truncate_rows(data, heat_feat()) %>% 
-        sort_row_sums() %>% set_f1_f2(inp()$set_f1, inp()$set_f2)
+        sort_row_sums() %>% set_f1_f2(iplot$set_f1, iplot$set_f2)
       
       return(plotly_heatmap_variance(data, paint(), title_embed(), legend(), boost()))
     }
     
-    addr <- make_aws_name(cati(), subi(), inp()$scale, inp()$normalize, 
-                          feat(), inp()$embedding, inp()$visualize, 2, per_ind())
+    addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize, 
+                          feat(), iplot$embedding, iplot$visualize, 2, per_ind())
     
     data <- load_db(addr)
     
-    if (inp()$embedding == "PHATE")
+    if (iplot$embedding == "PHATE")
     {
       data <- data[keep(),,drop=FALSE]
       
@@ -536,11 +532,11 @@ Possible reasons:<br>
       ))
     }
     
-    if (inp()$visualize == "Summarize")
+    if (iplot$visualize == "Summarize")
     {
       num_data(data)
       
-      if (inp()$embedding == "PCA")
+      if (iplot$embedding == "PCA")
         return(plotly_2d(
           data[,"Components"], data[,"Variance"], 
           "Number of Components", "Variance Captured", "markers",
@@ -549,7 +545,7 @@ Possible reasons:<br>
           paint(), title_embed(), legend()
         ))
       
-      if (inp()$embedding == "VAE")
+      if (iplot$embedding == "VAE")
         return(plotly_2d(
           data[,"Training Iterations"], data[,"Loss Value"], 
           "Number of Training Iterations", "Loss Function Output", "markers",
@@ -558,7 +554,7 @@ Possible reasons:<br>
           paint(), title_embed(), legend()
         ))
       
-      if (inp()$embedding == "UMAP")
+      if (iplot$embedding == "UMAP")
         return(plotly_2d(
           as.numeric(data[,1]), as.numeric(data[,2]), 
           "Number of Components", "Number of Noisy Samples", "markers",
@@ -571,15 +567,15 @@ Possible reasons:<br>
     data <- data[keep(),,drop=FALSE]
     num_data(data)
     
-    if (inp()$visualize == "Explore")
+    if (iplot$visualize == "Explore")
     {
       return(plotly_2d(
-        data[,inp()$pc1], data[,inp()$pc2], pc(inp()$pc1), pc(inp()$pc2), "markers", 
+        data[,iplot$pc1], data[,iplot$pc2], pc(iplot$pc1), pc(iplot$pc2), "markers", 
         colors(), labels(), paint(), title_embed(), legend()
       ))
     }
     
-    if (inp()$visualize == "tSNE")
+    if (iplot$visualize == "tSNE")
     {
       return(plotly_2d(
         data[,1], data[,2], pc("1"), pc("2"), "markers", 
@@ -589,10 +585,10 @@ Possible reasons:<br>
   })
   
   plotly3_data <- reactive({
-    if (inp()$embedding == "VAE" && which(nor_options == inp()$normalize) > 2)
+    if (iplot$embedding == "VAE" && which(nor_options == iplot$normalize) > 2)
       return(NULL)
     
-    if (inp()$embedding == "Sets")
+    if (iplot$embedding == "Sets")
     {
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(), 
                       sca_ind(), filterby(), cati())
@@ -602,17 +598,17 @@ Possible reasons:<br>
       
       num_data(data)
       
-      data <- truncate_rows(data, dend_feat()) %>% set_f1_f2(inp()$set_f1, inp()$set_f2)
+      data <- truncate_rows(data, dend_feat()) %>% set_f1_f2(iplot$set_f1, iplot$set_f2)
       
       return(plotly_heatmap_dendrogram(data, paint(), title_embed(), legend(), boost()))
     }
     
-    addr <- make_aws_name(cati(), subi(), inp()$scale, inp()$normalize, 
-                          feat(), inp()$embedding, inp()$visualize, 3, per_ind())
+    addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize, 
+                          feat(), iplot$embedding, iplot$visualize, 3, per_ind())
     
     data <- load_db(addr)
     
-    if (inp()$embedding == "PHATE")
+    if (iplot$embedding == "PHATE")
     {
       data <- data[keep(),,drop=FALSE]
       num_data(data)
@@ -623,11 +619,11 @@ Possible reasons:<br>
       ))
     }
     
-    if (inp()$visualize == "Summarize")
+    if (iplot$visualize == "Summarize")
     {
       num_data(data)
       
-      if (inp()$embedding == "PCA")
+      if (iplot$embedding == "PCA")
         return(plotly_2d(
           data[,"Components"], data[,"Variance"], 
           "Number of Components", "Variance Captured", "lines+markers",
@@ -636,7 +632,7 @@ Possible reasons:<br>
           paint(), title_embed(), legend()
         ))
       
-      if (inp()$embedding == "VAE")
+      if (iplot$embedding == "VAE")
         return(plotly_2d(
           data[,"Training Iterations"], data[,"Loss Value"], 
           "Number of Training Iterations", "Loss Function Output", "lines+markers",
@@ -645,7 +641,7 @@ Possible reasons:<br>
           paint(), title_embed(), legend()
         ))
       
-      if (inp()$embedding == "UMAP")
+      if (iplot$embedding == "UMAP")
         return(plotly_2d(
           as.numeric(data[,1]), as.numeric(data[,2]), 
           "Number of Components", "Number of Noisy Samples", "lines+markers",
@@ -658,16 +654,16 @@ Possible reasons:<br>
     data <- data[keep(),,drop=FALSE]
     num_data(data)
     
-    if (inp()$visualize == "Explore")
+    if (iplot$visualize == "Explore")
     {
       return(plotly_3d(
-        data[,inp()$pc1], data[,inp()$pc2], data[,inp()$pc3], 
-        pc(inp()$pc1), pc(inp()$pc2), pc(inp()$pc3), 
+        data[,iplot$pc1], data[,iplot$pc2], data[,iplot$pc3], 
+        pc(iplot$pc1), pc(iplot$pc2), pc(iplot$pc3), 
         colors(), labels(), paint(), title_embed(), legend()
       ))
     }
     
-    if (inp()$visualize == "tSNE")
+    if (iplot$visualize == "tSNE")
     {
       return(plotly_3d(
         data[,1], data[,2], data[,3],
@@ -679,19 +675,19 @@ Possible reasons:<br>
   
   # generates beeswarm data
   beeswarm_data <- reactive({
-    if (!(inp()$embedding %in% c('PCA', 'VAE', 'UMAP')))
+    if (!(iplot$embedding %in% c('PCA', 'VAE', 'UMAP')))
       return(NULL)
     
-    addr <- make_aws_name(cati(), subi(), inp()$scale, inp()$normalize, 
-                          feat(), inp()$embedding, inp()$visualize, 2, per_ind())
+    addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize, 
+                          feat(), iplot$embedding, iplot$visualize, 2, per_ind())
     
-    data <- load_db(addr)[keep(),inp()$pc1]
+    data <- load_db(addr)[keep(),iplot$pc1]
     
     if (length(data) < 1)
       return(NULL)
     
     data  <- cbind.data.frame(data, colors())
-    pc_name <- pc(inp()$pc1)
+    pc_name <- pc(iplot$pc1)
     colnames(data) <- c(pc_name, colorby())
     temp <- unique(colors())
     
@@ -773,7 +769,7 @@ Possible reasons:<br>
   output$beeswarm_out <- renderPlot({
     if (!authenticated())
       return(ggplot2_null())
-
+    
     plot_start()
     start <- my_timer()
     target <- beeswarm_data()
