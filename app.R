@@ -744,7 +744,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     if (!authenticated())
       return(my_datatable(NULL))
     
-    my_datatable(data.frame(metadata_data()))
+    my_datatable(data.frame(metadata()))
   })
   
   output$download_metadata <- downloadHandler(
@@ -755,7 +755,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
       if (!authenticated())
         return(NULL)
       
-      write.csv(metadata_data(), file)
+      write.csv(metadata(), file)
     }
   )
   
