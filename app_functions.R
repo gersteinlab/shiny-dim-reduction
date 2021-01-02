@@ -125,6 +125,13 @@ make_transparent <- function(color)
   sprintf("%s44", substr(color, start=1, stop=7))
 }
 
+# displays a color sequence as a rectangular palette
+display_palette <- function(color_seq, title)
+{
+  nums <- 1:length(color_seq)
+  image(nums, 1, as.matrix(nums), col=color_seq, axes=FALSE, xlab=title, ylab="")
+}
+
 # bulldog blue
 single_color_seq <- "#00356B"
 # adds harvard crimson

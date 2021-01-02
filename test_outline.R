@@ -101,6 +101,9 @@ auth_test <- function()
   print(my_auth(username, password, NULL))
 }
 
+# -------
+# RUN ALL
+# -------
 aws_test_1()
 aws_test_2()
 my_timer_test()
