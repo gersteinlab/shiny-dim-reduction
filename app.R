@@ -686,21 +686,10 @@ Seconds elapsed: %s", my_timer(start)), "message")
                           feat(), iplot$embedding, iplot$visualize, 2, per_ind())
     
     data <- load_db(addr)[keep(),iplot$pc1]
-    
-    if (length(data) < 1)
-      return(NULL)
-    
-    data  <- cbind.data.frame(data, colors())
-    pc_name <- pc(iplot$pc1)
-    colnames(data) <- c(pc_name, colorby())
-    temp <- unique(colors())
-    
-    names <- 1:length(temp)
-    if (legend())
-      names <- temp
-    
-    boxplot_beeswarm(data, get(pc_name) ~ get(colorby()), colorby(), pc_name, 
-                     names, make_transparent(paint()), paint(), title_embed())
+    data <- cbind.data.frame(colors(), data)
+    colnames(data) <- c(colorby(), pc(iplot$pc1))
+ 
+    boxplot_beeswarm(data, paint(), title_embed(), legend())
   })
   
   legend_data <- reactive({generate_legend_table(colors())})

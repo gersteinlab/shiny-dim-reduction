@@ -190,16 +190,24 @@ ggplot2_null <- function()
     xlim(0, 1) + ylim(0, 1)
 }
 
-# Beeswarm / box plot, rel stands for relation
-boxplot_beeswarm <- function(data, rel, xlab, ylab, names, 
-                             box_colors, bee_colors, title)
+# Boxplot + Beeswarm, with partially transparent boxplot
+# data: a data frame where each row represents a dot,
+# column 1 stores the label, and column 2 stores the y-coord
+boxplot_beeswarm <- function(data, colors, title, legend)
 {
-  boxplot(rel, data=data, xlab=xlab, ylab=ylab, 
-          names=names, col=box_colors, outline = FALSE, main=title)
+  xlab <- colnames(data)[1]
+  ylab <- colnames(data)[2]
+  rel <- get(ylab) ~ get(xlab)
+  x_bins <- unique(data[,1])
   
-  beeswarm(rel, data=data, xlab=xlab, ylab=ylab,
-           labels=names, col=bee_colors, corral="random",
-           main=title, pch=16, add=TRUE) # filled circles
+  if (!legend)
+    x_bins <- 1:length(x_bins)
+  
+  boxplot(rel, data=data, xlab=xlab, ylab=ylab, names=x_bins, 
+          col=make_transparent(colors), outline = FALSE, main=title) # transparency
+  
+  beeswarm(rel, data=data, xlab=xlab, ylab=ylab, labels=x_bins, 
+           col=colors, corral="random", main=title, pch=16, add=TRUE) # filled circles
 }
 
 # -------------------
