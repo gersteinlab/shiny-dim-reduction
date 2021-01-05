@@ -148,6 +148,16 @@ server <- function(input, output, session) {
     shinyjs::hide("stop")
   })
   
+  observeEvent(input$randomize, {
+    pick_random_input(session, "category", name_cat)
+    pick_random_input(session, "scale", sca_options)
+    pick_random_input(session, "normalize", nor_options)
+    pick_random_input(session, "features", fea_options)
+    pick_random_input(session, "embedding", emb_options)
+    pick_random_input(session, "visualize", vis_options)
+    pick_random_input(session, "perplexity", perplexity_types)
+  })
+  
   # a copy of all reactives that can stop running
   iplot <- reactiveValues()
   

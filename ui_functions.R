@@ -219,3 +219,9 @@ notification <- function(message, time, form)
   if (time > 0)
     showNotification(HTML(message), duration = time, closeButton = TRUE, type=form)
 }
+
+# picks a random option for an input picker that accepts only 1 option
+pick_random_input <- function(session, inputId, choices)
+{
+  updatePickerInput(session, inputId, selected=sample(choices, 1))
+}
