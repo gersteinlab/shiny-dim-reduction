@@ -298,9 +298,9 @@ upset_custom <- function(data, legend, nintersects, ratio)
     return(NULL)
   
   if (!legend)
-    colnames(data) <- 1:ncol(data)
+    colnames(data) <- ncol(data):1
   
-  upset(data, sets = rev(colnames(data)), nintersects = nintersects, 
+  upset(data, sets = colnames(data), nintersects = nintersects, 
         sets.x.label = "Features Per Factor Level", 
         mainbar.y.label = "Features Per Factor Subset", 
         order.by = "freq", mb.ratio = ratio, keep.order=!legend, 
