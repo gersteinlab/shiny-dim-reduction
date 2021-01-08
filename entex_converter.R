@@ -46,7 +46,7 @@ EH38E_removal <- function(char_vec)
 # USER VARIABLES
 # --------------
 
-init_cat(categories_full)
+init_cat()
 
 # -----
 # FABIO
@@ -221,6 +221,44 @@ oms <- data[95:104,]
 # # dropped - not samples
 # correlation <- data[136,,drop=FALSE]
 
+# -------
+# RAMPAGE
+# -------
+
+setwd(raw_loc)
+rampage_order <- read_tsv_text("metadata_20210106.tsv")
+rampage_order[[1]] <- rampage_order[[1]][1:54]
+rampage_order <- do.call(rbind, rampage_order) %>% r1_to_cols()
+
+trunc_names <- repStr(list.files("RAMPAGE"), ".tsv", "")
+rampage_order <- data.frame(rampage_order[rampage_order[,1] %in% trunc_names,])
+good <- apply(rampage_order, 2, function(x){length(unique(x))}) %>% unlist()
+rampage_order <- rampage_order[,good > 1]
+
+rampage_list <- my_empty_list(trunc_names)
+
+for (trunc in trunc_names)
+{
+  listed <- read_tsv_text(sprintf("RAMPAGE/%s.tsv", trunc))
+  rampage_list[[trunc]] <- do.call(rbind, listed)[,c(4, 7)]
+}
+
+column_names <- rampage_list[[1]][,1]
+rampage_mat <- rampage_list
+for (trunc in trunc_names)
+  rampage_mat[[trunc]] <- rampage_mat[[trunc]][,2]
+rampage_mat <- do.call(rbind, rampage_mat)
+rampage_mat <- rampage_mat[rampage_order[,1],]
+colnames(rampage_mat) <- column_names
+rownames(rampage_mat) <- NULL
+rampage_com <- convert_to_num(rampage_mat)
+
+setwd(pro_loc)
+cat <- name_cat[14]
+saveRDS(rampage_com, sprintf("combined/combined_%s.rds", cat))
+order_total[[cat]] <- rampage_order
+order_total <- order_total[name_cat]
+
 # ----------------------------------
 # Proteomics, FPKM/TPM, OMS Metadata
 # ----------------------------------
@@ -228,7 +266,7 @@ oms <- data[95:104,]
 setwd(pro_loc)
 
 # process metadata
-cat <- name_cat[14]
+cat <- name_cat[15]
 print(sprintf("Processing metadata for %s", cat))
 order <- create_order(
   nrow(pd), 
@@ -251,7 +289,7 @@ order_total[[cat]] <- order
 saveRDS(pd, sprintf("combined/combined_%s.rds", cat))
 
 # process metadata
-cat <- name_cat[15]
+cat <- name_cat[16]
 print(sprintf("Processing metadata for %s", cat))
 order <- create_order(
   nrow(ft), 
@@ -276,7 +314,7 @@ order_total[[cat]] <- order
 saveRDS(ft, sprintf("combined/combined_%s.rds", cat))
 
 # process metadata
-cat <- name_cat[16]
+cat <- name_cat[17]
 print(sprintf("Processing metadata for %s", cat))
 order <- create_order(
   nrow(oms), 
@@ -551,17 +589,87 @@ self_save("custom_color_scales")
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
 source("app_functions.R", encoding="UTF-8")
 
-dAct <- all_decorations$Active_Distal %>% set_f1_f2(c(0.4,1),c(0,60))
-dActPlot <- dAct %>% num_nan_binary() %>% upset_custom(TRUE)
-pAct <- all_decorations$Active_Proximal %>% set_f1_f2(c(0.4,1),c(0,60)) 
-pActPlot <- pAct %>% num_nan_binary() %>% upset_custom(TRUE)
-dRep <- all_decorations$Repressive_Distal %>% set_f1_f2(c(0.4,1),c(0,60)) 
-dRepPlot <- dRep %>% num_nan_binary() %>% upset_custom(TRUE)
-pRep <- all_decorations$Repressive_Proximal %>% set_f1_f2(c(0.4,1),c(0,60)) 
-pRepPlot <- pRep %>% num_nan_binary() %>% upset_custom(TRUE)
+default_proc <- function(data)
+{
+  data %>% set_f1_f2(c(0.4,1),c(0,60)) %>% num_nan_binary()
+}
+
+dAct <- all_decorations$Active_Distal %>% default_proc()
+pAct <- all_decorations$Active_Proximal %>% default_proc()
+dRep <- all_decorations$Repressive_Distal %>% default_proc()
+pRep <- all_decorations$Repressive_Proximal %>% default_proc()
+
+timur <- c("body_of_pancreas",
+"upper_lobe_of_left_lung",
+"ascending_aorta",
+"thyroid_gland",
+"tibial_nerve",
+"heart_left_ventricle",
+"stomach",
+"right_atrium_auricular_region",
+"esophagus_muscularis_mucosa",
+"sigmoid_colon",
+"gastroesophageal_sphincter",
+"esophagus_squamous_epithelium",
+"breast_epithelium",
+"adrenal_gland",
+"Peyers_patch",
+"vagina",
+"coronary_artery",
+"transverse_colon",
+"gastrocnemius_medialis",
+"uterus",
+"right_lobe_of_liver",
+"spleen")
+
+dAct_cols <- c(timur, setdiff(colnames(dAct), timur))
+safeDAct <- dAct[,timur]
+longDAct <- dAct[,dAct_cols]
+
+safedActPlot <- safeDAct %>% upset_custom(TRUE, 50, c(0.5, 0.5), TRUE)
+longdActPlot <- longDAct %>% upset_custom(TRUE, 50, c(0.5, 0.5), TRUE)
+
+setwd(dec_pro)
+
+c("safedActPlot", "longdActPlot") %>% self_save()
+
+pdf(file = "safedActPlot.pdf", width = 16, height = 8)
+safedActPlot
+dev.off()
+
+pdf(file = "longdActPlot.pdf", width = 16, height = 8)
+longdActPlot
+dev.off()
+
+protein <- readRDS(sprintf(
+  "%s/Sets/Sets-1_Logarithmic_Protein_Coding_Genes.rds",
+  pro_loc
+))$TISSUE
+
+hmm <- protein %>% set_f1_f2(c(0.25,1),c(0,60)) %>% num_nan_binary()
+colnames(hmm) <- repStr(colnames(hmm), ".", "_")
+
+timur_2 <- timur[timur %in% colnames(hmm)]
+safeProt <- hmm[,timur_2]
+prot_cols <- c(timur_2, setdiff(colnames(hmm), timur_2))
+longProt <- hmm[,prot_cols]
+
+protein_safe <- safeProt %>% upset_custom(TRUE, 50, c(0.5, 0.5), TRUE)
+protein_long <- longProt %>% upset_custom(TRUE, 50, c(0.5, 0.5), TRUE)
+
+pdf(file = "protein_safe.pdf", width = 16, height = 8)
+protein_safe
+dev.off()
+
+pdf(file = "protein_long.pdf", width = 16, height = 8)
+protein_long
+dev.off()
+
+pActPlot <- pAct %>% upset_custom(TRUE, 50, c(0.5, 0.5))
+dRepPlot <- dRep %>% upset_custom(TRUE, 50, c(0.5, 0.5))
+pRepPlot <- pRep %>% upset_custom(TRUE, 50, c(0.5, 0.5))
 
 # save
-setwd(dec_pro)
 c("dAct", "dActPlot", "pAct", "pActPlot", 
   "dRep", "dRepPlot", "pRep", "pRepPlot") %>% self_save()
 
