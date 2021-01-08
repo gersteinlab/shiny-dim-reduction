@@ -130,9 +130,9 @@ for (cat in dog)
 # -------
 
 yyang_folder_names <- list(
-  "Yucheng/gene_expression.lnc.cufflinks_output.reformat",
   "Yucheng/gene_expression.pc.cufflinks_output.reformat",
-  "Yucheng/gene_expression.pg.cufflinks_output.reformat" 
+  "Yucheng/gene_expression.pg.cufflinks_output.reformat",
+  "Yucheng/gene_expression.lnc.cufflinks_output.reformat"
 )
 
 dog <- name_cat[11:13]
