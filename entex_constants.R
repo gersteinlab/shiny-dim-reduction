@@ -14,9 +14,10 @@ categories_full <- list(
     "Methylation"=226807
   ),
   "Expression"=list(
-    "Protein_Coding_Genes"=9571,
-    "Pseudogenes"=17201,
-    "Long_Non_Coding_RNAs"=2542
+    "Protein_Coding_Genes"=17201,
+    "Pseudogenes"=2542,
+    "Long_Non_Coding_RNAs"=9571,
+    "RAMPAGE"=148246
   ),
   "Proteomics"=list(
     "Peptide"=9411,
