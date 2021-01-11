@@ -17,7 +17,7 @@ latent_dim <- pc_cap
 # batch_size depends completely on the dataset and your willingness to wait
 batch_size <- 2
 # cap_size depends completely on the dataset and your willingness to wait
-cap_size <- 12000
+cap_size <- 20000
 # patience depends completely on the dataset and your willingness to wait (10-20 standard)
 pat_size <- 5
 
@@ -131,6 +131,74 @@ make_records <- function(loss, val_loss)
   records
 }
 
+# runs variational autoencoder
+run_vae <- function(data)
+{
+  num_samp <- nrow(data)
+  input_dim <- ncol(data)
+  print(sprintf("Number of features: %s", input_dim))
+  
+  dims <- get_intermediate(input_dim, latent_dim)
+  dim_d1 <- dims[1]
+  dim_d2 <- dims[2]
+  print(sprintf("Layers (x2): %s neurons, %s neurons", dim_d1, dim_d2))
+  
+  x_inputs <- layer_input(shape = input_dim)
+  enc_d1 <- layer_dense(x_inputs, dim_d1, activation = "relu")
+  enc_d2 <- layer_dense(enc_d1, dim_d2, activation = "relu")
+  
+  z_dec_d2 <- layer_dense(units = dim_d2, activation = "relu")
+  d2_dec_d1 <- layer_dense(units = dim_d1, activation = "relu")
+  d1_dec_means <- layer_dense(units = input_dim, activation = "sigmoid")
+  
+  z_mean <- layer_dense(enc_d2, latent_dim)
+  z_log_var <- layer_dense(enc_d2, latent_dim)
+  z_combine <- layer_concatenate(list(z_mean, z_log_var))
+  
+  # inputs-derived z, from taking variables in inputs space as inputs
+  z_inputs <- z_combine %>% layer_lambda(sampling)
+  means_inputs <- z_inputs %>% z_dec_d2() %>% d2_dec_d1() %>% d1_dec_means()
+  
+  # latent-derived z, from taking variables in latent space as inputs
+  z_latent <- layer_input(shape = latent_dim)
+  means_latent <- z_latent %>% z_dec_d2() %>% d2_dec_d1() %>% d1_dec_means()
+  
+  # inputs-derived x to inputs-derived means: autoencoder
+  vae <- keras_model(x_inputs, means_inputs)
+  
+  # inputs-derived x to inputs-derived z means: encoder
+  encoder <- keras_model(x_inputs, z_inputs)
+  
+  # latent-derived z to latent-derived means: generator
+  generator <- keras_model(z_latent, means_latent)
+  
+  # compile with the customized vae loss function
+  vae_loss <- function(x, x_decoded_mean){
+    vae_loss_full(x, x_decoded_mean, input_dim, z_mean, z_log_var)
+  }
+  
+  vae %>% keras::compile(optimizer = pref_comp,
+                         loss = vae_loss,
+                         experimental_run_tf_function=FALSE)
+  
+  # generate training data
+  x_train <- data[,1:input_dim]
+  
+  loss <- numeric(0)
+  
+  history <- my_fit(vae, x_train)
+  
+  vae_final <- list(
+    "history"=history,
+    "predict"=predict(encoder, data[,1:input_dim], batch_size = batch_size),
+    "records"=make_records(loss, history$metrics$val_loss)
+  )
+  
+  k_clear_session()
+  
+  vae_final
+}
+
 dog <- rev(names(categories))
 for (cat in dog)
 {
@@ -138,7 +206,7 @@ for (cat in dog)
   
   for (sub in sub_groups[[cat]])
   {
-    scaled <- get_safe_sub(sub, combined, decorations, cat)
+    scaled <- get_safe_sub(combined, cat, sub)
     
     for (sca in sca_options)
     {
@@ -155,70 +223,7 @@ for (cat in dog)
           {
             print(vae_title)
             data <- feature_start(cap(scaled), fea/100)
-            
-            num_samp <- nrow(data)
-            input_dim <- ncol(data)
-            print(sprintf("Number of features: %s", input_dim))
-            
-            dims <- get_intermediate(input_dim, latent_dim)
-            dim_d1 <- dims[1]
-            dim_d2 <- dims[2]
-            print(sprintf("Layers (x2): %s neurons, %s neurons", dim_d1, dim_d2))
-            
-            x_inputs <- layer_input(shape = input_dim)
-            enc_d1 <- layer_dense(x_inputs, dim_d1, activation = "relu")
-            enc_d2 <- layer_dense(enc_d1, dim_d2, activation = "relu")
-            
-            z_dec_d2 <- layer_dense(units = dim_d2, activation = "relu")
-            d2_dec_d1 <- layer_dense(units = dim_d1, activation = "relu")
-            d1_dec_means <- layer_dense(units = input_dim, activation = "sigmoid")
-            
-            z_mean <- layer_dense(enc_d2, latent_dim)
-            z_log_var <- layer_dense(enc_d2, latent_dim)
-            z_combine <- layer_concatenate(list(z_mean, z_log_var))
-            
-            # inputs-derived z, from taking variables in inputs space as inputs
-            z_inputs <- z_combine %>% layer_lambda(sampling)
-            means_inputs <- z_inputs %>% z_dec_d2() %>% d2_dec_d1() %>% d1_dec_means()
-            
-            # latent-derived z, from taking variables in latent space as inputs
-            z_latent <- layer_input(shape = latent_dim)
-            means_latent <- z_latent %>% z_dec_d2() %>% d2_dec_d1() %>% d1_dec_means()
-            
-            # inputs-derived x to inputs-derived means: autoencoder
-            vae <- keras_model(x_inputs, means_inputs)
-            
-            # inputs-derived x to inputs-derived z means: encoder
-            encoder <- keras_model(x_inputs, z_inputs)
-            
-            # latent-derived z to latent-derived means: generator
-            generator <- keras_model(z_latent, means_latent)
-            
-            # compile with the customized vae loss function
-            vae_loss <- function(x, x_decoded_mean){
-              vae_loss_full(x, x_decoded_mean, input_dim, z_mean, z_log_var)
-            }
-            
-            vae %>% keras::compile(optimizer = pref_comp,
-                                   loss = vae_loss,
-                                   experimental_run_tf_function=FALSE)
-            
-            # generate training data
-            x_train <- data[,1:input_dim]
-            
-            loss <- numeric(0)
-            
-            history <- my_fit(vae, x_train)
-            
-            vae_final <- list(
-              "history"=history,
-              "predict"=predict(encoder, data[,1:input_dim], batch_size = batch_size),
-              "records"=make_records(loss, history$metrics$val_loss)
-            )
-            
-            saveRDS(vae_final, vae_title)
-            
-            k_clear_session()
+            saveRDS(run_vae(data), vae_title)
           }
         }
       }
