@@ -256,8 +256,9 @@ rampage_com <- convert_to_num(rampage_mat)
 setwd(pro_loc)
 cat <- name_cat[14]
 saveRDS(rampage_com, sprintf("combined/combined_%s.rds", cat))
-order_total[[cat]] <- rampage_order
-order_total <- order_total[name_cat]
+order_total[[cat]] <- rampage_order[,c(1:2, 4:6)]
+colnames(order_total[[cat]]) <- c("FILE_ACCESSION", "EXPERIMENT_ACCESSION", 
+                                  "TISSUE", "DATE_RELEASED", "TECHNICAL_REPLICATE")
 
 # ----------------------------------
 # Proteomics, FPKM/TPM, OMS Metadata
