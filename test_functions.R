@@ -49,8 +49,41 @@ test_boxplot_beeswarm <- function(r10 = 100)
   boxplot_beeswarm(data, cs, "Test with External Legend", FALSE)
 }
 
+test_upset_custom <- function(row=10000, col=4)
+{
+  print_clean("Functions tested: upset_custom")
+  
+  # example data
+  data <- data.frame(matrix(sample(0:1, row*col, replace=TRUE), nrow=row, ncol=col))
+  rownames(data) <- sprintf("Row_%s", 1:row)
+  colnames(data) <- sprintf("Col_%s", 1:col)
+  assign("upset_custom_data", data, envir=.GlobalEnv)
+  
+  # compressed with number of occurrences
+  comp <- data[!duplicated(data), ]
+  occurrences <- rep(0, nrow(comp))
+  
+  for (i in 1:nrow(comp))
+  {
+    ref <- as.numeric(comp[i, ])
+    for (j in 1:nrow(data))
+    {
+      if (isTRUE(all.equal(ref, as.numeric(data[j, ]))))
+        occurrences[i] <- occurrences[i]+1
+    }
+  }
+  
+  comp[["Occurrences"]] <- occurrences
+  comp <- comp[order(rowSums(comp[,1:col])),]
+  View(comp)
+}
+
 # -------
 # RUN ALL
 # -------
 test_color_seq()
 test_boxplot_beeswarm()
+test_upset_custom()
+upset_custom(upset_custom_data, 4, 0.7, TRUE)
+upset_custom(upset_custom_data, 8, 0.5, TRUE)
+upset_custom(upset_custom_data, 16, 0.3, TRUE)

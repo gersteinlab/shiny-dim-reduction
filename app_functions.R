@@ -290,21 +290,18 @@ plotly_3d <- function(x, y, z, x_axis, y_axis, z_axis,
 # SET INTERSECTION GRAPHS
 # -----------------------
 
-# Creates an UpSetR plot with/without a legend, nintersects columns, and the 
-# provided height ratio of the bar plot to the set intersection matrix.
-upset_custom <- function(data, legend, nintersects, ratio) 
+# Creates an UpSetR plot with nintersects columns, the provided height ratio of the 
+# bar plot to the whole upset, and whether feature subsets should be sorted by size.
+upset_custom <- function(data, nintersects, ratio, keep_order) 
 {
   if (ncol(data) < 2 || nrow(data) < 8)
     return(NULL)
   
-  if (!legend)
-    colnames(data) <- ncol(data):1
-  
-  upset(data, sets = colnames(data), nintersects = nintersects, 
+  upset(data, sets = rev(colnames(data)), nintersects = nintersects, 
         sets.x.label = "Features Per Factor Level", 
         mainbar.y.label = "Features Per Factor Subset", 
-        order.by = "freq", mb.ratio = ratio, keep.order=!legend, 
-        line.size = 0.1, shade.alpha = 0.25,
+        order.by = "freq", mb.ratio = c(ratio, 1-ratio), keep.order=keep_order, 
+        line.size = 0.1, shade.alpha = 0.25, empty.intersections = empty,
         matrix.color = "royalblue4", main.bar.color = "royalblue4",
         sets.bar.color = "royalblue4", shade.color = "lightskyblue")
 }
