@@ -301,7 +301,7 @@ upset_custom <- function(data, nintersects, ratio, keep_order)
         sets.x.label = "Features Per Factor Level", 
         mainbar.y.label = "Features Per Factor Subset", 
         order.by = "freq", mb.ratio = c(ratio, 1-ratio), keep.order=keep_order, 
-        line.size = 0.1, shade.alpha = 0.25, empty.intersections = empty,
+        line.size = 0.1, shade.alpha = 0.25,
         matrix.color = "royalblue4", main.bar.color = "royalblue4",
         sets.bar.color = "royalblue4", shade.color = "lightskyblue")
 }

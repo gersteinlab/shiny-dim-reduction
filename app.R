@@ -441,7 +441,10 @@ Seconds elapsed: %s", my_timer(start)), "message")
       if (ncol(data) == 1)
         return(venn1_custom(data, legend()))
       
-      return(upset_custom(data, legend(), nintersect(), c(bar_frac(), 1-bar_frac())))
+      if (!legend())
+        colnames(data) <- 1:ncol(data)
+      
+      return(upset_custom(data, nintersect(), bar_frac(), !legend()))
     }
     
     addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize, 
