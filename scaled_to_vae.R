@@ -184,7 +184,7 @@ run_vae <- function(data)
   # generate training data
   x_train <- data[,1:input_dim]
   
-  loss <- numeric(0)
+  loss <<- numeric(0)
   
   history <- my_fit(vae, x_train)
   
