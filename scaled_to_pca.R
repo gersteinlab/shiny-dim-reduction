@@ -13,7 +13,7 @@ for (cat in dog)
   
   for (sub in sub_groups[[cat]])
   {
-    scaled <- get_safe_sub(sub, combined, decorations, cat)
+    scaled <- get_safe_sub(combined, cat, sub)
     
     for (sca in sca_options)
     {
