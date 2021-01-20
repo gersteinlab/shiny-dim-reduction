@@ -292,7 +292,8 @@ plotly_3d <- function(x, y, z, x_axis, y_axis, z_axis,
 
 # Creates an UpSetR plot with nintersects columns, the provided height ratio of the 
 # bar plot to the whole upset, and whether feature subsets should be sorted by size.
-upset_custom <- function(data, nintersects, ratio, keep_order) 
+upset_custom <- function(data, nintersects, ratio, keep_order, 
+                         solid="royalblue4", shade="lightskyblue") 
 {
   if (ncol(data) < 2 || nrow(data) < 8)
     return(NULL)
@@ -302,8 +303,8 @@ upset_custom <- function(data, nintersects, ratio, keep_order)
         mainbar.y.label = "Features Per Factor Subset", 
         order.by = "freq", mb.ratio = c(ratio, 1-ratio), keep.order=keep_order, 
         line.size = 0.1, shade.alpha = 0.25,
-        matrix.color = "royalblue4", main.bar.color = "royalblue4",
-        sets.bar.color = "royalblue4", shade.color = "lightskyblue")
+        matrix.color = solid, main.bar.color = solid,
+        sets.bar.color = solid, shade.color = shade)
 }
 
 # Draws a single set venn diagram, where data is a one-column matrix / data frame

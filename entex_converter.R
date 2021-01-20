@@ -627,8 +627,8 @@ dAct_cols <- c(timur, setdiff(colnames(dAct), timur))
 safeDAct <- dAct[,timur]
 longDAct <- dAct[,dAct_cols]
 
-safedActPlot <- safeDAct %>% upset_custom(TRUE, 50, c(0.5, 0.5), TRUE)
-longdActPlot <- longDAct %>% upset_custom(TRUE, 50, c(0.5, 0.5), TRUE)
+safedActPlot <- safeDAct %>% upset_custom(50, 0.5, TRUE, "gray23", "gray88")
+longdActPlot <- longDAct %>% upset_custom(50, 0.5, TRUE, "gray23", "gray88")
 
 setwd(dec_pro)
 
@@ -655,8 +655,8 @@ safeProt <- hmm[,timur_2]
 prot_cols <- c(timur_2, setdiff(colnames(hmm), timur_2))
 longProt <- hmm[,prot_cols]
 
-protein_safe <- safeProt %>% upset_custom(TRUE, 50, c(0.5, 0.5), TRUE)
-protein_long <- longProt %>% upset_custom(TRUE, 50, c(0.5, 0.5), TRUE)
+protein_safe <- safeProt %>% upset_custom(50, 0.5, TRUE, "gray23", "gray88")
+protein_long <- longProt %>% upset_custom(50, 0.5, TRUE, "gray23", "gray88")
 
 pdf(file = "protein_safe.pdf", width = 16, height = 8)
 protein_safe
