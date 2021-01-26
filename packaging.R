@@ -3,6 +3,8 @@
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
 source("scaling.R", encoding="UTF-8")
 
+saver <- save_db # can also be save_ref
+
 # -----------
 # PACKAGE PCA
 # -----------
@@ -24,13 +26,15 @@ for (cat in dog)
         {
           loc <- sprintf("%s_%s_%s_%s_%s.rds", fea, nor, sca, sub, cat)
           
-          save_db(
-            readRDS(sprintf("vis-%s/NONE_%s_%s", emb, emb, loc)),
+          none <- readRDS(sprintf("vis-%s/NONE_%s_%s", emb, emb, loc))
+          saver(
+            none,
             make_aws_name(cat, sub, sca, nor, fea, emb, "Explore", "", "")
           )
           
-          save_db(
-            readRDS(sprintf("vis-%s/SUM_%s_%s", emb, emb, loc)), 
+          sum <- readRDS(sprintf("vis-%s/SUM_%s_%s", emb, emb, loc))
+          saver(
+            sum, 
             make_aws_name(cat, sub, sca, nor, fea, emb, "Summarize", "", "")
           )
           
@@ -42,7 +46,7 @@ for (cat in dog)
             
             for (dim in c(2,3))
             {
-              save_db(
+              saver(
                 tsne_vis[[sprintf("TSNE%s", dim)]][[sprintf("P%s", nei)]],
                 make_aws_name(cat, sub, sca, nor, fea, emb, "tSNE", dim, nei_ind)
               )
@@ -75,13 +79,15 @@ for (cat in dog)
         {
           loc <- sprintf("%s_%s_%s_%s_%s.rds", fea, nor, sca, sub, cat)
           
-          save_db(
-            readRDS(sprintf("vis-%s/NONE_%s_%s", emb, emb, loc)),
+          none <- readRDS(sprintf("vis-%s/NONE_%s_%s", emb, emb, loc))
+          saver(
+            none,
             make_aws_name(cat, sub, sca, nor, fea, emb, "Explore", "", "")
           )
           
-          save_db(
-            readRDS(sprintf("vis-%s/SUM_%s_%s", emb, emb, loc)), 
+          sum <- readRDS(sprintf("vis-%s/SUM_%s_%s", emb, emb, loc))
+          saver(
+            sum, 
             make_aws_name(cat, sub, sca, nor, fea, emb, "Summarize", "", "")
           )
           
@@ -93,7 +99,7 @@ for (cat in dog)
             
             for (dim in c(2,3))
             {
-              save_db(
+              saver(
                 tsne_vis[[sprintf("TSNE%s", dim)]][[sprintf("P%s", nei)]],
                 make_aws_name(cat, sub, sca, nor, fea, emb, "tSNE", dim, nei_ind)
               )
@@ -124,33 +130,29 @@ for (cat in dog)
         for (fea in c(1, 10, 100))
         {
           loc <- sprintf("%s_%s_%s_%s_%s.rds", fea, nor, sca, sub, cat)
-          # loc <- repStr(loc, sprintf("Total_%s", name_cat), name_cat)
           
-          save_db(
-            readRDS(sprintf("vis-UMAP/SUM_UMAP_%s", loc)), 
-            aws_bucket,
+          sum <- readRDS(sprintf("vis-UMAP/SUM_UMAP_%s", loc))
+          saver(
+            sum, 
             make_aws_name(cat, sub, sca, nor, fea, "UMAP", "Summarize", "", "")
           )
           
           explore <- readRDS(sprintf("vis-UMAP/NONE_UMAP_%s", loc))
+          tsne_vis <- readRDS(sprintf("vis-UMAP/TSNE_UMAP_%s", loc))
           
           for (nei in perplexity_types)
           {
             nei_ind <- which(perplexity_types == nei)
             
-            save_db(
+            saver(
               explore[[sprintf("P%s", nei)]], 
-              aws_bucket,
               make_aws_name(cat, sub, sca, nor, fea, "UMAP", "Explore", "", nei_ind)
             )
             
-            tsne_vis <- readRDS(sprintf("vis-UMAP/TSNE_UMAP_%s", loc))
-            
             for (dim in c(2,3))
             {
-              save_db(
+              saver(
                 tsne_vis[[sprintf("TSNE%s", dim)]][[sprintf("P%s", nei)]],
-                aws_bucket,
                 make_aws_name(cat, sub, sca, nor, fea, "UMAP", "tSNE", dim, nei_ind)
               )
             }
@@ -189,7 +191,7 @@ for (cat in dog)
                 "PHATE/PHATE-%s-%s_%s_%s_%s_%s_%s.rds",
                 nei, dim, fea, nor, sca, sub, cat))$embedding
               
-              save_db(
+              saver(
                 phate,
                 make_aws_name(cat, sub, sca, nor, fea, "PHATE", "", dim, nei_ind)
               )
@@ -229,7 +231,7 @@ for (cat in dog)
       
       for (cha in colnames(short_list))
       {
-        save_db(
+        saver(
           set_data[[cha]],
           sprintf("Sets/Sets-%s_%s_%s_%s.rds", 
                   ind, sca_ind, cha, cat)
