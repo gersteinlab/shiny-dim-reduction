@@ -74,6 +74,18 @@ pro_swi <- function()
   source("pipeline.R", encoding="UTF-8")
 }
 
+save_ref <- function(object, file)
+{
+  curdir <- getwd()
+  setwd(ref_loc)
+  dn <- dirname(file)
+  if (!dir.exists(dn))
+    dir.create(dn, recursive=TRUE)
+  saveRDS(object, file)
+  setwd(curdir)
+  invisible()
+}
+
 # runs the app
 rapp <- function(){
   runApp(sprintf("%s/app/app.R", roo_loc))
