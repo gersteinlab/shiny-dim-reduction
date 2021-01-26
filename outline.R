@@ -254,19 +254,22 @@ get_decor_subset <- function(cat, sub)
   return(NULL)
 }
 
-# obtains a subset of data's rows (margin 1) / columns (margin 2)
+# obtains a subset of data's rows
 # assumes the existence of an object named 'decorations'
-get_safe_sub <- function(data, cat, sub, margin=2)
+get_row_sub <- function(data, cat, sub)
 {
   if (sub != "Total")
-  {
-    indices <- get_decor_subset(cat, sub)
-    
-    if (margin == 1)
-      return(data[rownames(data) %in% indices,,drop=FALSE])
-    if (margin == 2)
-      return(data[,colnames(data) %in% indices,drop=FALSE])
-  }
+    return(data[rownames(data) %in% get_decor_subset(cat, sub),,drop=FALSE])
+  
+  data
+}
+
+# obtains a subset of data's cols
+# assumes the existence of an object named 'decorations'
+get_col_sub <- function(data, cat, sub)
+{
+  if (sub != "Total")
+    return(data[,colnames(data) %in% get_decor_subset(cat, sub),drop=FALSE])
   
   data
 }

@@ -67,7 +67,7 @@ for (cat in dog)
           
           # SUM
           raw <- readRDS(sprintf("combined/combined_%s.rds", cat))
-          raw <- get_safe_sub(raw, cat, sub)
+          raw <- get_col_sub(raw, cat, sub)
           raw <- do_scal(sca, raw)
           raw <- do_norm(nor, raw)
           raw <- feature_start(raw, fea/100)
