@@ -4,8 +4,38 @@
 
 source("options.R", encoding="UTF-8")
 
-auth_default <- TRUE # is the user authenticated by default?
-run_default <- TRUE # should plots respond to user inputs by default?
+# should data be retrieved from AWS or from ref_loc?
+use_local <- FALSE
+if (Sys.getenv('SHINY_PORT') == "")
+  use_local <- readline("Do you wish to run this app locally? (Y/N)") == 'Y'
+
+loader <- function(file)
+{
+  if (use_local)
+    return(readRDS(sprintf("%s/%s", ref_loc, file)))
+  load_db(file)
+}
+
+finder <- function(file)
+{
+  if (use_local)
+    return(file.exists(sprintf("%s/%s", ref_loc, file)))
+  length(get_bucket(aws_bucket, prefix=file)) > 0
+}
+
+saver <- function(object, file)
+{
+  if (use_local)
+    save_to_ref(object, sprintf("%s/%s", ref_loc, file))
+  else
+    save_db(object, file)
+}
+
+# is the user authenticated by default?
+auth_default <- TRUE 
+
+# should plots respond to user inputs by default?
+run_default <- TRUE 
 
 server <- function(input, output, session) {
   # --------------
@@ -430,8 +460,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(), 
                       sca_ind(), filterby(), cati())
       
-      data <- load_db(addr)[,my_chars(),drop=FALSE] %>% 
-        get_safe_sub(cati(), subi(), 1)
+      data <- loader(addr)[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), subi())
       
       num_data(data)
       
@@ -450,7 +479,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize, 
                           feat(), iplot$embedding, iplot$visualize, 2, per_ind())
     
-    data <- load_db(addr)
+    data <- loader(addr)
     
     if (iplot$embedding == "PHATE")
     {
@@ -521,8 +550,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(), 
                       sca_ind(), filterby(), cati())
       
-      data <- load_db(addr)[,my_chars(),drop=FALSE] %>% 
-        get_safe_sub(cati(), subi(), 1)
+      data <- loader(addr)[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), subi())
       
       num_data(data)
       
@@ -535,7 +563,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize, 
                           feat(), iplot$embedding, iplot$visualize, 2, per_ind())
     
-    data <- load_db(addr)
+    data <- loader(addr)
     
     if (iplot$embedding == "PHATE")
     {
@@ -610,8 +638,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(), 
                       sca_ind(), filterby(), cati())
       
-      data <- load_db(addr)[,my_chars(),drop=FALSE] %>% 
-        get_safe_sub(cati(), subi(), 1)
+      data <- loader(addr)[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), subi())
       
       num_data(data)
       
@@ -623,7 +650,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize, 
                           feat(), iplot$embedding, iplot$visualize, 3, per_ind())
     
-    data <- load_db(addr)
+    data <- loader(addr)
     
     if (iplot$embedding == "PHATE")
     {
@@ -701,7 +728,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize, 
                           feat(), iplot$embedding, iplot$visualize, 2, per_ind())
     
-    data <- load_db(addr)[keep(),iplot$pc1]
+    data <- loader(addr)[keep(),iplot$pc1]
     data <- cbind.data.frame(colors(), data)
     colnames(data) <- c(colorby(), pc(iplot$pc1))
  
@@ -826,15 +853,15 @@ Seconds elapsed: %s", my_timer(start)), "message")
     
     # get the vector of all session IDs
     num_sessions <- 0
-    if (length(get_bucket(aws_bucket, prefix="Sessions/num_sessions.rds")) > 0)
-      num_sessions <- load_db("Sessions/num_sessions.rds")
+    if (finder("Sessions/num_sessions.rds"))
+      num_sessions <- loader("Sessions/num_sessions.rds")
     
     # find a session ID that is not used
     i <- smallest_missing(num_sessions)
     
     # add the session ID to the list and save the session
-    save_db(c(num_sessions, i), "Sessions/num_sessions.rds")
-    save_db(session_data, sprintf("Sessions/session_%s.rds", i))
+    saver(c(num_sessions, i), "Sessions/num_sessions.rds")
+    saver(session_data, sprintf("Sessions/session_%s.rds", i))
     
     # the bookmark is simply the numerical ID for the session
     state$values$user_id <- i
@@ -844,8 +871,8 @@ Seconds elapsed: %s", my_timer(start)), "message")
   onRestore(function(state) {
     # get the vector of all session IDs
     num_sessions <- 0
-    if (length(get_bucket(aws_bucket, prefix="Sessions/num_sessions.rds")) > 0)
-      num_sessions <- load_db("Sessions/num_sessions.rds")
+    if (finder("Sessions/num_sessions.rds"))
+      num_sessions <- loader("Sessions/num_sessions.rds")
     
     # if the ID is invalid, load nothing
     id <- state$values$user_id
@@ -853,7 +880,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
       return(NULL)
     
     # otherwise, load the appropriate item
-    session_data <- load_db(sprintf("Sessions/session_%s.rds", id))
+    session_data <- loader(sprintf("Sessions/session_%s.rds", id))
     
     # update all input types accordingly
     picker_input_data <- session_data[["pickerInput"]]
