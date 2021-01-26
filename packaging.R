@@ -23,17 +23,14 @@ for (cat in dog)
         for (fea in c(1, 10, 100))
         {
           loc <- sprintf("%s_%s_%s_%s_%s.rds", fea, nor, sca, sub, cat)
-          # loc <- repStr(loc, sprintf("Total_%s", name_cat), name_cat)
           
           save_db(
             readRDS(sprintf("vis-%s/NONE_%s_%s", emb, emb, loc)),
-            aws_bucket,
             make_aws_name(cat, sub, sca, nor, fea, emb, "Explore", "", "")
           )
           
           save_db(
             readRDS(sprintf("vis-%s/SUM_%s_%s", emb, emb, loc)), 
-            aws_bucket,
             make_aws_name(cat, sub, sca, nor, fea, emb, "Summarize", "", "")
           )
           
@@ -47,7 +44,6 @@ for (cat in dog)
             {
               save_db(
                 tsne_vis[[sprintf("TSNE%s", dim)]][[sprintf("P%s", nei)]],
-                aws_bucket,
                 make_aws_name(cat, sub, sca, nor, fea, emb, "tSNE", dim, nei_ind)
               )
             }
@@ -78,17 +74,14 @@ for (cat in dog)
         for (fea in c(1, 10, 100))
         {
           loc <- sprintf("%s_%s_%s_%s_%s.rds", fea, nor, sca, sub, cat)
-          # loc <- repStr(loc, sprintf("Total_%s", name_cat), name_cat)
           
           save_db(
             readRDS(sprintf("vis-%s/NONE_%s_%s", emb, emb, loc)),
-            aws_bucket,
             make_aws_name(cat, sub, sca, nor, fea, emb, "Explore", "", "")
           )
           
           save_db(
             readRDS(sprintf("vis-%s/SUM_%s_%s", emb, emb, loc)), 
-            aws_bucket,
             make_aws_name(cat, sub, sca, nor, fea, emb, "Summarize", "", "")
           )
           
@@ -102,7 +95,6 @@ for (cat in dog)
             {
               save_db(
                 tsne_vis[[sprintf("TSNE%s", dim)]][[sprintf("P%s", nei)]],
-                aws_bucket,
                 make_aws_name(cat, sub, sca, nor, fea, emb, "tSNE", dim, nei_ind)
               )
             }
@@ -197,13 +189,8 @@ for (cat in dog)
                 "PHATE/PHATE-%s-%s_%s_%s_%s_%s_%s.rds",
                 nei, dim, fea, nor, sca, sub, cat))$embedding
               
-              # phate <- myRDS(sprintf(
-              #   "PHATE/PHATE-%s-%s_%s_%s_%s_%s.rds", 
-              #   nei, dim, fea, nor, sca, cat))$embedding
-              
               save_db(
                 phate,
-                aws_bucket,
                 make_aws_name(cat, sub, sca, nor, fea, "PHATE", "", dim, nei_ind)
               )
             }
@@ -244,7 +231,6 @@ for (cat in dog)
       {
         save_db(
           set_data[[cha]],
-          aws_bucket,
           sprintf("Sets/Sets-%s_%s_%s_%s.rds", 
                   ind, sca_ind, cha, cat)
         )
