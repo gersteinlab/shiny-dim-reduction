@@ -80,7 +80,7 @@ server <- function(input, output, session) {
   
   # logical conditions too complicated to hard-code
   output$visualize_cond <- reactive({
-    input$embedding %in% c("PCA", "VAE", "UMAP") && input$plotPanels != pan_options[4]
+    input$embedding %in% c("PCA", "VAE", "UMAP")
   })
   
   output$perplexity_cond <- reactive({
@@ -693,6 +693,9 @@ Seconds elapsed: %s", my_timer(start)), "message")
   # generates beeswarm data
   beeswarm_data <- reactive({
     if (!(iplot$embedding %in% c('PCA', 'VAE', 'UMAP')))
+      return(NULL)
+    
+    if (iplot$visualize != 'Explore')
       return(NULL)
     
     addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize, 
