@@ -678,3 +678,37 @@ c("dAct", "dActPlot", "pAct", "pActPlot",
 setwd(dec_pro)
 c("dAct", "dActPlot", "pAct", "pActPlot", 
   "dRep", "dRepPlot", "pRep", "pRepPlot") %>% self_load()
+
+
+upset_plot = function (df, ncols=5, order, Nintersects, keeporder=FALSE){
+  
+  p = upset(df,
+            nsets=ncols,  # number of tissues
+            nintersects = Nintersects, # number of bars in x
+            point.size = 4.5,
+            line.size = 2,
+            number.angles = 0,
+            mainbar.y.label = Ylabel,
+            sets.x.label = Xlabel,
+            order.by = order,
+            mb.ratio = c(0.5, 0.5),
+            #              keep.order=keeporder, # doesn't work?
+            text.scale = 1.8,
+  )
+  return(p)
+}
+
+upset_revised <- function(data, Xlabel, Ylabel, nint=200, order="freq", keep_order=TRUE) 
+{
+  upset(data, 
+        sets = rev(colnames(data)),  
+        sets.x.label = Xlabel, 
+        mainbar.y.label = Ylabel, 
+        mb.ratio = c(0.5, 0.5),
+        nintersects = nint,
+        order.by = order,  
+        keep.order=keep_order, 
+        point.size = 5,
+        line.size = 1,
+        text.scale = 2)
+}

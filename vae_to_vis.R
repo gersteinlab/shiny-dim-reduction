@@ -1,6 +1,5 @@
 # The goal of this script is to convert VAE data to vis data.
 
-
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
 source("scaling.R", encoding="UTF-8")
 
