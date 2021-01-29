@@ -26,7 +26,7 @@ finder <- function(file)
 saver <- function(object, file)
 {
   if (use_local)
-    save_to_ref(object, sprintf("%s/%s", ref_loc, file))
+    save_ref(object, sprintf("%s/%s", ref_loc, file))
   else
     save_db(object, file)
 }
