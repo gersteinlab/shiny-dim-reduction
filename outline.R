@@ -4,7 +4,6 @@
 
 source("installer.R", encoding="UTF-8")
 
-require("shiny")
 require("dplyr")
 require("stringi")
 
@@ -58,7 +57,7 @@ add_perc <- function(str)
 # removes a percent sign from a string and converts to a number
 rem_perc <- function(str)
 {
-  repStr(str, "%", "") %>% as.numeric()
+  as.numeric(repStr(str, "%", ""))
 }
 
 # Interpolates the number of truncated features in the range [pc_cap, total_features]
