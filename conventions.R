@@ -5,6 +5,7 @@
 # SECTION HEADER
 # --------------
 
+# settings: end in newline, no trailing whitespace, spaces only
 # aside from the opening comment, most comments are terse and minimally formatted
 # --comments use double hyphens to denote bullet points
 # --wrapping is done by using tabs (2 spaces)
