@@ -37,6 +37,8 @@ load_local <- function(filename)
 # AWS.S3 STORAGE
 # --------------
 
+my_amazon_obj <- NULL
+
 # assigns keys for AWS.S3 - must be used first
 assign_keys <- function(keys)
 {
@@ -62,8 +64,8 @@ save_aws_s3 <- function(data, filename)
 {
   tmp <- tempfile(fileext = ".rdata")
   on.exit(unlink(tmp))
-  assign("my_amazon_obj", data, envir = parent.frame())
-  save(my_amazon_obj, file = tmp, envir = parent.frame())
+  my_amazon_obj <<- data
+  save(my_amazon_obj, file = tmp, envir = .GlobalEnv)
   put_object(file = tmp, bucket = Sys.getenv("AWS_ACCESS_BUCKET"), object = filename)
 }
 
@@ -73,7 +75,7 @@ load_aws_s3 <- function(filename)
   tmp <- tempfile(fileext = ".rdata")
   on.exit(unlink(tmp))
   save_object(bucket = Sys.getenv("AWS_ACCESS_BUCKET"), object = filename, file = tmp)
-  load(tmp, envir = parent.frame())
+  load(tmp, envir = .GlobalEnv)
   my_amazon_obj
 }
 
@@ -81,16 +83,8 @@ load_aws_s3 <- function(filename)
 # STORAGE ASSIGNMENT
 # ------------------
 
-find_store <- find_aws_s3
-save_store <- save_aws_s3
-load_store <- load_aws_s3
-
-is_local <- function()
-{
-  (Sys.getenv('SHINY_PORT') == "") && dir.exists(Sys.getenv("LOCAL_STORAGE_ROOT"))
-}
-
-update_type <- function(use_local)
+# changes the storage type to local or AWS
+set_storage <- function(use_local)
 {
   if (use_local)
   {
@@ -106,9 +100,18 @@ update_type <- function(use_local)
   }
 }
 
-use_local <- FALSE
-if (is_local())
-  use_local <- readline("Type 'Y' and press enter to use local storage.
-Type anything else and press enter to use AWS storage.") == 'Y'
+# checks if the script is running locally
+is_local <- function()
+{
+  (Sys.getenv('SHINY_PORT') == "") && dir.exists(Sys.getenv("LOCAL_STORAGE_ROOT"))
+}
 
-update_type(use_local)
+# queries the user for a storage type
+storage_query <- function()
+{
+  user_local <- "N"
+  if (is_local())
+    user_local <- readline("Type 'Y' and press enter to use local storage.
+Type anything else and press enter to use AWS storage.")
+  set_storage(user_local == "Y")
+}
