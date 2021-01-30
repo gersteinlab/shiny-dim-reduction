@@ -2,6 +2,7 @@
 
 source("app_functions.R", encoding="UTF-8")
 
+require("shiny")
 require("shinycssloaders")
 require("shinyWidgets")
 
@@ -10,19 +11,19 @@ require("shinyWidgets")
 # ---------------
 
 # formats to 'opt (num)'
-get_opt <- function(opt, num) 
+get_opt <- function(opt, num)
 {
   sprintf("%s (%s)", opt, num)
 }
 
 # performs get_opt on every unique member of a vector v
-get_opts <- function(v) 
+get_opts <- function(v)
 {
   unlist(lapply(unique(v), function(sample){get_opt(sample, sum(v %in% sample))}))
 }
 
-# Suppose we have a vector of strings of the form "A (B)", 
-# where A and B are strings that do not contain '(' or ')'. 
+# Suppose we have a vector of strings of the form "A (B)",
+# where A and B are strings that do not contain '(' or ')'.
 # Return all As if ind = 1 or all Bs if ind = 2.
 parse_opt <- function(str, ind=1)
 {
@@ -62,18 +63,18 @@ id_filter <- function(category)
 }
 
 # Useful for finding select IDs
-id_select <- function(category, character) 
+id_select <- function(category, character)
 {
   sprintf("selectby_%s_%s", category, character)
 }
 
 # Useful for finding thre IDs
-id_thre <- function(category, scale) 
+id_thre <- function(category, scale)
 {
   sprintf("thre_%s_%s", category, scale)
 }
 
-# creates a vector of inputs that should be excluded 
+# creates a vector of inputs that should be excluded
 # from bookmarking, based on the table's ID
 table_exclude_vector <- function(...)
 {
@@ -127,7 +128,7 @@ select_panel <- function(id, name, options, chosen)
   if (missing(chosen))
     chosen <- 1
   chosen <- min(chosen, length(options))
-  
+
   pickerInput(
     inputId = id, label = name, choices = options,
     selected = options[chosen], multiple = FALSE,
@@ -143,7 +144,7 @@ check_panel <- function(id, name, inputs, indices)
 {
   if (missing(indices))
     indices <- 1:length(inputs)
-  
+
   pickerInput(
     inputId = id, label = name,
     choices = inputs, selected = inputs[indices], multiple = TRUE,
@@ -168,14 +169,14 @@ action <- function(id, name, icon_name, color, bk, br)
 authenticator_modal <- function() {
   modalDialog(
     title = HTML("<b>Authentication</b>"),
-    HTML("Need access? Please make a request to 
+    HTML("Need access? Please make a request to
     <a href=\"justin.chang@yale.edu\" target=\"_blank\">
     justin.chang@yale.edu</a>.<br><br>"),
     wellPanel(
       style="background-color: #E0F0FF; border-color: #00356B",
-      textInput("username", "Username", 
+      textInput("username", "Username",
                 placeholder="Please enter your username ...", value="guest"),
-      textInput("password", "Password (is invisible)", 
+      textInput("password", "Password (is invisible)",
                 placeholder="", value=""),
       action("attempt_login", "Login", "unlock", "#FFFFFF", "#0064C8", "#00356B"),
       actionButton("toggle_password", "Show/Hide Password")
@@ -190,7 +191,7 @@ cat_select_panel <- function(cat, id, name, options, chosen)
   conditionalPanel(
     condition = sprintf("input.category == '%s'",  cat),
     select_panel(id, name, options, chosen)
-  ) 
+  )
 }
 
 # creates a check panel of selections for a given category and characteristic
@@ -214,7 +215,7 @@ thre_select_panel <- function(choices, cat, sca)
 # shows a notification (form can be default, message, warning, error)
 # in general: warnings and errors are self-explanatory, defaults are used
 # to begin actions, and messages are used to return results
-notification <- function(message, time, form) 
+notification <- function(message, time, form)
 {
   if (time > 0)
     showNotification(HTML(message), duration = time, closeButton = TRUE, type=form)
