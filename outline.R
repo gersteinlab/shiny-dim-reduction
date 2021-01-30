@@ -3,9 +3,7 @@
 # source("outline.R", encoding="UTF-8")
 
 source("installer.R", encoding="UTF-8")
-
 require("dplyr")
-require("stringi")
 
 # ---------
 # FUNCTIONS
@@ -17,47 +15,17 @@ my_timer <- function(start = 0, num_digits = 4){
 }
 
 # creates an empty list of length n
-list_len_n <- function(n)
+len_n_list <- function(n)
 {
   vector(mode="list", length=n)
 }
 
-# creates an empty list with names
-my_empty_list <- function(names)
+# creates an empty list from names
+empty_list <- function(names)
 {
-  target <- vector(mode="list", length=length(names))
+  target <- len_n_list(length(names))
   names(target) <- names
   target
-}
-
-# fixed pattern replacement in a vector of strings
-repStr <- function(x_stringi, pattern, replacement)
-{
-  stri_replace_all_fixed(
-    x_stringi, pattern = pattern,
-    replacement = replacement,
-    vectorize_all = FALSE)
-}
-
-# regex pattern replacement in a vector of strings
-regStr <- function(x_stringi, pattern, replacement)
-{
-  stri_replace_all_regex(
-    x_stringi, pattern = pattern,
-    replacement = replacement,
-    vectorize_all = FALSE)
-}
-
-# adds a percent sign to a string or number
-add_perc <- function(str)
-{
-  sprintf("%s%%", str)
-}
-
-# removes a percent sign from a string and converts to a number
-rem_perc <- function(str)
-{
-  as.numeric(repStr(str, "%", ""))
 }
 
 # Interpolates the number of truncated features in the range [pc_cap, total_features]
