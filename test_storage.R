@@ -85,3 +85,4 @@ aws_s3_test_2 <- function(num = 10)
 # -------
 aws_s3_test_1()
 aws_s3_test_2()
+storage_query()

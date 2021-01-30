@@ -3,6 +3,7 @@
 # source("outline.R", encoding="UTF-8")
 
 source("installer.R", encoding="UTF-8")
+require("shiny")
 require("dplyr")
 
 # ---------
@@ -21,7 +22,7 @@ len_n_list <- function(n)
 }
 
 # creates an empty list from names
-empty_list <- function(names)
+my_empty_list <- function(names)
 {
   target <- len_n_list(length(names))
   names(target) <- names

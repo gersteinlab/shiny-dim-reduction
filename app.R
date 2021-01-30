@@ -4,6 +4,9 @@
 
 source("options.R", encoding="UTF-8")
 source("storage.R", encoding="UTF-8")
+source("authentication.R", encoding="UTF-8")
+
+storage_query()
 
 # is the user authenticated by default?
 auth_default <- TRUE
@@ -434,7 +437,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(),
                       sca_ind(), filterby(), cati())
 
-      data <- loader(addr)[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), subi())
+      data <- load_store(addr)[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), subi())
 
       num_data(data)
 
@@ -453,7 +456,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize,
                           feat(), iplot$embedding, iplot$visualize, 2, per_ind())
 
-    data <- loader(addr)
+    data <- load_store(addr)
 
     if (iplot$embedding == "PHATE")
     {
@@ -524,7 +527,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(),
                       sca_ind(), filterby(), cati())
 
-      data <- loader(addr)[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), subi())
+      data <- load_store(addr)[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), subi())
 
       num_data(data)
 
@@ -537,7 +540,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize,
                           feat(), iplot$embedding, iplot$visualize, 2, per_ind())
 
-    data <- loader(addr)
+    data <- load_store(addr)
 
     if (iplot$embedding == "PHATE")
     {
@@ -612,7 +615,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(),
                       sca_ind(), filterby(), cati())
 
-      data <- loader(addr)[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), subi())
+      data <- load_store(addr)[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), subi())
 
       num_data(data)
 
@@ -624,7 +627,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize,
                           feat(), iplot$embedding, iplot$visualize, 3, per_ind())
 
-    data <- loader(addr)
+    data <- load_store(addr)
 
     if (iplot$embedding == "PHATE")
     {
@@ -702,7 +705,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize,
                           feat(), iplot$embedding, iplot$visualize, 2, per_ind())
 
-    data <- loader(addr)[keep(),iplot$pc1]
+    data <- load_store(addr)[keep(),iplot$pc1]
     data <- cbind.data.frame(colors(), data)
     colnames(data) <- c(colorby(), pc(iplot$pc1))
 
@@ -827,15 +830,15 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
     # get the vector of all session IDs
     num_sessions <- 0
-    if (finder("Sessions/num_sessions.rds"))
-      num_sessions <- loader("Sessions/num_sessions.rds")
+    if (find_store("Sessions/num_sessions.rds"))
+      num_sessions <- load_store("Sessions/num_sessions.rds")
 
     # find a session ID that is not used
     i <- smallest_missing(num_sessions)
 
     # add the session ID to the list and save the session
-    saver(c(num_sessions, i), "Sessions/num_sessions.rds")
-    saver(session_data, sprintf("Sessions/session_%s.rds", i))
+    save_store(c(num_sessions, i), "Sessions/num_sessions.rds")
+    save_store(session_data, sprintf("Sessions/session_%s.rds", i))
 
     # the bookmark is simply the numerical ID for the session
     state$values$user_id <- i
@@ -845,8 +848,8 @@ Seconds elapsed: %s", my_timer(start)), "message")
   onRestore(function(state) {
     # get the vector of all session IDs
     num_sessions <- 0
-    if (finder("Sessions/num_sessions.rds"))
-      num_sessions <- loader("Sessions/num_sessions.rds")
+    if (find_store("Sessions/num_sessions.rds"))
+      num_sessions <- load_store("Sessions/num_sessions.rds")
 
     # if the ID is invalid, load nothing
     id <- state$values$user_id
@@ -854,7 +857,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
       return(NULL)
 
     # otherwise, load the appropriate item
-    session_data <- loader(sprintf("Sessions/session_%s.rds", id))
+    session_data <- load_store(sprintf("Sessions/session_%s.rds", id))
 
     # update all input types accordingly
     picker_input_data <- session_data[["pickerInput"]]

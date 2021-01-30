@@ -1,8 +1,8 @@
 # The purpose of this file is to store various UI-related functions for the app.
 
 source("app_functions.R", encoding="UTF-8")
+source("find_replace.R", encoding="UTF-8")
 
-require("shiny")
 require("shinycssloaders")
 require("shinyWidgets")
 

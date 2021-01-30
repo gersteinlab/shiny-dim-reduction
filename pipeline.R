@@ -1,4 +1,4 @@
-# The purpose of this script is to store functions for 
+# The purpose of this script is to store functions for
 # building the files and folders of a dimensionality reduction app.
 # source("pipeline.R", encoding="UTF-8")
 
@@ -16,7 +16,7 @@ while (!exists("project_name"))
 {
   attempted_name <- readline(prompt = "
 Please enter the name of the project that you would like to work on.")
-  
+
   if (attempted_name %in% list.files(root))
     assign("project_name", attempted_name, envir = .GlobalEnv)
 }
@@ -42,7 +42,7 @@ safe_dir(raw_loc)
 pro_loc <- sprintf("%s/processing", roo_loc)
 safe_dir(pro_loc)
 ref_loc <- sprintf("%s/reference", roo_loc)
-safe_dir(ref_loc)
+assign_root(ref_loc)
 app_loc <- sprintf("%s/app", roo_loc)
 safe_dir(app_loc)
 dep_loc <- sprintf("%s/dependencies", app_loc)
@@ -93,12 +93,15 @@ rapp <- function(){
 
 # updates and runs the app
 uapp <- function(){
-  update_app(c("app.R", 
-               "interface.R", 
-               "app_functions.R", 
-               "ui_functions.R", 
-               "options.R", 
+  update_app(c("app.R",
+               "interface.R",
+               "app_functions.R",
+               "ui_functions.R",
+               "options.R",
                "outline.R",
-               "installer.R"))
+               "installer.R",
+               "storage.R",
+               "find_replace.R",
+               "authentication.R"))
   rapp()
 }
