@@ -1,66 +1,114 @@
-# The purpose of this file is to manage Local / AWS storage.
+# The purpose of this file is to manage Local / AWS.S3 storage.
 
-use_local <- FALSE
-if (Sys.getenv('SHINY_PORT') == "")
-  use_local <- readline("Do you wish to run this app locally? (Y/N)") == 'Y'
+require(aws.s3)
 
 # -------------
 # LOCAL STORAGE
 # -------------
 
-# -------------
-# S3AWS STORAGE
-# -------------
-
-# assigns Amazon Web Service keys
-assign_keys <- function(aws_keys)
+# assigns a root directory for local storage
+assign_root <- function(root)
 {
-  if (length(aws_keys) != 3)
-    stop("Not all AWS keys provided.")
+  if (length(root) != 1 || !dir.exists(root))
+    stop("Error: invalid root directory.")
 
-  Sys.setenv("AWS_ACCESS_KEY_ID" = aws_keys[1],
-             "AWS_SECRET_ACCESS_KEY" = aws_keys[2])
-  assign("aws_bucket", aws_keys[3], envir = .GlobalEnv)
-  invisible()
+  Sys.setenv("LOCAL_STORAGE_ROOT" = root)
+}
+
+# determines whether a file with the given filename exists
+find_local <- function(filename)
+{
+  file.exists(sprintf("%s/%s", Sys.getenv("LOCAL_STORAGE_ROOT"), filename))
+}
+
+# saves data to filename in the root directory
+save_local <- function(data, filename)
+{
+  saveRDS(data, sprintf("%s/%s", Sys.getenv("LOCAL_STORAGE_ROOT"), filename))
+}
+
+# loads data from filename in the root directory
+load_local <- function(filename)
+{
+  readRDS(sprintf("%s/%s", Sys.getenv("LOCAL_STORAGE_ROOT"), filename))
+}
+
+# --------------
+# AWS.S3 STORAGE
+# --------------
+
+# assigns keys for AWS.S3 - must be used first
+assign_keys <- function(keys)
+{
+  if (class(keys) != "list")
+    stop("Provided keys are not a list.")
+
+  if (!isTRUE(all.equal(names(keys), c("id", "secret", "bucket"))))
+    stop("Incorrect key components provided.")
+
+  Sys.setenv("AWS_ACCESS_KEY_ID" = keys$id,
+             "AWS_SECRET_ACCESS_KEY" = keys$secret,
+             "AWS_ACCESS_BUCKET" = keys$bucket)
+}
+
+# determines whether a single object with the given filename exists
+find_aws_s3 <- function(filename)
+{
+  length(get_bucket(Sys.getenv("AWS_ACCESS_BUCKET"), prefix=filename)) == 1
 }
 
 # saves a single object to AWS.s3 - modified from s3save
-# assumes the existence of an object called 'aws_bucket'
-custom_s3save <- function(my_amazon_obj, object)
+save_aws_s3 <- function(data, filename)
 {
   tmp <- tempfile(fileext = ".rdata")
   on.exit(unlink(tmp))
+  assign("my_amazon_obj", data, envir = parent.frame())
   save(my_amazon_obj, file = tmp, envir = parent.frame())
-  put_object(file = tmp, bucket = aws_bucket, object = object)
+  put_object(file = tmp, bucket = Sys.getenv("AWS_ACCESS_BUCKET"), object = filename)
 }
 
 # loads a single object from AWS.s3 - modified from s3load
-# assumes the existence of an object called 'aws_bucket'
-custom_s3load <- function(object)
+load_aws_s3 <- function(filename)
 {
   tmp <- tempfile(fileext = ".rdata")
   on.exit(unlink(tmp))
-  save_object(bucket = aws_bucket, object = object, file = tmp)
+  save_object(bucket = Sys.getenv("AWS_ACCESS_BUCKET"), object = filename, file = tmp)
   load(tmp, envir = parent.frame())
   my_amazon_obj
 }
 
-# ------------
-# OUTDATED AWS
-# ------------
+# ------------------
+# STORAGE ASSIGNMENT
+# ------------------
 
-# saves an object to Amazon AWS, returning whether the process succeeded
-# assumes the existence of an object called 'aws_bucket'
-save_db <- function(dat, filename){
-  my_amazon_obj <- dat
-  s3save(my_amazon_obj, bucket=aws_bucket, object=filename)
-  my_amazon_obj <- NULL
-  length(evaluation) == 1
+find_store <- find_aws_s3
+save_store <- save_aws_s3
+load_store <- load_aws_s3
+
+is_local <- function()
+{
+  (Sys.getenv('SHINY_PORT') == "") && dir.exists(Sys.getenv("LOCAL_STORAGE_ROOT"))
 }
 
-# loads an object from Amazon AWS
-# assumes the existence of an object called 'aws_bucket'
-load_db <- function(filename){
-  s3load(filename, aws_bucket)
-  my_amazon_obj
+update_type <- function(use_local)
+{
+  if (use_local)
+  {
+    assign("find_store", find_local, envir=.GlobalEnv)
+    assign("save_store", save_local, envir=.GlobalEnv)
+    assign("load_store", load_local, envir=.GlobalEnv)
+  }
+  else
+  {
+    assign("find_store", find_aws_s3, envir=.GlobalEnv)
+    assign("save_store", save_aws_s3, envir=.GlobalEnv)
+    assign("load_store", load_aws_s3, envir=.GlobalEnv)
+  }
 }
+
+use_local <- FALSE
+if (is_local())
+  use_local <- readline("Type 'Y' and press enter to use local storage.
+Type anything else and press enter to use AWS storage.") == 'Y'
+
+update_type(use_local)

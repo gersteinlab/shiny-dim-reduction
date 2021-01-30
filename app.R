@@ -3,31 +3,7 @@
 # source("pipeline.R", encoding="UTF-8")
 
 source("options.R", encoding="UTF-8")
-
-# should data be retrieved from AWS or from ref_loc?
-
-
-loader <- function(file)
-{
-  if (use_local)
-    return(readRDS(sprintf("%s/%s", ref_loc, file)))
-  load_db(file)
-}
-
-finder <- function(file)
-{
-  if (use_local)
-    return(file.exists(sprintf("%s/%s", ref_loc, file)))
-  length(get_bucket(aws_bucket, prefix=file)) > 0
-}
-
-saver <- function(object, file)
-{
-  if (use_local)
-    save_ref(object, sprintf("%s/%s", ref_loc, file))
-  else
-    save_db(object, file)
-}
+source("storage.R", encoding="UTF-8")
 
 # is the user authenticated by default?
 auth_default <- TRUE
