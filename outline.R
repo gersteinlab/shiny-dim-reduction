@@ -7,8 +7,6 @@ source("installer.R", encoding="UTF-8")
 require("shiny")
 require("dplyr")
 require("stringi")
-require("aws.s3")
-require("bcrypt")
 
 # ---------
 # FUNCTIONS
@@ -31,20 +29,6 @@ my_empty_list <- function(names)
   target <- vector(mode="list", length=length(names))
   names(target) <- names
   target
-}
-
-# straightforward password hashing
-my_hash <- function(password)
-{
-  bcrypt::hashpw(password, gensalt(12))
-}
-
-# checks if user_credentials[[username]] == password
-my_auth <- function(username, password, user_credentials)
-{
-  length(username) == 1 && length(password) == 1 && is.character(username) &&
-    is.character(password) && (username %in% names(user_credentials)) &&
-    checkpw(password, user_credentials[[username]])
 }
 
 # fixed pattern replacement in a vector of strings
