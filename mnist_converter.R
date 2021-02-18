@@ -30,24 +30,24 @@ read_idx <- function(file) {
   # create binary connection to file
   conn <- gzfile(file, open = "rb")
   on.exit(close(conn), add = TRUE)
-  
+
   # read the magic number as sequence of 4 bytes
   magic <- readBin(conn, what = "raw", n = 4, endian = "big")
   ndims <- as.integer(magic[[4]])
-  
+
   # read the dimensions (32-bit integers)
   dims <- readBin(conn, what = "integer", n = ndims, endian = "big")
-  
+
   # read the rest in as a raw vector
   data <- readBin(conn, what = "raw", n = prod(dims), endian = "big")
-  
+
   # convert to an integer vecto
   converted <- as.integer(data)
-  
+
   # return plain vector for 1-dim array
   if (length(dims) == 1)
     return(converted)
-  
+
   # wrap 3D data into matrix
   matrix(converted, nrow = dims[1], ncol = prod(dims[-1]), byrow = TRUE)
 }
@@ -57,26 +57,34 @@ mnist <- rapply(sources, classes = "character", how = "list", function(url) {
   target <- file.path(raw_loc, basename(url))
   if (!file.exists(target))
     download.file(url, target)
-  
+
   # read the IDX file
   read_idx(target)
 })
 
 setwd(pro_loc)
 
-saveRDS(mnist$train$x, "combined/combined_Training_Data.rds")
-saveRDS(mnist$test$x, "combined/combined_Test_Data.rds")
+indices <- sample(1:10000, 1000, replace=FALSE)
+
+combined_train <- convert_to_num(mnist$train$x[indices,])
+combined_test <- convert_to_num(mnist$test$x[indices,])
+saveRDS(combined_train, "combined/combined_Training_Data.rds")
+saveRDS(combined_test, "combined/combined_Test_Data.rds")
 
 order_total <- my_empty_list(name_cat)
 
-order_total[[1]] <- data.frame(matrix(mnist$train$y, ncol=1))
+order_total[[1]] <- data.frame(matrix(mnist$train$y, ncol=1))[indices,,drop=FALSE]
 colnames(order_total[[1]]) <- "Number"
-order_total[[2]] <- data.frame(matrix(mnist$test$y, ncol=1))
+order_total[[2]] <- data.frame(matrix(mnist$test$y, ncol=1))[indices,,drop=FALSE]
 colnames(order_total[[2]]) <- "Number"
 
-amazon_keys <- tester_keys
+amazon_keys <- list(
+  "id" = "AKIAVI2HZGPOKCJWL3VR",
+  "secret" = "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",
+  "bucket" = "shiny-app-data-justin-mnist"
+)
 pc_cap <- 10
-perplexity_types <- c(50, 400, 1000, 3000, 6000)
+perplexity_types <- c(5, 10, 20, 50, 100)
 app_title <- "Dimensionality Reduction Tool for MNIST"
 
 setwd(dep_loc)
