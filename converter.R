@@ -1,10 +1,11 @@
-# The goal of this script is to store functions related 
+# The goal of this script is to store functions related
 # to converting from raw data to combined data and metadata.
 # Actual converter.R files should source this file.
 # source("converter.R", encoding="UTF-8")
 
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
 source("pipeline.R", encoding="UTF-8")
+source("find_replace.R", encoding="UTF-8")
 
 # ------------
 # DEPENDENCIES
@@ -15,54 +16,54 @@ source("pipeline.R", encoding="UTF-8")
 dependencies <- function()
 {
   print_clean("DEPENDENCY 01 (REQUIRED): categories_full.rds")
-  print_clean("A list of groups (ex: cCREs, Expression, Proteomics), where each 
+  print_clean("A list of groups (ex: cCREs, Expression, Proteomics), where each
 group is a list of categories (ex: H3K27ac, H3K9me3, Methylation) and the value
 of each category is the number of features prior to dimensionality reduction.
 All categories must be unique, even if in different groups.")
   print_clean("")
-  
+
   print_clean("DEPENDENCY 02 (REQUIRED): amazon_keys.rds")
   print_clean("A vector for AWS - access ID, access secret, and bucket.")
   print_clean("")
-  
+
   print_clean("DEPENDENCY 03 (OPTIONAL): order_total.rds")
   print_clean("A list of data frames, one for each category.
 Each data frame has samples as rows and columns as metadata features.")
   print_clean("")
-  
+
   print_clean("DEPENDENCY 04 (OPTIONAL): decorations.rds")
-  print_clean("A list of decorations, where each decoration contains (i) a 
+  print_clean("A list of decorations, where each decoration contains (i) a
 vector of applicable categories and (ii) the subsets. Each subset contains
 (a) a reference character vector and (b) indices that constitute subsets.")
   print_clean("")
-  
+
   print_clean("DEPENDENCY 05 (OPTIONAL): pc_cap.rds")
   print_clean("The number of principal components displayed, at least 3.")
   print_clean("")
-  
+
   print_clean("DEPENDENCY 06 (OPTIONAL): thresholds.rds")
   print_clean("A list (sca_options) of lists (name_cat), with each entry
 being a vector of eleven numbers as thresholds for Sets.")
   print_clean("")
-  
+
   print_clean("DEPENDENCY 07 (OPTIONAL): perplexity_types.rds")
   print_clean("A vector of five numbers denoting the options for the number of
 nearest neighbors employed by tSNE, UMAP, or PHATE.")
   print_clean("")
-  
+
   print_clean("DEPENDENCY 08 (OPTIONAL): app_title.rds")
   print_clean("The title of the application.")
   print_clean("")
-  
+
   print_clean("DEPENDENCY 09 (OPTIONAL): app_citations.rds")
   print_clean("The data-related citations for this application.")
   print_clean("")
-  
+
   print_clean("DEPENDENCY 10 (OPTIONAL): user_credentials.rds")
-  print_clean("A list of user credentials, where usernames are 
+  print_clean("A list of user credentials, where usernames are
 names(user_credentials) and passwords are unlist(user_credentials).")
   print_clean("")
-  
+
   print_clean("DEPENDENCY 11 (OPTIONAL): custom_color_scales.rds")
   print_clean("A list of custom color scales, where each scale is a list such that
 the labels are names(scale) and the colors are unlist(scale).")
@@ -120,7 +121,7 @@ r1_to_cols <- function(data){
 try_catch_ignore <- function(expr)
 {
   tryCatch(
-    expr, 
+    expr,
     warning = function(e){
       return()
     },
@@ -129,11 +130,11 @@ try_catch_ignore <- function(expr)
     },
     finally=NULL
   )
-  
+
   return(invisible())
 }
 
-# a function that attempts a mass download, 
+# a function that attempts a mass download,
 # returning all indices that the download failed at
 # url_vec: a vector of URLs
 # loc_vec: a vector of corresponding locations to write to
@@ -142,44 +143,44 @@ mass_download <- function(url_vec, loc_vec, chunk_size = 100)
 {
   # input validation
   len <- length(url_vec)
-  
+
   if (len != length(loc_vec))
     stop("Length of URL vector does not equal length of location vector.")
-  
+
   failed_indices <- 0
-  
+
   if (len < 1)
     return(failed_indices)
-  
+
   # separate into chunks
   chunk_indices <- c(seq(1, len, chunk_size), len+1)
   num_chunks <- length(chunk_indices)-1
-  
+
   start <- my_timer()
-  
+
   for (i in 1:num_chunks)
   {
     print_clean(sprintf("Downloading chunk: %s/%s", i, num_chunks))
-    
+
     chunk <- chunk_indices[i]:(chunk_indices[i+1]-1)
-    
+
     try_catch_ignore(
       download.file(url_vec[chunk], loc_vec[chunk], method="libcurl", quiet=TRUE)
     )
-    
+
     for (j in chunk)
       if (!file.exists(loc_vec[j]))
         failed_indices <- c(failed_indices, j)
-    
+
     print_clean(sprintf(
       "Number of items failed: %s", length(failed_indices)-1
     ))
-    
+
     print_clean(sprintf(
-      "Seconds per item: %s", 
+      "Seconds per item: %s",
       round(my_timer(start)/max(i*chunk_size, len), digits=4)
     ))
   }
-  
+
   failed_indices
 }

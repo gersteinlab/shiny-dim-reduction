@@ -40,7 +40,7 @@ import_pipeline <- function(filenames)
 {
   m_list <- my_empty_list(filenames)
   for (filename in filenames)
-    m_list[[filename]] <- filename %>% read_tsv_text() %>% rem_preamble(10) 
+    m_list[[filename]] <- filename %>% read_tsv_text() %>% rem_preamble(10)
   dplyr::bind_rows(m_list) %>% rem_dupe_rows() %>% order_by_col("FASTQ.IDENTIFIER")
 }
 
@@ -52,9 +52,9 @@ colnames(empty_df) <- "Unknown"
 bed_assemble <- function(bed_res){
   if (is.null(bed_res))
     return(empty_df)
-  
+
   bed_res[,1] <- make.unique(bed_res[,1])
-  
+
   bed_res %>% t() %>% r1_to_cols() %>% data.frame()
 }
 
@@ -74,13 +74,13 @@ colnames(common_bed) <- common_cols
 colnames(common_rg) <- common_cols
 
 # folders, URLs, and filenames for downloading
-dest_folders <- sprintf("Metadata_Cleaned/%s_Mass", 
+dest_folders <- sprintf("Metadata_Cleaned/%s_Mass",
                         c("Bios", "Expe", "Dono", "rRNA", "Gene"))
 
 url_lists <- list(
-  "Bios" = bios_ref[,2], 
-  "Expe" = expe_ref[,2], 
-  "Dono" = dono_ref[,2], 
+  "Bios" = bios_ref[,2],
+  "Expe" = expe_ref[,2],
+  "Dono" = dono_ref[,2],
   "rRNA" = rrna_ref[,2],
   "GeneE" = gene_ref[,2]
 )
@@ -120,7 +120,7 @@ for (i in 1:5)
   locs <- loc_lists[[i]]
   miss <- download_status[[i]][-1]
   mass_download(urls[miss], locs[miss], 1)
-  
+
   for (j in miss)
     if (file.exists(locs[miss]))
       download_status[[i]] <- setdiff(download_status[[i]], j)
@@ -135,6 +135,7 @@ rm(urls, locs, url_lists, loc_lists)
 # ----------------
 
 bed_txt <- my_empty_list(c("Bios", "Expe", "Dono"))
+self_load("common_bed")
 
 for (i in 1:3)
 {
@@ -143,7 +144,7 @@ for (i in 1:3)
   filenames <- sprintf("M%s.txt", 1:final_len)
   bed_txt[[i]] <- my_empty_list(filenames)
   file_locs <- sprintf("%s/%s/%s", raw_loc, dest_folders[i], filenames)
-  
+
   for (j in 1:final_len)
   {
     if (j %% 1000 == 0)
@@ -188,7 +189,7 @@ dono_clean[,5] <- gsub(" y", "", dono_clean[,5])
 dono_clean <- cbind.data.frame(dono_clean, make_age_range(dono_clean[,5], 5))
 dono_clean <- cbind.data.frame(dono_clean, make_age_range(dono_clean[,5], 10))
 dono_clean <- dono_clean[,-5]
-colnames(dono_clean) <- c("DONOR", "DONOR_TYPE", "SEX", "STATUS", 
+colnames(dono_clean) <- c("DONOR", "DONOR_TYPE", "SEX", "STATUS",
                           "AGE_5", "AGE_10")
 
 # bios
@@ -220,18 +221,18 @@ expe_clean$X......Other.Library.Construction.Kit <- NULL
 expe_clean$X.....Other.Kits <- NULL
 expe_clean$X...RNA.Isolation.Method <- NULL
 # colnames(expe_clean) <- c(
-#   "EXPERIMENT", "EXPERIMENT_TYPE", "AMPLIFIED", 
-#   "DNA_QUANTIFICATION_METHOD", "LIBRARY_CONSTRUCTION_KIT", "SAMPLES_MULTIPLEXED", 
-#   "STRAND_SPECIFICITY", "STARTING_MATERIAL_TYPE", "EXRNA_QUANTIFICATION_METHOD", 
-#   "RNA_ISOLATION_KIT", "EXTRACELLULAR_VESICLE_PURIFICATION", "CELL_REMOVAL", 
+#   "EXPERIMENT", "EXPERIMENT_TYPE", "AMPLIFIED",
+#   "DNA_QUANTIFICATION_METHOD", "LIBRARY_CONSTRUCTION_KIT", "SAMPLES_MULTIPLEXED",
+#   "STRAND_SPECIFICITY", "STARTING_MATERIAL_TYPE", "EXRNA_QUANTIFICATION_METHOD",
+#   "RNA_ISOLATION_KIT", "EXTRACELLULAR_VESICLE_PURIFICATION", "CELL_REMOVAL",
 #   "CELL_REMOVAL_METHOD", "CENTRIFUGATION_PARAMETERS"
 # )
 colnames(expe_clean) <- c(
   "EXPERIMENT", "CELL_REMOVAL", "ENZYMATIC_TREATMENT",
   "EXRNA_QUANTIFICATION_METHOD","RNA_ISOLATION_KIT", "PROTEINASE_K", "DNASE",
   "EXTRACELLULAR_VESICLE_PURIFICATION", "CELL_REMOVAL_METHOD",
-  "CENTRIFUGATION_PARAMETERS","AMPLIFIED", "DNA_QUANTIFICATION_METHOD", 
-  "LIBRARY_CONSTRUCTION_KIT",  "SAMPLES_MULTIPLEXED", 
+  "CENTRIFUGATION_PARAMETERS","AMPLIFIED", "DNA_QUANTIFICATION_METHOD",
+  "LIBRARY_CONSTRUCTION_KIT",  "SAMPLES_MULTIPLEXED",
   "STRAND_SPECIFICITY", "STARTING_MATERIAL_TYPE")
 
 # note: redundancy between columns and missing data have been fixed
@@ -287,16 +288,16 @@ metadata$ANATOMICAL <- repStr(
 
 metadata$RNA_KIT <- repStr(
   metadata$RNA_KIT,
-  c("miRCURY RNA isolation kit - Cell & Plant (Exiqon)", 
+  c("miRCURY RNA isolation kit - Cell & Plant (Exiqon)",
     "MiRVana Paris (Ambion)",
     "SeraMir Kit (System Biosciences)",
     "Trizol + alcohol precipitation",
     "Serum and Plasma kit (Qiagen)",
     "miRcury biofluids (Exiqon)",
     "miRNeasy (Qiagen)"),
-  c("miRCURY RNA Isolation, Exiqon", 
-    "mirVana PARIS, Ambion", 
-    "SeraMir, System Biosciences", 
+  c("miRCURY RNA Isolation, Exiqon",
+    "mirVana PARIS, Ambion",
+    "SeraMir, System Biosciences",
     "Trizol, Alcohol Precipitation",
     "Serum and Plasma, Qiagen",
     "miRCURY Biofluids, Exiqon",
@@ -335,11 +336,11 @@ metadata$DONOR <- repStr(
 
 metadata$LIBRARY_CONSTRUCTION_KIT <- repStr(
   metadata$LIBRARY_CONSTRUCTION_KIT,
-  c("TruSeq Small RNA library prep kit (Illumina)", 
+  c("TruSeq Small RNA library prep kit (Illumina)",
     "NEBNext small RNA library prep (NEB)",
     "BioO NEXTFlex kit (V2)",
     "NEXTflex (Bioo)"),
-  c("TruSeq Small RNA, Illumina", 
+  c("TruSeq Small RNA, Illumina",
     "NEBNext small RNA, NEB",
     "BioO NEXTFlex V2",
     "BioO NEXTFlex V1")
@@ -347,7 +348,7 @@ metadata$LIBRARY_CONSTRUCTION_KIT <- repStr(
 
 metadata$SEX <- repStr(
   metadata$SEX,
-  c("Gender unknown", "Gender unspecified", "female", "male", 
+  c("Gender unknown", "Gender unspecified", "female", "male",
     "Masculine gender", "FeMale"),
   c("Unknown", "Unknown", "Female", "Male", "Male", "Female")
 )
@@ -398,7 +399,7 @@ for (i in 4:5)
   filenames <- sprintf("M%s.txt", 1:final_len)
   rg_txt[[i-3]] <- my_empty_list(filenames)
   file_locs <- sprintf("%s/%s/%s", raw_loc, dest_folders[i], filenames)
-  
+
   for (j in 1:final_len)
   {
     if (j %% 1000 == 0)
@@ -433,7 +434,7 @@ taxonomic_ordering <- c(
 species_only <- function(hmm1)
 {
   working <- rep(0, 24)
-  
+
   for (i in 1:nrow(hmm1))
   {
     if (hmm1[i, 25] != 0)
@@ -456,7 +457,7 @@ species_only <- function(hmm1)
       }
     }
   }
-  
+
   hmm1[hmm1[,25] != 0,]
 }
 
@@ -479,9 +480,9 @@ for (n in 1:2)
       print(sprintf("k: %s", k))
       print(sprintf("Average: %s", my_timer(start)/k))
     }
-    
+
     test <- rg_txt[[n]][[k]]
-    
+
     if (length(test) < 1 || nrow(test) < 1 || ncol(test) != 7)
     {
       rg_assoc[[n]][[k]] <- empty_df
@@ -490,7 +491,7 @@ for (n in 1:2)
     else
     {
       x <- test[test$level != "no rank",c(2,3,5,6)]
-      
+
       if (length(which(x$level == "species")) < 1 || ncol(x) != 4)
       {
         rg_assoc[[n]][[k]] <- empty_df
@@ -501,15 +502,15 @@ for (n in 1:2)
         hmm1 <- matrix(0, nrow=nrow(x), ncol=length(taxonomic_ordering)) %>% data.frame()
         for (i in 1:nrow(x))
           hmm1[i, taxonomic_ordering == x[i, 1]] <- x[i, 3]
-        
+
         hmm2 <- species_only(hmm1)[,1:25]
         readCounts <- x[as.numeric(rownames(hmm2)),,drop=FALSE]
-        
-        rownames(readCounts) <- apply(readCounts, 1, 
+
+        rownames(readCounts) <- apply(readCounts, 1,
                                       function(a){sprintf("%s_%s", a[3], a[2])})
         rownames(hmm2) <- rownames(readCounts)
         indices <- readCounts[,4] > 0
-        
+
         rg_assoc[[n]][[k]] <- hmm2[indices,]
         rg_txt2[[n]][[k]] <- t(readCounts[indices,4,drop=FALSE]) %>% data.frame()
       }
@@ -610,13 +611,13 @@ for (folder in file_list)
   finaddr <- sprintf("%s/Cleaned/%s", base_data_loc, folder)
   if (!file.exists(finaddr))
     dir.create(finaddr)
-  
+
   memes <- list.files(subaddr)
   splitup <- strsplit(memes, "_exceRpt_", fixed=TRUE)
   actual_names <- unlist(lapply(splitup, function(x){x[2]}))
-  processed_names <- gsub("ReadsPerMillion", "RPM", 
-                          gsub("TaxonomyTrees", "TAXTREE", 
-                               gsub("exogenousGenomes", "EXO-GENO", 
+  processed_names <- gsub("ReadsPerMillion", "RPM",
+                          gsub("TaxonomyTrees", "TAXTREE",
+                               gsub("exogenousGenomes", "EXO-GENO",
                                     gsub("exogenousRibosomal", "EXO-RIBO",
                                          actual_names))))
   initial_data_locs <- sprintf("%s/%s", subaddr, memes)
@@ -636,8 +637,8 @@ for (folder in list.files())
 {
   for (file in list.files(sprintf("%s/Cleaned", folder)))
   {
-    list_of_fragments <- c(list_of_fragments, 
-                           sprintf("%s/Cleaned/%s/smallRNAQuants_RPM.RData", 
+    list_of_fragments <- c(list_of_fragments,
+                           sprintf("%s/Cleaned/%s/smallRNAQuants_RPM.RData",
                                    folder, file))
   }
 }
@@ -746,7 +747,7 @@ rownames(assoc_gene_clean) <- NULL
 colnames(assoc_gene_clean) <- taxonomic_ordering[1:25]
 
 setwd(sprintf("%s/Summary_Cleaned", raw_loc))
-miRNA <- readRDS("miRNA.rds") 
+miRNA <- readRDS("miRNA.rds")
 piRNA <- readRDS("piRNA.rds")
 tRNA <- readRDS("tRNA.rds")
 circRNA <- readRDS("circRNA.rds")
@@ -759,13 +760,13 @@ specific_ex_ribosomes <- readRDS("specific_ex_ribosomes.rds")
 
 cut_features <- function(data, thresh){
   bad_indices <- NULL
-  
+
   for (j in 2:ncol(data))
   {
     if (sum(is.na(data[[j]])) > thresh*nrow(data))
       bad_indices <- c(bad_indices, j)
   }
-  
+
   good_indices <- setdiff(1:ncol(data), bad_indices)
   data[,good_indices]
 }
@@ -786,23 +787,23 @@ match_order <- function(fastq_list, ord)
 {
   missed <- which(!(fastq_list %in% ord$FASTQ_IDENTIFIER))
   original_len <- nrow(ord)
-  
+
   for (i in 1:length(missed))
     ord[nrow(ord)+1,] <- "Unknown"
-  
+
   for (i in 1:length(missed))
     ord$FASTQ_IDENTIFIER[i+original_len] <- fastq_list[missed[i]]
-  
+
   ord[match(fastq_list, ord$FASTQ_IDENTIFIER),]
 }
 
 assoc_rRNA_clean[assoc_rRNA_clean == 0] <- "Unknown"
 assoc_gene_clean[assoc_gene_clean == 0] <- "Unknown"
 
-order_total <- list("miRNA"=match_order(miRNA[,1], metadata), 
-                    "piRNA"=match_order(piRNA[,1], metadata), 
-                    "tRNA"=match_order(tRNA[,1], metadata), 
-                    "circRNA"=match_order(circRNA[,1], metadata), 
+order_total <- list("miRNA"=match_order(miRNA[,1], metadata),
+                    "piRNA"=match_order(piRNA[,1], metadata),
+                    "tRNA"=match_order(tRNA[,1], metadata),
+                    "circRNA"=match_order(circRNA[,1], metadata),
                     "ex_miRNA"=match_order(ex_miRNA[,1], metadata),
                     "cumulative_ex_genomes"=
                       match_order(cumulative_ex_genomes[,1], metadata),
@@ -905,9 +906,9 @@ saveRDS(order_total, "order_total.rds")
 # amazon_keys <- c("AKIAVI2HZGPODUFE62HE",
 #                  "V4LyDo0i1zv2cUZaFeIg9EFUFe+Fr+cv05U30efG",
 #                  "shiny-app-data-justin-2")
-amazon_keys <- c("AKIAVI2HZGPODUFE62HE",
-                 "V4LyDo0i1zv2cUZaFeIg9EFUFe+Fr+cv05U30efG",
-                 "shiny-app-data-justin-exrna")
+amazon_keys <- list("id" = "AKIAVI2HZGPODUFE62HE",
+                    "secret" = "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",
+                    "bucket" = "shiny-app-data-justin-exrna")
 perplexity_types <- c(10, 20, 30, 50, 100)
 pc_cap <- 10
 user_credentials <- list("guest"=my_hash("All@2019"))

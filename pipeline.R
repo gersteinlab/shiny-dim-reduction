@@ -4,6 +4,7 @@
 
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
 source("outline.R", encoding="UTF-8")
+source("storage.R", encoding="UTF-8")
 
 # --------------
 # USER VARIABLES
@@ -42,6 +43,7 @@ safe_dir(raw_loc)
 pro_loc <- sprintf("%s/processing", roo_loc)
 safe_dir(pro_loc)
 ref_loc <- sprintf("%s/reference", roo_loc)
+safe_dir(ref_loc)
 assign_root(ref_loc)
 app_loc <- sprintf("%s/app", roo_loc)
 safe_dir(app_loc)

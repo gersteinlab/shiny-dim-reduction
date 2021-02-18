@@ -105,6 +105,8 @@ log_scale <- function(data)
 # uses only a fraction of features
 feature_start <- function(data, fraction)
 {
+  variances <- apply(data, 2, var)
+  data <- data[,order(variances, decreasing=TRUE),drop=FALSE]
   num_features <- calc_feat(pc_cap, fraction, ncol(data))
   data[,1:num_features, drop=FALSE]
 }
@@ -123,9 +125,9 @@ my_rTSNE <- function(data, dim, perp) {
   set.seed(42)
   Rtsne(data, dims = dim, perplexity = min(perp, max_perp), max_iter = 500,
         initial_dims = 10, stop_lying_iter = 250, mom_switch_iter = 250,
-        theta = 0.5, momentum = 0.0, final_momentum = 0.8,  
+        theta = 0.5, momentum = 0.0, final_momentum = 0.8,
         eta = 200, exaggeration_factor = 12, num_threads = 1,
-        check_duplicates = FALSE, pca = FALSE, partial_pca = FALSE, 
-        verbose = FALSE, is_distance = FALSE, Y_init = NULL, 
+        check_duplicates = FALSE, pca = FALSE, partial_pca = FALSE,
+        verbose = FALSE, is_distance = FALSE, Y_init = NULL,
         pca_center = FALSE, pca_scale = FALSE, normalize = FALSE)
 }
