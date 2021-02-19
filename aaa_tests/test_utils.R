@@ -1,4 +1,4 @@
-# This file tests outline.R.
+# This file tests utils.R.
 
 # -----
 # SETUP
