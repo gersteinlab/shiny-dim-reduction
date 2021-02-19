@@ -5,36 +5,35 @@
 # -----
 
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
-source("ui_functions.R", encoding="UTF-8")
+source("app_functions.R", encoding="UTF-8")
 
 # -----
 # TESTS
 # -----
 
-test_color_seq <- function()
+test_color_seq <- function(time_wait = 1)
 {
   print_clean("Functions tested: display_palette, color_seq")
-  print_clean("Press enter to continue.")
   display_palette(single_color_seq, "Yale Blue")
-  prompt <- readline()
+  Sys.sleep(time_wait)
   display_palette(double_color_seq, "Yale Blue + Harvard Crimson")
-  prompt <- readline()
+  Sys.sleep(time_wait)
 
   for (color in c("Rainbow", "Heat", "Terrain", "Topography", "CM",
               "Viridis", "Magma", "Plasma", "Inferno", "Cividis"))
   {
     display_palette(
       color_seq(1000, color_type=color, reverse=FALSE), sprintf("%s Normal", color))
-    prompt <- readline()
+    Sys.sleep(time_wait)
     display_palette(
       color_seq(1000, color_type=color, reverse=TRUE), sprintf("%s Reverse", color))
-    prompt <- readline()
+    Sys.sleep(time_wait)
   }
 
   display_palette("#000000", "End of Presentation")
 }
 
-test_boxplot_beeswarm <- function(r10 = 100)
+test_boxplot_beeswarm <- function(r10 = 100, time_wait = 3)
 {
   print_clean("Functions tested: boxplot_beeswarm")
   data <- data.frame(matrix(nrow = 10*r10, ncol=2))
@@ -43,9 +42,8 @@ test_boxplot_beeswarm <- function(r10 = 100)
   colnames(data) <- c("X_coord", "Y_coord")
   cs <- color_seq(10)
 
-  print_clean("Testing, press enter to continue.")
   boxplot_beeswarm(data, cs, "Test with Embedded Legend", TRUE)
-  prompt <- readline()
+  Sys.sleep(time_wait)
   boxplot_beeswarm(data, cs, "Test with External Legend", FALSE)
 }
 
