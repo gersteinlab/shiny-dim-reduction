@@ -3,7 +3,7 @@
 # source("pipeline.R", encoding="UTF-8")
 
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
-source("outline.R", encoding="UTF-8")
+source("utils.R", encoding="UTF-8")
 source("storage.R", encoding="UTF-8")
 
 # --------------

@@ -3,7 +3,7 @@
 # Each section is sorted from most algorithmic to least algorithmic,
 # though intended purpose may create a more reasonable ordering.
 
-source("outline.R", encoding="UTF-8")
+source("utils.R", encoding="UTF-8")
 
 require("viridis")
 require("ggplot2")
@@ -60,18 +60,18 @@ range_invalid <- function(value, min, max)
 {
   if (length(value) == 2)
     return(range_invalid(value[1], min, max) || range_invalid(value[2], min, max))
-  
+
   length(value) != 1 || is.na(value) || is.nan(value) || value < min || value > max
 }
 
 # given a list of numeric vectors, returns get_opt(name, length) for each vector
 name_num_map <- function(list_num)
 {
-  mapply(get_opt, names(list_num), lapply(list_num, length), USE.NAMES = FALSE) 
+  mapply(get_opt, names(list_num), lapply(list_num, length), USE.NAMES = FALSE)
 }
 
 # Useful function for changing "PC 1" to "prcomp 1", getting length, etc.
-pc <- function(name) 
+pc <- function(name)
 {
   if (missing(name))
     name <- "1"
@@ -82,13 +82,13 @@ pc <- function(name)
 check_custom_colors <- function(colors, custom)
 {
   present <- TRUE
-  
+
   for (color in colors)
   {
     if (!(color %in% custom))
       present <- FALSE
   }
-  
+
   present
 }
 
@@ -105,13 +105,13 @@ smallest_missing <- function(vec)
 generate_legend_table <- function(vec)
 {
   unique_vals <- unique(vec)
-  
+
   if (length(unique_vals) < 1)
     return(NULL)
-  
+
   table <- cbind.data.frame(1:length(unique_vals), unique_vals)
   colnames(table) <- c("Number", "Value")
-  
+
   table
 }
 
@@ -140,12 +140,12 @@ double_color_seq <- c("#C90016", single_color_seq)
 # Generates a color sequence of length n_colors with the given type.
 # "Base"=c("Rainbow", "Heat", "Terrain", "Topography", "CM"),
 # "Viridis"=c("Viridis", "Magma", "Plasma", "Inferno", "Cividis")
-color_seq <- function(n_colors, color_type = "Rainbow", reverse = FALSE) 
+color_seq <- function(n_colors, color_type = "Rainbow", reverse = FALSE)
 {
   # returns single color seq if only one color needed
   if (n_colors < 2)
     return(single_color_seq)
-  
+
   if (color_type == "Heat")
     return(heat.colors(n_colors, rev=reverse))
   if (color_type == "Terrain")
@@ -164,7 +164,7 @@ color_seq <- function(n_colors, color_type = "Rainbow", reverse = FALSE)
     return(inferno(n_colors, direction = ifelse(reverse, -1, 1)))
   if (color_type == "Cividis")
     return(cividis(n_colors, direction = ifelse(reverse, -1, 1)))
-  
+
   # rainbow, the default (also returned to cover for custom color scales)
   if (reverse)
     return(hcl(n_colors:1 * (360/(n_colors+1))-15, 160, 60))
@@ -175,7 +175,7 @@ color_seq <- function(n_colors, color_type = "Rainbow", reverse = FALSE)
 # my personal favorite ordering of the 25 default R plot shapes
 ggplot2_shapes_unique <- c(15:25,0:2,5:6,3:4,8,7,9:14)
 # Generates a shape sequence of length n for ggplot2.
-ggplot2_shape_seq <- function(n) 
+ggplot2_shape_seq <- function(n)
 {
   my_seq <- 0:(n-1) %% length(ggplot2_shapes_unique)
   ggplot2_shapes_unique[my_seq+1]
@@ -185,7 +185,7 @@ ggplot2_shape_seq <- function(n)
 ggplot2_null <- function()
 {
   df <- data.frame()
-  ggplot(df) + geom_point() + 
+  ggplot(df) + geom_point() +
     ggtitle("This plot cannot be displayed.") +
     xlim(0, 1) + ylim(0, 1)
 }
@@ -199,14 +199,14 @@ boxplot_beeswarm <- function(data, colors, title, legend)
   ylab <- colnames(data)[2]
   rel <- get(ylab) ~ get(xlab)
   x_bins <- unique(data[,1])
-  
+
   if (!legend)
     x_bins <- 1:length(x_bins)
-  
-  boxplot(rel, data=data, xlab=xlab, ylab=ylab, names=x_bins, 
+
+  boxplot(rel, data=data, xlab=xlab, ylab=ylab, names=x_bins,
           col=make_transparent(colors), outline = FALSE, main=title) # transparency
-  
-  beeswarm(rel, data=data, xlab=xlab, ylab=ylab, labels=x_bins, 
+
+  beeswarm(rel, data=data, xlab=xlab, ylab=ylab, labels=x_bins,
            col=colors, corral="random", main=title, pch=16, add=TRUE) # filled circles
 }
 
@@ -218,28 +218,28 @@ boxplot_beeswarm <- function(data, colors, title, legend)
 # ... with appropriate colors in cq, symbols in sq.
 # The graph will have features (x_axis, y_axis, title), with legend
 # determining whether a legend will be displayed.
-ggplot2_2d <- function(x, y, x_axis, y_axis, 
-                       color, symbol, cq, sq, title, legend) 
+ggplot2_2d <- function(x, y, x_axis, y_axis,
+                       color, symbol, cq, sq, title, legend)
 {
   df <- data.frame(dx = x, dy = y, Color = color, Shape = symbol)
-  ggplot(df, aes(x = dx, y = dy, color = Color, shape = Shape)) + 
-    ggtitle(title) + xlab(x_axis) + ylab(y_axis) + 
+  ggplot(df, aes(x = dx, y = dy, color = Color, shape = Shape)) +
+    ggtitle(title) + xlab(x_axis) + ylab(y_axis) +
     scale_color_manual(values = cq) +
     scale_shape_manual(values = ggplot2_shape_seq(sq)) +
-    theme(plot.title=element_text(size=22,face="bold"), 
-          axis.title.x=element_text(size=16, margin = margin(t = 10)), 
-          axis.title.y=element_text(size=16, margin = margin(r = 10)), 
+    theme(plot.title=element_text(size=22,face="bold"),
+          axis.title.x=element_text(size=16, margin = margin(t = 10)),
+          axis.title.y=element_text(size=16, margin = margin(r = 10)),
           axis.text=element_text(size=12),
-          legend.title=element_text(size=16), 
+          legend.title=element_text(size=16),
           legend.text=element_text(size=10),
           legend.position=ifelse(legend, "right", "none"),
           plot.margin = margin(0.5, 0, 0, 0, "cm"),
           panel.background = element_blank(),
           panel.grid.major = element_line(size = 0.1, linetype = 'solid',
-                                          colour = "gray")) + 
+                                          colour = "gray")) +
     geom_hline(aes(yintercept = 0), size = 0.5) +
     geom_vline(aes(xintercept = 0), size = 0.5) +
-    geom_point(size = 2.4) + 
+    geom_point(size = 2.4) +
     guides(color = guide_legend(order = 1))
 }
 
@@ -247,12 +247,12 @@ ggplot2_2d <- function(x, y, x_axis, y_axis,
 # ... with appropriate colors in colors in c_seq, text.
 # The graph will have features (x_axis, y_axis, title), with legend
 # determining whether a legend will be displayed.
-plotly_2d <- function(x, y, x_axis, y_axis, mode, 
-                      color, text, c_seq, title, legend) 
+plotly_2d <- function(x, y, x_axis, y_axis, mode,
+                      color, text, c_seq, title, legend)
 {
   plot_ly(x = x, y = y, mode = mode,
-          color = color, colors = c_seq,  
-          text = text, 
+          color = color, colors = c_seq,
+          text = text,
           marker = list(size = 6, symbol = 'circle'),
           hovertemplate = paste(
             "<b>%{text}</b>",
@@ -269,11 +269,11 @@ plotly_2d <- function(x, y, x_axis, y_axis, mode,
 # The graph will have features (x_axis, y_axis, z_axis, title), with legend
 # determining whether a legend will be displayed.
 plotly_3d <- function(x, y, z, x_axis, y_axis, z_axis,
-                      color, text, c_seq, title, legend) 
+                      color, text, c_seq, title, legend)
 {
-  plot_ly(x = x, y = y, z = z, mode = "markers",  
+  plot_ly(x = x, y = y, z = z, mode = "markers",
           color = color, colors = c_seq,
-          text = text, 
+          text = text,
           marker = list(size = 4, symbol = 'circle'),
           hovertemplate = paste(
             "<b>%{text}</b>",
@@ -290,37 +290,37 @@ plotly_3d <- function(x, y, z, x_axis, y_axis, z_axis,
 # SET INTERSECTION GRAPHS
 # -----------------------
 
-# Creates an UpSetR plot with nintersects columns, the provided height ratio of the 
+# Creates an UpSetR plot with nintersects columns, the provided height ratio of the
 # bar plot to the whole upset, and whether feature subsets should be sorted by size.
-upset_custom <- function(data, nintersects, ratio, keep_order, 
-                         solid="royalblue4", shade="lightskyblue") 
+upset_custom <- function(data, nintersects, ratio, keep_order,
+                         solid="royalblue4", shade="lightskyblue")
 {
   if (ncol(data) < 2 || nrow(data) < 8)
     return(NULL)
-  
-  upset(data, sets = rev(colnames(data)), nintersects = nintersects, 
-        sets.x.label = "Features Per Factor Level", 
-        mainbar.y.label = "Features Per Factor Subset", 
-        order.by = "freq", mb.ratio = c(ratio, 1-ratio), keep.order=keep_order, 
+
+  upset(data, sets = rev(colnames(data)), nintersects = nintersects,
+        sets.x.label = "Features Per Factor Level",
+        mainbar.y.label = "Features Per Factor Subset",
+        order.by = "freq", mb.ratio = c(ratio, 1-ratio), keep.order=keep_order,
         line.size = 0.1, shade.alpha = 0.25,
         matrix.color = solid, main.bar.color = solid,
         sets.bar.color = solid, shade.color = shade)
 }
 
 # Draws a single set venn diagram, where data is a one-column matrix / data frame
-venn1_custom <- function(data, legend) 
+venn1_custom <- function(data, legend)
 {
   draw.single.venn(
-    nrow(data), category = ifelse(legend, colnames(data)[1], ""), 
+    nrow(data), category = ifelse(legend, colnames(data)[1], ""),
     lwd = 2, lty = "solid", cex = 1,
-    fill = "#0064c8", alpha = 0.5, 
-    
+    fill = "#0064c8", alpha = 0.5,
+
     ind = TRUE, margin = 0.025, cat.just = list(c(0.5, 0.5)),
-    cat.default.pos = "outer", cat.prompts = FALSE, 
-    cat.pos = 0, cat.dist = 0.025, cat.cex = 1, 
-    rotation.degree = 0, rotation.centre = c(0.5, 0.5), 
+    cat.default.pos = "outer", cat.prompts = FALSE,
+    cat.pos = 0, cat.dist = 0.025, cat.cex = 1,
+    rotation.degree = 0, rotation.centre = c(0.5, 0.5),
     col = "black", label.col = "black", cat.col = "black",
-    fontface = "plain", fontfamily = "serif", 
+    fontface = "plain", fontfamily = "serif",
     cat.fontface = "plain", cat.fontfamily = "serif")
 }
 
@@ -331,12 +331,12 @@ plotly_heatmap_variance <- function(binary, colors, title, legend, smooth)
   cols <- sprintf("Y:%s", substring(colnames(binary), 0, 50))
   rownames(binary) <- NULL
   colnames(binary) <- NULL
-  
-  plot_ly(x = rows, y = cols, z = t(binary), 
-          type="heatmap", 
-          zsmooth = ifelse(smooth, "best", "false"), 
+
+  plot_ly(x = rows, y = cols, z = t(binary),
+          type="heatmap",
+          zsmooth = ifelse(smooth, "best", "false"),
           colors=colors) %>% layout(
-            title = title, 
+            title = title,
             showlegend = legend)
 }
 
@@ -345,17 +345,17 @@ plotly_heatmap_dendrogram <- function(binary, colors, title, legend, dend)
 {
   if (nrow(binary) < 1 || ncol(binary) < 1)
     return(NULL)
-  
+
   binary[is.na(binary)] <- 0
   heatmaply(
     t(binary),
-    main=title, 
-    hide_colorbar=!legend, 
-    colors=colors, 
+    main=title,
+    hide_colorbar=!legend,
+    colors=colors,
     plot_method = "plotly",
     colorbar_len = ifelse(dend, 0.8, 1),
     showticklabels = c(FALSE, TRUE),
-    dendrogram = ifelse(dend, "both", "none")) 
+    dendrogram = ifelse(dend, "both", "none"))
 }
 
 # ----------
@@ -370,9 +370,9 @@ my_datatable <- function(df)
 {
   if (class(df) != "data.frame" || ncol(df) < 1)
     df <- empty_df
-  
+
   datatable(
-    df, editable=FALSE, escape=TRUE, filter="top", 
+    df, editable=FALSE, escape=TRUE, filter="top",
     selection="none", options=list(
       scrollX=TRUE,
       scrollY=TRUE,
