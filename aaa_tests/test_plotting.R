@@ -8,6 +8,8 @@ setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
 source("plotting.R", encoding="UTF-8")
 source("installer.R", encoding="UTF-8")
 
+require(dplyr)
+
 # displays a color sequence as a rectangular palette
 display_palette <- function(color_seq, title)
 {
@@ -77,33 +79,13 @@ test_plotly_3d <- function(n = 10)
   plotly_3d(1:(10*n), 1:(10*n), 1:(10*n), types, types, color_seq(10))
 }
 
-test_upset_custom <- function(row=10000, col=4)
+get_set_data <- function(row=10000, col=4)
 {
-  print_clean("Functions tested: upset_custom")
-
-  # example data
-  data <- data.frame(matrix(sample(0:1, row*col, replace=TRUE), nrow=row, ncol=col))
+  test <- seq(0, 1, 0.1)
+  data <- matrix(sample(test, row*col, replace=TRUE), nrow=row, ncol=col)
   rownames(data) <- sprintf("Row_%s", 1:row)
   colnames(data) <- sprintf("Col_%s", 1:col)
-  assign("upset_custom_data", data, envir=.GlobalEnv)
-
-  # compressed with number of occurrences
-  comp <- data[!duplicated(data), ]
-  occurrences <- rep(0, nrow(comp))
-
-  for (i in 1:nrow(comp))
-  {
-    ref <- as.numeric(comp[i, ])
-    for (j in 1:nrow(data))
-    {
-      if (isTRUE(all.equal(ref, as.numeric(data[j, ]))))
-        occurrences[i] <- occurrences[i]+1
-    }
-  }
-
-  comp[["Occurrences"]] <- occurrences
-  comp <- comp[order(rowSums(comp[,1:col])),]
-  View(comp)
+  data
 }
 
 # -------
@@ -115,7 +97,22 @@ test_boxplot_beeswarm()
 test_ggplot2_2d()
 test_plotly_2d()
 test_plotly_3d()
-test_upset_custom()
-upset_custom(upset_custom_data, 4, 0.7, TRUE)
-upset_custom(upset_custom_data, 8, 0.5, TRUE)
-upset_custom(upset_custom_data, 16, 0.3, TRUE)
+
+upset_custom_data <- get_set_data()
+
+upset_custom_data %>% truncate_rows(100) %>% set_f1_f2(c(0.3, 1), c(0, 3)) %>%
+  num_nan_binary() %>% upset_custom(4, 0.7, TRUE)
+
+upset_custom_data %>% truncate_rows(1000) %>% set_f1_f2(c(0.4, 1), c(0, 4)) %>%
+  num_nan_binary() %>% upset_custom(16, 0.5, TRUE)
+
+upset_custom_data %>% truncate_rows() %>% set_f1_f2(c(0.5, 1), c(0, 4)) %>%
+  num_nan_binary() %>% upset_custom(64, 0.3, TRUE)
+
+inferno <- color_seq(5, "Inferno", TRUE)
+
+upset_custom_data %>% truncate_rows() %>% sort_row_sums() %>%
+  set_f1_f2(c(0, 1), c(0, 4)) %>% plotly_heatmap_variance(inferno)
+
+upset_custom_data %>% truncate_rows(500) %>% sort_row_sums() %>%
+  set_f1_f2(c(0, 1), c(0, 4)) %>% plotly_heatmap_dendrogram(inferno)

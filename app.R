@@ -643,8 +643,6 @@ Seconds elapsed: %s", my_timer(start)), "message")
     boxplot_beeswarm(data, paint(), title_embed(), legend())
   })
 
-  legend_data <- reactive({generate_legend_table(colors())})
-
   # -------------------
   # INDIRECT UI OUTPUTS
   # -------------------
@@ -703,7 +701,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     if (!authenticated() || legend())
       return(NULL)
 
-    my_datatable(legend_data())
+    my_datatable(generate_legend_table(colors()))
   })
 
   # -----------------

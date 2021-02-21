@@ -200,12 +200,18 @@ plotly_3d <- function(x, y, z, color, text,
 # SET INTERSECTION GRAPHS
 # -----------------------
 
+# checks if data is a matrix or data frame
+is_mat_df <- function(data)
+{
+  any(class(data) %in% c("matrix", "data.frame"))
+}
+
 # given a matrix and two ranges f1, f2,
 # return the rows where the of number of entries between f1[1], f1[2]
 # is between f2[1], f2[2] and omit empty columns
 set_f1_f2 <- function(data, f1, f2)
 {
-  if (class(data) != "matrix" || length(data) < 1 || ncol(data) < 1)
+  if (!is_mat_df(data) || length(data) < 1 || ncol(data) < 1)
     return(matrix(nrow=0, ncol=0))
   for (j in 1:ncol(data))
     data[,j] <- ifelse(between(data[,j], f1[1], f1[2]), data[,j], NaN)
@@ -223,7 +229,7 @@ num_nan_binary <- function(data)
 }
 
 # returns the first m rows of data unless m is too big
-truncate_rows <- function(data, m)
+truncate_rows <- function(data, m = .Machine$double.xmax)
 {
   if (m < nrow(data))
     return(data[1:m,,drop=FALSE])
@@ -254,7 +260,7 @@ upset_custom <- function(data, nintersects, ratio, keep_order,
 }
 
 # Draws a single set venn diagram, where data is a one-column matrix / data frame
-venn1_custom <- function(data, legend)
+venn1_custom <- function(data, legend = TRUE)
 {
   draw.single.venn(
     nrow(data), category = ifelse(legend, colnames(data)[1], ""),
@@ -271,7 +277,8 @@ venn1_custom <- function(data, legend)
 }
 
 # creates a variance-based heatmap for sets on plotly
-plotly_heatmap_variance <- function(binary, colors, title, legend, smooth)
+plotly_heatmap_variance <- function(binary, colors,
+                                    title = "", legend = TRUE, smooth = TRUE)
 {
   rows <- sprintf("X:%s", substring(rownames(binary), 0, 50))
   cols <- sprintf("Y:%s", substring(colnames(binary), 0, 50))
@@ -288,7 +295,8 @@ plotly_heatmap_variance <- function(binary, colors, title, legend, smooth)
 }
 
 # creates a correlation-based heatmap for sets on plotly
-plotly_heatmap_dendrogram <- function(binary, colors, title, legend, dend)
+plotly_heatmap_dendrogram <- function(binary, colors,
+                                      title = "", legend = TRUE, dend = TRUE)
 {
   if (nrow(binary) < 1 || ncol(binary) < 1)
     return(NULL)
@@ -392,4 +400,3 @@ plotly_umap_sum <- function(data, lines, paint, legend, title)
     title, "Number of Components", "Number of Noisy Samples"
   )
 }
-
