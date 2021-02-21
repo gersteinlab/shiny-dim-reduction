@@ -7,42 +7,6 @@ require("shinyWidgets")
 # COMPUTATION
 # -----------
 
-# given a matrix and two ranges f1, f2,
-# return the rows where the of number of entries between f1[1], f1[2]
-# is between f2[1], f2[2] and omit empty columns
-set_f1_f2 <- function(data, f1, f2)
-{
-  if (class(data) != "matrix" || length(data) < 1 || ncol(data) < 1)
-    return(matrix(nrow=0, ncol=0))
-  for (j in 1:ncol(data))
-    data[,j] <- ifelse(between(data[,j], f1[1], f1[2]), data[,j], NaN)
-  valid <- !is.nan(data)
-  data[between(rowSums(valid), f2[1], f2[2]), colSums(valid) > 0, drop = FALSE]
-}
-
-# given a matrix, returns a data frame where
-# all non-NaN entries become 1 and all NaN entries become 0
-num_nan_binary <- function(data)
-{
-  data[!is.nan(data)] <- 1
-  data[is.nan(data)] <- 0
-  data.frame(data)
-}
-
-# returns the first m rows of data unless m is too big
-truncate_rows <- function(data, m)
-{
-  if (m < nrow(data))
-    return(data[1:m,,drop=FALSE])
-  data
-}
-
-# sort the rows of data by their sums in decreasing order
-sort_row_sums <- function(data)
-{
-  data[base::order(rowSums(data),decreasing=T),,drop=FALSE]
-}
-
 # checks if a value is invalid with respect to a range
 # if given an ordered pair, returns whether either value is invalid
 range_invalid <- function(value, min, max)
@@ -51,12 +15,6 @@ range_invalid <- function(value, min, max)
     return(range_invalid(value[1], min, max) || range_invalid(value[2], min, max))
 
   length(value) != 1 || is.na(value) || is.nan(value) || value < min || value > max
-}
-
-# given a list of numeric vectors, returns get_opt(name, length) for each vector
-name_num_map <- function(list_num)
-{
-  mapply(get_opt, names(list_num), lapply(list_num, length), USE.NAMES = FALSE)
 }
 
 # checks if every member of the vector colors is in the vector custom

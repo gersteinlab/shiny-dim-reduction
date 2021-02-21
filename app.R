@@ -5,7 +5,6 @@
 source("authentication.R", encoding="UTF-8")
 source("storage.R", encoding="UTF-8")
 source("plotting.R", encoding="UTF-8")
-
 source("options.R", encoding="UTF-8")
 
 storage_query()

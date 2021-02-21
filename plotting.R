@@ -200,6 +200,42 @@ plotly_3d <- function(x, y, z, color, text,
 # SET INTERSECTION GRAPHS
 # -----------------------
 
+# given a matrix and two ranges f1, f2,
+# return the rows where the of number of entries between f1[1], f1[2]
+# is between f2[1], f2[2] and omit empty columns
+set_f1_f2 <- function(data, f1, f2)
+{
+  if (class(data) != "matrix" || length(data) < 1 || ncol(data) < 1)
+    return(matrix(nrow=0, ncol=0))
+  for (j in 1:ncol(data))
+    data[,j] <- ifelse(between(data[,j], f1[1], f1[2]), data[,j], NaN)
+  valid <- !is.nan(data)
+  data[between(rowSums(valid), f2[1], f2[2]), colSums(valid) > 0, drop = FALSE]
+}
+
+# given a matrix, returns a data frame where
+# all non-NaN entries become 1 and all NaN entries become 0
+num_nan_binary <- function(data)
+{
+  data[!is.nan(data)] <- 1
+  data[is.nan(data)] <- 0
+  data.frame(data)
+}
+
+# returns the first m rows of data unless m is too big
+truncate_rows <- function(data, m)
+{
+  if (m < nrow(data))
+    return(data[1:m,,drop=FALSE])
+  data
+}
+
+# sort the rows of data by their sums in decreasing order
+sort_row_sums <- function(data)
+{
+  data[base::order(rowSums(data),decreasing=T),,drop=FALSE]
+}
+
 # Creates an UpSetR plot with nintersects columns, the provided height ratio of the
 # bar plot to the whole upset, and whether feature subsets should be sorted by size.
 upset_custom <- function(data, nintersects, ratio, keep_order,

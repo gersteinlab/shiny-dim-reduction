@@ -81,6 +81,12 @@ parse_opt <- function(str, ind=1)
   result[(seq(result) + ind) %% 2 == 0]
 }
 
+# given a list of numeric vectors, returns get_opt(name, length) for each vector
+name_num_map <- function(list_num)
+{
+  mapply(get_opt, names(list_num), lapply(list_num, length), USE.NAMES = FALSE)
+}
+
 # convert perplexity types to character
 perplexity_types <- as.character(perplexity_types)
 
