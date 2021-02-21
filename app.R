@@ -2,9 +2,11 @@
 # setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
 # source("pipeline.R", encoding="UTF-8")
 
-source("options.R", encoding="UTF-8")
-source("storage.R", encoding="UTF-8")
 source("authentication.R", encoding="UTF-8")
+source("storage.R", encoding="UTF-8")
+source("plotting.R", encoding="UTF-8")
+
+source("options.R", encoding="UTF-8")
 
 storage_query()
 
@@ -391,18 +393,9 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
     if (iplot$embedding == "Sets")
       num <- 5
-    else
-    {
-      if (iplot$visualize == "Summarize")
-      {
-        if (iplot$embedding == "PCA")
-          return(single_color_seq)
-        if (iplot$embedding == "VAE")
-          return(double_color_seq)
-        if (iplot$embedding == "UMAP")
-          num <- 6
-      }
-    }
+
+    if (iplot$embedding == "UMAP" && iplot$visualize == "Summarize")
+        num <- 6
 
     color_seq(num, iplot$palette, !not_rev())
   })
@@ -464,8 +457,8 @@ Seconds elapsed: %s", my_timer(start)), "message")
       num_data(data)
 
       return(ggplot2_2d(
-        data[,1], data[,2], pc("1"), pc("2"),
-        colors(), shapes(), paint(), shape_num(), title_embed(), legend()))
+        data[,1], data[,2], colors(), shapes(), paint(), NULL,
+        legend(), title_embed(), pc("1"), pc("2")))
     }
 
     if (iplot$visualize == "Summarize")
@@ -473,31 +466,13 @@ Seconds elapsed: %s", my_timer(start)), "message")
       num_data(data)
 
       if (iplot$embedding == "PCA")
-        return(ggplot2_2d(
-          data[,"Components"], data[,"Variance"],
-          "Number of Components", "Variance Captured",
-          rep("Cumulative Variance", pc_cap),
-          rep("Cumulative Variance", pc_cap),
-          paint(), shape_num(), title_embed(), legend()
-        ) + geom_smooth(se=FALSE, method="gam", formula = y ~ s(log(x))))
+        return(ggplot2_pca_sum(data, pc_cap, legend(), title_embed()))
 
       if (iplot$embedding == "VAE")
-        return(ggplot2_2d(
-          data[,"Training Iterations"], data[,"Loss Value"],
-          "Number of Training Iterations", "Loss Function Output",
-          data[,"Loss Type"],
-          data[,"Loss Type"],
-          paint(), shape_num(), title_embed(), legend()
-        ) + geom_smooth(se=FALSE, method="gam", formula = y ~ s(log(x))))
+        return(ggplot2_vae_sum(data, !not_rev(), legend(), title_embed()))
 
       if (iplot$embedding == "UMAP")
-        return(ggplot2_2d(
-          as.numeric(data[,1]), as.numeric(data[,2]),
-          "Number of Components", "Number of Noisy Samples",
-          data[,3],
-          data[,3],
-          paint(), shape_num(), title_embed(), legend()
-        ) + geom_line())
+        return(ggplot2_umap_sum(data, paint(), legend(), title_embed()))
     }
 
     data <- data[keep(),,drop=FALSE]
@@ -506,15 +481,15 @@ Seconds elapsed: %s", my_timer(start)), "message")
     if (iplot$visualize == "Explore")
     {
       return(ggplot2_2d(
-        data[,iplot$pc1], data[,iplot$pc2], pc(iplot$pc1), pc(iplot$pc2),
-        colors(), shapes(), paint(), shape_num(), title_embed(), legend()))
+        data[,iplot$pc1], data[,iplot$pc2], colors(), shapes(), paint(), NULL,
+        legend(), title_embed(), pc(iplot$pc1), pc(iplot$pc2)))
     }
 
     if (iplot$visualize == "tSNE")
     {
       return(ggplot2_2d(
-        data[,1], data[,2], pc("1"), pc("2"),
-        colors(), shapes(), paint(), shape_num(), title_embed(), legend()))
+        data[,1], data[,2], colors(), shapes(), paint(), NULL,
+        legend(), title_embed(), pc("1"), pc("2")))
     }
   })
 
@@ -549,9 +524,8 @@ Seconds elapsed: %s", my_timer(start)), "message")
       num_data(data)
 
       return(plotly_2d(
-        data[,1], data[,2], pc("1"), pc("2"), "markers",
-        colors(), labels(), paint(), title_embed(), legend()
-      ))
+        data[,1], data[,2], colors(), labels(), paint(),
+        FALSE, legend(), title_embed(), pc("1"), pc("2")))
     }
 
     if (iplot$visualize == "Summarize")
@@ -559,31 +533,13 @@ Seconds elapsed: %s", my_timer(start)), "message")
       num_data(data)
 
       if (iplot$embedding == "PCA")
-        return(plotly_2d(
-          data[,"Components"], data[,"Variance"],
-          "Number of Components", "Variance Captured", "markers",
-          rep("Cumulative", pc_cap),
-          sprintf("%s: %s", "Variance", rep("Cumulative", pc_cap)),
-          paint(), title_embed(), legend()
-        ))
+        return(plotly_pca_sum(data, pc_cap, FALSE, legend(), title_embed()))
 
       if (iplot$embedding == "VAE")
-        return(plotly_2d(
-          data[,"Training Iterations"], data[,"Loss Value"],
-          "Number of Training Iterations", "Loss Function Output", "markers",
-          data[,"Loss Type"],
-          sprintf("%s: %s", "Loss Type", data[,"Loss Type"]),
-          paint(), title_embed(), legend()
-        ))
+        return(plotly_vae_sum(data, FALSE, !not_rev(), legend(), title_embed()))
 
       if (iplot$embedding == "UMAP")
-        return(plotly_2d(
-          as.numeric(data[,1]), as.numeric(data[,2]),
-          "Number of Components", "Number of Noisy Samples", "markers",
-          data[,3],
-          sprintf("%s: %s", "Embedding", data[,3]),
-          paint(), title_embed(), legend()
-        ))
+        return(plotly_umap_sum(data, FALSE, paint(), legend(), title_embed()))
     }
 
     data <- data[keep(),,drop=FALSE]
@@ -592,17 +548,15 @@ Seconds elapsed: %s", my_timer(start)), "message")
     if (iplot$visualize == "Explore")
     {
       return(plotly_2d(
-        data[,iplot$pc1], data[,iplot$pc2], pc(iplot$pc1), pc(iplot$pc2), "markers",
-        colors(), labels(), paint(), title_embed(), legend()
-      ))
+        data[,iplot$pc1], data[,iplot$pc2], colors(), labels(), paint(),
+        FALSE, legend(), title_embed(), pc(iplot$pc1), pc(iplot$pc2)))
     }
 
     if (iplot$visualize == "tSNE")
     {
       return(plotly_2d(
-        data[,1], data[,2], pc("1"), pc("2"), "markers",
-        colors(), labels(), paint(), title_embed(), legend()
-      ))
+        data[,1], data[,2], colors(), labels(), paint(),
+        FALSE, legend(), title_embed(), pc("1"), pc("2")))
     }
   })
 
@@ -635,9 +589,8 @@ Seconds elapsed: %s", my_timer(start)), "message")
       num_data(data)
 
       return(plotly_3d(
-        data[,1], data[,2], data[,3], pc("1"), pc("2"), pc("3"),
-        colors(), labels(), paint(), title_embed(), legend()
-      ))
+        data[,1], data[,2], data[,3], colors(), labels(), paint(),
+        legend(), title_embed(), pc("1"), pc("2"), pc("3")))
     }
 
     if (iplot$visualize == "Summarize")
@@ -645,31 +598,13 @@ Seconds elapsed: %s", my_timer(start)), "message")
       num_data(data)
 
       if (iplot$embedding == "PCA")
-        return(plotly_2d(
-          data[,"Components"], data[,"Variance"],
-          "Number of Components", "Variance Captured", "lines+markers",
-          rep("Cumulative", pc_cap),
-          sprintf("%s: %s", "Variance", rep("Cumulative", pc_cap)),
-          paint(), title_embed(), legend()
-        ))
+        return(plotly_pca_sum(data, pc_cap, TRUE, legend(), title_embed()))
 
       if (iplot$embedding == "VAE")
-        return(plotly_2d(
-          data[,"Training Iterations"], data[,"Loss Value"],
-          "Number of Training Iterations", "Loss Function Output", "lines+markers",
-          data[,"Loss Type"],
-          sprintf("%s: %s", "Loss Type", data[,"Loss Type"]),
-          paint(), title_embed(), legend()
-        ))
+        return(plotly_vae_sum(data, TRUE, !not_rev(), legend(), title_embed()))
 
       if (iplot$embedding == "UMAP")
-        return(plotly_2d(
-          as.numeric(data[,1]), as.numeric(data[,2]),
-          "Number of Components", "Number of Noisy Samples", "lines+markers",
-          data[,3],
-          sprintf("%s: %s", "Embedding", data[,3]),
-          paint(), title_embed(), legend()
-        ))
+        return(plotly_umap_sum(data, TRUE, paint(), legend(), title_embed()))
     }
 
     data <- data[keep(),,drop=FALSE]
@@ -679,18 +614,15 @@ Seconds elapsed: %s", my_timer(start)), "message")
     {
       return(plotly_3d(
         data[,iplot$pc1], data[,iplot$pc2], data[,iplot$pc3],
-        pc(iplot$pc1), pc(iplot$pc2), pc(iplot$pc3),
-        colors(), labels(), paint(), title_embed(), legend()
-      ))
+        colors(), labels(), paint(), legend(), title_embed(),
+        pc(iplot$pc1), pc(iplot$pc2), pc(iplot$pc3)))
     }
 
     if (iplot$visualize == "tSNE")
     {
       return(plotly_3d(
-        data[,1], data[,2], data[,3],
-        pc("1"), pc("2"), pc("3"),
-        colors(), labels(), paint(), title_embed(), legend()
-      ))
+        data[,1], data[,2], data[,3], colors(), labels(), paint(),
+        legend(), title_embed(),  pc("1"), pc("2"), pc("3")))
     }
   })
 

@@ -97,10 +97,10 @@ rapp <- function(){
 uapp <- function(){
   update_app(c("app.R",
                "interface.R",
-               "app_functions.R",
+               "plotting.R",
                "ui_functions.R",
                "options.R",
-               "outline.R",
+               "utils.R",
                "installer.R",
                "storage.R",
                "find_replace.R",

@@ -32,7 +32,7 @@ init_sub(name_num_map)
 # and creates an empty metadata table for that category
 get_empty_cat_meta <- function(cat){
   addr <- make_aws_name(
-    cat, "Total", sca_options[1], nor_options[1], 
+    cat, "Total", sca_options[1], nor_options[1],
     rem_perc(fea_options[1]), emb_options[1], vis_options[1], 2, 1)
   data.frame("Unknown" = rep("Unknown", nrow(load_db(addr))))
 }
@@ -82,41 +82,41 @@ for (cn in 1:num_cat)
   order_gen <- order_total[[cat]]
   cols_unique_gen <- apply(order_gen, 2, function(i) length(unique(i)))
   order_names <- colnames(order_gen)
-  
+
   # subsets
   subsets <- sub_groups[[cat]]
   sub_opts[[cn]] <- cat_select_panel(
     cat, id_subset(cat), sprintf("Feature Subset (%s)", cat), subsets, 1)
-  
+
   # characteristics
   chars <- order_names[between(cols_unique_gen, 2, num_filters)]
   if (length(chars) < 1)
     chars <- "Unknown"
   selected_chars[[cat]] <- chars
-  
+
   # filters
   filter_opts[[cn]] <- cat_select_panel(
     cat, id_filter(cat), sprintf("Current Filter (%s)", cat), chars, 1)
-  
+
   # colors
   color_opts[[cn]] <- cat_select_panel(
     cat, id_color(cat), sprintf("Color By (%s)", cat), chars, 1)
-  
+
   # shapes
   shape_opts[[cn]] <- cat_select_panel(
     cat, id_shape(cat), sprintf("Shape By (%s)", cat), chars, 2)
-  
+
   # labels
   label_opts[[cn]] <- cat_select_panel(
     cat, id_label(cat), sprintf("Label By (%s)", cat), chars, 1)
-  
+
   # selections
   for (char in chars)
   {
     select_ids <- c(select_ids, id_select(cat, char))
     select_opts[[length(select_ids)]] <- select_check_panel(order_gen[[char]], cat, char)
   }
-  
+
   # thresholds
   for (sca in sca_options)
   {
@@ -148,22 +148,22 @@ picker_input_ids <- c(
   id_shape(name_cat),
   id_label(name_cat),
   id_filter(name_cat),
-  select_ids, 
+  select_ids,
   thre_ids
 )
 
 numeric_input_ids <- c(
-  "height", 
+  "height",
   "notif_time",
-  "nintersect", 
+  "nintersect",
   "bar_frac",
-  "set_feat_upse", 
-  "set_feat_heat", 
+  "set_feat_upse",
+  "set_feat_heat",
   "set_feat_dend"
 )
 
 numeric_range_input_ids <- c(
-  "set_f1", 
+  "set_f1",
   "set_f2"
 )
 
@@ -172,8 +172,8 @@ tabset_panel_ids <- c(
 )
 
 slider_input_ids <- c(
-  "pc1", 
-  "pc2", 
+  "pc1",
+  "pc2",
   "pc3"
 )
 
@@ -191,28 +191,28 @@ bookmark_exclude_vector <- c(
   "plotly_hover-A",
   "plotly_afterplot-A",
   "plotly_relayout-A",
-  
-  "username", 
-  "password", 
-  "toggle_password", 
+
+  "username",
+  "password",
+  "toggle_password",
   "attempt_login",
-  
+
   "sidebarMenu",
   "sidebarCollapsed",
   "sidebarItemExpanded",
-  
-  "start", 
-  "stop", 
-  "instructions", 
-  "citations", 
+
+  "start",
+  "stop",
+  "instructions",
+  "citations",
   "randomize",
-  
+
   table_exclude_vector(
-    "num_data_table", 
-    "metadata_table", 
+    "num_data_table",
+    "metadata_table",
     "legend_out"
   ),
-  
+
   bookmarkable_ids
 )
 
@@ -230,7 +230,7 @@ output_conditions <- c(
   "set_feat_upse_cond",
   "set_feat_heat_cond",
   "set_feat_dend_cond",
-  "nintersect_cond", 
+  "nintersect_cond",
   "pc_sliders_cond",
   "pc_slider2_cond",
   "pc_slider3_cond",
@@ -258,29 +258,29 @@ dataSelectionMenu <- menuItem(
     select_panel("features", "Percentage of Features Used", fea_options),
     conditionalPanel(
       condition = "output.perplexity_cond",
-      select_panel("perplexity", "Perplexity", perplexity_types, 
+      select_panel("perplexity", "Perplexity", perplexity_types,
                    ceiling(length(perplexity_types)/2))
     )
   ),
   expand_cond_panel(
-    condition = "input.embedding == 'Sets'", 
-    thre_opts, 
+    condition = "input.embedding == 'Sets'",
+    thre_opts,
     list(
       numericRangeInput("set_f1", "Fraction of Samples", c(0.5,1)),
       numericRangeInput("set_f2", "Number of Characteristics", c(1,num_filters)),
       conditionalPanel(
         condition = "output.set_feat_upse_cond",
-        numericInput("set_feat_upse", "Maximum Features", 
+        numericInput("set_feat_upse", "Maximum Features",
                      value=max_upse, min=pc_cap, max=2^24)
       ),
       conditionalPanel(
         condition = "output.set_feat_heat_cond",
-        numericInput("set_feat_heat", "Maximum Features", 
+        numericInput("set_feat_heat", "Maximum Features",
                      value=max_heat, min=pc_cap, max=2^24)
       ),
       conditionalPanel(
         condition = "output.set_feat_dend_cond",
-        numericInput("set_feat_dend", "Maximum Features", 
+        numericInput("set_feat_dend", "Maximum Features",
                      value=max_dend, min=pc_cap, max=2^24)
       )
     )
@@ -295,7 +295,7 @@ settingsMenu <- menuItem(
   numericInput("notif_time", "Notification Time", value=6),
   conditionalPanel(
     condition = "output.nintersect_cond",
-    numericInput("nintersect", "Number of Columns", 
+    numericInput("nintersect", "Number of Columns",
                  value=def_set_col_num, min=3, max=max_set_col_num),
     numericInput("bar_frac", "Bar Plot Fraction", value=def_bar_frac, min=0, max=1)
   ),
@@ -303,7 +303,7 @@ settingsMenu <- menuItem(
     condition = "output.pc_sliders_cond",
     pc_slider(1, pc_cap),
     conditionalPanel(
-      condition = "output.pc_slider2_cond", 
+      condition = "output.pc_slider2_cond",
       pc_slider(2, pc_cap)
     ),
     conditionalPanel(
@@ -363,7 +363,7 @@ ui <- function(request){
         bookmarkButton(),
         downloadButton("download_num_data", "Numeric Data"),
         downloadButton("download_metadata", "Metadata"),
-        action("randomize", "Randomize", "connectdevelop", 
+        action("randomize", "Randomize", "connectdevelop",
                "#FFF", "#29AB87", "#00356B")
       ),
       htmlOutput("title_out"),
