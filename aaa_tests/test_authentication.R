@@ -5,8 +5,8 @@
 # -----
 
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
-source("installer.R", encoding="UTF-8")
 source("authentication.R", encoding="UTF-8")
+source("installer.R", encoding="UTF-8")
 
 # -----
 # TESTS
