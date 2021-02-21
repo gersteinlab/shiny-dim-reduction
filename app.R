@@ -367,7 +367,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
     sprintf("%s%s on %s.%s (%s Samples, %s Features%s)",
             ifelse(iplot$embedding == "PHATE", "",
-                   repStr(iplot$visualize, vis_options, vis_nouns)),
+                   vis_to_noun(iplot$visualize)),
             iplot$embedding, cati(), subi(), sum(keep()), num_feat(), nei)
   })
 

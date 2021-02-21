@@ -1,95 +1,97 @@
 # The purpose of this file is to store various UI-related functions for the app.
 
-source("app_functions.R", encoding="UTF-8")
-source("find_replace.R", encoding="UTF-8")
-
 require("shinycssloaders")
 require("shinyWidgets")
 
-# ---------------
-# INPUT SELECTION
-# ---------------
+# -----------
+# COMPUTATION
+# -----------
 
-# formats to 'opt (num)'
-get_opt <- function(opt, num)
+# given a matrix and two ranges f1, f2,
+# return the rows where the of number of entries between f1[1], f1[2]
+# is between f2[1], f2[2] and omit empty columns
+set_f1_f2 <- function(data, f1, f2)
 {
-  sprintf("%s (%s)", opt, num)
+  if (class(data) != "matrix" || length(data) < 1 || ncol(data) < 1)
+    return(matrix(nrow=0, ncol=0))
+  for (j in 1:ncol(data))
+    data[,j] <- ifelse(between(data[,j], f1[1], f1[2]), data[,j], NaN)
+  valid <- !is.nan(data)
+  data[between(rowSums(valid), f2[1], f2[2]), colSums(valid) > 0, drop = FALSE]
 }
 
-# performs get_opt on every unique member of a vector v
-get_opts <- function(v)
+# given a matrix, returns a data frame where
+# all non-NaN entries become 1 and all NaN entries become 0
+num_nan_binary <- function(data)
 {
-  unlist(lapply(unique(v), function(sample){get_opt(sample, sum(v %in% sample))}))
+  data[!is.nan(data)] <- 1
+  data[is.nan(data)] <- 0
+  data.frame(data)
 }
 
-# Suppose we have a vector of strings of the form "A (B)",
-# where A and B are strings that do not contain '(' or ')'.
-# Return all As if ind = 1 or all Bs if ind = 2.
-parse_opt <- function(str, ind=1)
+# returns the first m rows of data unless m is too big
+truncate_rows <- function(data, m)
 {
-  if (length(str) < 1 || !is.character(str))
+  if (m < nrow(data))
+    return(data[1:m,,drop=FALSE])
+  data
+}
+
+# sort the rows of data by their sums in decreasing order
+sort_row_sums <- function(data)
+{
+  data[base::order(rowSums(data),decreasing=T),,drop=FALSE]
+}
+
+# checks if a value is invalid with respect to a range
+# if given an ordered pair, returns whether either value is invalid
+range_invalid <- function(value, min, max)
+{
+  if (length(value) == 2)
+    return(range_invalid(value[1], min, max) || range_invalid(value[2], min, max))
+
+  length(value) != 1 || is.na(value) || is.nan(value) || value < min || value > max
+}
+
+# given a list of numeric vectors, returns get_opt(name, length) for each vector
+name_num_map <- function(list_num)
+{
+  mapply(get_opt, names(list_num), lapply(list_num, length), USE.NAMES = FALSE)
+}
+
+# checks if every member of the vector colors is in the vector custom
+check_custom_colors <- function(colors, custom)
+{
+  present <- TRUE
+
+  for (color in colors)
+    if (!(color %in% custom))
+      present <- FALSE
+
+  present
+}
+
+# find the smallest positive integer not in the vector
+smallest_missing <- function(vec)
+{
+  small <- 1
+  while (small %in% vec)
+    small <- small+1
+  small
+}
+
+# given a vector of values, generate a table for the legend
+generate_legend_table <- function(vec)
+{
+  unique_vals <- unique(vec)
+
+  if (length(unique_vals) < 1)
     return(NULL)
-  strsplit(str, "( \\(|\\))") %>% lapply(function(i){i[ind]}) %>% unlist()
-}
 
-# Useful for finding subset IDs
-id_subset <- function(category)
-{
-  sprintf("subsetby_%s", category)
-}
+  table <- cbind.data.frame(1:length(unique_vals), unique_vals)
+  colnames(table) <- c("Number", "Value")
 
-# Useful for finding color IDs
-id_color <- function(category)
-{
-  sprintf("colorby_%s", category)
-}
-
-# Useful for finding shape IDs
-id_shape <- function(category)
-{
-  sprintf("shapeby_%s", category)
-}
-
-# Useful for finding label IDs
-id_label <- function(category)
-{
-  sprintf("labelby_%s", category)
-}
-
-# Useful for finding filter IDs
-id_filter <- function(category)
-{
-  sprintf("filterby_%s", category)
-}
-
-# Useful for finding select IDs
-id_select <- function(category, character)
-{
-  sprintf("selectby_%s_%s", category, character)
-}
-
-# Useful for finding thre IDs
-id_thre <- function(category, scale)
-{
-  sprintf("thre_%s_%s", category, scale)
-}
-
-# creates a vector of inputs that should be excluded
-# from bookmarking, based on the table's ID
-table_exclude_vector <- function(...)
-{
-  table_id <- list(...)
-  c(
-    sprintf("%s_search", table_id),
-    sprintf("%s_state", table_id),
-    sprintf("%s_cell_clicked", table_id),
-    sprintf("%s_search_columns", table_id),
-    sprintf("%s_rows_current", table_id),
-    sprintf("%s_rows_all", table_id),
-    sprintf("%s_rows_selected", table_id),
-    sprintf("%s_columns_selected", table_id),
-    sprintf("%s_cells_selected", table_id)
-  )
+  table
 }
 
 # -------------------
@@ -99,7 +101,7 @@ table_exclude_vector <- function(...)
 # adds a spinner to content that may need to be refreshed
 my_spin <- function(content)
 {
-  content %>% withSpinner(type = 6)
+   withSpinner(content, type = 6)
 }
 
 # makes a slider for the nth principal component
@@ -114,12 +116,6 @@ pc_slider <- function(n, pc_cap)
 expand_cond_panel <- function(condition, ...)
 {
   do.call(conditionalPanel, c(condition = condition, ...))
-}
-
-# removes all parts of the form <tag> from a text
-rem_html_tags <- function(html)
-{
-  regStr(html, "<[^>]*>", "")
 }
 
 # Creates a selectizeInput panel with only one option allowed.

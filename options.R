@@ -4,17 +4,89 @@
 # Note: Most interface numbers are rounded to 4 decimal places.
 # This likely will not change in the near future.
 
-source("interface.R", encoding="UTF-8")
+source("text_work.R", encoding="UTF-8")
+source("ui_functions.R", encoding="UTF-8")
 
 require("shinydashboard")
 require("shinyjs")
+
+# ------------------
+# BROWSER PARAMETERS
+# ------------------
+
+# Only select characteristics with <= num_filters distinct values.
+num_filters <- 60
+# The height of a graph by default. Depends on browser interpretation.
+graph_height <- 520
+# the default barplot/(barplot+matrix) ratio on an upset plot
+def_bar_frac <- 0.7
+# the default number of set columns on an upset plot
+def_set_col_num <- 40
+# the maximum number of set columns on an upset plot
+max_set_col_num <- 1000000
+# the initial number of rows on an upset plot
+max_upse <- 5000
+# the initial number of rows on a heatmap
+max_heat <- 20000
+# the initial number of columns on a dendrogram
+max_dend <- 200
+
+# plot panel options
+pan_options <- c("Static 2D", "Interactive 2D", "Interactive 3D", "Boxplot")
+# palette options
+pal_options <- list(
+  "Base"=c("Custom", "Rainbow", "Heat", "Terrain", "Topography", "CM"),
+  "Viridis"=c("Viridis", "Magma", "Plasma", "Inferno", "Cividis")
+)
+# settings options
+my_settings <- c("Embed Title", "Embed Legend",
+                 "Boost Graphics", "Uninverted Colors")
+
+# -----------------
+# LOAD DEPENDENCIES
+# -----------------
+
+# Please see converter.R for an explanation of these dependencies.
+get_from_dir("categories_full")
+get_from_dir("amazon_keys")
+get_from_dir("order_total", my_empty_list(name_cat))
+get_from_dir("decorations")
+get_from_dir("pc_cap", 3)
+get_from_dir("thresholds")
+get_from_dir("perplexity_types", 1:5)
+get_from_dir("app_title", "Dimensionality Reduction Tool")
+get_from_dir("app_citations", "No data citations could be found.")
+get_from_dir("user_credentials")
+get_from_dir("custom_color_scales")
+
+# -----
+# SETUP
+# -----
+
+vis_to_noun <- function(vis)
+{
+  rep_str(vis, vis_options, vis_nouns)
+}
+
+# performs get_opt on every unique member of a vector v
+get_opts <- function(v)
+{
+  unlist(lapply(unique(v), function(sample){get_opt(sample, sum(v %in% sample))}))
+}
+
+# From sep_opt, return all As if ind = 1 or all Bs if ind = 2.
+parse_opt <- function(str, ind=1)
+{
+  result <- sep_opt(str)
+  result[(seq(result) + ind) %% 2 == 0]
+}
 
 # convert perplexity types to character
 perplexity_types <- as.character(perplexity_types)
 
 # assign keys and create bibliography
 assign_keys(amazon_keys)
-citations <- bibliography(app_citations)
+citations <- rep_str(bibliography, "!!!!!!!!!!", app_citations)
 
 # creates a print version of the instructions / citations
 print_instructions <- rem_html_tags(instructions)

@@ -76,18 +76,6 @@ pro_swi <- function()
   source("pipeline.R", encoding="UTF-8")
 }
 
-save_ref <- function(object, file)
-{
-  curdir <- getwd()
-  setwd(ref_loc)
-  dn <- dirname(file)
-  if (!dir.exists(dn))
-    dir.create(dn, recursive=TRUE)
-  saveRDS(object, file)
-  setwd(curdir)
-  invisible()
-}
-
 # runs the app
 rapp <- function(){
   runApp(sprintf("%s/app/app.R", roo_loc))
@@ -96,14 +84,14 @@ rapp <- function(){
 # updates and runs the app
 uapp <- function(){
   update_app(c("app.R",
-               "interface.R",
-               "plotting.R",
-               "ui_functions.R",
                "options.R",
+               "ui_functions.R",
                "utils.R",
                "installer.R",
-               "storage.R",
+               "text_work.R",
                "find_replace.R",
+               "plotting.R",
+               "storage.R",
                "authentication.R"))
   rapp()
 }
