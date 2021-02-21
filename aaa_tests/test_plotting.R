@@ -5,7 +5,8 @@
 # -----
 
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
-source("app_functions.R", encoding="UTF-8")
+source("plotting.R", encoding="UTF-8")
+source("installer.R", encoding="UTF-8")
 
 # displays a color sequence as a rectangular palette
 display_palette <- function(color_seq, title)
@@ -22,10 +23,10 @@ test_color_seq <- function()
 {
   print_clean("Functions tested: display_palette, color_seq")
   display_palette(single_color_seq, "Yale Blue")
-  display_palette(double_color_seq, "Yale Blue + Harvard Crimson")
+  display_palette(double_color_seq(), "Yale Blue + Harvard Crimson")
 
   for (color in c("Rainbow", "Heat", "Terrain", "Topography", "CM",
-              "Viridis", "Magma", "Plasma", "Inferno", "Cividis"))
+                  "Viridis", "Magma", "Plasma", "Inferno", "Cividis"))
   {
     display_palette(
       color_seq(1000, color_type=color, reverse=FALSE), sprintf("%s Normal", color))
@@ -34,6 +35,12 @@ test_color_seq <- function()
   }
 
   display_palette("#000000", "End of Presentation")
+}
+
+test_ggplot2_null <- function()
+{
+  print_clean("Functions tested: ggplot2_null")
+  ggplot2_null()
 }
 
 test_boxplot_beeswarm <- function(r10 = 100)
@@ -47,6 +54,27 @@ test_boxplot_beeswarm <- function(r10 = 100)
 
   boxplot_beeswarm(data, cs, "Test with Embedded Legend", TRUE)
   boxplot_beeswarm(data, cs, "Test with External Legend", FALSE)
+}
+
+test_ggplot2_2d <- function(n = 10)
+{
+  types <- rep(LETTERS[1:10], n)
+  print_clean("Functions tested: ggplot2_2d")
+  ggplot2_2d(1:(10*n), 1:(10*n), types, types, color_seq(10))
+}
+
+test_plotly_2d <- function(n = 10)
+{
+  types <- rep(LETTERS[1:10], n)
+  print_clean("Functions tested: plotly_2d")
+  plotly_2d(1:(10*n), 1:(10*n), types, types, color_seq(10))
+}
+
+test_plotly_3d <- function(n = 10)
+{
+  types <- rep(LETTERS[1:10], n)
+  print_clean("Functions tested: plotly_2d")
+  plotly_3d(1:(10*n), 1:(10*n), 1:(10*n), types, types, color_seq(10))
 }
 
 test_upset_custom <- function(row=10000, col=4)
@@ -82,7 +110,11 @@ test_upset_custom <- function(row=10000, col=4)
 # RUN ALL
 # -------
 test_color_seq()
+test_ggplot2_null()
 test_boxplot_beeswarm()
+test_ggplot2_2d()
+test_plotly_2d()
+test_plotly_3d()
 test_upset_custom()
 upset_custom(upset_custom_data, 4, 0.7, TRUE)
 upset_custom(upset_custom_data, 8, 0.5, TRUE)
