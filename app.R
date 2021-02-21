@@ -9,6 +9,49 @@ source("options.R", encoding="UTF-8")
 
 storage_query()
 
+# checks if a value is invalid with respect to a range
+# if given an ordered pair, returns whether either value is invalid
+range_invalid <- function(value, min, max)
+{
+  if (length(value) == 2)
+    return(range_invalid(value[1], min, max) || range_invalid(value[2], min, max))
+
+  length(value) != 1 || is.na(value) || is.nan(value) || value < min || value > max
+}
+
+# checks if every member of the vector colors is in the vector custom
+check_custom_colors <- function(colors, custom)
+{
+  for (color in colors)
+    if (!(color %in% custom))
+      return(FALSE)
+
+  TRUE
+}
+
+# find the smallest positive integer not in the vector
+smallest_missing <- function(vec)
+{
+  small <- 1
+  while (small %in% vec)
+    small <- small+1
+  small
+}
+
+# given a vector of values, generate a table for the legend
+generate_legend_table <- function(vec)
+{
+  unique_vals <- unique(vec)
+
+  if (length(unique_vals) < 1)
+    return(NULL)
+
+  table <- cbind.data.frame(1:length(unique_vals), unique_vals)
+  colnames(table) <- c("Number", "Value")
+
+  table
+}
+
 # is the user authenticated by default?
 auth_default <- TRUE
 
@@ -668,7 +711,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
   output$download_num_data <- downloadHandler(
     filename = function() {
-      sprintf("%s_num_data.csv", repStr(title_text(), " ", "_"))
+      sprintf("%s_num_data.csv", rep_str(title_text(), " ", "_"))
     },
     content = function(file) {
       if (!authenticated())
@@ -687,7 +730,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
   output$download_metadata <- downloadHandler(
     filename = function() {
-      sprintf("%s_metadata.csv", repStr(title_text(), " ", "_"))
+      sprintf("%s_metadata.csv", rep_str(title_text(), " ", "_"))
     },
     content = function(file) {
       if (!authenticated())

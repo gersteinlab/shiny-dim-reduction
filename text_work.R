@@ -1,5 +1,4 @@
-# The purpose of this file is to store browser parameters, set up long text
-# strings, and load dependencies for the main app.
+# The purpose of this file is to store long texts and functions for text manipulation.
 
 source("find_replace.R", encoding="UTF-8")
 
@@ -99,6 +98,80 @@ table_exclude_vector <- function(...)
 # LONG TEXTS
 # ----------
 
+session_data_template <- list(
+  "pickerInput"=list(),
+  "numericInput"=list(),
+  "numericRangeInput"=list(),
+  "sliderInput"=list(),
+  "tabsetPanel"=list()
+)
+
+default_picker_input_ids <- c(
+  "sMenu",
+  "category",
+  "scale",
+  "normalize",
+  "features",
+  "embedding",
+  "visualize",
+  "perplexity",
+  "palette",
+  "console"
+)
+
+numeric_input_ids <- c(
+  "height",
+  "notif_time",
+  "nintersect",
+  "bar_frac",
+  "set_feat_upse",
+  "set_feat_heat",
+  "set_feat_dend"
+)
+
+numeric_range_input_ids <- c(
+  "set_f1",
+  "set_f2"
+)
+
+tabset_panel_ids <- c(
+  "plotPanels"
+)
+
+slider_input_ids <- c(
+  "pc1",
+  "pc2",
+  "pc3"
+)
+
+default_exclude_vector <- c(
+  ".clientValue-default-plotlyCrosstalkOpts",
+  "plotly_hover-A",
+  "plotly_afterplot-A",
+  "plotly_relayout-A",
+
+  "username",
+  "password",
+  "toggle_password",
+  "attempt_login",
+
+  "sidebarMenu",
+  "sidebarCollapsed",
+  "sidebarItemExpanded",
+
+  "start",
+  "stop",
+  "instructions",
+  "citations",
+  "randomize",
+
+  table_exclude_vector(
+    "num_data_table",
+    "metadata_table",
+    "legend_out"
+  )
+)
+
 bibliography <- sprintf(
   "Developed at Gerstein Lab from 2019-2020.
 <br><br>
@@ -161,7 +234,7 @@ https://github.com/jamesdiao/ERCC-Plotting-Tool</a>", intToUtf8(0x00F1))
 
 instructions <-
   "Welcome! Please feel free to explore this dimensionality reduction tool.
-Developed by Justin Chang at the Gerstein Lab from 2019-2020,
+Developed by Justin Chang at the Gerstein Lab from 2019-2021,
 under the mentorship of Joel Rozowsky.
 <br><br>
 In Shiny, values are reactive and observe their dependencies. If one of their

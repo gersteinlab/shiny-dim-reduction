@@ -211,16 +211,7 @@ select_opts <- select_opts[1:length(select_ids)]
 # -----------
 
 picker_input_ids <- c(
-  "sMenu",
-  "category",
-  "scale",
-  "normalize",
-  "features",
-  "embedding",
-  "visualize",
-  "perplexity",
-  "palette",
-  "console",
+  default_picker_input_ids,
   id_subset(name_cat),
   id_color(name_cat),
   id_shape(name_cat),
@@ -228,31 +219,6 @@ picker_input_ids <- c(
   id_filter(name_cat),
   select_ids,
   thre_ids
-)
-
-numeric_input_ids <- c(
-  "height",
-  "notif_time",
-  "nintersect",
-  "bar_frac",
-  "set_feat_upse",
-  "set_feat_heat",
-  "set_feat_dend"
-)
-
-numeric_range_input_ids <- c(
-  "set_f1",
-  "set_f2"
-)
-
-tabset_panel_ids <- c(
-  "plotPanels"
-)
-
-slider_input_ids <- c(
-  "pc1",
-  "pc2",
-  "pc3"
 )
 
 bookmarkable_ids <- c(
@@ -265,41 +231,8 @@ bookmarkable_ids <- c(
 
 # the vector of all inputs to exclude from manual bookmarking
 bookmark_exclude_vector <- c(
-  ".clientValue-default-plotlyCrosstalkOpts",
-  "plotly_hover-A",
-  "plotly_afterplot-A",
-  "plotly_relayout-A",
-
-  "username",
-  "password",
-  "toggle_password",
-  "attempt_login",
-
-  "sidebarMenu",
-  "sidebarCollapsed",
-  "sidebarItemExpanded",
-
-  "start",
-  "stop",
-  "instructions",
-  "citations",
-  "randomize",
-
-  table_exclude_vector(
-    "num_data_table",
-    "metadata_table",
-    "legend_out"
-  ),
-
+  default_exclude_vector,
   bookmarkable_ids
-)
-
-session_data_template <- list(
-  "pickerInput"=list(),
-  "numericInput"=list(),
-  "numericRangeInput"=list(),
-  "sliderInput"=list(),
-  "tabsetPanel"=list()
 )
 
 output_conditions <- c(
