@@ -1,0 +1,376 @@
+# The purpose of this file is to store browser parameters, set up long text
+# strings, and load dependencies for the main app.
+
+source("find_replace.R", encoding="UTF-8")
+
+# ---------
+# FUNCTIONS
+# ---------
+
+# formats to "opt (num)"
+get_opt <- function(opt, num)
+{
+  sprintf("%s (%s)", opt, num)
+}
+
+# Suppose we have a vector of strings of the form "A (B)",
+# where A and B are strings that do not contain '(' or ')'.
+# Returns a vector containing for each string c("A", "B")
+sep_opt <- function(str)
+{
+  if (!is.character(str))
+    return(NULL)
+  unlist(strsplit(str, "( \\(|\\))"))
+}
+
+# removes all parts of the form <tag> from a text
+rem_html_tags <- function(html)
+{
+  reg_str(html, "<[^>]*>", "")
+}
+
+# Creates a label for the nth component
+pc <- function(name = "1")
+{
+  sprintf("Component %s", name)
+}
+
+# Useful for finding subset IDs
+id_subset <- function(category)
+{
+  sprintf("subsetby_%s", category)
+}
+
+# Useful for finding color IDs
+id_color <- function(category)
+{
+  sprintf("colorby_%s", category)
+}
+
+# Useful for finding shape IDs
+id_shape <- function(category)
+{
+  sprintf("shapeby_%s", category)
+}
+
+# Useful for finding label IDs
+id_label <- function(category)
+{
+  sprintf("labelby_%s", category)
+}
+
+# Useful for finding filter IDs
+id_filter <- function(category)
+{
+  sprintf("filterby_%s", category)
+}
+
+# Useful for finding select IDs
+id_select <- function(category, character)
+{
+  sprintf("selectby_%s_%s", category, character)
+}
+
+# Useful for finding thre IDs
+id_thre <- function(category, scale)
+{
+  sprintf("thre_%s_%s", category, scale)
+}
+
+# creates a vector of inputs that should be excluded
+# from bookmarking, based on the table's ID
+table_exclude_vector <- function(...)
+{
+  table_id <- list(...)
+  c(
+    sprintf("%s_search", table_id),
+    sprintf("%s_state", table_id),
+    sprintf("%s_cell_clicked", table_id),
+    sprintf("%s_search_columns", table_id),
+    sprintf("%s_rows_current", table_id),
+    sprintf("%s_rows_all", table_id),
+    sprintf("%s_rows_selected", table_id),
+    sprintf("%s_columns_selected", table_id),
+    sprintf("%s_cells_selected", table_id)
+  )
+}
+
+# ----------
+# LONG TEXTS
+# ----------
+
+bibliography <- sprintf(
+  "Developed at Gerstein Lab from 2019-2020.
+<br><br>
+Developed by Justin Chang at the Gerstein Lab from 2019-2020,
+under the mentorship of Joel Rozowsky. I appreciate
+the help of Abhinav Godavarthi, Max Sun, and Ana Berthel in developing
+this tool. The citations below are in the format requested by their respective creators.
+<br><br>
+<b>Data Sources</b>
+<br>
+!!!!!!!!!!
+<br><br>
+<b>R Packages</b>
+<br>
+<u>Rtsne:</u> Jesse H. Krijthe (2015). Rtsne: T-Distributed Stochastic Neighbor
+Embedding using a Barnes-Hut Implementation, URL:
+<a href=\"https://github.com/jkrijthe/Rtsne\" target=\"_blank\">
+https://github.com/jkrijthe/Rtsne</a>
+<br>
+<u>Keras:</u> Keras, (2018), GitHub repository,
+https://github.com/charlespwd/project-title
+<a href=\"https://github.com/keras-team/keras\" target=\"_blank\">
+https://github.com/keras-team/keras</a>
+<br>
+<u>UMAP:</u> McInnes et al., (2018). UMAP: Uniform Manifold Approximation and
+Projection. Journal of Open Source Software, 3(29), 861,
+<a href=\"https://doi.org/10.21105/joss.00861\" target=\"_blank\">
+https://doi.org/10.21105/joss.00861</a>
+<br>
+<u>PHATE:</u> Moon, K.R., van Dijk, D., Wang, Z. et al.
+Visualizing structure and transitions in high-dimensional biological data.
+Nat Biotechnol 37, 1482-1492 (2019).
+<a href=\"https://doi.org/10.1038/s41587-019-0336-3\" target=\"_blank\">
+https://doi.org/10.1038/s41587-019-0336-3</a>
+<br>
+<u>UpSetR:</u> Jake R Conway, Alexander Lex, Nils Gehlenborg UpSetR: An R Package
+for the Visualization of Intersecting Sets and their Properties doi:
+<a href=\"https://doi.org/10.1093/bioinformatics/btx364\" target=\"_blank\">
+https://doi.org/10.1093/bioinformatics/btx364</a>
+<br>
+<u>heatmaply:</u> Galili, Tal, O'Callaghan, Alan, Sidi, Jonathan, Sievert,
+Carson (2017). \"heatmaply: an R package for creating interactive cluster heatmaps
+for online publishing.\" Bioinformatics. doi:
+<a href=\"http://dx.doi.org/10.1093/bioinformatics/btx657\" target=\"_blank\">
+http://dx.doi.org/10.1093/bioinformatics/btx657</a>
+<br>
+<u>Cividis:</u> Nu%sez, Jamie R., Christopher R. Anderton, and Ryan S. Renslow.
+\"Optimizing colormaps with consideration for color vision deficiency to enable
+accurate interpretation of scientific data.\" PloS one 13.7 (2018): e0199239.
+<br><br>
+<b>Further Reading</b>
+<br>
+<u>Optimizing tSNE:</u> Wattenberg, et al., \"How to Use t-SNE Effectively\",
+Distill, 2016. <a href=\"http://doi.org/10.23915/distill.00002\" target=\"_blank\">
+http://doi.org/10.23915/distill.00002</a>
+<br>
+<u>James Diao's ERCC Plotting Tool:</u>
+<a href=\"https://github.com/jamesdiao/ERCC-Plotting-Tool\" target=\"_blank\">
+https://github.com/jamesdiao/ERCC-Plotting-Tool</a>", intToUtf8(0x00F1))
+
+instructions <-
+  "Welcome! Please feel free to explore this dimensionality reduction tool.
+Developed by Justin Chang at the Gerstein Lab from 2019-2020,
+under the mentorship of Joel Rozowsky.
+<br><br>
+In Shiny, values are reactive and observe their dependencies. If one of their
+dependencies is invalidated - meaning one of the inputs has changed - then they
+recalculate their values. Once a reactive value is recalculated, the functions
+that depend on it will be invalidated, causing their own downstream recalculation.
+This approach allows the app to be highly responsive, without constantly performing
+upstream calculations. Users can therefore freely change parameters as they go.
+Non-visible outputs are also not activated, which saves drawing time.
+<br><br>
+Note that the settings in 'Graphing' are applied in reverse order. As an example,
+'Color Palette' is applied after 'Method of Dimensionality Reduction', which is
+applied after normalization, which is applied after scaling.
+<br><br>
+If you want to save plotly output as an image, use the camera icon.
+To save all other output, right click the image and 'Save image as ...'
+<br><br>
+<b>Glossary of Terms</b>
+<ul>
+<li><u>Settings Menu:</u>
+If 'Embed Title' is checked, then the title of the plot will be included within the
+plot graphic. Otherwise, it will be displayed as plaintext below the plot. Embedded
+titles are not supported for UpSetR. If 'Show Legend' is  checked, then the plot will
+contain a legend. Otherwise, no legend will be included. If 'Boost Graphics' is checked,
+certain plots will be drawn with more expensive methods. If 'Notifications' is
+checked, then relevant notifications will appear in the bottom-right corner over time.
+Otherwise, no notifications will appear. If 'Uninverted Colors' is not checked,
+then color scales will be reversed.
+</li>
+<li><u>Color Palette:</u>
+For plotting, this tool supports 10 color scales. The color scales inherent to R are
+'Custom', 'Rainbow', 'Heat', 'Terrain', and 'Topography'. The color scales inherent
+to Viridis are 'Viridis', 'Magma', 'Plasma', 'Inferno', and 'Cividis'. Cividis
+'enables nearly-identical visual-data interpretation' for color-deficient vision,
+'is perceptually uniform in hue and brightness, and increases in brightness linearly'.
+</li>
+<li><u>Method of Visualization:</u>
+Explore: Plots combinations of principal components.
+Summarize: Generates a filter-free summary, with best-fit lines in ggplot2 and plotly3.
+tSNE: Flattens all components into a t-distributed Stochastic Neighbor Embedding.
+Frequency: Sorts the columns of the UpSetR plot by frequencies of factor subsets.
+Degree: Sorts the columns of the UpSetR plot by degrees of factor subsets.
+Variance: Sorts columns of heatmap by variance.
+Correlation: Performs correlation clustering, with dendrograms in plotly3.
+</li>
+<li><u>Method of Dimensionality Reduction:</u>
+PCA: Principal Component Analysis.
+VAE: Variational Auto-Encoder.
+UMAP: Uniform Manifold Approximation and Projection.
+PHATE: Potential of Heat diffusion for Affinity-based Transition Embedding.
+Sets: Uses a user-calculated threshold to analyze characteristic intersections.
+</li>
+<li><u>Percentage of Features Used:</u>
+Let x be the fraction of extraneous features used.
+Let t be the total number of features.
+Let c be the number of components in the final reduction.
+Then the first {c + x * (t - c)} features, in decreasing order by variance,
+will be used to form the model.
+Due to hardware limitations, t is capped at 24000 for VAE.
+</li>
+<li><u>Normalization:</u>
+Raw data is globally normalized - features retain their relative magnitudes, the
+minimum of the whole matrix is 0, and the maximum of the whole matrix is 1.
+Normalized data is locally normalized - the minimum of each feature is 0 and the
+maximum of each feature is 1. Normalization generally benefits neural networks,
+so it is suggested for VAE. On the other hand, normalization is usually detrimental
+to PCA, as it removes the relative magnitudes of all features.
+</li>
+<li><u>Scale:</u>
+Logarithmic data underwent a transformation of f(x) = log2(x+1).
+</li>
+<li><u>Feature Subset:</u>
+Choose a subset of features for use in further analysis.
+</li>
+<li><u>Category:</u>
+A category is a set of samples with conserved features. Since categories do not
+necessarily share common metadata characteristics, distinct inputs exist for each
+category in subsetting, coloring, labeling, filtering, selecting, and thresholding.
+</li>
+<li><u>Start Plotting:</u>
+Activates plotting and causes plots to update instantaneously.
+</li>
+<li><u>Stop Plotting:</u>
+Stops plotting and allows settings to be updated without waiting.
+</li>
+<li><u>Bookmark:</u>
+Creates a URL that replicates this session.
+</li>
+<li><u>Numeric Data:</u>
+Downloads the numeric data used to produce the current plot.
+</li>
+<li><u>Metadata:</u>
+Downloads the metadata used to produce the current plot.
+</li>
+<li><u>Displayed Components:</u>
+Displayed Component 1 denotes the component, after dimensionality reduction,
+that will be shown on the x-axis. Displayed Component 2 denotes the component,
+after dimensionality reduction, that will be shown on the y-axis. For plotly3,
+Displayed Component 3 denotes the component, after dimensionality reduction,
+that will be shown on the z-axis. Note that components can equal each other.
+</li>
+<li><u>Color By, Shape By, Label By:</u>
+What category should points on the graph be colored / shaped by?
+(Note: depends on the category selected.)
+</li>
+<li><u>Current Filter, Filter By:</u>
+'Current Filter' lists all available categories for which filters can be applied.
+Filters for all categories are applied concurrently in an AND operation. In other
+words, only points in the intersection of all filters will be plotted. Filters consist
+of including / excluding factors of a selected metadata characteristic.
+(Note: depends on the category selected.)
+</li>
+<li><u>Perplexity:</u>
+Let a gene's expression range be normalized to (0,1) after the scaling transformation.
+Then a gene will be considered present in a categorical characteristic if it is
+expressed above this threshold. The bounds of this slider were selected to ensure a
+broad range of expression patterns without overflowing memory.
+</li>
+<li><u>Threshold:</u>
+Perplexity is a hyperparameter used in dimensionality reduction methods that create
+clusters. It is analogous to the expected number of neighbors for any data point.
+</li>
+<li><u>Fraction of Samples:</u>
+Suppose S samples belong to a characteristic.
+Suppose a gene is expressed at the threshold level in G of those samples.
+Then this slider determines the acceptable values of G/S to be displayed.
+</li>
+<li><u>Fraction of Characteristics:</u>
+This slider determines the percentage of possible sets that must contain a gene
+for the gene to be displayed. A gene is contained if and only if it is present
+in an appropriate fraction of samples. As an example, housekeeping genes (present
+in all characteristics) - will be removed by setting this value to less than 1.
+</li></ul>"
+
+no_autofill <-
+  "document.getElementById('password').setAttribute('autocomplete','new-password')"
+
+my_css_styling <- HTML("
+/* Personal notification preferences */
+.shiny-notification {
+  border-color: #00356B !important;
+  opacity: 1 !important;
+}
+
+/* Increases text / icon visibility in selectors */
+[role=option] > .text, [role=option] > .glyphicon {
+  color: #000000 !important;
+}
+
+/* Better indicator of selected item */
+.dropdown-menu>.active>a,
+.dropdown-menu>.active>a:focus,
+.dropdown-menu>.active>a:hover {
+    background-color: #E0F0FF !important;
+}
+
+/* Everyone's favorite color - Yale Blue! */
+.skin-blue .main-header .logo {
+  background-color: #00356B !important;
+}
+
+/* Place sidebar toggle on right! */
+.sidebar-toggle {
+  float: right !important;
+}
+
+/* Prevents weird sidebar glitch */
+.wrapper {
+  height: auto !important;
+  position:relative;
+  overflow-x:hidden;
+  overflow-y:hidden
+}
+
+/* Prevents overflow from input pickers */
+.inner {
+  min-height: 0px !important;
+  max-height: 360px !important;
+}
+
+/* Prevents misfitting of dropdowns */
+.dropdown-menu {
+  min-height: 0px !important;
+}
+
+/* Wrap text to avoid overflowing selectors */
+.dropdown-menu > li > a {
+  white-space: normal !important;
+}
+
+/* Make password text invisible, but mark the caret */
+.my-hidden-text {
+  color: rgba(0,0,0,0) !important;
+  caret-color: rgba(0,0,0,1) !important;
+}
+
+/* Make password text same color as selection */
+.my-hidden-text::selection {
+  color: #3297FD !important;
+  background: #3297FD !important;
+}
+
+/* center selectors */
+.sidebar-menu .treeview-menu {
+  padding-left: 0px !important;
+}
+
+/* center title */
+#title_out {
+  text-align: center !important;
+}
+")
