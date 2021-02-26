@@ -1,4 +1,4 @@
-# This file tests app_functions.R.
+# This file tests plotting.R.
 
 # -----
 # SETUP

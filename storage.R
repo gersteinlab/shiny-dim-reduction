@@ -24,7 +24,10 @@ find_local <- function(filename)
 # saves data to filename in the root directory
 save_local <- function(data, filename)
 {
-  saveRDS(data, sprintf("%s/%s", Sys.getenv("LOCAL_STORAGE_ROOT"), filename))
+  file <- sprintf("%s/%s", Sys.getenv("LOCAL_STORAGE_ROOT"), filename)
+  if (!dir.exists(dirname(file)))
+    dir.create(dirname(file), recursive=TRUE)
+  saveRDS(data, file)
 }
 
 # loads data from filename in the root directory

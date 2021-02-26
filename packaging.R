@@ -2,6 +2,7 @@
 
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
 source("storage.R", encoding="UTF-8")
+source("find_replace.R", encoding="UTF-8")
 source("scaling.R", encoding="UTF-8")
 storage_query()
 
@@ -231,7 +232,7 @@ for (cat in dog)
 
       for (cha in colnames(short_list))
       {
-        saver(
+        save_store(
           set_data[[cha]],
           sprintf("Sets/Sets-%s_%s_%s_%s.rds",
                   ind, sca_ind, cha, cat)
