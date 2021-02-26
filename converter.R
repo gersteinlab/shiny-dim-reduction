@@ -108,7 +108,7 @@ convert_to_num <- function(data){
 
 # converts the first row of a matrix to column names
 r1_to_cols <- function(data){
-  if (nrow(data) < 1)
+  if (length(data) < 1 || nrow(data) < 1)
   {
     print("Warning: < 1 row")
     return(data)
@@ -183,4 +183,38 @@ mass_download <- function(url_vec, loc_vec, chunk_size = 100)
   }
 
   failed_indices
+}
+
+# gets the fraction of values of x that are not in 'unacceptable'
+frac_acceptable <- function(x, unacceptable=list(NA, NaN, NULL, "", "Unknown")){
+  1 - sum(x %in% unacceptable)/length(x)
+}
+
+# a version of dplyr::bind_rows that works extremely quickly
+# when binding many small matrices together
+chunk_bind_rows <- function(data, num_chunks=1, bind_fun = dplyr::bind_rows)
+{
+  len <- length(data)
+
+  if (len < 2)
+    return(data)
+
+  if (is.null(names(data)))
+    names(data) <- 1:len
+
+  if (num_chunks < 2)
+    return(bind_fun(data))
+
+  chunk_size <- ceiling(len/num_chunks)
+
+  result <- my_empty_list(1:num_chunks)
+
+  for (i in 1:num_chunks)
+  {
+    min_ind <- (i-1)*chunk_size+1
+    max_ind <- min(len, i*chunk_size)
+    result[[i]] <- data.frame(bind_fun(data[min_ind:max_ind]))
+  }
+
+  result
 }
