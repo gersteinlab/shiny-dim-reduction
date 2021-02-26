@@ -86,7 +86,7 @@ setwd(sprintf("%s/decorations_app/data", roo_loc))
 for (dec in names(all_decorations))
 {
   compressed <- all_decorations[[dec]] %>% Matrix(sparse=TRUE)
-  myRDS(sprintf("%s.rds", dec), 
+  myRDS(sprintf("%s.rds", dec),
         list("TISSUE"=compressed)
   )
 }
@@ -113,13 +113,13 @@ for (sca in sca_options)
   scaled <- do_scal(sca, scaled_raw)
   scaled <- do_scal(sca, scaled)
   net_data_pca[[sca]] <- my_empty_list(nor_options)
-  
+
   for (nor in nor_options[1:4])
   {
     print(nor)
     scaled <- do_norm(nor, scaled)
     s2 <- feature_start(scaled, 1.0*10/100)
-    pca <- prcomp(s2, center = TRUE, rank. = pc_cap) 
+    pca <- prcomp(s2, center = TRUE, rank. = pc_cap)
     net_data_pca[[sca]][[nor]] <- pca
   }
 }
@@ -128,7 +128,7 @@ net_data_tsne <- net_data_pca
 for (sca in sca_options)
 {
   net_data_tsne[[sca]] <- my_empty_list(nor_options)
-  
+
   for (nor in nor_options[1:4])
   {
     net_data_tsne[[sca]][[nor]] <- my_rTSNE(net_data_pca[[sca]][[nor]]$x, 2, 50)
@@ -138,15 +138,15 @@ for (sca in sca_options)
 biofluids <- order_total$miRNA$BIOFLUID
 
 tsne <- net_data_tsne[["Logarithmic"]][["Global Min-Max"]]$Y
-plotly_2d(tsne[,1], tsne[,2], "1", "2", "markers", 
-          biofluids, biofluids, 
+plotly_2d(tsne[,1], tsne[,2], "1", "2", "markers",
+          biofluids, biofluids,
           color_seq(length(unique(biofluids)), "Rainbow", TRUE), "", TRUE)
 
 net_data_tsne <- net_data_pca
 for (sca in sca_options)
 {
   net_data_tsne[[sca]] <- my_empty_list(nor_options)
-  
+
   for (nor in nor_options[1:4])
   {
     net_data_tsne[[sca]][[nor]] <- my_rTSNE(net_data_pca[[sca]][[nor]]$x, 2, 50)
@@ -194,9 +194,9 @@ for (i in 1:20000)
 {
   if (i %% 1000 == 0)
     print(i)
-  
+
   samp <- samples[i]
-  
+
   for (dec in r1)
   {
     if (samp %in% d1[[dec]])
@@ -205,7 +205,7 @@ for (i in 1:20000)
       break
     }
   }
-  
+
   for (dec in r2)
   {
     if (samp %in% d2[[dec]])
@@ -214,7 +214,7 @@ for (i in 1:20000)
       break
     }
   }
-  
+
   for (dec in r3)
   {
     if (samp %in% d3[[dec]])
@@ -241,11 +241,11 @@ nei <- 30
 for (cat in dog)
 {
   combined <- myRDS(sprintf("combined/combined_%s.rds", cat))
-  
+
   scaled <- combined %>% do_scal(sca, .) %>% do_norm(nor, .)
   trans <- t(scaled[,indices])
   print(sprintf("Dimensions of %s: %s %s", cat, dim(trans)[1], dim(trans)[2]))
-  
+
   umap_total[[cat]] <- my_UMAP(trans, pc_cap, nei)
   umap_emb <- umap_total[[cat]]$layout
   tsne_total[[cat]] <- my_rTSNE(umap_emb, 2, nei)
@@ -264,7 +264,7 @@ my_subsetter <- function(types)
   ltype <- lapply(as.list(uni), function(x){length(which(types == x))})
   lnum <- mean(unlist(ltype))
   lind <- my_empty_list(uni)
-  
+
   for (u in uni)
   {
     num <- 0
@@ -278,7 +278,7 @@ my_subsetter <- function(types)
       }
     }
   }
-  
+
   which(types != "REMOVE")
 }
 
@@ -290,23 +290,23 @@ for (cat in dog)
 {
   umap_emb <- umap_total[[cat]]$layout
   tsne_emb <- tsne_total[[cat]]$Y
-  
+
   umap_x <- umap_emb[,1]
   umap_y <- umap_emb[,2]
   tsne_x <- tsne_emb[,1]
   tsne_y <- tsne_emb[,2]
-  
-  t1_plots[[cat]] <- plotly_2d(tsne_x[s1], tsne_y[s1], "1", "2", "markers", 
+
+  t1_plots[[cat]] <- plotly_2d(tsne_x[s1], tsne_y[s1], "1", "2", "markers",
                                t11[s1], t11[s1], col1, "", TRUE)
-  u1_plots[[cat]] <- plotly_2d(umap_x[s1], umap_y[s1], "1", "2", "markers", 
+  u1_plots[[cat]] <- plotly_2d(umap_x[s1], umap_y[s1], "1", "2", "markers",
                                t11[s1], t11[s1],  col1, "", TRUE)
-  t2_plots[[cat]] <- plotly_2d(tsne_x[s2], tsne_y[s2], "1", "2", "markers", 
+  t2_plots[[cat]] <- plotly_2d(tsne_x[s2], tsne_y[s2], "1", "2", "markers",
                                t22[s2], t22[s2], col2, "", TRUE)
-  u2_plots[[cat]] <- plotly_2d(umap_x[s2], umap_y[s2], "1", "2", "markers", 
+  u2_plots[[cat]] <- plotly_2d(umap_x[s2], umap_y[s2], "1", "2", "markers",
                                t22[s2], t22[s2],  col2, "", TRUE)
-  t3_plots[[cat]] <- plotly_2d(tsne_x[s3], tsne_y[s3], "1", "2", "markers", 
+  t3_plots[[cat]] <- plotly_2d(tsne_x[s3], tsne_y[s3], "1", "2", "markers",
                                t33[s3], t33[s3], col3, "", TRUE)
-  u3_plots[[cat]] <- plotly_2d(umap_x[s3], umap_y[s3], "1", "2", "markers", 
+  u3_plots[[cat]] <- plotly_2d(umap_x[s3], umap_y[s3], "1", "2", "markers",
                                t33[s3], t33[s3],  col3, "", TRUE)
 }
 
@@ -314,30 +314,30 @@ for (cat in dog)
 # UNREVISED PORTABLE
 # ------------------
 
-# To begin, install R-Portable and GoogleChromePortable into your dist folder  
-# Add to R-Portable/App/R-Portable/etc/Rprofile.site:  
-#   .First = function(){.libPaths(.Library)}  
-# 
-# Open up R-Portable as an admin. Check library is portable with .libPaths().  
-# Install all necessary packages ...  
-# DO NOT COMPILE FROM SOURCE! Use the binaries from CRAN.  
-# 
-# Create a file called runShinyApp.R with the following lines:  
-#   message('library paths:\n', paste('... ', .libPaths(), sep='', collapse='\n'))  
-# options(browser='C:/Program Files (x86)/Google/Chrome/Application/chrome.exe')  
-# shiny::runApp('app', launch.browser=T)  
-# 
-# Create a file called run.bat with the following lines:  
-#   SET ROPTS=--no-save --no-environ --no-init-file --no-restore --no-Rconsole  
-# R-Portable\App\R-Portable\bin\Rscript.exe %ROPTS% runShinyApp.R 1> ShinyApp.log 2>&1  
-# 
-# copy and paste the app folder into the dist ... final product  
-# JC-Portable  
-# -runShinyApp.R  
-# -run.bat  
-# -app (DIR)  
-# -R-Portable (DIR)  
-# -GoogleChromePortable (DIR)  
+# To begin, install R-Portable and GoogleChromePortable into your dist folder
+# Add to R-Portable/App/R-Portable/etc/Rprofile.site:
+#   .First = function(){.libPaths(.Library)}
+#
+# Open up R-Portable as an admin. Check library is portable with .libPaths().
+# Install all necessary packages ...
+# DO NOT COMPILE FROM SOURCE! Use the binaries from CRAN.
+#
+# Create a file called runShinyApp.R with the following lines:
+#   message('library paths:\n', paste('... ', .libPaths(), sep='', collapse='\n'))
+# options(browser='C:/Program Files (x86)/Google/Chrome/Application/chrome.exe')
+# shiny::runApp('app', launch.browser=T)
+#
+# Create a file called run.bat with the following lines:
+#   SET ROPTS=--no-save --no-environ --no-init-file --no-restore --no-Rconsole
+# R-Portable\App\R-Portable\bin\Rscript.exe %ROPTS% runShinyApp.R 1> ShinyApp.log 2>&1
+#
+# copy and paste the app folder into the dist ... final product
+# JC-Portable
+# -runShinyApp.R
+# -run.bat
+# -app (DIR)
+# -R-Portable (DIR)
+# -GoogleChromePortable (DIR)
 
 # --------------
 # SET THRESHOLDS
@@ -361,14 +361,14 @@ for (cat in dog[1:10])
 hmm$threshold <- 1:prec/prec
 h2 <- melt(hmm, id.vars = "threshold")
 colors <- color_seq(10, "Rainbow", TRUE)
-plotly_2d(h2$threshold, h2$value,"","","lines+markers", 
+plotly_2d(h2$threshold, h2$value,"","","lines+markers",
           h2$variable, h2$variable, colors, "", TRUE)
 
 h3 <- hmm
 for (i in 1:10)
   h3[,i] <- log2(h3[,i])
 h4 <- melt(h3, id.vars="threshold")
-plotly_2d(h4$threshold, h4$value,"","","lines+markers", 
+plotly_2d(h4$threshold, h4$value,"","","lines+markers",
           h4$variable, h4$variable, colors, "", TRUE)
 
 for (i in 1:9)
@@ -378,40 +378,6 @@ for (i in 10)
   print_clean(sprintf("%s: %s", dog[i], summary(lm(threshold~get(dog[i]),hmm))$r.squared))
 
 # intended for converter
-
-# a version of dplyr::bind_rows that works extremely quickly
-# when binding many small matrices together
-chunk_bind_rows <- function(data, num_chunks=1, bind_fun = dplyr::bind_rows)
-{
-  len <- length(data)
-  
-  if (len < 2)
-    return(data)
-  
-  if (is.null(names(data)))
-    names(data) <- 1:len
-  
-  if (num_chunks < 2)
-    return(bind_fun(data))
-  
-  chunk_size <- ceiling(len/num_chunks)
-  
-  result <- my_empty_list(1:num_chunks)
-  
-  for (i in 1:num_chunks)
-  {
-    min_ind <- (i-1)*chunk_size+1
-    max_ind <- min(len, i*chunk_size)
-    result[[i]] <- data.frame(bind_fun(data[min_ind:max_ind]))
-  }
-  
-  result
-}
-
-# gets the fraction of values of x that are not in 'unacceptable'
-frac_acceptable <- function(x, unacceptable=list(NA, NaN, NULL, "", "Unknown")){
-  1 - sum(x %in% unacceptable)/length(x)
-}
 
 # sorts a list by names
 sort_by_names <- function(target)
