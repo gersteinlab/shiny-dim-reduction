@@ -3,7 +3,7 @@
 
 project_name <- "exRNA"
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
-source("exrna_constants.R", encoding="UTF-8")
+source("aaa_tests/exrna_constants.R", encoding="UTF-8")
 source("converter.R", encoding="UTF-8")
 
 # place in a convenient folder to start - try not to jump around too much
@@ -48,16 +48,6 @@ import_pipeline <- function(filenames)
 empty_df <- matrix(0, nrow=1, ncol=1) %>% data.frame()
 colnames(empty_df) <- "Unknown"
 
-# takes read_tsv_text from bed_txt and assembles it into a metadata df
-bed_assemble <- function(bed_res){
-  if (is.null(bed_res))
-    return(empty_df)
-
-  bed_res[,1] <- make.unique(bed_res[,1])
-
-  bed_res %>% t() %>% r1_to_cols() %>% data.frame()
-}
-
 # ---------------------------
 # SPLIT INTO COMMON / URL_LOC
 # ---------------------------
@@ -82,7 +72,7 @@ url_lists <- list(
   "Expe" = expe_ref[,2],
   "Dono" = dono_ref[,2],
   "rRNA" = rrna_ref[,2],
-  "GeneE" = gene_ref[,2]
+  "Gene" = gene_ref[,2]
 )
 
 loc_lists <- my_empty_list(c("Bios", "Expe", "Dono", "rRNA", "Gene"))
@@ -153,26 +143,28 @@ for (i in 1:3)
   }
 }
 
+# takes read_tsv_text from bed_txt and assembles it into a metadata df
+bed_assemble <- function(bed_res){
+  if (is.null(bed_res))
+    return(empty_df)
+
+  bed_res[,1] <- make.unique(bed_res[,1])
+
+  bed_res %>% t() %>% r1_to_cols() %>% data.frame()
+}
+
 bios_total <- lapply(bed_txt[[1]], bed_assemble) %>% dplyr::bind_rows()
 expe_total <- lapply(bed_txt[[2]], bed_assemble) %>% dplyr::bind_rows()
 dono_total <- lapply(bed_txt[[3]], bed_assemble) %>% dplyr::bind_rows()
-
-
-
-
-
-
-
-
 
 check_garbo <- function(data, min) {
   select_if(data, function(x){frac_acceptable(x) > min})
 }
 
-indices <- which(common$PROFILING != "qPCR")
-bios_c <- check_garbo(bios_total[indices,], 0.3)
-expe_c <- check_garbo(expe_total[indices,], 0.3)
-dono_c <- check_garbo(dono_total[indices,], 0.5)
+indices <- which(common_bed$PROFILING != "qPCR")
+bios_c <- check_garbo(bios_total[indices,], 0.25)
+expe_c <- check_garbo(expe_total[indices,], 0.25)
+dono_c <- check_garbo(dono_total[indices,], 0.25)
 
 # dono
 make_age_range <- function(x, scale){
@@ -180,7 +172,7 @@ make_age_range <- function(x, scale){
   sprintf("%s to %s", num, num+scale)
 }
 
-dono_clean <- dono_c
+dono_clean <- dono_c[,1:6]
 dono_clean[is.na(dono_clean)] <- "Unknown"
 dono_clean[which(dono_clean == "")] <- "Unknown"
 dono_clean <- dono_clean[,-1]
@@ -203,46 +195,39 @@ colnames(bios_clean) <- c("BIOSAMPLE", "FRACTIONATION")
 expe_clean <- expe_c
 expe_clean[is.na(expe_clean)] <- "Unknown"
 expe_clean[which(expe_clean == "")] <- "Unknown"
-expe_clean$X.property <- NULL
-expe_clean$X..Status <- NULL
-expe_clean$X..exRNA.Source.Isolation.Protocol <- NULL
-expe_clean$X...Protocol.Description <- NULL
-expe_clean$X..exRNA.Sample.Preparation.Protocol <- NULL
-expe_clean$X..Schema.Version <- NULL
-expe_clean$X...Biofluid <- NULL
-expe_clean$X....Description <- NULL
-expe_clean$X...Protocol.Description.1 <- NULL
-expe_clean$X...smRNA.Seq <- NULL
-expe_clean$X..Experiment.Type <- NULL
-expe_clean$X....Other.exRNA.Quantification.Method <- NULL
-expe_clean$X......Low.Speed.Centrifugation <- NULL
-expe_clean$X....Library.Generation <- NULL
-expe_clean$X......Other.Library.Construction.Kit <- NULL
-expe_clean$X.....Other.Kits <- NULL
-expe_clean$X...RNA.Isolation.Method <- NULL
-# colnames(expe_clean) <- c(
-#   "EXPERIMENT", "EXPERIMENT_TYPE", "AMPLIFIED",
-#   "DNA_QUANTIFICATION_METHOD", "LIBRARY_CONSTRUCTION_KIT", "SAMPLES_MULTIPLEXED",
-#   "STRAND_SPECIFICITY", "STARTING_MATERIAL_TYPE", "EXRNA_QUANTIFICATION_METHOD",
-#   "RNA_ISOLATION_KIT", "EXTRACELLULAR_VESICLE_PURIFICATION", "CELL_REMOVAL",
-#   "CELL_REMOVAL_METHOD", "CENTRIFUGATION_PARAMETERS"
-# )
+
+expe_useless <- c(
+  "X.property", "X..Status", "X..exRNA.Source.Isolation.Protocol",
+  "X...Protocol.Description", "exRNA.Sample.Preparation.Protocol",
+  "X..Schema.Version", "X...Biofluid", "X....Description", "X...Protocol.Description.1",
+  "X...smRNA.Seq", "X..Experiment.Type", "X....Other.exRNA.Quantification.Method",
+  "X......Low.Speed.Centrifugation", "X....Library.Generation",
+  "X......Other.Library.Construction.Kit", "X.....Other.Kits",
+  "X...RNA.Isolation.Method"
+)
+
+for (term in expe_useless)
+  expe_clean[[term]] <- NULL
+
 colnames(expe_clean) <- c(
-  "EXPERIMENT", "CELL_REMOVAL", "ENZYMATIC_TREATMENT",
+  "EXPERIMENT", "CELL_REMOVAL",  "EXRNA_PREPARATION_PROTOCOL", "ENZYMATIC_TREATMENT",
   "EXRNA_QUANTIFICATION_METHOD","RNA_ISOLATION_KIT", "PROTEINASE_K", "DNASE",
+  "RNA_INTEGRITY_METHOD",
   "EXTRACELLULAR_VESICLE_PURIFICATION", "CELL_REMOVAL_METHOD",
-  "CENTRIFUGATION_PARAMETERS","AMPLIFIED", "DNA_QUANTIFICATION_METHOD",
+  "CENTRIFUGATION_PARAMETERS",
+  "CENTRIFUGATION_TEMPERATURE", "CENTRIFUGATION_SPEED", "CENTRIFUGATION_DURATION",
+  "AMPLIFIED", "DNA_QUANTIFICATION_METHOD",
   "LIBRARY_CONSTRUCTION_KIT",  "SAMPLES_MULTIPLEXED",
   "STRAND_SPECIFICITY", "STARTING_MATERIAL_TYPE")
 
 # note: redundancy between columns and missing data have been fixed
 # keep all factors, even if length(unique) < 2 or length(unique) > num_filters
-metadata <- cbind(common[indices,], bios_clean, expe_clean, dono_clean)
+metadata <- cbind(common_bed[indices,], bios_clean, expe_clean, dono_clean)
 
 metadata$BIOSAMPLE <- NULL
 metadata$RNA_ISOLATION_KIT <- NULL
 
-metadata$CONDITION <- repStr(
+metadata$CONDITION <- rep_str(
   metadata$CONDITION,
   c("Chronic Maternal Hypertension with Superimposed Preeclampsia",
     "Gastric Cancer Pathologic TNM Finding v7",
@@ -258,7 +243,7 @@ metadata$CONDITION <- repStr(
     "Liver Transplant")
 )
 
-metadata$BIOFLUID <- repStr(
+metadata$BIOFLUID <- rep_str(
   metadata$BIOFLUID,
   c("Bronchoalveolar lavage fluid sample",
     "Culture Media, Conditioned",
@@ -270,7 +255,7 @@ metadata$BIOFLUID <- repStr(
     "Ovarian Follicle")
 )
 
-metadata$ANATOMICAL <- repStr(
+metadata$ANATOMICAL <- rep_str(
   metadata$ANATOMICAL,
   c("Brain and spinal cord structure",
     "Entire cardiovascular system",
@@ -286,7 +271,7 @@ metadata$ANATOMICAL <- repStr(
     "")
 )
 
-metadata$RNA_KIT <- repStr(
+metadata$RNA_KIT <- rep_str(
   metadata$RNA_KIT,
   c("miRCURY RNA isolation kit - Cell & Plant (Exiqon)",
     "MiRVana Paris (Ambion)",
@@ -304,37 +289,37 @@ metadata$RNA_KIT <- repStr(
     "miRNeasy, Qiagen")
 )
 
-metadata$RNA_SOURCE <- repStr(
+metadata$RNA_SOURCE <- rep_str(
   metadata$RNA_SOURCE,
   "HDL-containing protein-lipid-RNA complex",
   "HDL-protein-lipid-RNA complex"
 )
 
-metadata$BIO_ID <- repStr(
+metadata$BIO_ID <- rep_str(
   metadata$BIO_ID,
   c("EXR-", "-BS"),
   c("", "")
 )
 
-metadata$EXPERIMENT <- repStr(
+metadata$EXPERIMENT <- rep_str(
   metadata$EXPERIMENT,
   c("EXR-", "-EX"),
   c("", "")
 )
 
-metadata$DATASET <- repStr(
+metadata$DATASET <- rep_str(
   metadata$DATASET,
   c("EXR-", "-AN"),
   c("", "")
 )
 
-metadata$DONOR <- repStr(
+metadata$DONOR <- rep_str(
   metadata$DONOR,
   c("EXR-", "-DO"),
   c("", "")
 )
 
-metadata$LIBRARY_CONSTRUCTION_KIT <- repStr(
+metadata$LIBRARY_CONSTRUCTION_KIT <- rep_str(
   metadata$LIBRARY_CONSTRUCTION_KIT,
   c("TruSeq Small RNA library prep kit (Illumina)",
     "NEBNext small RNA library prep (NEB)",
@@ -346,14 +331,14 @@ metadata$LIBRARY_CONSTRUCTION_KIT <- repStr(
     "BioO NEXTFlex V1")
 )
 
-metadata$SEX <- repStr(
+metadata$SEX <- rep_str(
   metadata$SEX,
   c("Gender unknown", "Gender unspecified", "female", "male",
     "Masculine gender", "FeMale"),
   c("Unknown", "Unknown", "Female", "Male", "Male", "Female")
 )
 
-metadata$CENTRIFUGATION_PARAMETERS <- repStr(
+metadata$CENTRIFUGATION_PARAMETERS <- rep_str(
   metadata$CENTRIFUGATION_PARAMETERS,
   c("5 minutes in 4 C room at 2,000 x g",
     "2500 g x 15 minutes, room temperature",
@@ -385,7 +370,7 @@ metadata$CENTRIFUGATION_PARAMETERS <- repStr(
 rownames(metadata) <- NULL
 
 setwd(raw_loc)
-saveRDS(metadata, "Metadata_Taxonomy/metadata.rds")
+saveRDS(metadata, "bed_metadata.rds")
 
 # ---------------------
 # TAXONOMY (Gene, rRNA)
@@ -409,45 +394,39 @@ for (i in 4:5)
 }
 
 for (i in 1:2)
-{
   for (j in 1:length(rg_txt[[i]]))
-  {
     rg_txt[[i]][[j]] <- rg_txt[[i]][[j]] %>% r1_to_cols() %>% data.frame()
-  }
+
+num_taxa <- length(taxonomic_ordering)
+num_spe <- num_taxa - 3
+
+# converts a list of levels / names into a sparse table
+populate_taxa <- function(data)
+{
+  result <- data.frame(matrix(0, nrow=nrow(data), ncol=num_taxa))
+  for (i in 1:nrow(data))
+    result[i, taxonomic_ordering == data[i, 1]] <- data[i, 3]
+  result
 }
 
-# a predetermined ordering for taxonomy
-taxonomic_ordering <- c(
-  "superkingdom", "kingdom", "subkingdom",
-  "superphylum", "phylum", "subphylum",
-  "superclass", "class", "subclass", "infraclass",
-  "superorder", "order", "suborder", "infraorder", "parvorder",
-  "superfamily", "family", "subfamily",
-  "tribe", "subtribe",
-  "genus", "subgenus",
-  "species group", "species subgroup",
-  "species", "subspecies",
-  "varietas", "forma"
-)
-
 # a super-optimized function for populating the tree to species only
-species_only <- function(hmm1)
+species_only <- function(data)
 {
-  working <- rep(0, 24)
+  working <- rep(0, num_spe-1)
 
-  for (i in 1:nrow(hmm1))
+  for (i in 1:nrow(data))
   {
-    if (hmm1[i, 25] != 0)
+    if (data[i, num_spe] != 0)
     {
-      hmm1[i, 1:24] <- working
+      data[i, 1:(num_spe-1)] <- working
     }
     else
     {
-      for (j in 24:1)
+      for (j in (num_spe-1):1)
       {
-        if (hmm1[i,j] != 0)
+        if (data[i,j] != 0)
         {
-          working[j] <- hmm1[i,j]
+          working[j] <- data[i,j]
           break
         }
         else
@@ -458,61 +437,63 @@ species_only <- function(hmm1)
     }
   }
 
-  hmm1[hmm1[,25] != 0,]
+  data[data[,num_spe] != 0,1:num_spe]
+}
+
+make_rownames <- function(names, ids)
+{
+  mapply(function(a, b){sprintf("%s_%s", a, b)}, names, ids)
+}
+
+truncate_data <- function(data)
+{
+  data[data$level != "no rank",c(2,3,5,6)]
 }
 
 rg_assoc <- my_empty_list(names(rg_txt))
 rg_txt2 <- rg_assoc
-
-empty_df <- matrix(0, nrow=1, ncol=1) %>% data.frame()
-colnames(empty_df) <- "Unknown"
-start <- my_timer()
 
 for (n in 1:2)
 {
   print(n)
   rg_assoc[[n]] <- my_empty_list(names(rg_txt[[n]]))
   rg_txt2[[n]] <- rg_assoc[[n]]
+  start <- my_timer()
   for (k in 1:length(rg_txt[[n]]))
   {
-    if (k %% 30 == 0)
+    if (k %% 100 == 0)
     {
       print(sprintf("k: %s", k))
       print(sprintf("Average: %s", my_timer(start)/k))
     }
 
-    test <- rg_txt[[n]][[k]]
+    data <- rg_txt[[n]][[k]]
 
-    if (length(test) < 1 || nrow(test) < 1 || ncol(test) != 7)
+    if (length(data) < 1 || nrow(data) < 1 || ncol(data) != 7)
     {
       rg_assoc[[n]][[k]] <- empty_df
       rg_txt2[[n]][[k]] <- empty_df
     }
     else
     {
-      x <- test[test$level != "no rank",c(2,3,5,6)]
+      x <- truncate_data(data)
 
-      if (length(which(x$level == "species")) < 1 || ncol(x) != 4)
+      if (sum(x$level == "species") < 1 || ncol(x) != 4)
       {
         rg_assoc[[n]][[k]] <- empty_df
         rg_txt2[[n]][[k]] <- empty_df
       }
       else
       {
-        hmm1 <- matrix(0, nrow=nrow(x), ncol=length(taxonomic_ordering)) %>% data.frame()
-        for (i in 1:nrow(x))
-          hmm1[i, taxonomic_ordering == x[i, 1]] <- x[i, 3]
-
-        hmm2 <- species_only(hmm1)[,1:25]
-        readCounts <- x[as.numeric(rownames(hmm2)),,drop=FALSE]
-
-        rownames(readCounts) <- apply(readCounts, 1,
-                                      function(a){sprintf("%s_%s", a[3], a[2])})
+        hmm2 <- species_only(populate_taxa(x))
+        ind1 <- as.numeric(rownames(hmm2))
+        readCounts <- x[ind1,,drop=FALSE]
+        rownames(readCounts) <- make_rownames(readCounts$name, readCounts$ID)
         rownames(hmm2) <- rownames(readCounts)
-        indices <- readCounts[,4] > 0
+        ind2 <- readCounts$readCount_direct > 0
 
-        rg_assoc[[n]][[k]] <- hmm2[indices,]
-        rg_txt2[[n]][[k]] <- t(readCounts[indices,4,drop=FALSE]) %>% data.frame()
+        rg_assoc[[n]][[k]] <- hmm2[ind2,]
+        rg_txt2[[n]][[k]] <- t(readCounts[ind2,4,drop=FALSE]) %>% data.frame()
       }
     }
   }
@@ -520,15 +501,15 @@ for (n in 1:2)
 
 # now that all the cleaning is done, save ...
 setwd(raw_loc)
-saveRDS(rg_txt2, "Metadata_Taxonomy/rg_txt2.rds")
-saveRDS(rg_assoc, "Metadata_Taxonomy/rg_assoc.rds")
+saveRDS(rg_txt2, "rg_txt2.rds")
+saveRDS(rg_assoc, "rg_assoc.rds")
 
 setwd(raw_loc)
-rg_txt2 <- readRDS("Metadata_Taxonomy/rg_txt2.rds")
-rg_assoc <- readRDS("Metadata_Taxonomy/rg_assoc.rds")
-good_indices <- my_empty_list(names(rg_txt2))
+rg_txt2 <- readRDS("rg_txt2.rds")
+rg_assoc <- readRDS("rg_assoc.rds")
 
 # find and keep only actual samples
+good_indices <- my_empty_list(names(rg_txt2))
 for (i in 1:2)
 {
   good_indices[[i]] <- numeric(0)
@@ -546,27 +527,27 @@ for (i in 1:2)
 }
 
 # bind them all together!
-all_rRNA <- recursive_bind_rows(rg_txt2[[1]])
+all_rRNA <- chunk_bind_rows(rg_txt2[[1]], 50) %>% chunk_bind_rows()
 rownames(all_rRNA) <- good_indices[[1]]
-assoc_rRNA <- recursive_bind_rows(rg_assoc[[1]])
+assoc_rRNA <- chunk_bind_rows(rg_assoc[[1]], 50) %>% chunk_bind_rows()
 assoc_rRNA <- assoc_rRNA[!duplicated(assoc_rRNA$X25),]
-all_gene <- recursive_bind_rows(rg_txt2[[2]])
+all_gene <- chunk_bind_rows(rg_txt2[[2]], 50) %>% chunk_bind_rows()
 rownames(all_gene) <- good_indices[[2]]
-assoc_gene <- recursive_bind_rows(rg_assoc[[2]])
+assoc_gene <- chunk_bind_rows(rg_assoc[[2]], 50) %>% chunk_bind_rows()
 assoc_gene <- assoc_gene[!duplicated(assoc_gene$X25),]
 
 # saving
 setwd(raw_loc)
-saveRDS(all_rRNA, "Metadata_Taxonomy/all_rRNA.rds")
-saveRDS(assoc_rRNA, "Metadata_Taxonomy/assoc_rRNA.rds")
-saveRDS(all_gene, "Metadata_Taxonomy/all_gene.rds")
-saveRDS(assoc_gene, "Metadata_Taxonomy/assoc_gene.rds")
+saveRDS(all_rRNA, "all_rRNA.rds")
+saveRDS(assoc_rRNA, "assoc_rRNA.rds")
+saveRDS(all_gene, "all_gene.rds")
+saveRDS(assoc_gene, "assoc_gene.rds")
 
 setwd(raw_loc)
-all_rRNA <- readRDS("Metadata_Taxonomy/all_rRNA.rds")
-assoc_rRNA <- readRDS("Metadata_Taxonomy/assoc_rRNA.rds")
-all_gene <- readRDS("Metadata_Taxonomy/all_gene.rds")
-assoc_gene <- readRDS("Metadata_Taxonomy/assoc_gene.rds")
+all_rRNA <- readRDS("all_rRNA.rds")
+assoc_rRNA <- readRDS("assoc_rRNA.rds")
+all_gene <- readRDS("all_gene.rds")
+assoc_gene <- readRDS("assoc_gene.rds")
 
 # more cleaning
 cleanup_fun_2 <- function(data, frac){
@@ -579,67 +560,67 @@ assoc_rRNA_clean <- assoc_rRNA[colnames(all_rRNA) %in% colnames(all_rRNA_clean),
 assoc_gene_clean <- assoc_gene[colnames(all_gene) %in% colnames(all_gene_clean),]
 
 setwd(raw_loc)
-saveRDS(all_rRNA_clean, "Metadata_Taxonomy/all_rrna_clean.rds")
-saveRDS(assoc_rRNA_clean, "Metadata_Taxonomy/assoc_rrna_clean.rds")
-saveRDS(all_gene_clean, "Metadata_Taxonomy/all_gene_clean.rds")
-saveRDS(assoc_gene_clean, "Metadata_Taxonomy/assoc_gene_clean.rds")
+saveRDS(all_rRNA_clean, "all_rrna_clean.rds")
+saveRDS(assoc_rRNA_clean, "assoc_rrna_clean.rds")
+saveRDS(all_gene_clean, "all_gene_clean.rds")
+saveRDS(assoc_gene_clean, "assoc_gene_clean.rds")
 
 # --------------
 # CLEAN ALL DATA
 # --------------
 
 # set your directory to a folder with tgz files ... this will untar all
-for (file in list.files())
+for (folder in list.files("TGZ"))
 {
-  dir.create(repStr(file, ".tgz", ""))
-  untar(file, exdir=repStr(file, ".tgz", ""))
+  if (dir.exists(sprintf("TGZ/%s", folder)))
+  {
+    for (file in list.files(sprintf("TGZ/%s", folder)))
+    {
+      result_dir <- sprintf("UNTAR/%s/%s", folder, rep_str(file, ".tgz", ""))
+      dir.create(result_dir)
+      untar(sprintf("TGZ/%s/%s", folder, file), exdir=result_dir)
+    }
+  }
 }
-
-# then create the folders Cleaned, Raw, Data
-dir.create("Cleaned")
-dir.create("Raw")
-dir.create("Data")
 
 # move all the .tgz files into Raw and all the folders into Data
 # Then run this code to make cleaned versions of all folders
-base_data_loc <- getwd()
-file_list <- list.files(sprintf("%s/Data", base_data_loc))
 
-for (folder in file_list)
+for (folder in list.files("UNTAR"))
 {
-  subaddr <- sprintf("%s/Data/%s", base_data_loc, folder)
-  finaddr <- sprintf("%s/Cleaned/%s", base_data_loc, folder)
-  if (!file.exists(finaddr))
-    dir.create(finaddr)
+  if (dir.exists(sprintf("UNTAR/%s", folder)))
+  {
+    for (archive in list.files(sprintf("UNTAR/%s", folder)))
+    {
+      subaddr <- sprintf("UNTAR/%s/%s", folder, archive)
+      finaddr <- sprintf("CLEAN/%s/%s", folder, archive)
+      if (!file.exists(finaddr))
+        dir.create(finaddr, recursive=TRUE)
 
-  memes <- list.files(subaddr)
-  splitup <- strsplit(memes, "_exceRpt_", fixed=TRUE)
-  actual_names <- unlist(lapply(splitup, function(x){x[2]}))
-  processed_names <- gsub("ReadsPerMillion", "RPM",
-                          gsub("TaxonomyTrees", "TAXTREE",
-                               gsub("exogenousGenomes", "EXO-GENO",
-                                    gsub("exogenousRibosomal", "EXO-RIBO",
-                                         actual_names))))
-  initial_data_locs <- sprintf("%s/%s", subaddr, memes)
-  final_data_locs <- sprintf("%s/%s", finaddr, processed_names)
-  file.copy(from = initial_data_locs, to = final_data_locs)
+      all_copies <- list.files(subaddr)
+      splitup <- strsplit(all_copies, "_exceRpt_", fixed=TRUE)
+      actual_names <- unlist(lapply(splitup, function(x){x[2]}))
+      initial_data_locs <- sprintf("%s/%s", subaddr, all_copies)
+      final_data_locs <- sprintf("%s/%s", finaddr, actual_names)
+      file.copy(from = initial_data_locs, to = final_data_locs)
+    }
+  }
 }
 
 # -----------------------
 # PROCESS SUMMARY REPORTS
 # -----------------------
 
-setwd(sprintf("%s/Summary_Reports", raw_loc))
-
 list_of_fragments <- NULL
 
-for (folder in list.files())
+for (folder in list.files("UNTAR"))
 {
-  for (file in list.files(sprintf("%s/Cleaned", folder)))
+  for (archive in list.files(sprintf("UNTAR/%s", folder)))
   {
-    list_of_fragments <- c(list_of_fragments,
-                           sprintf("%s/Cleaned/%s/smallRNAQuants_RPM.RData",
-                                   folder, file))
+    finaddr <- sprintf("CLEAN/%s/%s/smallRNAQuants_ReadsPerMillion.RData",
+                       folder, archive)
+    if (file.exists(finaddr))
+      list_of_fragments <- c(list_of_fragments,finaddr)
   }
 }
 
@@ -661,7 +642,7 @@ cumulative_ex_genomes <- miRNA
 specific_ex_genomes <- miRNA
 cumulative_ex_ribosomes <- miRNA
 specific_ex_ribosomes <- miRNA
-gencode <- miRNA
+# gencode <- miRNA
 
 for (i in 1:length(list_of_fragments))
 {
@@ -675,19 +656,8 @@ for (i in 1:length(list_of_fragments))
   specific_ex_genomes[[i]] <- exprs.exogenousGenomes_specific.rpm %>% raw_to_df()
   cumulative_ex_ribosomes[[i]] <- exprs.exogenousRibosomal_cumulative.rpm %>% raw_to_df()
   specific_ex_ribosomes[[i]] <- exprs.exogenousRibosomal_specific.rpm %>% raw_to_df()
-  gencode[[i]] <- exprs.gencode.rpm %>% raw_to_df()
+  # gencode[[i]] <- exprs.gencode.rpm %>% raw_to_df()
 }
-
-miRNA <- dplyr::bind_rows(miRNA)
-piRNA <- dplyr::bind_rows(piRNA)
-tRNA <- dplyr::bind_rows(tRNA)
-circRNA <- dplyr::bind_rows(circRNA)
-ex_miRNA <- dplyr::bind_rows(ex_miRNA)
-cumulative_ex_genomes <- dplyr::bind_rows(cumulative_ex_genomes)
-specific_ex_genomes <- dplyr::bind_rows(specific_ex_genomes)
-cumulative_ex_ribosomes <- dplyr::bind_rows(cumulative_ex_ribosomes)
-specific_ex_ribosomes <- dplyr::bind_rows(specific_ex_ribosomes)
-gencode <- dplyr::bind_rows(gencode)
 
 rm(
   exprs.miRNA.rpm
@@ -700,6 +670,22 @@ rm(
   , exprs.exogenousRibosomal_specific.rpm
   , exprs.gencode.rpm
 )
+
+local_bind <- function(data)
+{
+  chunk_bind_rows(data, 20) %>% chunk_bind_rows()
+}
+
+miRNA <- local_bind(miRNA)
+piRNA <- local_bind(piRNA)
+tRNA <- local_bind(tRNA)
+circRNA <- local_bind(circRNA)
+ex_miRNA <- local_bind(ex_miRNA)
+cumulative_ex_genomes <- local_bind(cumulative_ex_genomes)
+specific_ex_genomes <- local_bind(specific_ex_genomes)
+cumulative_ex_ribosomes <- local_bind(cumulative_ex_ribosomes)
+specific_ex_ribosomes <- local_bind(specific_ex_ribosomes)
+# gencode <- dplyr::bind_rows(gencode)
 
 # remove duplicated FASTQ entries
 rem_dup <- function(data){
@@ -715,7 +701,7 @@ cumulative_ex_genomes <- rem_dup(cumulative_ex_genomes)
 specific_ex_genomes <- rem_dup(specific_ex_genomes)
 cumulative_ex_ribosomes <- rem_dup(cumulative_ex_ribosomes)
 specific_ex_ribosomes <- rem_dup(specific_ex_ribosomes)
-gencode <- rem_dup(gencode)
+# gencode <- rem_dup(gencode)
 
 setwd(sprintf("%s/Summary_Cleaned", raw_loc))
 saveRDS(miRNA, "miRNA.rds")
@@ -727,60 +713,90 @@ saveRDS(cumulative_ex_genomes, "cumulative_ex_genomes.rds")
 saveRDS(specific_ex_genomes, "specific_ex_genomes.rds")
 saveRDS(cumulative_ex_ribosomes, "cumulative_ex_ribosomes.rds")
 saveRDS(specific_ex_ribosomes, "specific_ex_ribosomes.rds")
-saveRDS(gencode, "gencode.rds")
+# saveRDS(gencode, "gencode.rds")
+
+# ----------------
+# TWO NEW DATASETS
+# ----------------
+
+filenames <- list.files("twonewdatasets")
+files <- my_empty_list(filenames)
+
+for (file in filenames)
+  files[[file]] <- read_tsv_text(sprintf("twonewdatasets/%s", file))
+
+f1 <- files[1:6]
+
+for (file in names(f1))
+{
+  max_len <- 0
+  for (i in 1:length(f1[[file]]))
+  {
+    entry <- f1[[file]][[i]]
+    if (length(entry) > max_len)
+      max_len <- length(entry)
+    while (length(entry) < max_len)
+      entry <- c(entry, " ")
+    f1[[file]][[i]] <- entry
+  }
+  f1[[file]] <- do.call(rbind, f1[[file]]) %>% t() %>% r1_to_cols() %>% data.frame()
+}
+
+for (file in names(f1))
+{
+  f1[[file]] <- f1[[file]][1:(nrow(f1[[file]])-4),]
+}
+
+f2 <- files[7:15]
+
+for (file in names(f2))
+{
+  max_len <- 0
+  for (i in 1:length(f2[[file]]))
+  {
+    entry <- f2[[file]][[i]]
+    if (length(entry) > max_len)
+      max_len <- length(entry)
+    while (length(entry) < max_len)
+      entry <- c(entry, " ")
+    f2[[file]][[i]] <- entry
+  }
+  f2[[file]] <- do.call(rbind, f2[[file]]) %>% t() %>% r1_to_cols() %>% data.frame()
+}
+
+f11 <- dplyr::bind_rows(f1)
+f22 <- dplyr::bind_rows(f2)
+rm(f1, f2)
+
+f111 <- f11 %>% check_garbo(0.25)
+
+# dgala fix
+hmm <- read_tsv_text("dgala_metadata.tsv")
+h2 <- rem_preamble(hmm, 2)
+h2[[2]] <- NULL
+colnames(h2) <- common_cols
+colnames(f22)[2] <- "BIO_ID"
+
+dgala_metadata <- dplyr::full_join(h2, f22, by = "BIO_ID")
+colnames(dgala_metadata)[c(19, 24, 25, 53)] <- c(
+  "DONOR_TYPE", "DONOR", "AGE", "FRACTIONATION")
+dgala_metadata[c(18,20:23,26:52)] <- NULL
+
+ages <- gsub(" years", "", dgala_metadata$AGE)
+age5 <- make_age_range(ages, 5)
+age10 <- make_age_range(ages, 10)
+
+dgala_metadata$AGE <- NULL
+dgala_metadata$AGE_5 <- age5
+dgala_metadata$AGE_10 <- age10
+
+bed_metadata_rev <- dplyr::bind_rows(bed_metadata, dgala_metadata)
+missing_meta <- setdiff(miRNA[,1], bed_metadata_rev$FASTQ_IDENTIFIER)
+saveRDS(bed_metadata_rev, "metadata.rds")
 
 # ---------
 # FINISHING
 # ---------
-
-setwd(raw_loc)
-metadata <- readRDS("Metadata_Taxonomy/metadata.rds")
-
-setwd(raw_loc)
-all_rRNA_clean <- readRDS("Metadata_Taxonomy/all_rrna_clean.rds")
-assoc_rRNA_clean <- readRDS("Metadata_Taxonomy/assoc_rrna_clean.rds")
-rownames(assoc_rRNA_clean) <- NULL
-colnames(assoc_rRNA_clean) <- taxonomic_ordering[1:25]
-all_gene_clean <- readRDS("Metadata_Taxonomy/all_gene_clean.rds")
-assoc_gene_clean <- readRDS("Metadata_Taxonomy/assoc_gene_clean.rds")
-rownames(assoc_gene_clean) <- NULL
-colnames(assoc_gene_clean) <- taxonomic_ordering[1:25]
-
-setwd(sprintf("%s/Summary_Cleaned", raw_loc))
-miRNA <- readRDS("miRNA.rds")
-piRNA <- readRDS("piRNA.rds")
-tRNA <- readRDS("tRNA.rds")
-circRNA <- readRDS("circRNA.rds")
-ex_miRNA <- readRDS("ex_miRNA.rds")
-cumulative_ex_genomes <- readRDS("cumulative_ex_genomes.rds")
-specific_ex_genomes <- readRDS("specific_ex_genomes.rds")
-cumulative_ex_ribosomes <- readRDS("cumulative_ex_ribosomes.rds")
-specific_ex_ribosomes <- readRDS("specific_ex_ribosomes.rds")
-# gencode <- readRDS("gencode.rds")
-
-cut_features <- function(data, thresh){
-  bad_indices <- NULL
-
-  for (j in 2:ncol(data))
-  {
-    if (sum(is.na(data[[j]])) > thresh*nrow(data))
-      bad_indices <- c(bad_indices, j)
-  }
-
-  good_indices <- setdiff(1:ncol(data), bad_indices)
-  data[,good_indices]
-}
-
-miRNA <- cut_features(miRNA, 0.95)
-piRNA <- cut_features(piRNA, 0.95)
-tRNA <- cut_features(tRNA, 0.95)
-circRNA <- cut_features(circRNA, 0.95)
-ex_miRNA <- cut_features(ex_miRNA, 0.95)
-cumulative_ex_genomes <- cut_features(cumulative_ex_genomes, 0.05)
-specific_ex_genomes <- cut_features(specific_ex_genomes, 0.05)
-cumulative_ex_ribosomes <- cut_features(cumulative_ex_ribosomes, 0.05)
-specific_ex_ribosomes <- cut_features(specific_ex_ribosomes, 0.05)
-# gencode <- cut_features(gencode, 0.05)
 
 # a very cool trick
 match_order <- function(fastq_list, ord)
@@ -797,26 +813,75 @@ match_order <- function(fastq_list, ord)
   ord[match(fastq_list, ord$FASTQ_IDENTIFIER),]
 }
 
-assoc_rRNA_clean[assoc_rRNA_clean == 0] <- "Unknown"
+# another cool trick
+cut_features <- function(data, thresh){
+  bad_indices <- NULL
+
+  for (j in 2:ncol(data))
+  {
+    if (sum(is.na(data[[j]])) > thresh*nrow(data))
+      bad_indices <- c(bad_indices, j)
+  }
+
+  good_indices <- setdiff(1:ncol(data), bad_indices)
+  data[,good_indices,drop=FALSE]
+}
+
+setwd(raw_loc)
+self_load(c("metadata", "all_rrna_clean", "assoc_rrna_clean",
+            "all_gene_clean", "assoc_gene_clean"))
+rownames(assoc_rrna_clean) <- NULL
+colnames(assoc_rrna_clean) <- taxonomic_ordering[1:25]
+rownames(assoc_gene_clean) <- NULL
+colnames(assoc_gene_clean) <- taxonomic_ordering[1:25]
+
+setwd(sprintf("%s/Summary_Cleaned", raw_loc))
+miRNA <- readRDS("miRNA.rds")
+piRNA <- readRDS("piRNA.rds")
+tRNA <- readRDS("tRNA.rds")
+circRNA <- readRDS("circRNA.rds")
+ex_miRNA <- readRDS("ex_miRNA.rds")
+cumulative_ex_genomes <- readRDS("cumulative_ex_genomes.rds")
+specific_ex_genomes <- readRDS("specific_ex_genomes.rds")
+cumulative_ex_ribosomes <- readRDS("cumulative_ex_ribosomes.rds")
+specific_ex_ribosomes <- readRDS("specific_ex_ribosomes.rds")
+# gencode <- readRDS("gencode.rds")
+
+miRNA <- cut_features(miRNA, 0.95)
+piRNA <- cut_features(piRNA, 0.95)
+tRNA <- cut_features(tRNA, 0.95)
+circRNA <- cut_features(circRNA, 0.95)
+ex_miRNA <- cut_features(ex_miRNA, 0.95)
+cumulative_ex_genomes <- cut_features(cumulative_ex_genomes, 0.05)
+specific_ex_genomes <- cut_features(specific_ex_genomes, 0.05)
+cumulative_ex_ribosomes <- cut_features(cumulative_ex_ribosomes, 0.05)
+specific_ex_ribosomes <- cut_features(specific_ex_ribosomes, 0.05)
+# gencode <- cut_features(gencode, 0.05)
+
+assoc_rrna_clean[assoc_rrna_clean == 0] <- "Unknown"
 assoc_gene_clean[assoc_gene_clean == 0] <- "Unknown"
 
-order_total <- list("miRNA"=match_order(miRNA[,1], metadata),
-                    "piRNA"=match_order(piRNA[,1], metadata),
-                    "tRNA"=match_order(tRNA[,1], metadata),
-                    "circRNA"=match_order(circRNA[,1], metadata),
-                    "ex_miRNA"=match_order(ex_miRNA[,1], metadata),
-                    "cumulative_ex_genomes"=
-                      match_order(cumulative_ex_genomes[,1], metadata),
-                    "specific_ex_genomes"=
-                      match_order(specific_ex_genomes[,1], metadata),
-                    "cumulative_ex_ribosomes"=
-                      match_order(cumulative_ex_ribosomes[,1], metadata),
-                    "specific_ex_ribosomes"=
-                      match_order(specific_ex_ribosomes[,1], metadata),
-                    "rRNA_Species"=metadata[rownames(all_rRNA_clean),],
-                    "Gene_Species"=metadata[rownames(all_gene_clean),],
-                    "rRNA_Transpose"=assoc_rRNA_clean,
-                    "Gene_Transpose"=assoc_gene_clean)
+order_miRNA <- match_order(miRNA[,1], metadata)
+order_piRNA <- match_order(piRNA[,1], metadata)
+order_tRNA <- match_order(tRNA[,1], metadata)
+order_circRNA <- match_order(circRNA[,1], metadata)
+order_ex_miRNA <- match_order(ex_miRNA[,1], metadata)
+order_cumulative_ex_genomes <- match_order(cumulative_ex_genomes[,1], metadata)
+order_specific_ex_genomes <- match_order(specific_ex_genomes[,1], metadata)
+order_cumulative_ex_ribosomes <- match_order(cumulative_ex_ribosomes[,1], metadata)
+order_specific_ex_ribosomes <- match_order(specific_ex_ribosomes[,1], metadata)
+order_rRNA_Species <- metadata[rownames(all_rrna_clean),]
+order_Gene_Species <- metadata[rownames(all_gene_clean),]
+order_rRNA_Transpose <- assoc_rrna_clean
+order_Gene_Transpose <- assoc_gene_clean
+
+order_total <- list()
+for (cat in name_cat)
+  order_total[[cat]] <- get(sprintf("order_%s", cat))
+
+setwd(dep_loc)
+saveRDS(categories_full, "categories_full.rds")
+saveRDS(order_total, "order_total.rds")
 
 miRNA <- miRNA[,-1]
 piRNA <- piRNA[,-1]
@@ -828,38 +893,16 @@ specific_ex_genomes <- specific_ex_genomes[,-1]
 cumulative_ex_ribosomes <- cumulative_ex_ribosomes[,-1]
 specific_ex_ribosomes <- specific_ex_ribosomes[,-1]
 # gencode <- gencode[,-1]
-rRNA_species <- all_rRNA_clean
+rRNA_species <- all_rrna_clean
 gene_species <- all_gene_clean
-rRNA_transpose <- t(all_rRNA_clean)
+rRNA_transpose <- t(all_rrna_clean)
 gene_transpose <- t(all_gene_clean)
 rownames(rRNA_species) <- NULL
 rownames(gene_species) <- NULL
 rownames(rRNA_transpose) <- NULL
 rownames(gene_transpose) <- NULL
-colnames(rRNA_transpose) <- order_total$rRNA_Samples$FASTQ_IDENTIFIER
-colnames(gene_transpose) <- order_total$Gene_Samples$FASTQ_IDENTIFIER
-
-categories <- list(
-  "Extracellular RNA"=list(
-    "miRNA"=ncol(miRNA),
-    "piRNA"=ncol(piRNA),
-    "tRNA"=ncol(tRNA),
-    "circRNA"=ncol(circRNA),
-    "ex_miRNA"=ncol(ex_miRNA)
-  ),
-  "Exogenous RNA"=list(
-    "cumulative_ex_genomes"=5431,
-    "specific_ex_genomes"=5431,
-    "cumulative_ex_ribosomes"=1317,
-    "specific_ex_ribosomes"=1317
-  ),
-  "Taxonomy"=list(
-    "rRNA_Species"=1967,
-    "Gene_Species"=1702,
-    "rRNA_Transpose"=5260,
-    "Gene_Transpose"=5276
-  )
-)
+colnames(rRNA_transpose) <- order_total$rRNA_Species$FASTQ_IDENTIFIER
+colnames(gene_transpose) <- order_total$Gene_Species$FASTQ_IDENTIFIER
 
 combined_miRNA <- convert_to_num(miRNA)
 combined_piRNA <- convert_to_num(piRNA)
@@ -876,9 +919,9 @@ combined_gene_species <- convert_to_num(gene_species)
 combined_rRNA_transpose <- convert_to_num(rRNA_transpose)
 combined_gene_transpose <- convert_to_num(gene_transpose)
 
-# -----------------------
-# LIBRARIES AND FUNCTIONS
-# -----------------------
+# ---------
+# SAVE DATA
+# ---------
 
 setwd(pro_loc)
 saveRDS(combined_miRNA, "combined/combined_miRNA.rds")
@@ -899,9 +942,37 @@ saveRDS(combined_gene_transpose, "combined/combined_Gene_Transpose.rds")
 # SAVE DEPENDENCIES
 # -----------------
 
+metadata[is.na(metadata)] <- "Unknown"
+
+setwd(pro_loc)
+decorations <- list()
+init_cat()
+
+ind_sd_top_1000 <- function(data)
+{
+  vals <- apply(data, 2, sd)
+  order(vals)[1:1000]
+}
+
+for (cat in name_cat)
+{
+  combined <- readRDS(sprintf("combined/combined_%s.rds", cat))
+  print(dim(combined))
+  decorations[[cat]] <- list(
+    "Categories" = cat,
+    "Subsets"=list(
+      "Reference" = colnames(combined),
+      "SD_Top_1000" = ind_sd_top_1000(combined)
+    )
+  )
+}
+
+decorations$tRNA <- NULL
+
 setwd(dep_loc)
-saveRDS(categories, "categories_full.rds")
-saveRDS(order_total, "order_total.rds")
+
+for (i in 1:num_cat)
+  rownames(order_total[[i]]) <- NULL
 
 # amazon_keys <- c("AKIAVI2HZGPODUFE62HE",
 #                  "V4LyDo0i1zv2cUZaFeIg9EFUFe+Fr+cv05U30efG",
@@ -913,9 +984,5 @@ perplexity_types <- c(10, 20, 30, 50, 100)
 pc_cap <- 10
 user_credentials <- list("guest"=my_hash("All@2019"))
 
-myRDS("amazon_keys.rds", amazon_keys)
-myRDS("app_title.rds", app_title)
-myRDS("app_citations.rds", app_citations)
-myRDS("perplexity_types.rds", perplexity_types)
-myRDS("pc_cap.rds", pc_cap)
-myRDS("user_credentials.rds", user_credentials)
+self_save(c("amazon_keys", "app_title", "app_citations", "perplexity_types",
+          "pc_cap", "user_credentials", "decorations"))
