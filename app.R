@@ -335,6 +335,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
   title_access <- reactive("Embed Title" %in% iplot$sMenu)
   legend <- reactive("Embed Legend" %in% iplot$sMenu)
+  match_colors <- reactive("Match Colors" %in% iplot$Menu)
   boost <- reactive("Boost Graphics" %in% iplot$sMenu)
   not_rev <- reactive("Uninverted Colors" %in% iplot$sMenu)
 
@@ -711,7 +712,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
   output$download_num_data <- downloadHandler(
     filename = function() {
-      sprintf("%s_num_data.csv", rep_str(title_text(), " ", "_"))
+      sprintf("num_data_%s.csv", rep_str(title_text(), " ", "_"))
     },
     content = function(file) {
       if (!authenticated())
@@ -730,7 +731,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
   output$download_metadata <- downloadHandler(
     filename = function() {
-      sprintf("%s_metadata.csv", rep_str(title_text(), " ", "_"))
+      sprintf("metadata_%s.csv", rep_str(title_text(), " ", "_"))
     },
     content = function(file) {
       if (!authenticated())
