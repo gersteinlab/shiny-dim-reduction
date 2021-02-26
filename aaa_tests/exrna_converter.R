@@ -671,11 +671,6 @@ rm(
   , exprs.gencode.rpm
 )
 
-local_bind <- function(data)
-{
-  chunk_bind_rows(data, 20) %>% chunk_bind_rows()
-}
-
 miRNA <- local_bind(miRNA)
 piRNA <- local_bind(piRNA)
 tRNA <- local_bind(tRNA)

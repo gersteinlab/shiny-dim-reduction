@@ -218,3 +218,9 @@ chunk_bind_rows <- function(data, num_chunks=1, bind_fun = dplyr::bind_rows)
 
   result
 }
+
+# does chunk_bind_rows but a little more quickly
+local_bind <- function(data, num = 20)
+{
+  chunk_bind_rows(data, num) %>% chunk_bind_rows()
+}
