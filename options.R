@@ -33,13 +33,8 @@ max_dend <- 200
 
 # plot panel options
 pan_options <- c("Static 2D", "Interactive 2D", "Interactive 3D", "Boxplot")
-# palette options
-pal_options <- list(
-  "Base"=c("Custom", "Rainbow", "Heat", "Terrain", "Topography", "CM"),
-  "Viridis"=c("Viridis", "Magma", "Plasma", "Inferno", "Cividis")
-)
 # settings options
-my_settings <- c("Embed Title", "Embed Legend",
+my_settings <- c("Embed Title", "Embed Legend", "Match Colors",
                  "Boost Graphics", "Uninverted Colors")
 
 # -----------------
@@ -301,7 +296,7 @@ dataSelectionMenu <- menuItem(
 settingsMenu <- menuItem(
   "Settings",
   check_panel("sMenu", "Settings", my_settings),
-  select_panel("palette", "Color Palette", pal_options),
+  select_panel("palette", "Color Palette", color_palettes),
   numericInput("height", "Graph Height", value=graph_height, min=1, max=4000),
   numericInput("notif_time", "Notification Time", value=6),
   conditionalPanel(

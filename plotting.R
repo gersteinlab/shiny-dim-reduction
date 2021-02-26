@@ -32,15 +32,22 @@ double_color_seq <- function(reverse = FALSE)
   c("#C90016", single_color_seq)
 }
 
-# Generates a color sequence of length n_colors with the given type.
-# "Base"=c("Rainbow", "Heat", "Terrain", "Topography", "CM"),
-# "Viridis"=c("Viridis", "Magma", "Plasma", "Inferno", "Cividis")
+# lists all color palette options accepted by color_seq
+color_palettes <- list(
+  "Custom"=c("Custom", "Grayscale"),
+  "Base"=c("Rainbow", "Heat", "Terrain", "Topography", "CM"),
+  "Viridis"=c("Viridis", "Magma", "Plasma", "Inferno", "Cividis")
+)
+
+# Generates a color sequence of length n_colors with the given type
 color_seq <- function(n_colors, color_type = "Rainbow", reverse = FALSE)
 {
   # returns single color seq if only one color needed
   if (n_colors < 2)
     return(single_color_seq)
 
+  if (color_type == "Grayscale")
+    return(grey.colors(n_colors, rev=reverse))
   if (color_type == "Heat")
     return(heat.colors(n_colors, rev=reverse))
   if (color_type == "Terrain")

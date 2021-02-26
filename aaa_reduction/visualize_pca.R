@@ -40,16 +40,16 @@ for (cat in dog)
           print(loc)
 
           pca <- readRDS(sprintf("PCA/PCA_%s", loc))
-          
+
           explore <- pca$x
-          
+
           # NONE
           saveRDS(explore, sprintf("vis-PCA/NONE_PCA_%s", loc))
-          
+
           # tSNE
           tsne2 <- perplexity_list
           tsne3 <- perplexity_list
-          
+
           start <- my_timer()
           for (nei in perplexity_types)
           {
@@ -59,7 +59,7 @@ for (cat in dog)
           print(my_timer(start))
           saveRDS(list("TSNE2"=tsne2, "TSNE3"=tsne3),
                   sprintf("vis-PCA/TSNE_PCA_%s", loc))
-          
+
           # SUM
           saveRDS(my_props(pca), sprintf("vis-PCA/SUM_PCA_%s", loc))
         }
