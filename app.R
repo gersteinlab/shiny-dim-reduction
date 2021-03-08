@@ -65,11 +65,13 @@ server <- function(input, output, session) {
   # DYNAMIC UI LOGIC
   # ----------------
   observeEvent(input$instructions, {
-    showModal(modalDialog(title = HTML("<b>Instructions</b>"), HTML(instructions)))
+    showModal(modalDialog(
+      title = HTML("<b>Instructions</b>"), easyClose = TRUE, HTML(instructions)))
   })
 
   observeEvent(input$citations, {
-    showModal(modalDialog(title = HTML("<b>Citations</b>"), HTML(citations)))
+    showModal(modalDialog(
+      title = HTML("<b>Citations</b>"), easyClose = TRUE, HTML(citations)))
   })
 
   output$downloadInstructions <- downloadHandler(
