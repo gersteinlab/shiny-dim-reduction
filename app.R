@@ -168,11 +168,11 @@ server <- function(input, output, session) {
   })
 
   output$shape_opts_cond <- reactive({
-    input$plotPanels == "Static 2D" && !match_colors()
+    input$plotPanels == "Static 2D" && sep_colors()
   })
 
   output$label_opts_cond <- reactive({
-    input$plotPanels %in% c("Interactive 2D", "Interactive 3D") && !match_colors()
+    input$plotPanels %in% c("Interactive 2D", "Interactive 3D") && sep_colors()
   })
 
   for (cond in output_conditions)
@@ -335,7 +335,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
   title_access <- reactive("Embed Title" %in% iplot$sMenu)
   legend <- reactive("Embed Legend" %in% iplot$sMenu)
-  match_colors <- reactive("Match Colors" %in% iplot$Menu)
+  sep_colors <- reactive("Separate Colors" %in% iplot$sMenu)
   boost <- reactive("Boost Graphics" %in% iplot$sMenu)
   not_rev <- reactive("Uninverted Colors" %in% iplot$sMenu)
 
@@ -355,12 +355,12 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
   colorby <- reactive(iplot[[id_color(cati())]])
   shapeby <- reactive({
-    if (match_colors())
+    if (!sep_colors())
       return(colorby())
     iplot[[id_shape(cati())]]
   })
   labelby <- reactive({
-    if (match_colors())
+    if (!sep_colors())
       return(colorby())
     iplot[[id_label(cati())]]
   })

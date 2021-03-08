@@ -289,7 +289,7 @@ data_selection_menu <- menuItem(
 
 settings_menu <- menuItem(
   "Settings",
-  check_panel("sMenu", "Settings", c("Embed Title", "Embed Legend", "Match Colors",
+  check_panel("sMenu", "Settings", c("Embed Title", "Embed Legend", "Separate Colors",
                                      "Boost Graphics", "Uninverted Colors")),
   select_panel("palette", "Color Palette", color_palettes),
   numericInput("height", "Graph Height", value=graph_height, min=1, max=4000),
