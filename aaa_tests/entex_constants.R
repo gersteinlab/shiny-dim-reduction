@@ -14,12 +14,12 @@ categories_full <- list(
     "Methylation"=226807
   ),
   "Expression"=list(
-    "Protein_Coding_Genes"=17201,
-    "Pseudogenes"=2542,
-    "Long_Non_Coding_RNAs"=9571,
+    "Protein Coding Genes (total RNAseq)"=17201,
+    "Pseudogenes (total RNAseq)"=2542,
+    "lncRNAs (total RNAseq)"=9571,
     "RAMPAGE"=148246
   ),
-  "Proteomics"=list(
+  "Proteomics (Mass Spec)"=list(
     "Peptide"=9411,
     "FPKM_TPM"=19377,
     "OMS"=6558
@@ -43,19 +43,19 @@ formal_dec_names <- c(
 )
 
 app_title <- "Dimensionality Reduction Plotting Tool for the ENTEx Project"
-app_citations <- "<u>ENCODE Paper 1:</u> ENCODE Project Consortium. 
-An integrated encyclopedia of DNA elements in the human genome. 
-Nature. 2012;489(7414):57-74. 
+app_citations <- "<u>ENCODE Paper 1:</u> ENCODE Project Consortium.
+An integrated encyclopedia of DNA elements in the human genome.
+Nature. 2012;489(7414):57-74.
 <a href=\"doi:10.1038/nature11247\" target=\"_blank\">
 doi:10.1038/nature11247</a>
 <br>
-<u>ENCODE Paper 2:</u> Davis CA, Hitz BC, Sloan CA, et al. The Encyclopedia of 
-DNA elements (ENCODE): data portal update. Nucleic Acids Res. 2018;46(D1):D794-D801. 
+<u>ENCODE Paper 2:</u> Davis CA, Hitz BC, Sloan CA, et al. The Encyclopedia of
+DNA elements (ENCODE): data portal update. Nucleic Acids Res. 2018;46(D1):D794-D801.
 <a href=\"doi:10.1093/nar/gkx1081\" target=\"_blank\">
 doi:10.1093/nar/gkx1081</a>
 <br><br>
 In addition, the ENCODE Consortium and several ENCODE production laboratories
-graciously generated these datasets." 
+graciously generated these datasets."
 
 custom_color_scales <- list(
   "TISSUE"=list(
