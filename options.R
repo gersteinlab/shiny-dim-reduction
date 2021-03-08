@@ -31,12 +31,6 @@ max_heat <- 20000
 # the initial number of columns on a dendrogram
 max_dend <- 200
 
-# plot panel options
-pan_options <- c("Static 2D", "Interactive 2D", "Interactive 3D", "Boxplot")
-# settings options
-my_settings <- c("Embed Title", "Embed Legend", "Match Colors",
-                 "Boost Graphics", "Uninverted Colors")
-
 # -----------------
 # LOAD DEPENDENCIES
 # -----------------
@@ -247,7 +241,7 @@ output_conditions <- c(
 # ASSEMBLE THE UI
 # ---------------
 
-dataSelectionMenu <- menuItem(
+data_selection_menu <- menuItem(
   startExpanded=TRUE,
   "Data Selection",
   select_panel("category", "Category", cat_groups),
@@ -293,9 +287,10 @@ dataSelectionMenu <- menuItem(
   )
 )
 
-settingsMenu <- menuItem(
+settings_menu <- menuItem(
   "Settings",
-  check_panel("sMenu", "Settings", my_settings),
+  check_panel("sMenu", "Settings", c("Embed Title", "Embed Legend", "Match Colors",
+                                     "Boost Graphics", "Uninverted Colors")),
   select_panel("palette", "Color Palette", color_palettes),
   numericInput("height", "Graph Height", value=graph_height, min=1, max=4000),
   numericInput("notif_time", "Notification Time", value=6),
@@ -320,7 +315,7 @@ settingsMenu <- menuItem(
   check_panel("console", "Console Output", bookmarkable_ids, NULL)
 )
 
-filtersMenu <- menuItem(
+filters_menu <- menuItem(
   "Filters",
   conditionalPanel(
     condition = "input.embedding != 'Sets' &&
@@ -346,6 +341,11 @@ filtersMenu <- menuItem(
   )
 )
 
+button_toolbox <- function(title, ...)
+{
+  box(title = title, collapsible = TRUE, collapsed = FALSE, width = "100%", ...)
+}
+
 ui <- function(request){
   dashboardPage(
     skin="blue",
@@ -353,17 +353,16 @@ ui <- function(request){
     dashboardSidebar(
       width=300,
       sidebarMenu(
-        dataSelectionMenu,
-        settingsMenu,
-        filtersMenu
+        data_selection_menu,
+        settings_menu,
+        filters_menu
       )
     ),
     dashboardBody(
       shinyjs::useShinyjs(),
       tags$head(tags$style(my_css_styling)),
-      box(
+      button_toolbox(
         title = "Controls",
-        collapsible=TRUE, collapsed=FALSE, width="100%",
         action("start", "Start Plotting", "chart-bar", "#FFF", "#0064C8", "#00356B"),
         action("stop", "Stop Plotting", "ban", "#FFF", "#C90016", "#00356B"),
         bookmarkButton(),
@@ -376,17 +375,16 @@ ui <- function(request){
       tabBox(
         width="100%",
         id = 'plotPanels',
-        tabPanel(pan_options[1], uiOutput("ggplot2UI")),
-        tabPanel(pan_options[2], uiOutput("plotly2UI")),
-        tabPanel(pan_options[3], uiOutput("plotly3UI")),
-        tabPanel(pan_options[4], uiOutput("beeswarmUI")),
+        tabPanel("Static 2D", uiOutput("ggplot2UI")),
+        tabPanel("Interactive 2D", uiOutput("plotly2UI")),
+        tabPanel("Interactive 3D", uiOutput("plotly3UI")),
+        tabPanel("Boxplot", uiOutput("beeswarmUI")),
         tabPanel("Numeric Data", uiOutput("num_dataUI")),
         tabPanel("Metadata", uiOutput("metadataUI"))
       ),
       DTOutput("legend_out", width="100%") %>% my_spin(),
-      box(
+      button_toolbox(
         title = "Documentation",
-        collapsible=TRUE, collapsed=FALSE, width="100%",
         action("instructions", "Instructions", "book", "#FFF", "#9400D3", "#00356B"),
         action("citations", "Citations", "book", "#FFF", "#9400D3", "#00356B"),
         downloadButton('downloadInstructions', 'Instructions'),

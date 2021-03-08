@@ -140,19 +140,19 @@ server <- function(input, output, session) {
   })
 
   output$set_feat_upse_cond <- reactive({
-    input$plotPanels == pan_options[1]
+    input$plotPanels == "Static 2D"
   })
 
   output$set_feat_heat_cond <- reactive({
-    input$plotPanels == pan_options[2]
+    input$plotPanels == "Interactive 2D"
   })
 
   output$set_feat_dend_cond <- reactive({
-    input$plotPanels == pan_options[3]
+    input$plotPanels == "Interactive 3D"
   })
 
   output$nintersect_cond <- reactive({
-    input$plotPanels == pan_options[1] && input$embedding == "Sets"
+    input$plotPanels == "Static 2D" && input$embedding == "Sets"
   })
 
   output$pc_sliders_cond <- reactive({
@@ -160,19 +160,19 @@ server <- function(input, output, session) {
   })
 
   output$pc_slider2_cond <- reactive({
-    input$plotPanels %in% pan_options[1:3]
+    input$plotPanels %in% c("Static 2D", "Interactive 2D", "Interactive 3D")
   })
 
   output$pc_slider3_cond <- reactive({
-    input$plotPanels == pan_options[3]
+    input$plotPanels == "Interactive 3D"
   })
 
   output$shape_opts_cond <- reactive({
-    input$plotPanels == pan_options[1]
+    input$plotPanels == "Static 2D" && !match_colors()
   })
 
   output$label_opts_cond <- reactive({
-    input$plotPanels %in% pan_options[2:3]
+    input$plotPanels %in% c("Interactive 2D", "Interactive 3D") && !match_colors()
   })
 
   for (cond in output_conditions)
@@ -354,8 +354,16 @@ Seconds elapsed: %s", my_timer(start)), "message")
   )
 
   colorby <- reactive(iplot[[id_color(cati())]])
-  shapeby <- reactive(iplot[[id_shape(cati())]])
-  labelby <- reactive(iplot[[id_label(cati())]])
+  shapeby <- reactive({
+    if (match_colors())
+      return(colorby())
+    iplot[[id_shape(cati())]]
+  })
+  labelby <- reactive({
+    if (match_colors())
+      return(colorby())
+    iplot[[id_label(cati())]]
+  })
   filterby <- reactive(iplot[[id_filter(cati())]])
 
   # calculate which samples to keep after considering all metadata filters
