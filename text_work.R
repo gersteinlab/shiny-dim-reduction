@@ -232,93 +232,12 @@ http://doi.org/10.23915/distill.00002</a>
 <a href=\"https://github.com/jamesdiao/ERCC-Plotting-Tool\" target=\"_blank\">
 https://github.com/jamesdiao/ERCC-Plotting-Tool</a>", intToUtf8(0x00F1))
 
-instructions <-
-  "Welcome! Please feel free to explore this dimensionality reduction tool.
-Developed by Justin Chang at the Gerstein Lab from 2019-2021,
-under the mentorship of Joel Rozowsky.
-<br><br>
-In Shiny, values are reactive and observe their dependencies. If one of their
-dependencies is invalidated - meaning one of the inputs has changed - then they
-recalculate their values. Once a reactive value is recalculated, the functions
-that depend on it will be invalidated, causing their own downstream recalculation.
-This approach allows the app to be highly responsive, without constantly performing
-upstream calculations. Users can therefore freely change parameters as they go.
-Non-visible outputs are also not activated, which saves drawing time.
-<br><br>
-Note that the settings in 'Graphing' are applied in reverse order. As an example,
-'Color Palette' is applied after 'Method of Dimensionality Reduction', which is
-applied after normalization, which is applied after scaling.
-<br><br>
-If you want to save plotly output as an image, use the camera icon.
-To save all other output, right click the image and 'Save image as ...'
-<br><br>
-<b>Glossary of Terms</b>
-<ul>
-<li><u>Settings Menu:</u>
-If 'Embed Title' is checked, then the title of the plot will be included within the
-plot graphic. Otherwise, it will be displayed as plaintext below the plot. Embedded
-titles are not supported for UpSetR. If 'Show Legend' is  checked, then the plot will
-contain a legend. Otherwise, no legend will be included. If 'Boost Graphics' is checked,
-certain plots will be drawn with more expensive methods. If 'Notifications' is
-checked, then relevant notifications will appear in the bottom-right corner over time.
-Otherwise, no notifications will appear. If 'Uninverted Colors' is not checked,
-then color scales will be reversed.
-</li>
-<li><u>Color Palette:</u>
-For plotting, this tool supports 10 color scales. The color scales inherent to R are
-'Custom', 'Rainbow', 'Heat', 'Terrain', and 'Topography'. The color scales inherent
-to Viridis are 'Viridis', 'Magma', 'Plasma', 'Inferno', and 'Cividis'. Cividis
-'enables nearly-identical visual-data interpretation' for color-deficient vision,
-'is perceptually uniform in hue and brightness, and increases in brightness linearly'.
-</li>
-<li><u>Method of Visualization:</u>
-Explore: Plots combinations of principal components.
-Summarize: Generates a filter-free summary, with best-fit lines in ggplot2 and plotly3.
-tSNE: Flattens all components into a t-distributed Stochastic Neighbor Embedding.
-Frequency: Sorts the columns of the UpSetR plot by frequencies of factor subsets.
-Degree: Sorts the columns of the UpSetR plot by degrees of factor subsets.
-Variance: Sorts columns of heatmap by variance.
-Correlation: Performs correlation clustering, with dendrograms in plotly3.
-</li>
-<li><u>Method of Dimensionality Reduction:</u>
-PCA: Principal Component Analysis.
-VAE: Variational Auto-Encoder.
-UMAP: Uniform Manifold Approximation and Projection.
-PHATE: Potential of Heat diffusion for Affinity-based Transition Embedding.
-Sets: Uses a user-calculated threshold to analyze characteristic intersections.
-</li>
-<li><u>Percentage of Features Used:</u>
-Let x be the fraction of extraneous features used.
-Let t be the total number of features.
-Let c be the number of components in the final reduction.
-Then the first {c + x * (t - c)} features, in decreasing order by variance,
-will be used to form the model.
-Due to hardware limitations, t is capped at 24000 for VAE.
-</li>
-<li><u>Normalization:</u>
-Raw data is globally normalized - features retain their relative magnitudes, the
-minimum of the whole matrix is 0, and the maximum of the whole matrix is 1.
-Normalized data is locally normalized - the minimum of each feature is 0 and the
-maximum of each feature is 1. Normalization generally benefits neural networks,
-so it is suggested for VAE. On the other hand, normalization is usually detrimental
-to PCA, as it removes the relative magnitudes of all features.
-</li>
-<li><u>Scale:</u>
-Logarithmic data underwent a transformation of f(x) = log2(x+1).
-</li>
-<li><u>Feature Subset:</u>
-Choose a subset of features for use in further analysis.
-</li>
-<li><u>Category:</u>
-A category is a set of samples with conserved features. Since categories do not
-necessarily share common metadata characteristics, distinct inputs exist for each
-category in subsetting, coloring, labeling, filtering, selecting, and thresholding.
-</li>
+plotting_glossary <- "
 <li><u>Start Plotting:</u>
-Activates plotting and causes plots to update instantaneously.
+Links inputs to the reactive system, which causes plots to update instantaneously.
 </li>
 <li><u>Stop Plotting:</u>
-Stops plotting and allows settings to be updated without waiting.
+Unlinks inputs to the reactive system, which freezes plotting.
 </li>
 <li><u>Bookmark:</u>
 Creates a URL that replicates this session.
@@ -329,45 +248,148 @@ Downloads the numeric data used to produce the current plot.
 <li><u>Metadata:</u>
 Downloads the metadata used to produce the current plot.
 </li>
+<li><u>Randomize:</u>
+Randomizes the data selection parameters.
+</li>
+"
+
+data_selection_glossary <- "
+<li><u>Category:</u>
+A category is a set of samples with conserved features. Since categories do not
+necessarily share common metadata characteristics, distinct inputs exist for each
+category in subsetting, coloring, shaping, labeling, filtering, selecting, thresholding.
+</li>
+<li><u>Feature Subset:</u>
+A feature subset is a subset of features for a category.
+</li>
+<li><u>Method of Dimensionality Reduction:</u>
+PCA: Principal Component Analysis.
+VAE: Variational Auto-Encoder.
+UMAP: Uniform Manifold Approximation and Projection.
+PHATE: Potential of Heat diffusion for Affinity-based Transition Embedding.
+Sets: Uses a user-calculated threshold to analyze characteristic intersections.
+</li>
+<li><u>Method of Visualization:</u>
+Explore: Plots combinations of principal components.
+Summarize: Generates a filter-free summary, with best-fit lines in ggplot2 and plotly3.
+tSNE: Flattens all components into a t-distributed Stochastic Neighbor Embedding.
+</li>
+<li><u>Scale:</u>
+Logarithmic data underwent a transformation of f(x) = log2(x+1).
+</li>
+<li><u>Normalization:</u>
+Global methods normalize over the whole matrix. Local methods normalize over each
+feature. Normalization generally benefits neural networks, so it is suggested for VAE.
+On the other hand, normalization is usually detrimental
+to PCA, as it removes the relative magnitudes of all features.
+</li>
+<li><u>Percentage of Features Used:</u>
+Let x be the fraction of features used.
+Let t be the total number of features.
+Let c be the number of components in the final reduction.
+Then the first {c + x * (t - c)} features, in decreasing order by variance,
+will be used to form the model.
+</li>
+<li><u>Perplexity:</u>
+Perplexity is a hyperparameter used in dimensionality reduction methods that create
+clusters. It is analogous to the expected number of neighbors for any data point.
+</li>
+<li><u>Threshold:</u>
+Let a sample's range be normalized to (0,1) after the scaling transformation.
+Then a sample will be considered present in a categorical characteristic if it is
+expressed above this threshold. The bounds of this slider were selected to ensure a
+broad range of expression patterns without overflowing memory.
+</li>
+<li><u>Fraction of Samples:</u>
+Suppose S samples belong to a characteristic.
+Suppose a feature is present at the threshold level in G of those samples.
+Then this slider determines the acceptable values of G/S to be displayed.
+</li>
+<li><u>Number of Characteristics:</u>
+This slider determines the number of possible sets that must contain a feature
+for the feature to be displayed. A feature is included if it is present
+in an appropriate number of samples.
+</li>
+<li><u>Maximum Features:</u>
+The number of features displayed by set-based approaches.
+</li>"
+
+settings_glossary <- "
+<li><u>Settings Menu:</u>
+If 'Embed Title' is checked, then the title of the plot will be included within the
+plot graphic. Otherwise, it will be displayed as actual text. If 'Embed Legend' is
+checked, then the legend of the plot will be included within the plot graphic.
+Otherwise, the legend will be displayed as an external table. If 'Boost Graphics' is
+checked, certain plots will be drawn with more expensive methods. If 'Separate Colors' is
+unchecked, then colors / shapes / labels will all be bound to the current color.
+If 'Uninverted Colors' is unchecked, then color scales will be reversed.
+</li>
+<li><u>Color Palette:</u>
+Plots support 12 color scales. The custom color scales are
+'Custom' and 'Grayscale'. The color scales from R are
+'Rainbow', 'Heat', 'Terrain', 'Topography', and 'CM'. The color scales from Viridis are
+'Viridis', 'Magma', 'Plasma', 'Inferno', and 'Cividis'. Cividis
+'enables nearly-identical visual-data interpretation' for color-deficient vision,
+'is perceptually uniform in hue and brightness, and increases in brightness linearly'.
+</li>
+<li><u>Graph Height:</u>
+The height of the plotting graphic.
+</li>
+<li><u>Notification Time:</u>
+The time it takes for notifications to fade away. Set to a nonpositive value to hide
+all notifications.
+</li>
+<li><u>Number of Columns:</u>
+The number of bars in the UpSetR histogram plot.
+</li>
 <li><u>Displayed Components:</u>
 Displayed Component 1 denotes the component, after dimensionality reduction,
-that will be shown on the x-axis. Displayed Component 2 denotes the component,
-after dimensionality reduction, that will be shown on the y-axis. For plotly3,
+that will be usually shown on the x-axis. Displayed Component 2 denotes the component,
+after dimensionality reduction, that will usually be shown on the y-axis. For plotly3,
 Displayed Component 3 denotes the component, after dimensionality reduction,
-that will be shown on the z-axis. Note that components can equal each other.
+that will be usually shown on the z-axis. Components can equal each other.
 </li>
+<li><u>Console Output:</u>
+A tool used to see the precise inputs being passed to the plotting system.
+</li>"
+
+filters_glossary <- "
 <li><u>Color By, Shape By, Label By:</u>
 What category should points on the graph be colored / shaped by?
 (Note: depends on the category selected.)
 </li>
 <li><u>Current Filter, Filter By:</u>
 'Current Filter' lists all available categories for which filters can be applied.
-Filters for all categories are applied concurrently in an AND operation. In other
-words, only points in the intersection of all filters will be plotted. Filters consist
+Samples satisfying the intersection of all filters will be plotted. Filters consist
 of including / excluding factors of a selected metadata characteristic.
 (Note: depends on the category selected.)
-</li>
-<li><u>Perplexity:</u>
-Let a gene's expression range be normalized to (0,1) after the scaling transformation.
-Then a gene will be considered present in a categorical characteristic if it is
-expressed above this threshold. The bounds of this slider were selected to ensure a
-broad range of expression patterns without overflowing memory.
-</li>
-<li><u>Threshold:</u>
-Perplexity is a hyperparameter used in dimensionality reduction methods that create
-clusters. It is analogous to the expected number of neighbors for any data point.
-</li>
-<li><u>Fraction of Samples:</u>
-Suppose S samples belong to a characteristic.
-Suppose a gene is expressed at the threshold level in G of those samples.
-Then this slider determines the acceptable values of G/S to be displayed.
-</li>
-<li><u>Fraction of Characteristics:</u>
-This slider determines the percentage of possible sets that must contain a gene
-for the gene to be displayed. A gene is contained if and only if it is present
-in an appropriate fraction of samples. As an example, housekeeping genes (present
-in all characteristics) - will be removed by setting this value to less than 1.
-</li></ul>"
+</li>"
+
+instructions <- sprintf(
+  "Welcome! Please feel free to explore this dimensionality reduction tool.
+Developed by Justin Chang at the Gerstein Lab from 2019-2021,
+under the mentorship of Joel Rozowsky.
+<br><br>
+In Shiny, values are reactive and observe their dependencies. If one of their
+dependencies is invalidated - meaning one of the inputs has changed - then they
+recalculate their values. Once a reactive value is recalculated, the functions
+that depend on it will be invalidated, causing their own downstream recalculation.
+This approach allows the app to be highly responsive, without constantly performing
+upstream calculations. Users can therefore freely change parameters as they go.
+Invisible outputs are also not activated, which saves drawing time.
+<br><br>
+If you want to save plotly output as an image, use the camera icon.
+To save all other output, right click the image and 'Save image as ...'
+<br><br>
+<b>Plotting Glossary</b>
+<ul>%s</ul>
+<b>Data Selection Glossary</b>
+<ul>%s</ul>
+<b>Settings Glossary</b>
+<ul>%s</ul>
+<b>Filters Glossary</b>
+<ul>%s</ul>",
+  plotting_glossary, data_selection_glossary, settings_glossary, filters_glossary)
 
 no_autofill <-
   "document.getElementById('password').setAttribute('autocomplete','new-password')"
