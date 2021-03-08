@@ -131,3 +131,52 @@ pick_random_input <- function(session, inputId, choices)
 {
   updatePickerInput(session, inputId, selected=sample(choices, 1))
 }
+
+# checks if a value is invalid with respect to a range
+# if given an ordered pair, returns whether either value is invalid
+range_invalid <- function(value, min, max)
+{
+  if (length(value) == 2)
+    return(range_invalid(value[1], min, max) || range_invalid(value[2], min, max))
+
+  length(value) != 1 || is.na(value) || is.nan(value) || value < min || value > max
+}
+
+# checks if every member of the vector colors is in the vector custom
+check_custom_colors <- function(colors, custom)
+{
+  for (color in colors)
+    if (!(color %in% custom))
+      return(FALSE)
+
+  TRUE
+}
+
+# find the smallest positive integer not in the vector (used for bookmarking)
+smallest_missing <- function(vec)
+{
+  small <- 1
+  while (small %in% vec)
+    small <- small+1
+  small
+}
+
+# given a vector of values, generate a table for the legend
+generate_legend_table <- function(vec)
+{
+  unique_vals <- unique(vec)
+
+  if (length(unique_vals) < 1)
+    return(NULL)
+
+  table <- cbind.data.frame(1:length(unique_vals), unique_vals)
+  colnames(table) <- c("Number", "Value")
+
+  table
+}
+
+# generates a box from shinydashboard but with certain features
+button_toolbox <- function(title, ...)
+{
+  box(title = title, collapsible = TRUE, collapsed = FALSE, width = "100%", ...)
+}

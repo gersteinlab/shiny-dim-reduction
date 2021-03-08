@@ -341,11 +341,6 @@ filters_menu <- menuItem(
   )
 )
 
-button_toolbox <- function(title, ...)
-{
-  box(title = title, collapsible = TRUE, collapsed = FALSE, width = "100%", ...)
-}
-
 ui <- function(request){
   dashboardPage(
     skin="blue",
