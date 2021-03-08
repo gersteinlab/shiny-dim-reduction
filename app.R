@@ -3,11 +3,10 @@
 # source("pipeline.R", encoding="UTF-8")
 
 source("authentication.R", encoding="UTF-8")
-source("storage.R", encoding="UTF-8")
 source("plotting.R", encoding="UTF-8")
-source("options.R", encoding="UTF-8")
-
+source("storage.R", encoding="UTF-8")
 storage_query()
+source("options.R", encoding="UTF-8")
 
 # is the user authenticated by default?
 auth_default <- TRUE

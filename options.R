@@ -101,7 +101,9 @@ get_empty_cat_meta <- function(cat){
   addr <- make_aws_name(
     cat, "Total", sca_options[1], nor_options[1],
     rem_perc(fea_options[1]), emb_options[1], vis_options[1], 2, 1)
-  data.frame("Unknown" = rep("Unknown", nrow(load_db(addr))))
+  if (!find_store(addr))
+    return(data.frame("Unknown" = "Unknown"))
+  data.frame("Unknown" = rep("Unknown", nrow(load_store(addr))))
 }
 
 # fills in order_total in the event of missing portions
