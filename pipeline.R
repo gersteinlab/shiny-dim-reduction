@@ -1,6 +1,8 @@
 # The purpose of this script is to store functions for
 # building the files and folders of a dimensionality reduction app.
 # source("pipeline.R", encoding="UTF-8")
+# library(shiny)
+# runApp("~/Justin-Tool/ENTEx/app/app.R")
 
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
 source("utils.R", encoding="UTF-8")
@@ -78,7 +80,7 @@ pro_swi <- function()
 
 # runs the app
 rapp <- function(){
-  runApp(sprintf("%s/app/app.R", roo_loc))
+  runApp(sprintf("%s/app.R", app_loc))
 }
 
 # updates and runs the app
