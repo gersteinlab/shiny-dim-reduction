@@ -237,6 +237,13 @@ Seconds elapsed: %s", my_timer(start)), "message")
   # INPUT PROCESSING
   # ----------------
 
+  width <- reactive({
+    if (range_invalid(iplot$width, 1, .Machine$integer.max))
+      return("100%")
+
+    round(iplot$width, digits=0)
+  })
+
   height <- reactive({
     if (range_invalid(iplot$height, 1, 4000))
     {
@@ -719,27 +726,27 @@ Seconds elapsed: %s", my_timer(start)), "message")
   # -----------------
 
   output$ggplot2UI <- renderUI({
-    plotOutput("ggplot2_out", width="100%", height=height()) %>% my_spin()
+    plotOutput("ggplot2_out", width=width(), height=height()) %>% my_spin()
   })
 
   output$plotly2UI <- renderUI({
-    plotlyOutput("plotly2_out", width="100%", height=height()) %>% my_spin()
+    plotlyOutput("plotly2_out", width=width(), height=height()) %>% my_spin()
   })
 
   output$plotly3UI <- renderUI({
-    plotlyOutput("plotly3_out", width="100%", height=height()) %>% my_spin()
+    plotlyOutput("plotly3_out", width=width(), height=height()) %>% my_spin()
   })
 
   output$beeswarmUI <- renderUI({
-    plotOutput("beeswarm_out", width="100%", height=height()) %>% my_spin()
+    plotOutput("beeswarm_out", width=width(), height=height()) %>% my_spin()
   })
 
   output$num_dataUI <- renderUI({
-    DTOutput("num_data_table", width="100%", height=height()) %>% my_spin()
+    DTOutput("num_data_table", width=width(), height=height()) %>% my_spin()
   })
 
   output$metadataUI <- renderUI({
-    DTOutput("metadata_table", width="100%", height=height()) %>% my_spin()
+    DTOutput("metadata_table", width=width(), height=height()) %>% my_spin()
   })
 
   # -----------

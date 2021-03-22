@@ -121,6 +121,7 @@ default_picker_input_ids <- c(
 
 numeric_input_ids <- c(
   "height",
+  "width",
   "notif_time",
   "nintersect",
   "bar_frac",
