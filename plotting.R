@@ -251,7 +251,7 @@ sort_row_sums <- function(data)
 
 # Creates an UpSetR plot with nintersects columns, the provided height ratio of the
 # bar plot to the whole upset, and whether feature subsets should be sorted by size.
-upset_custom <- function(data, nintersects, ratio, keep_order,
+upset_custom <- function(data, nintersects, ratio, keep_order, text_scale = 1,
                          solid="royalblue4", shade="lightskyblue")
 {
   if (ncol(data) < 2 || nrow(data) < 8)
@@ -261,7 +261,7 @@ upset_custom <- function(data, nintersects, ratio, keep_order,
         sets.x.label = "Features Per Factor Level",
         mainbar.y.label = "Features Per Factor Subset",
         order.by = "freq", mb.ratio = c(ratio, 1-ratio), keep.order=keep_order,
-        line.size = 0.1, shade.alpha = 0.25,
+        line.size = 0.1, shade.alpha = 0.25, text.scale = text_scale,
         matrix.color = solid, main.bar.color = solid,
         sets.bar.color = solid, shade.color = shade)
 }

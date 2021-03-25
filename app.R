@@ -5,7 +5,8 @@
 source("authentication.R", encoding="UTF-8")
 source("plotting.R", encoding="UTF-8")
 source("storage.R", encoding="UTF-8")
-storage_query()
+# storage_query()
+set_storage(TRUE)
 source("options.R", encoding="UTF-8")
 
 # is the user authenticated by default?
@@ -238,7 +239,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
   # ----------------
 
   width <- reactive({
-    if (range_invalid(iplot$width, 1, .Machine$integer.max))
+    if (range_invalid(iplot$width, 1, 4000))
       return("100%")
 
     round(iplot$width, digits=0)
@@ -251,6 +252,15 @@ Seconds elapsed: %s", my_timer(start)), "message")
       return(graph_height)
     }
     round(iplot$height, digits=0)
+  })
+
+  text_scale <- reactive({
+    if (range_invalid(iplot$text_scale, 0.01, 100))
+    {
+      range_invalid_notif("Text Scale", 0.01, 100)
+      return(1)
+    }
+    round(iplot$text_scale, digits=2)
   })
 
   upse_feat <- reactive({
@@ -459,7 +469,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
       if (!legend())
         colnames(data) <- 1:ncol(data)
 
-      return(upset_custom(data, nintersect(), bar_frac(), !legend()))
+      return(upset_custom(data, nintersect(), bar_frac(), !legend(), text_scale()))
     }
 
     addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize,

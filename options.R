@@ -302,7 +302,8 @@ settings_menu <- menuItem(
     condition = "output.nintersect_cond",
     numericInput("nintersect", "Number of Columns",
                  value=def_set_col_num, min=3, max=max_set_col_num),
-    numericInput("bar_frac", "Bar Plot Fraction", value=def_bar_frac, min=0, max=1)
+    numericInput("bar_frac", "Bar Plot Fraction", value=def_bar_frac, min=0, max=1),
+    numericInput("text_scale", "Text Scale", value=1, min=0.01, max = 100)
   ),
   conditionalPanel(
     condition = "output.pc_sliders_cond",
