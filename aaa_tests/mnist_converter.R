@@ -64,18 +64,18 @@ mnist <- rapply(sources, classes = "character", how = "list", function(url) {
 
 setwd(pro_loc)
 
-indices <- sample(1:10000, 1000, replace=FALSE)
+indices <- 1:6000
 
-combined_train <- convert_to_num(mnist$train$x[indices,])
-combined_test <- convert_to_num(mnist$test$x[indices,])
+combined_train <- mnist$train$x[indices,]
+combined_test <- mnist$test$x[indices,]
 saveRDS(combined_train, "combined/combined_Training_Data.rds")
 saveRDS(combined_test, "combined/combined_Test_Data.rds")
 
 order_total <- my_empty_list(name_cat)
 
-order_total[[1]] <- data.frame(matrix(mnist$train$y, ncol=1))[indices,,drop=FALSE]
+order_total[[1]] <- data.frame(matrix(mnist$train$y[indices], ncol=1))
 colnames(order_total[[1]]) <- "Number"
-order_total[[2]] <- data.frame(matrix(mnist$test$y, ncol=1))[indices,,drop=FALSE]
+order_total[[2]] <- data.frame(matrix(mnist$test$y[indices], ncol=1))
 colnames(order_total[[2]]) <- "Number"
 
 amazon_keys <- list(
@@ -84,7 +84,7 @@ amazon_keys <- list(
   "bucket" = "shiny-app-data-justin-mnist"
 )
 pc_cap <- 10
-perplexity_types <- c(5, 10, 20, 50, 100)
+perplexity_types <- c(50, 100, 200, 600, 1200)
 app_title <- "Dimensionality Reduction Tool for MNIST"
 
 setwd(dep_loc)
