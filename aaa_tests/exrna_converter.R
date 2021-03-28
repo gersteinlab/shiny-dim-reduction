@@ -969,9 +969,6 @@ setwd(dep_loc)
 for (i in 1:num_cat)
   rownames(order_total[[i]]) <- NULL
 
-# amazon_keys <- c("AKIAVI2HZGPODUFE62HE",
-#                  "V4LyDo0i1zv2cUZaFeIg9EFUFe+Fr+cv05U30efG",
-#                  "shiny-app-data-justin-2")
 amazon_keys <- list("id" = "AKIAVI2HZGPODUFE62HE",
                     "secret" = "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",
                     "bucket" = "shiny-app-data-justin-exrna")

@@ -3,7 +3,7 @@
 
 project_name <- "ENTEx"
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
-source("entex_constants.R", encoding="UTF-8")
+source("aaa_tests/entex_constants.R", encoding="UTF-8")
 source("converter.R", encoding="UTF-8")
 
 library(Matrix)
@@ -71,7 +71,7 @@ names(fabio_filenames) <- dog
 for (cat in dog)
 {
   filename <- fabio_filenames[[cat]]
-  
+
   # read data
   setwd(raw_loc)
   print(sprintf("Reading %s for %s", filename, cat))
@@ -85,40 +85,40 @@ for (cat in dog)
   rm(my_lists)
   colnames(data) <- my_colnames
   print(sprintf("Seconds elapsed: %s", my_timer(begin)))
-  
+
   # process metadata
   print(sprintf("Processing metadata for %s", cat))
   begin <- my_timer()
   order <- create_order(nrow(data), c("SAMPLE", "TISSUE", "INDIVIDUAL"))
   order[,1] <- data[,1]
-  
+
   for (j in 1:nrow(order))
   {
     words <- strsplit(order[j,1], ".ENC")[[1]]
     if (cat == "Methylation")
       words <- strsplit(order[j,1], "_enc")[[1]]
-    
+
     words <- repStr(
-      words, 
-      c("_", "andrenal", "pancrease", 
+      words,
+      c("_", "andrenal", "pancrease",
         "centricle", "peyers", "Peyers"),
       c(" ", "adrenal", "pancreas",
         "ventricle", "Peyer's", "Peyer's")
     )
-    
+
     order[j, 2] <- words[1]
     order[j, 3] <- words[2]
   }
-  
+
   order_total[[cat]] <- order
   print(sprintf("Seconds elapsed: %s", my_timer(begin)))
-  
+
   # # delete samples row in data and convert to numeric
   # print(sprintf("Converting numerical data for %s", cat))
   # begin <- my_timer()
   # data <- convert_to_num(data[,-1])
   # print(ncol(data))
-  # 
+  #
   # # save data
   # setwd(pro_loc)
   # saveRDS(data, sprintf("combined/combined_%s.rds", cat), compress=FALSE)
@@ -145,49 +145,49 @@ for (cat in dog)
   print(sprintf("Reading %s for %s", folder, cat))
   begin <- my_timer()
   folder_entries <- my_empty_list(list.files(folder))
-  
+
   for (file in names(folder_entries))
   {
-    folder_entries[[file]] <- sprintf("%s/%s", folder, file) %>% 
+    folder_entries[[file]] <- sprintf("%s/%s", folder, file) %>%
       read_tsv_text() %>% do.call(rbind, .)
   }
-  
+
   rows <- lapply(folder_entries, function(x){x[,2]})
   data <- do.call(rbind, rows)
   colnames(data) <- folder_entries[[1]][,1]
   row_names <- repStr(rownames(data), ".txt", "")
   rownames(data) <- NULL
   print(sprintf("Seconds elapsed: %s", my_timer(begin)))
-  
+
   print(sprintf("Processing metadata for %s", cat))
   begin <- my_timer()
   order <- create_order(length(row_names), c("SAMPLE", "TISSUE", "INDIVIDUAL"))
   order[,1] <- row_names
-  
+
   for (j in 1:nrow(order))
   {
     words <- strsplit(order[j,1], ".ENC")[[1]]
-    
+
     words <- repStr(
-      words, 
-      c("_", "andrenal", "pancrease", 
+      words,
+      c("_", "andrenal", "pancrease",
         "centricle", "peyers", "Peyers"),
       c(" ", "adrenal", "pancreas",
         "ventricle", "Peyer's", "Peyer's")
     )
-    
+
     order[j, 3] <- words[2]
     order[j, 2] <- words[1]
   }
-  
+
   order_total[[cat]] <- order
-  
+
   # convert to numeric
   print(sprintf("Converting numerical data for %s", cat))
   begin <- my_timer()
   data <- convert_to_num(data)
   print(ncol(data))
-  
+
   # save data
   setwd(pro_loc)
   saveRDS(data, sprintf("combined/combined_%s.rds", cat), compress=FALSE)
@@ -257,7 +257,7 @@ setwd(pro_loc)
 cat <- name_cat[14]
 saveRDS(rampage_com, sprintf("combined/combined_%s.rds", cat))
 order_total[[cat]] <- rampage_order[,c(1:2, 4:6)]
-colnames(order_total[[cat]]) <- c("FILE_ACCESSION", "EXPERIMENT_ACCESSION", 
+colnames(order_total[[cat]]) <- c("FILE_ACCESSION", "EXPERIMENT_ACCESSION",
                                   "TISSUE", "DATE_RELEASED", "TECHNICAL_REPLICATE")
 
 # ----------------------------------
@@ -270,7 +270,7 @@ setwd(pro_loc)
 cat <- name_cat[15]
 print(sprintf("Processing metadata for %s", cat))
 order <- create_order(
-  nrow(pd), 
+  nrow(pd),
   c("SAMPLE", "TISSUE", "INDIVIDUAL", "EXPRESSION"))
 order[,1] <- pd[,1]
 
@@ -293,7 +293,7 @@ saveRDS(pd, sprintf("combined/combined_%s.rds", cat))
 cat <- name_cat[16]
 print(sprintf("Processing metadata for %s", cat))
 order <- create_order(
-  nrow(ft), 
+  nrow(ft),
   c("SAMPLE", "TISSUE", "INDIVIDUAL", "EXPRESSION", "EXP_COEFFICIENT"))
 order[,1] <- ft[,1]
 
@@ -318,7 +318,7 @@ saveRDS(ft, sprintf("combined/combined_%s.rds", cat))
 cat <- name_cat[17]
 print(sprintf("Processing metadata for %s", cat))
 order <- create_order(
-  nrow(oms), 
+  nrow(oms),
   c("SAMPLE", "TISSUE", "INDIVIDUAL"))
 order[,1] <- oms[,1]
 
@@ -368,21 +368,21 @@ for (folder in folder_list)
 {
   file_list <- list.files(folder)
   all_stuff <- my_empty_list(file_list)
-  
+
   for (file in file_list)
   {
-    all_stuff[[file]] <- read_tsv_text(sprintf("%s/%s", folder, file)) %>% 
+    all_stuff[[file]] <- read_tsv_text(sprintf("%s/%s", folder, file)) %>%
       unlist() %>% EH38E_removal() %>% ED_map()
   }
-  
+
   union <- NULL
   for (file in file_list)
   {
     union <- base::union(union, all_stuff[[file]])
   }
-  
+
   print(length(union))
-  
+
   folder_full[[folder]] <- all_stuff
   union_full[[folder]] <- union
 }
@@ -548,7 +548,7 @@ ind_decor_order <- ind_decor[c(1,
                                6,9,14,
                                5,3,2,4,
                                8,7,
-                               13,11,10,12, 
+                               13,11,10,12,
                                15:30)]
 
 decorations <- list(
@@ -568,13 +568,13 @@ self_save("decorations")
 self_save("categories_full")
 self_save("order_total")
 
-# shiny-app-entex
-amazon_keys <- c("AKIAVI2HZGPON64RUYYJ",
-                 "1AE4Jlbrp0Sfuq8Ew1gYNFkWOaqgrDVVvCJqCz8b",
-                 "shiny-app-data-justin-entex")
+# s3_entex
+amazon_keys <- list("id" = "AKIAVI2HZGPOG5NGHEZ2",
+                    "secret"  = "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",
+                    "bucket" = "shiny-app-data-justin-entex")
 perplexity_types <- c(2, 4, 6, 12, 20)
 pc_cap <- 10
-user_credentials <- list("guest" = my_hash("All@2019")) 
+user_credentials <- list("guest" = my_hash("All@2019"))
 
 self_save("amazon_keys")
 self_save("app_title")
@@ -601,27 +601,27 @@ dRep <- all_decorations$Repressive_Distal %>% default_proc()
 pRep <- all_decorations$Repressive_Proximal %>% default_proc()
 
 timur <- c("body_of_pancreas",
-"upper_lobe_of_left_lung",
-"ascending_aorta",
-"thyroid_gland",
-"tibial_nerve",
-"heart_left_ventricle",
-"stomach",
-"right_atrium_auricular_region",
-"esophagus_muscularis_mucosa",
-"sigmoid_colon",
-"gastroesophageal_sphincter",
-"esophagus_squamous_epithelium",
-"breast_epithelium",
-"adrenal_gland",
-"Peyers_patch",
-"vagina",
-"coronary_artery",
-"transverse_colon",
-"gastrocnemius_medialis",
-"uterus",
-"right_lobe_of_liver",
-"spleen")
+           "upper_lobe_of_left_lung",
+           "ascending_aorta",
+           "thyroid_gland",
+           "tibial_nerve",
+           "heart_left_ventricle",
+           "stomach",
+           "right_atrium_auricular_region",
+           "esophagus_muscularis_mucosa",
+           "sigmoid_colon",
+           "gastroesophageal_sphincter",
+           "esophagus_squamous_epithelium",
+           "breast_epithelium",
+           "adrenal_gland",
+           "Peyers_patch",
+           "vagina",
+           "coronary_artery",
+           "transverse_colon",
+           "gastrocnemius_medialis",
+           "uterus",
+           "right_lobe_of_liver",
+           "spleen")
 
 dAct_cols <- c(timur, setdiff(colnames(dAct), timur))
 safeDAct <- dAct[,timur]
@@ -671,17 +671,17 @@ dRepPlot <- dRep %>% upset_custom(TRUE, 50, c(0.5, 0.5))
 pRepPlot <- pRep %>% upset_custom(TRUE, 50, c(0.5, 0.5))
 
 # save
-c("dAct", "dActPlot", "pAct", "pActPlot", 
+c("dAct", "dActPlot", "pAct", "pActPlot",
   "dRep", "dRepPlot", "pRep", "pRepPlot") %>% self_save()
 
 # recover
 setwd(dec_pro)
-c("dAct", "dActPlot", "pAct", "pActPlot", 
+c("dAct", "dActPlot", "pAct", "pActPlot",
   "dRep", "dRepPlot", "pRep", "pRepPlot") %>% self_load()
 
 
 upset_plot = function (df, ncols=5, order, Nintersects, keeporder=FALSE){
-  
+
   p = upset(df,
             nsets=ncols,  # number of tissues
             nintersects = Nintersects, # number of bars in x
@@ -698,16 +698,16 @@ upset_plot = function (df, ncols=5, order, Nintersects, keeporder=FALSE){
   return(p)
 }
 
-upset_revised <- function(data, Xlabel, Ylabel, nint=200, order="freq", keep_order=TRUE) 
+upset_revised <- function(data, Xlabel, Ylabel, nint=200, order="freq", keep_order=TRUE)
 {
-  upset(data, 
-        sets = rev(colnames(data)),  
-        sets.x.label = Xlabel, 
-        mainbar.y.label = Ylabel, 
+  upset(data,
+        sets = rev(colnames(data)),
+        sets.x.label = Xlabel,
+        mainbar.y.label = Ylabel,
         mb.ratio = c(0.5, 0.5),
         nintersects = nint,
-        order.by = order,  
-        keep.order=keep_order, 
+        order.by = order,
+        keep.order=keep_order,
         point.size = 5,
         line.size = 1,
         text.scale = 2)
