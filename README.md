@@ -1,8 +1,3 @@
----
-output: 
-  html_document: 
-    self_contained: no
----
 # Objective
 
 This workflow can programmatically apply various dimensionality reduction methods to tabular data and generate R Shiny apps for interactive, precomputed visualization of the results. Developed at the Gerstein Lab from 2019-2021 by Justin Chang.
