@@ -1,9 +1,14 @@
 # The goal of this script is to convert vis data to packaged data.
 
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
+source("s3_master.R", encoding="UTF-8")
 source("storage.R", encoding="UTF-8")
 source("find_replace.R", encoding="UTF-8")
 source("scaling.R", encoding="UTF-8")
+get_from_dir("amazon_keys")
+
+# assign keys to admin plus decided bucket
+assign_keys(c(master_keys, amazon_keys[3]))
 storage_query()
 
 # -----------
