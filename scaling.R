@@ -18,12 +18,10 @@ setwd(app_loc)
 # open from dependencies
 get_from_dir("categories_full")
 get_from_dir("decorations")
-get_from_dir("amazon_keys")
+
 get_from_dir("order_total")
 get_from_dir("perplexity_types")
 get_from_dir("pc_cap")
-
-assign_keys(amazon_keys)
 
 # create categories and subsets
 init_cat()
