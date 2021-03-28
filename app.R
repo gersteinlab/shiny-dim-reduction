@@ -6,6 +6,7 @@ source("authentication.R", encoding="UTF-8")
 source("plotting.R", encoding="UTF-8")
 source("storage.R", encoding="UTF-8")
 # storage_query()
+# assign_root(sprintf("%s/../reference", getwd()))
 set_storage(TRUE)
 source("options.R", encoding="UTF-8")
 
