@@ -120,12 +120,19 @@ boxplot_beeswarm <- function(data, colors, title = "", legend = TRUE)
 # ... with appropriate colors in cq, symbols in sq.
 # The graph will have features (x_axis, y_axis, title), with legend
 # determining whether a legend will be displayed.
-ggplot2_2d <- function(x, y, color, shape,
-                       color_seq, mode = NULL, legend = TRUE,
+ggplot2_2d <- function(x, y, color, shape = NULL,
+                       color_seq = NULL, mode = NULL, legend = TRUE,
                        title = "", x_axis = "", y_axis = "")
 {
   df <- data.frame("x" = as.numeric(x), "y" = as.numeric(y),
                    "Color" = as.character(color), "Shape" = as.character(shape))
+
+  if (is.null(shape))
+    shape <- color
+
+  if (is.null(color_seq))
+    color_seq <- color_seq(length(unique(color)))
+
   shape_seq <- ggplot2_shape_seq(length(unique(shape)))
 
   theme <- theme(
@@ -160,10 +167,16 @@ ggplot2_2d <- function(x, y, color, shape,
 # ... with appropriate colors in colors in c_seq, text.
 # The graph will have features (x_axis, y_axis, title), with legend
 # determining whether a legend will be displayed.
-plotly_2d <- function(x, y, color, text,
-                      color_seq, lines = FALSE, legend = TRUE,
+plotly_2d <- function(x, y, color, text = NULL,
+                      color_seq = NULL, lines = FALSE, legend = TRUE,
                       title = "", x_axis = "", y_axis = "")
 {
+  if (is.null(text))
+    text <- color
+
+  if (is.null(color_seq))
+    color_seq <- color_seq(length(unique(color)))
+
   plot <- plot_ly(x = as.numeric(x), y = as.numeric(y),
                   color = as.character(color), text = as.character(text),
                   colors = color_seq, mode = ifelse(lines, "lines+markers", "markers"),
@@ -183,10 +196,16 @@ plotly_2d <- function(x, y, color, text,
 # ... with appropriate colors in c_seq, text.
 # The graph will have features (x_axis, y_axis, z_axis, title), with legend
 # determining whether a legend will be displayed.
-plotly_3d <- function(x, y, z, color, text,
-                      color_seq, legend = TRUE,
+plotly_3d <- function(x, y, z, color, text = NULL,
+                      color_seq = NULL, legend = TRUE,
                       title = "", x_axis = "", y_axis = "", z_axis = "")
 {
+  if (is.null(text))
+    text <- color
+
+  if (is.null(color_seq))
+    color_seq <- color_seq(length(unique(color)))
+
   plot <- plot_ly(x = as.numeric(x), y = as.numeric(y), z = as.numeric(z),
                   color = as.character(color), text = as.character(text),
                   colors = color_seq, mode = "markers",
