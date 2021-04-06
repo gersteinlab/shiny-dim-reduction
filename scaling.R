@@ -6,9 +6,9 @@
 
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
 source("pipeline.R", encoding="UTF-8")
+source("perform_tsne.R", encoding="UTF-8")
 
 library(limma)
-library(Rtsne)
 
 # --------------
 # USER VARIABLES
@@ -26,9 +26,6 @@ get_from_dir("pc_cap")
 # create categories and subsets
 init_cat()
 init_sub(names)
-
-# creates an empty list for neighbors
-perplexity_list <- my_empty_list(sprintf("P%s", perplexity_types))
 
 # note that the working directory after sourcing is pro_loc
 setwd(pro_loc)
@@ -100,15 +97,6 @@ log_scale <- function(data)
   log2(data+1)
 }
 
-# uses only a fraction of features
-feature_start <- function(data, fraction)
-{
-  variances <- apply(data, 2, var)
-  data <- data[,order(variances, decreasing=TRUE),drop=FALSE]
-  num_features <- calc_feat(pc_cap, fraction, ncol(data))
-  data[,1:num_features, drop=FALSE]
-}
-
 # performs scaling
 do_scal <- function(sca, scaled)
 {
@@ -117,15 +105,12 @@ do_scal <- function(sca, scaled)
   return(scaled)
 }
 
-# rTSNE on dim dimensions for tuning perplexity, iterations
-my_rTSNE <- function(data, dim, perp) {
-  max_perp <- floor((nrow(data)-1)/3)
-  set.seed(42)
-  Rtsne(data, dims = dim, perplexity = min(perp, max_perp), max_iter = 500,
-        initial_dims = 10, stop_lying_iter = 250, mom_switch_iter = 250,
-        theta = 0.5, momentum = 0.0, final_momentum = 0.8,
-        eta = 200, exaggeration_factor = 12, num_threads = 1,
-        check_duplicates = FALSE, pca = FALSE, partial_pca = FALSE,
-        verbose = FALSE, is_distance = FALSE, Y_init = NULL,
-        pca_center = FALSE, pca_scale = FALSE, normalize = FALSE)
+# uses only a fraction of features, sorted by variance
+feature_start <- function(data, fraction)
+{
+  variances <- apply(data, 2, var)
+  data <- data[,order(variances, decreasing=TRUE),drop=FALSE]
+  num_features <- calc_feat(pc_cap, fraction, ncol(data))
+  data[,1:num_features, drop=FALSE]
 }
+
