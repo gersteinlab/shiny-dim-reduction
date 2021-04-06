@@ -1,7 +1,14 @@
+# This file tests perform_tsne.R.
+
+# -----
+# SETUP
+# -----
+
 project_name <- "exRNA"
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
-source("pipeline.R", encoding="UTF-8")
 source("perform_tsne.R", encoding="UTF-8")
+source("pipeline.R", encoding="UTF-8")
+
 
 test_loc <- "%s/PCA/PCA_100_Global Min-Max_Logarithmic_Total_miRNA.rds"
 explore <- readRDS(sprintf(test_loc, pro_loc))
