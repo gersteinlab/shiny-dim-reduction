@@ -37,19 +37,3 @@ id_dim <- function(tsne)
 {
   sprintf("TSNE%s", tsne)
 }
-
-# returns a list (dims) of lists (perps) for rTSNE over many conditions
-multiple_rTSNE <- function(data, dims = c(2, 3), perps = c(5, 30, 50))
-{
-  target <- my_empty_list(id_dim(dim_types))
-
-  for (dim in dims)
-  {
-    target[[dim]] <- my_empty_list(id_perp(perplexity_types))
-
-    for (perp in perps)
-      target[[id_dim(dim)]][[id_perp(perp)]] <- my_rTSNE(data, dim, perp)$Y
-  }
-
-  perplexity_list
-}
