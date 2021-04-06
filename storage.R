@@ -1,5 +1,10 @@
 # The purpose of this file is to manage Local / AWS.S3 storage.
 
+# Goals:
+# find_store: returns whether a file exists
+# save_store: saves a file, creating the directory if it doesn't exist
+# load_store: loads a file, returning NULL if it doesn't exist
+
 require(aws.s3)
 
 # -------------
@@ -15,16 +20,21 @@ assign_root <- function(root)
   Sys.setenv("LOCAL_STORAGE_ROOT" = root)
 }
 
+path_local <- function(filename)
+{
+  sprintf("%s/%s", Sys.getenv("LOCAL_STORAGE_ROOT"), filename)
+}
+
 # determines whether a file with the given filename exists
 find_local <- function(filename)
 {
-  file.exists(sprintf("%s/%s", Sys.getenv("LOCAL_STORAGE_ROOT"), filename))
+  file.exists(path_local(filename))
 }
 
 # saves data to filename in the root directory
 save_local <- function(data, filename)
 {
-  file <- sprintf("%s/%s", Sys.getenv("LOCAL_STORAGE_ROOT"), filename)
+  file <- path_local(filename)
   if (!dir.exists(dirname(file)))
     dir.create(dirname(file), recursive=TRUE)
   saveRDS(data, file)
@@ -33,7 +43,9 @@ save_local <- function(data, filename)
 # loads data from filename in the root directory
 load_local <- function(filename)
 {
-  readRDS(sprintf("%s/%s", Sys.getenv("LOCAL_STORAGE_ROOT"), filename))
+  if (!find_local(filename))
+    return(NULL)
+  readRDS(path_local(filename))
 }
 
 # --------------
@@ -75,6 +87,8 @@ save_aws_s3 <- function(data, filename)
 # loads a single object from AWS.s3 - modified from s3load
 load_aws_s3 <- function(filename)
 {
+  if (!find_aws_s3(filename))
+    return(NULL)
   tmp <- tempfile(fileext = ".rdata")
   on.exit(unlink(tmp))
   save_object(bucket = Sys.getenv("AWS_ACCESS_BUCKET"), object = filename, file = tmp)

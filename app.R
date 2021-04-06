@@ -5,9 +5,9 @@
 source("authentication.R", encoding="UTF-8")
 source("plotting.R", encoding="UTF-8")
 source("storage.R", encoding="UTF-8")
-# storage_query()
+storage_query()
 # assign_root(sprintf("%s/../reference", getwd()))
-set_storage(TRUE)
+# set_storage(TRUE)
 source("options.R", encoding="UTF-8")
 
 # is the user authenticated by default?
@@ -457,7 +457,10 @@ Seconds elapsed: %s", my_timer(start)), "message")
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(),
                       sca_ind(), filterby(), cati())
 
-      data <- load_store(addr)[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), subi())
+      data <- load_store(addr)
+      if (is.null(data))
+        return(NULL)
+      data <- data[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), subi())
 
       num_data(data)
 
@@ -477,6 +480,9 @@ Seconds elapsed: %s", my_timer(start)), "message")
                           feat(), iplot$embedding, iplot$visualize, 2, per_ind())
 
     data <- load_store(addr)
+
+    if (is.null(data))
+      return(NULL)
 
     if (iplot$embedding == "PHATE")
     {
@@ -529,7 +535,12 @@ Seconds elapsed: %s", my_timer(start)), "message")
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(),
                       sca_ind(), filterby(), cati())
 
-      data <- load_store(addr)[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), subi())
+      data <- load_store(addr)
+
+      if (is.null(data))
+        return(NULL)
+
+      data <- data[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), subi())
 
       num_data(data)
 
@@ -543,6 +554,9 @@ Seconds elapsed: %s", my_timer(start)), "message")
                           feat(), iplot$embedding, iplot$visualize, 2, per_ind())
 
     data <- load_store(addr)
+
+    if (is.null(data))
+      return(NULL)
 
     if (iplot$embedding == "PHATE")
     {
@@ -596,7 +610,12 @@ Seconds elapsed: %s", my_timer(start)), "message")
       addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(),
                       sca_ind(), filterby(), cati())
 
-      data <- load_store(addr)[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), subi())
+      data <- load_store(addr)
+
+      if (is.null(data))
+        return(NULL)
+
+      data <- data[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), subi())
 
       num_data(data)
 
@@ -609,6 +628,9 @@ Seconds elapsed: %s", my_timer(start)), "message")
                           feat(), iplot$embedding, iplot$visualize, 3, per_ind())
 
     data <- load_store(addr)
+
+    if (is.null(data))
+      return(NULL)
 
     if (iplot$embedding == "PHATE")
     {
