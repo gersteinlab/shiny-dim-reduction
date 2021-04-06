@@ -14,7 +14,7 @@ library(Rtsne)
 my_rTSNE <- function(data, dim = 2, perp = 1, max_iter = 500, theta = 0.5,
                          eta = 200, momentum = 0.5, verbose = FALSE)
 {
-  perplexity <- min(perplexity, floor((nrow(data)-1)/3))
+  perplexity <- min(perp, floor((nrow(data)-1)/3))
   set.seed(42)
 
   Rtsne(data, dims = dim, perplexity = perp, max_iter = max_iter, theta = theta,
