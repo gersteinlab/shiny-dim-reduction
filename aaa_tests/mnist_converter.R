@@ -79,8 +79,8 @@ order_total[[2]] <- data.frame(matrix(mnist$test$y[indices], ncol=1))
 colnames(order_total[[2]]) <- "Number"
 
 amazon_keys <- list(
-  "id" = "AKIAVI2HZGPOKCJWL3VR",
-  "secret" = "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",
+  "id" = "AKIAVI2HZGPOEUQ6P2IV",
+  "secret" = "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",
   "bucket" = "shiny-app-data-justin-mnist"
 )
 pc_cap <- 10

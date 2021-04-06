@@ -969,8 +969,8 @@ setwd(dep_loc)
 for (i in 1:num_cat)
   rownames(order_total[[i]]) <- NULL
 
-amazon_keys <- list("id" = "AKIAVI2HZGPODUFE62HE",
-                    "secret" = "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",
+amazon_keys <- list("id" = "AKIAVI2HZGPOOLA56REY",
+                    "secret" = "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",
                     "bucket" = "shiny-app-data-justin-exrna")
 perplexity_types <- c(10, 20, 30, 50, 100)
 pc_cap <- 10
