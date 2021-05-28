@@ -30,6 +30,8 @@ init_sub(names)
 # note that the working directory after sourcing is pro_loc
 setwd(pro_loc)
 
+perplexity_list <- my_empty_list(perplexity_types)
+
 # -------------
 # NORMALIZATION
 # -------------
