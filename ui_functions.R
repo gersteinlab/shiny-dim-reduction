@@ -28,15 +28,11 @@ expand_cond_panel <- function(condition, ...)
 }
 
 # Creates a selectizeInput panel with only one option allowed.
-select_panel <- function(id, name, options, chosen)
+select_panel <- function(id, name, options, chosen = 1)
 {
-  if (missing(chosen))
-    chosen <- 1
-  chosen <- min(chosen, length(options))
-
   pickerInput(
     inputId = id, label = name, choices = options,
-    selected = options[chosen], multiple = FALSE,
+    selected = options[min(chosen, length(options))], multiple = FALSE,
     options = list(
       `live-search` = TRUE,
       `live-search-placeholder` = "Search for a phrase ..."

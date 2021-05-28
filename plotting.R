@@ -353,12 +353,8 @@ my_datatable <- function(df)
     df <- empty_df
 
   datatable(
-    df, editable=FALSE, escape=TRUE, filter="top",
-    selection="none", options=list(
-      scrollX=TRUE,
-      scrollY=TRUE,
-      autoWidth=FALSE
-    )
+    df, editable = FALSE, escape = TRUE, filter = "top", selection = "none",
+    options = list(scrollX = TRUE, scrollY = TRUE, autoWidth = FALSE)
   )
 }
 
