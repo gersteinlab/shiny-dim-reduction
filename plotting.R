@@ -347,7 +347,7 @@ empty_df <- data.frame(matrix(nrow=0, ncol=1))
 colnames(empty_df) <- "Unknown"
 
 # Creates a datatable from a data frame
-my_datatable <- function(df)
+my_datatable <- function(df = empty_df)
 {
   if (class(df) != "data.frame" || ncol(df) < 1)
     df <- empty_df
