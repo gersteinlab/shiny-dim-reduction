@@ -1,0 +1,26 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Deny",
+            "Action": "*",
+            "NotResource": [
+                "arn:aws:s3:::shiny-app-data-justin-exrna",
+                "arn:aws:s3:::shiny-app-data-justin-exrna/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket",
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:PutObjectAcl"
+            ],
+            "Resource": [
+                "arn:aws:s3:::shiny-app-data-justin-exrna",
+                "arn:aws:s3:::shiny-app-data-justin-exrna/*"
+            ]
+        }
+    ]
+}
