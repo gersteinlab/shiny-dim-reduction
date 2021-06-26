@@ -48,8 +48,8 @@ For reproducibility, the following settings were used in development:
 
 # Updating Path Variables
 
-These steps are only necessary if you intend to use this tool's data analysis workflow.
-Note that TILDE needs to be replaced with the appropriate character.
+These steps are only necessary if you intend to use this tool's data analysis workflow.  
+Note that TILDE needs to be replaced with the appropriate character.  
 Go to your Windows environment variables ("env" in search).  
 Set HOME, R_LIBS_USER under System Variables.  
 Use the following R code to add Rtools to the PATH and specify the root directory of your projects (replace '~/Justin-Tool' with your intended directory):  
