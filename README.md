@@ -48,13 +48,14 @@ For reproducibility, the following settings were used in development:
 
 # Updating Path Variables
 
-These steps are only necessary if you intend to use this tool's data analysis workflow.  
+These steps are only necessary if you intend to use this tool's data analysis workflow.
+Note that TILDE needs to be replaced with the appropriate character.
 Go to your Windows environment variables ("env" in search).  
 Set HOME, R_LIBS_USER under System Variables.  
 Use the following R code to add Rtools to the PATH and specify the root directory of your projects (replace '~/Justin-Tool' with your intended directory):  
 
-* "writeLines('PATH="${RTOOLS40_HOME}\\usr\\bin;${PATH}"', con = "~/.Renviron")"
-* "cat('SHINY_DIM_REDUCTION_ROOT="~/Justin-Tool"\n', append=TRUE, file="~/.Renviron")"
+* "writeLines('PATH="\${RTOOLS40_HOME}\\usr\\bin;\${PATH}"', con = "TILDE/.Renviron")"
+* "cat('SHINY_DIM_REDUCTION_ROOT="TILDE/Justin-Tool"\n', append=TRUE, file="TILDE/.Renviron")"
 Restart RStudio and run the following snippets of R code to test functionality:
 * "Sys.which("make")"  
 * "Sys.getenv("SHINY_DIM_REDUCTION_ROOT")"  
@@ -94,7 +95,7 @@ will not be hostable online via Shiny and requires the source code version to be
 
 To pursue AWS integration, the user must first create an "s3_master.R" file as shown in "s3_master_template.R" with the credentials of an AWS IAM account that has full permissions in Amazon S3. This master account will upload data and its credentials should not be distributed with the generated app.
 
-Generated apps should each be distributed with a set of AWS keys that link to an account with limited permissions. These permissions generally ought to include list / get / put, but the overall budget and permissions are in the hands of the developer.
+Generated apps should each be distributed with a set of AWS keys that link to an account with limited permissions. These permissions generally ought to include list / get / put, but the overall budget and permissions are in the hands of the developer. Please see example_aws_json.txt for an example policy.
 
 # Generating Portable Executables
 
