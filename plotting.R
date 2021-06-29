@@ -124,14 +124,14 @@ ggplot2_2d <- function(x, y, color, shape = NULL,
                        color_seq = NULL, mode = NULL, legend = TRUE,
                        title = "", x_axis = "", y_axis = "")
 {
-  df <- data.frame("x" = as.numeric(x), "y" = as.numeric(y),
-                   "Color" = as.character(color), "Shape" = as.character(shape))
-
-  if (is.null(shape))
+  if (length(shape) < 1)
     shape <- color
 
-  if (is.null(color_seq))
+  if (length(color_seq) < 1)
     color_seq <- color_seq(length(unique(color)))
+
+  df <- data.frame("x" = as.numeric(x), "y" = as.numeric(y),
+                   "Color" = as.character(color), "Shape" = as.character(shape))
 
   shape_seq <- ggplot2_shape_seq(length(unique(shape)))
 
