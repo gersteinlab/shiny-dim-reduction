@@ -2,16 +2,22 @@
 
 require("stringi")
 
-# fixed pattern replacement in a vector of strings
+# for each string in "x_stringi", replaces each element of "pattern" with the
+# corresponding element in "replacement" and returns an error if
+# "pattern" and "replacement" are of different lengths
 rep_str <- function(x_stringi, pattern, replacement)
 {
+  stopifnot(length(pattern) == length(replacement))
   stri_replace_all_fixed(
     x_stringi, pattern = pattern, replacement = replacement, vectorize_all = FALSE)
 }
 
-# regex pattern replacement in a vector of strings
+# for each string in "x_stringi" replaces each regex match of each element in
+# "pattern" with the corresponding element in "replacement" and returns an
+# error if "pattern" and "replacement" are of different lengths
 reg_str <- function(x_stringi, pattern, replacement)
 {
+  stopifnot(length(pattern) == length(replacement))
   stri_replace_all_regex(
     x_stringi, pattern = pattern, replacement = replacement, vectorize_all = FALSE)
 }
