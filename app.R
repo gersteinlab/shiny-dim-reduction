@@ -348,8 +348,10 @@ Seconds elapsed: %s", my_timer(start)), "message")
     keep <- rep(TRUE, nrow(order()))
 
     for (char in selected_chars[[cati()]])
-      keep <- keep & (
-        order()[[char]] %in% parse_opt(iplot[[id_select(cati(), char)]]))
+    {
+      cur_filter <- order()[[char]] %in% parse_opt(iplot[[id_select(cati(), char)]])
+      keep <- keep & filter
+    }
 
     keep
   })
