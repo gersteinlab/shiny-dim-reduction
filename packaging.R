@@ -1,10 +1,12 @@
 # The goal of this script is to convert vis data to packaged data.
 
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
-source("s3_master.R", encoding="UTF-8")
+source("aaa_ignore/s3_master.R", encoding="UTF-8")
 source("storage.R", encoding="UTF-8")
 source("find_replace.R", encoding="UTF-8")
 source("scaling.R", encoding="UTF-8")
+
+setwd(app_loc)
 get_from_dir("amazon_keys")
 
 # assign keys to admin plus decided bucket
@@ -86,13 +88,13 @@ for (cat in dog)
           loc <- sprintf("%s_%s_%s_%s_%s.rds", fea, nor, sca, sub, cat)
 
           none <- readRDS(sprintf("vis-%s/NONE_%s_%s", emb, emb, loc))
-          saver(
+          save_store(
             none,
             make_aws_name(cat, sub, sca, nor, fea, emb, "Explore", "", "")
           )
 
           sum <- readRDS(sprintf("vis-%s/SUM_%s_%s", emb, emb, loc))
-          saver(
+          save_store(
             sum,
             make_aws_name(cat, sub, sca, nor, fea, emb, "Summarize", "", "")
           )
@@ -105,7 +107,7 @@ for (cat in dog)
 
             for (dim in c(2,3))
             {
-              saver(
+              save_store(
                 tsne_vis[[sprintf("TSNE%s", dim)]][[sprintf("P%s", nei)]],
                 make_aws_name(cat, sub, sca, nor, fea, emb, "tSNE", dim, nei_ind)
               )
@@ -138,7 +140,7 @@ for (cat in dog)
           loc <- sprintf("%s_%s_%s_%s_%s.rds", fea, nor, sca, sub, cat)
 
           sum <- readRDS(sprintf("vis-UMAP/SUM_UMAP_%s", loc))
-          saver(
+          save_store(
             sum,
             make_aws_name(cat, sub, sca, nor, fea, "UMAP", "Summarize", "", "")
           )
@@ -150,14 +152,14 @@ for (cat in dog)
           {
             nei_ind <- which(perplexity_types == nei)
 
-            saver(
+            save_store(
               explore[[sprintf("P%s", nei)]],
               make_aws_name(cat, sub, sca, nor, fea, "UMAP", "Explore", "", nei_ind)
             )
 
             for (dim in c(2,3))
             {
-              saver(
+              save_store(
                 tsne_vis[[sprintf("TSNE%s", dim)]][[sprintf("P%s", nei)]],
                 make_aws_name(cat, sub, sca, nor, fea, "UMAP", "tSNE", dim, nei_ind)
               )
@@ -197,7 +199,7 @@ for (cat in dog)
                 "PHATE/PHATE-%s-%s_%s_%s_%s_%s_%s.rds",
                 nei, dim, fea, nor, sca, sub, cat))$embedding
 
-              saver(
+              save_store(
                 phate,
                 make_aws_name(cat, sub, sca, nor, fea, "PHATE", "", dim, nei_ind)
               )

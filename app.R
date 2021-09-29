@@ -350,7 +350,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     for (char in selected_chars[[cati()]])
     {
       cur_filter <- order()[[char]] %in% parse_opt(iplot[[id_select(cati(), char)]])
-      keep <- keep & filter
+      keep <- keep & cur_filter
     }
 
     keep
@@ -706,6 +706,14 @@ Seconds elapsed: %s", my_timer(start)), "message")
     sprintf("<h3><b>Title:</b> %s</h3>", title_text()) %>% HTML()
   })
 
+  output$description_out <- renderPrint({
+    print("Features of the Selected set:")
+    print(sprintf("Original Data: %s", cati()))
+    print(sprintf("Rows Included: All"))
+    print(sprintf("Columns Included: %s", subi()))
+    print(sprintf("Scaling: %s", iplot$scaling))
+    print(sprintf("Normalization: %s", iplot$normalization))
+  })
   output$ggplot2_out <- renderPlot({prep_plot(ggplot2_data())})
   output$plotly2_out <- renderPlotly({prep_plot(plotly2_data())})
   output$plotly3_out <- renderPlotly({prep_plot(plotly3_data())})
@@ -759,6 +767,10 @@ Seconds elapsed: %s", my_timer(start)), "message")
   # -----------------
   # DIRECT UI OUTPUTS
   # -----------------
+
+  output$descriptionUI <- renderUI({
+    verbatimTextOutput("description_out") %>% my_spin()
+  })
 
   output$ggplot2UI <- renderUI({
     plotOutput("ggplot2_out", width=width(), height=height()) %>% my_spin()

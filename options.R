@@ -353,6 +353,32 @@ ui <- function(request){
     dashboardSidebar(
       width=300,
       sidebarMenu(
+        menuItem(
+          "Table 1 Selection",
+          icon = icon("table"),
+          select_panel("table_1", "Select Table 1 Name", NULL),
+          select_panel("t1_opt_sou", "Desired Source(s)", NULL),
+          select_panel("t1_opt_row", "Desired Row Subset(s)", NULL),
+          select_panel("t1_opt_col", "Desired Column Subset(s)", NULL),
+          select_panel("t1_opt_sca", "Desired Scaling(s)", NULL), # log, lin
+          select_panel("t1_opt_nor", "Desired Normalization(s)", NULL) # global/local min-max, quant
+        ),
+        menuItem(
+          "Table 2 Selection",
+          icon = icon("table"),
+          select_panel("table_2", "Select Table 2 Name", NULL),
+          select_panel("t2_opt_sou", "Desired Source(s)", NULL),
+          select_panel("t2_opt_row", "Desired Row Subset(s)", NULL),
+          select_panel("t2_opt_col", "Desired Column Subset(s)", NULL),
+          select_panel("t2_opt_sca", "Desired Scaling(s)", NULL),
+          select_panel("t2_opt_nor", "Desired Normalization(s)", NULL)
+        ),
+        menuItem(
+          "Analysis 1 Selection",
+          icon = icon("calculator"),
+          select_panel("analysis_1", "Select Available Analyses", NULL),
+          select_panel("a1_opt_red", "Desired Reduction(s)", NULL) # pca, pca+tsne, vae, vae+tsne,
+        )
         data_selection_menu,
         settings_menu,
         filters_menu
@@ -375,6 +401,7 @@ ui <- function(request){
       tabBox(
         width="100%",
         id = 'plotPanels',
+        tabPanel("Description", uiOutput("descriptionUI")),
         tabPanel("Static 2D", uiOutput("ggplot2UI")),
         tabPanel("Interactive 2D", uiOutput("plotly2UI")),
         tabPanel("Interactive 3D", uiOutput("plotly3UI")),
