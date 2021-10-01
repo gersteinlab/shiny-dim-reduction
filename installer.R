@@ -2,6 +2,8 @@
 # and run the offline version of the tool.
 # source("installer.R", encoding="UTF-8")
 
+source("output_clean.R", encoding="UTF-8")
+
 # a list of all libraries necessary for the tool
 lib_list <- c(
   "shiny"
