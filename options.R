@@ -378,7 +378,7 @@ ui <- function(request){
           icon = icon("calculator"),
           select_panel("analysis_1", "Select Available Analyses", NULL),
           select_panel("a1_opt_red", "Desired Reduction(s)", NULL) # pca, pca+tsne, vae, vae+tsne,
-        )
+        ),
         data_selection_menu,
         settings_menu,
         filters_menu
