@@ -31,7 +31,7 @@ There are three ways to use this workflow:
 
 <b>If you intend to use this tool's data analysis workflow, we recommend R >= 4.0.0.</b>  
 
-You can download an installer for R from "https://cran.r-project.org".  
+You can download an installer for R from https://cran.r-project.org.  
 For reproducibility, the following settings were used in development:  
 
 * Run the installer as an administrator.  
@@ -56,7 +56,7 @@ Navigate to the app directory and run the following command in R:
 
 <b>If you intend to use this tool's dimensionality reduction & visualization workflow, we recommend RStudio >= 1.3.0.</b>
 
-You can download an installer for RStudio from "https://rstudio.com/products/rstudio/download/".  
+You can download an installer for RStudio from https://rstudio.com/products/rstudio/download.  
 For reproducibility, the following settings were used in development:  
 
 * Run the installer as an administrator. Keep the default installation location.  
@@ -68,7 +68,7 @@ For reproducibility, the following settings were used in development:
 
 <b>If you intend to use this tool's dimensionality reduction & visualization workflow, we recommend Rtools >= Rtools40.</b>
 
-You can download an installer for Rtools40 from "https://cran.r-project.org/bin/windows/Rtools/".  
+You can download an installer for Rtools40 from https://cran.r-project.org/bin/windows/Rtools.  
 For reproducibility, the following settings were used in development:  
 
 * Run the installer as an administrator. Keep the default installation location.  
@@ -80,7 +80,7 @@ For reproducibility, the following settings were used in development:
 
 If you intend to use this tool's dimensionality reduction & visualization workflow, a specialized Anaconda environment is necessary:  
 
-* If you do not have Anaconda, a Python package manager, please ensure RStudio is closed and install it from "https://anaconda.com" in a PATH without spaces, such as "C:/Anaconda".  
+* If you do not have Anaconda, a Python package manager, please ensure RStudio is closed and install it from https://anaconda.com in a PATH without spaces, such as "C:/Anaconda".  
 * If you have Anaconda, please ensure that no existing environments are named "r-reticulate". To do so, run "conda env remove --name r-reticulate". If the r-reticulate folder persists, delete it manually.  
 
 Then set up r-reticulate in the Anaconda Command Prompt:  
