@@ -44,7 +44,7 @@ For reproducibility, the following settings were used in development:
 
 ## Running App Code
 
-, navigate to the appropriate directory (should contain app folder) and run the following commands:
+Navigate to the app directory and run the following command in R:
 
 * "install.packages("shiny")", only needed if first time
 * "library("shiny")", only needed if first time
@@ -54,8 +54,7 @@ For reproducibility, the following settings were used in development:
 
 ## Installing RStudio
 
-<b>If you intend to use this tool's data analysis workflow, we recommend RStudio >= 1.3.0.</b>
-This tool is intended for RStudio 1.3.1056, but cross-version compatability was a focus during development.  
+<b>If you intend to use this tool's dimensionality reduction & visualization workflow, we recommend RStudio >= 1.3.0.</b>
 
 You can download an installer for RStudio from "https://rstudio.com/products/rstudio/download/".  
 For reproducibility, the following settings were used in development:  
@@ -67,8 +66,8 @@ For reproducibility, the following settings were used in development:
 
 ## Installing Rtools
 
-Rtools is only necessary if you intend to use this tool's data analysis workflow.  
-This tool is intended for Rtools40, but cross-version compatability was a focus during development.  
+<b>If you intend to use this tool's dimensionality reduction & visualization workflow, we recommend Rtools >= Rtools40.</b>
+
 You can download an installer for Rtools40 from "https://cran.r-project.org/bin/windows/Rtools/".  
 For reproducibility, the following settings were used in development:  
 
@@ -79,9 +78,9 @@ For reproducibility, the following settings were used in development:
 
 ## Installing Anaconda
 
-If you intend to use this tool's data analysis workflow with your own datasets, the Anaconda requirement below must be satisfied:  
+If you intend to use this tool's dimensionality reduction & visualization workflow, a specialized Anaconda environment is necessary:  
 
-* If you do not have Anaconda, a Python package manager, please ensure RStudio is closed and install it from "anaconda.com" in a PATH without spaces, such as "C:/Anaconda".  
+* If you do not have Anaconda, a Python package manager, please ensure RStudio is closed and install it from "https://anaconda.com" in a PATH without spaces, such as "C:/Anaconda".  
 * If you have Anaconda, please ensure that no existing environments are named "r-reticulate". To do so, run "conda env remove --name r-reticulate". If the r-reticulate folder persists, delete it manually.  
 
 Then set up r-reticulate in the Anaconda Command Prompt:  
@@ -98,7 +97,7 @@ Then set up r-reticulate in the Anaconda Command Prompt:
 
 ## Performing Reduction
 
-These steps are only necessary if you intend to use this tool's data analysis workflow.  
+If you intend to use this tool's dimensionality reduction & visualization workflow, please perform the following steps:
 Note that TILDE needs to be replaced with the appropriate character.  
 Go to your Windows environment variables ("env" in search).  
 Set HOME, R_LIBS_USER under System Variables.  
