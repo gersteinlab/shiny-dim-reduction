@@ -90,6 +90,7 @@ uapp <- function(){
                "ui_functions.R",
                "utils.R",
                "installer.R",
+               "output_clean.R",
                "text_work.R",
                "find_replace.R",
                "plotting.R",

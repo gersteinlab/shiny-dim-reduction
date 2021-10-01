@@ -2,17 +2,6 @@
 # and run the offline version of the tool.
 # source("installer.R", encoding="UTF-8")
 
-# prints a single line cleanly
-print_clean <- function(msg){
-  cat(sprintf("%s\n", msg))
-}
-
-# prints the result of sprintf cleanly
-sprintf_clean <- function(...)
-{
-  print_clean(sprintf(...))
-}
-
 # a list of all libraries necessary for the tool
 lib_list <- c(
   "shiny"
