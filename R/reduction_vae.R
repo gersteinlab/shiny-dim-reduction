@@ -15,11 +15,11 @@ library(keras)
 # latent dimensions ... the smallest neuron layer in VAE
 latent_dim <- pc_cap
 # batch_size depends completely on the dataset and your willingness to wait
-batch_size <- 2
+batch_size <- 64
 # cap_size depends completely on the dataset and your willingness to wait
 cap_size <- 20000
 # patience depends completely on the dataset and your willingness to wait (10-20 standard)
-pat_size <- 5
+pat_size <- 10
 
 # ---------
 # FUNCTIONS
@@ -39,13 +39,13 @@ cap <- function(data)
 sampling <- function(arg){
   z_mean <- arg[, 1:latent_dim]
   z_log_var <- arg[, (latent_dim + 1):(2 * latent_dim)]
-  
+
   epsilon <- k_random_normal(
-    shape = c(k_shape(z_mean)[[1]]), 
+    shape = c(k_shape(z_mean)[[1]]),
     mean = 0.0,
     stddev = 1.0
   )
-  
+
   z_mean + k_exp(z_log_var/2)*epsilon
 }
 
@@ -56,7 +56,7 @@ vae_loss_full <- function(x, x_decoded_mean, dim, z_mean, z_log_var){
   xent_loss + 1 - 0.5*kl_loss
 }
 
-# The reason we are using small layers 
+# The reason we are using small layers
 # is to improve scalability.
 # Let A be the number of input neurons.
 # Let d1 be the number of neurons in layer 1.
@@ -73,7 +73,7 @@ get_intermediate <- function(input_dim, latent_dim)
 
 # stops the training after no further progress is made
 early <- callback_early_stopping(
-  monitor='val_loss', mode='min', 
+  monitor='val_loss', mode='min',
   verbose=1, patience=pat_size,
   restore_best_weights = TRUE)
 
@@ -103,8 +103,8 @@ pref_comp <- optimizer_adam(
 # a fit function for a VAE
 my_fit <- function(vae, x_train){
   fit(
-    vae, 
-    x = x_train, 
+    vae,
+    x = x_train,
     y = x_train,
     shuffle = TRUE,
     batch_size = batch_size,
@@ -137,65 +137,65 @@ run_vae <- function(data)
   num_samp <- nrow(data)
   input_dim <- ncol(data)
   print(sprintf("Number of features: %s", input_dim))
-  
+
   dims <- get_intermediate(input_dim, latent_dim)
   dim_d1 <- dims[1]
   dim_d2 <- dims[2]
   print(sprintf("Layers (x2): %s neurons, %s neurons", dim_d1, dim_d2))
-  
+
   x_inputs <- layer_input(shape = input_dim)
   enc_d1 <- layer_dense(x_inputs, dim_d1, activation = "relu")
   enc_d2 <- layer_dense(enc_d1, dim_d2, activation = "relu")
-  
+
   z_dec_d2 <- layer_dense(units = dim_d2, activation = "relu")
   d2_dec_d1 <- layer_dense(units = dim_d1, activation = "relu")
   d1_dec_means <- layer_dense(units = input_dim, activation = "sigmoid")
-  
+
   z_mean <- layer_dense(enc_d2, latent_dim)
   z_log_var <- layer_dense(enc_d2, latent_dim)
   z_combine <- layer_concatenate(list(z_mean, z_log_var))
-  
+
   # inputs-derived z, from taking variables in inputs space as inputs
   z_inputs <- z_combine %>% layer_lambda(sampling)
   means_inputs <- z_inputs %>% z_dec_d2() %>% d2_dec_d1() %>% d1_dec_means()
-  
+
   # latent-derived z, from taking variables in latent space as inputs
   z_latent <- layer_input(shape = latent_dim)
   means_latent <- z_latent %>% z_dec_d2() %>% d2_dec_d1() %>% d1_dec_means()
-  
+
   # inputs-derived x to inputs-derived means: autoencoder
   vae <- keras_model(x_inputs, means_inputs)
-  
+
   # inputs-derived x to inputs-derived z means: encoder
   encoder <- keras_model(x_inputs, z_inputs)
-  
+
   # latent-derived z to latent-derived means: generator
   generator <- keras_model(z_latent, means_latent)
-  
+
   # compile with the customized vae loss function
   vae_loss <- function(x, x_decoded_mean){
     vae_loss_full(x, x_decoded_mean, input_dim, z_mean, z_log_var)
   }
-  
+
   vae %>% keras::compile(optimizer = pref_comp,
                          loss = vae_loss,
                          experimental_run_tf_function=FALSE)
-  
+
   # generate training data
   x_train <- data[,1:input_dim]
-  
+
   loss <<- numeric(0)
-  
+
   history <- my_fit(vae, x_train)
-  
+
   vae_final <- list(
     "history"=history,
     "predict"=predict(encoder, data[,1:input_dim], batch_size = batch_size),
     "records"=make_records(loss, history$metrics$val_loss)
   )
-  
+
   k_clear_session()
-  
+
   vae_final
 }
 
@@ -203,19 +203,19 @@ dog <- rev(names(categories))
 for (cat in dog)
 {
   combined <- readRDS(sprintf("combined/combined_%s.rds", cat))
-  
+
   for (sub in sub_groups[[cat]])
   {
     scaled <- get_col_sub(combined, cat, sub)
-    
+
     for (sca in sca_options)
     {
       scaled <- do_scal(sca, scaled)
-      
+
       for (nor in nor_options[1:2])
       {
         scaled <- do_norm(nor, scaled)
-        
+
         for (fea in c(1, 10, 100))
         {
           vae_title <- sprintf("VAE/VAE_%s_%s_%s_%s_%s.rds", fea, nor, sca, sub, cat)
@@ -223,7 +223,8 @@ for (cat in dog)
           {
             print(vae_title)
             data <- feature_start(cap(scaled), fea/100)
-            saveRDS(run_vae(data), vae_title)
+            vae_object <- run_vae(data)
+            saveRDS(vae_object, vae_title)
           }
         }
       }

@@ -6,9 +6,9 @@
 
 setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
 source("plotting.R", encoding="UTF-8")
-source("installer.R", encoding="UTF-8")
+source("output_clean.R", encoding="UTF-8")
 
-require(dplyr)
+library(dplyr)
 
 # displays a color sequence as a rectangular palette
 display_palette <- function(color_seq, title)

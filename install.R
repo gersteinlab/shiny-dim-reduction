@@ -1,6 +1,19 @@
-# The purpose of this file is to install packages
-# and run the offline version of the tool.
-# source("installer.R", encoding="UTF-8")
+# The purpose of this file is to install packages necessary for using this project.
+# source("install.R")
+
+# note: prevent the running of apps within workflow_loc
+
+set_sdr_workflow_loc <- function()
+{
+  assign("sdr_workflow_loc", getwd(), envir = .GlobalEnv)
+}
+
+source_from_workflow <- function(file)
+{
+  if (!exists(sdr_workflow_loc))
+    source(sprintf("%s/R/%s", workflow_loc, file), encoding = "UTF-8")
+}
+
 
 source("output_clean.R", encoding="UTF-8")
 
@@ -99,6 +112,6 @@ Type anything else and press enter to skip this step.")
   print_clean("All necessary R packages have been installed.")
 }
 
-# run installation - further notes are located below
+if (!require())
 print_clean("This tool was developed at the Gerstein Lab from 2019-2020.")
 print_clean("You can call the installation function by typing 'install()'.")

@@ -11,11 +11,6 @@ require("shiny")
 # FUNCTIONS
 # ---------
 
-# returns the rounded elapsed system time since 'start'
-my_timer <- function(start = 0, num_digits = 4){
-  round(as.numeric(Sys.time()) - start, num_digits)
-}
-
 # creates an empty list of length n
 len_n_list <- function(n)
 {

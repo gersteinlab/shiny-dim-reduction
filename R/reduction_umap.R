@@ -38,27 +38,27 @@ dog <- name_cat
 for (cat in dog)
 {
   combined <- readRDS(sprintf("combined/combined_%s.rds", cat))
-  
+
   for (sub in sub_groups[[cat]])
   {
     scaled <- get_col_sub(combined, cat, sub)
-    
+
     for (sca in sca_options)
     {
       scaled <- do_scal(sca, scaled)
-      
+
       for (nor in nor_options)
       {
         scaled <- do_norm(nor, scaled)
-        
+
         for (fea in c(1, 10, 100))
         {
           data <- feature_start(scaled, fea/100)
           for (nei in perplexity_types)
           {
-            umap_title <- sprintf("UMAP/UMAP-%s_%s_%s_%s_%s_%s.rds", 
+            umap_title <- sprintf("UMAP/UMAP-%s_%s_%s_%s_%s_%s.rds",
                                   nei, fea, nor, sca, sub, cat)
-            
+
             if (!file.exists(umap_title))
             {
               print(umap_title)
