@@ -54,19 +54,24 @@ For reproducibility, the following settings were used in development:
 * Keep the default installation location.  
 * Select the 64-bit user installation.  
 * Select customized startup, MDI, plain text help, no start menu folder.  
-* Keep the defaults for additional tasks.  
+* Keep the defaults for additional tasks.
+
+It is possible to customize your home and library locations in R:
+
+* <b>Windows:</b> Go to your environment variables ("env" in search) and set "HOME", "R_LIBS_USER" under "System Variables".
+* <b>MacOS / Linux:</b> Edit your environment variables through your shell's ".bashrc" file.
 
 <a name="running-app-code"/>
 
 ## Running App Code
 
-Use R to navigate to the app directory and run the following command to set up the app:
+Use R to navigate to the app directory and run the following code to set up the app:
 
 ```
 source("install.R")
 ```
 
-On subsequent uses, you can run the following two commands to immediately launch the app:
+On subsequent uses, you can navigate to the app directory and run the following code to launch the app:
 
 ```
 library(shiny)
@@ -97,6 +102,18 @@ For reproducibility, the following settings were used in development:
 * Run the installer as an administrator. Keep the default installation location.  
 * Save version history to registry and don't create start menu icons.  
 
+To add Rtools to your PATH, add the following code to your .Renviron file:
+
+```
+PATH="${RTOOLS40_HOME}\usr\bin;${PATH}"
+```
+
+Restart R and run the following code to test functionality:
+
+```
+Sys.which("make")
+```
+
 <a name="installing-anaconda"/>
 
 ## Installing Anaconda
@@ -112,8 +129,7 @@ Then set up r-reticulate in the Anaconda Command Prompt:
 conda create --name r-reticulate
 conda activate r-reticulate
 conda install keras matplotlib numba pandas scikit-learn
-pip install umap-learn
-pip install phate
+pip install umap-learn phate
 ```
 
 <a name="performing-reduction"/>
@@ -121,23 +137,17 @@ pip install phate
 ## Performing Reduction
 
 If you intend to use this tool's dimensionality reduction & visualization workflow, please perform the following steps:
-Note that TILDE needs to be replaced with the appropriate character.  
-Go to your Windows environment variables ("env" in search).  
-Set HOME, R_LIBS_USER under System Variables.  
-Use the following R code to add Rtools to the PATH and specify the root directory of your projects (replace '~/Justin-Tool' with your intended directory):  
 
-* "writeLines('PATH="\${RTOOLS40_HOME}\\usr\\bin;\${PATH}"', con = "TILDE/.Renviron")"
-* "cat('SHINY_DIM_REDUCTION_ROOT="TILDE/Justin-Tool"\n', append=TRUE, file="TILDE/.Renviron")"
-Restart RStudio and run the following snippets of R code to test functionality:
-* "Sys.which("make")"  
-* "Sys.getenv("SHINY_DIM_REDUCTION_ROOT")"  
+* Navigate to "File" -> "New Project..." -> "Version Control" -> "Git"
+* Set the URL to https://github.com/gersteinlab/shiny-dim-reduction.git
+* Name the Project Directory and select the parent directory.
+* Press "Create Project" and wait for the project to open.
+* In R, navigate to the project directory and run the following command: source("install.R")
 
-The actual '.Renviron' file can be modified in a text editor to alter these settings.  
-
-In your specified directory (SHINY_DIM_REDUCTION_ROOT), create a folder called "shiny-dim-reduction" and place all source code in "shiny-dim-reduction".  
-To finish installation, open and execute the code in "installer.R".  
 The following warning(s) can be safely ignored:  
-"Your CPU supports instructions that this TensorFlow binary was not compiled to use ..." 
+```
+Your CPU supports instructions that this TensorFlow binary was not compiled to use ...
+```
 
 <a name="aws-integration"/>
 
@@ -145,13 +155,12 @@ The following warning(s) can be safely ignored:
 
 This tool offers two options for storing the precomputed data that the application uses. 
 
-* The first option is local storage. This is sufficient for portable executables, but
-will not be hostable online via Shiny and requires the source code version to be accompanied by a dataset. 
+* The first option is local storage. This is sufficient for portable executables, but will not be hostable online via Shiny and requires the source code version to be accompanied by a dataset. 
 * The second option is AWS.S3 storage, which resolves the issues above. Although AWS offers a free plan, the onus is on the user to ensure that their AWS usage does not exceed their budget.
 
 To pursue AWS integration, the user must first create an "s3_master.R" file as shown in "s3_master_template.R" with the credentials of an AWS IAM account that has full permissions in Amazon S3. This master account will upload data and its credentials should not be distributed with the generated app.
 
-Generated apps should each be distributed with a set of AWS keys that link to an account with limited permissions. These permissions generally ought to include list / get / put, but the overall budget and permissions are in the hands of the developer. Please see example_aws_json.txt for an example policy.
+Generated apps should each be distributed with an AWS key (id, secret, S3 bucket) that link to an account with limited permissions. These permissions generally ought to include list / get / put, but the overall budget and permissions are in the hands of the developer. Please see example_aws_json.txt for an example policy.
 
 <a name="portable-executables"/>
 
