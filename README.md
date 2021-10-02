@@ -45,7 +45,7 @@ Developed by Justin Chang under the mentorship of Joel Rozowsky and Mark Gerstei
 
 ## Installing R
 
-If you intend to use this tool's data analysis workflow, we recommend R >= 4.0.0.
+To use this tool's data analysis workflow, we recommend R >= 4.0.0.
 
 You can download an installer for R from https://cran.r-project.org.  
 For reproducibility, the following settings were used in development:  
@@ -56,9 +56,9 @@ For reproducibility, the following settings were used in development:
 * Select customized startup, MDI, plain text help, no start menu folder.  
 * Keep the defaults for additional tasks.
 
-It is possible to customize your home and library locations in R:
+You can customize your home / library locations with the environmental variables "HOME", "R_LIBS_USER":
 
-* <b>Windows:</b> Go to your environment variables ("env" in search) and set "HOME", "R_LIBS_USER" under "System Variables".
+* <b>Windows:</b> Go to your environment variables ("env" in search) under "System Variables".
 * <b>MacOS / Linux:</b> Edit your environment variables through your shell's ".bashrc" file.
 
 <a name="running-app-code"/>
@@ -82,7 +82,7 @@ runApp("app.R")
 
 ## Installing RStudio
 
-If you intend to use this tool's dimensionality reduction & visualization workflow, we recommend RStudio >= 1.3.0.
+To use this tool's dimensionality reduction & visualization workflow, we recommend RStudio >= 1.3.0.
 
 You can download an installer for RStudio from https://rstudio.com/products/rstudio/download.  
 For reproducibility, the following settings were used in development:  
@@ -94,7 +94,7 @@ For reproducibility, the following settings were used in development:
 
 ## Installing Rtools
 
-If you intend to use this tool's dimensionality reduction & visualization workflow, we recommend Rtools >= Rtools40.
+To use this tool's dimensionality reduction & visualization workflow, we recommend Rtools >= Rtools40.
 
 You can download an installer for Rtools40 from https://cran.r-project.org/bin/windows/Rtools.  
 For reproducibility, the following settings were used in development:  
@@ -118,7 +118,7 @@ Sys.which("make")
 
 ## Installing Anaconda
 
-If you intend to use this tool's dimensionality reduction & visualization workflow, a specialized Anaconda environment is necessary:
+To use this tool's dimensionality reduction & visualization workflow, a specialized Anaconda environment is necessary:
 
 * If you do not have Anaconda, a Python package manager, please ensure RStudio is closed and install it from https://anaconda.com in a PATH without spaces, such as "C:/Anaconda".  
 * If you have Anaconda, please ensure that no existing environments are named "r-reticulate". To do so, run "conda env remove --name r-reticulate". If the r-reticulate folder persists, delete it manually.  
@@ -136,7 +136,7 @@ pip install umap-learn phate
 
 ## Performing Reduction
 
-If you intend to use this tool's dimensionality reduction & visualization workflow, please perform the following steps:
+To use this tool's dimensionality reduction & visualization workflow, please perform the following steps:
 
 * Navigate to "File" -> "New Project..." -> "Version Control" -> "Git"
 * Set the URL to https://github.com/gersteinlab/shiny-dim-reduction.git
@@ -157,7 +157,7 @@ Your CPU supports instructions that this TensorFlow binary was not compiled to u
 
 ## AWS Integration
 
-If you intend to create an application for visualizing dimensionally reduced data, please consider the options below for supported storage methods:
+To create an application for visualizing dimensionally reduced data, please consider the options below for supported storage methods:
 
 * <b>Local Storage:</b> Store all generated data in a folder on a file system, usually named "reference". This is useful for portable executables, but may not be hostable through Shiny if the folder size is too large. 
 * <b>AWS.S3:</b> Store all generated data in a bucket on AWS.S3. This substantially decreases app bundle size, but requires more setup. Although AWS offers a free plan, the onus is on the user to ensure that their AWS usage does not exceed their budget.
@@ -172,7 +172,7 @@ Generated apps should each be distributed with an AWS key (id, secret, S3 bucket
 
 ## Portable Executables
 
-If you intend to create portable Windows executables, please follow the steps below:
+To create portable Windows executables, please follow the steps below:
 
 * Create a folder that you intend to store the app in (portable folder).
 * Install R-Portable and GoogleChromePortable into the portable folder.

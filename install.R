@@ -1,21 +1,45 @@
 # The purpose of this file is to install packages necessary for using this project.
 # source("install.R")
 
-# note: prevent the running of apps within workflow_loc
+# ---------------
+# BASIC FUNCTIONS
+# ---------------
 
-set_sdr_workflow_loc <- function()
-{
-  assign("sdr_workflow_loc", getwd(), envir = .GlobalEnv)
+# prints a single line cleanly
+print_clean <- function(msg){
+  cat(sprintf("%s\n", msg))
 }
 
+# prints the result of sprintf cleanly
+sprintf_clean <- function(...)
+{
+  print_clean(sprintf(...))
+}
+
+# returns the rounded elapsed system time since 'start'
+my_timer <- function(start = 0, num_digits = 4){
+  round(as.numeric(Sys.time()) - start, num_digits)
+}
+
+# sets the location of the workflow folder (R project from shiny-dim-reduction)
+set_workflow_loc <- function(loc = getwd())
+{
+  assign("sdr_workflow_loc", loc, envir = .GlobalEnv)
+}
+
+# gets the absolute path of a file given its location in the workflow folder
+get_workflow_loc <- function(file)
+{
+  stopifnot(exists(sdr_workflow_loc))
+  sprintf("%s/%s", sdr_workflow_loc, file)
+}
+
+# sources a file located
 source_from_workflow <- function(file)
 {
   if (!exists(sdr_workflow_loc))
     source(sprintf("%s/R/%s", workflow_loc, file), encoding = "UTF-8")
 }
-
-
-source("output_clean.R", encoding="UTF-8")
 
 # a list of all libraries necessary for the tool
 lib_list <- c(
@@ -112,6 +136,14 @@ Type anything else and press enter to skip this step.")
   print_clean("All necessary R packages have been installed.")
 }
 
-if (!require())
-print_clean("This tool was developed at the Gerstein Lab from 2019-2020.")
-print_clean("You can call the installation function by typing 'install()'.")
+set_workflow_loc()
+
+message("*** SHINY DIMENSIONALITY REDUCTION ***")
+message("DEVELOPER: Justin Chang @ Gerstein Lab")
+message("BEGIN OR CHECK INSTALLATION: install()")
+message("CHANGE PROJECT PATH: set_project_loc()")
+message("ADD / OPEN WORKFLOW: select_workflow()")
+message("*** SHINY DIMENSIONALITY REDUCTION ***")
+print_clean(sdr_workflow_loc)
+
+
