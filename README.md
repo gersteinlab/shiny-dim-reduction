@@ -45,7 +45,7 @@ Developed by Justin Chang under the mentorship of Joel Rozowsky and Mark Gerstei
 
 ## Installing R
 
-<b>If you intend to use this tool's data analysis workflow, we recommend R >= 4.0.0.</b>  
+If you intend to use this tool's data analysis workflow, we recommend R >= 4.0.0.
 
 You can download an installer for R from https://cran.r-project.org.  
 For reproducibility, the following settings were used in development:  
@@ -82,7 +82,7 @@ runApp("app.R")
 
 ## Installing RStudio
 
-<b>If you intend to use this tool's dimensionality reduction & visualization workflow, we recommend RStudio >= 1.3.0.</b>
+If you intend to use this tool's dimensionality reduction & visualization workflow, we recommend RStudio >= 1.3.0.
 
 You can download an installer for RStudio from https://rstudio.com/products/rstudio/download.  
 For reproducibility, the following settings were used in development:  
@@ -94,7 +94,7 @@ For reproducibility, the following settings were used in development:
 
 ## Installing Rtools
 
-<b>If you intend to use this tool's dimensionality reduction & visualization workflow, we recommend Rtools >= Rtools40.</b>
+If you intend to use this tool's dimensionality reduction & visualization workflow, we recommend Rtools >= Rtools40.
 
 You can download an installer for Rtools40 from https://cran.r-project.org/bin/windows/Rtools.  
 For reproducibility, the following settings were used in development:  
@@ -118,7 +118,7 @@ Sys.which("make")
 
 ## Installing Anaconda
 
-If you intend to use this tool's dimensionality reduction & visualization workflow, a specialized Anaconda environment is necessary:  
+If you intend to use this tool's dimensionality reduction & visualization workflow, a specialized Anaconda environment is necessary:
 
 * If you do not have Anaconda, a Python package manager, please ensure RStudio is closed and install it from https://anaconda.com in a PATH without spaces, such as "C:/Anaconda".  
 * If you have Anaconda, please ensure that no existing environments are named "r-reticulate". To do so, run "conda env remove --name r-reticulate". If the r-reticulate folder persists, delete it manually.  
@@ -142,7 +142,11 @@ If you intend to use this tool's dimensionality reduction & visualization workfl
 * Set the URL to https://github.com/gersteinlab/shiny-dim-reduction.git
 * Name the Project Directory and select the parent directory.
 * Press "Create Project" and wait for the project to open.
-* In R, navigate to the project directory and run the following command: source("install.R")
+* To set up the workflow, navigate to the project directory and run the following code in R: 
+
+```
+source("install.R")
+```
 
 The following warning(s) can be safely ignored:  
 ```
@@ -153,12 +157,14 @@ Your CPU supports instructions that this TensorFlow binary was not compiled to u
 
 ## AWS Integration
 
-This tool offers two options for storing the precomputed data that the application uses. 
+If you intend to create an application for visualizing dimensionally reduced data, please consider the options below for supported storage methods:
 
-* The first option is local storage. This is sufficient for portable executables, but will not be hostable online via Shiny and requires the source code version to be accompanied by a dataset. 
-* The second option is AWS.S3 storage, which resolves the issues above. Although AWS offers a free plan, the onus is on the user to ensure that their AWS usage does not exceed their budget.
+* <b>Local Storage:</b> Store all generated data in a folder on a file system, usually named "reference". This is useful for portable executables, but may not be hostable through Shiny if the folder size is too large. 
+* <b>AWS.S3:</b> Store all generated data in a bucket on AWS.S3. This substantially decreases app bundle size, but requires more setup. Although AWS offers a free plan, the onus is on the user to ensure that their AWS usage does not exceed their budget.
 
-To pursue AWS integration, the user must first create an "s3_master.R" file as shown in "s3_master_template.R" with the credentials of an AWS IAM account that has full permissions in Amazon S3. This master account will upload data and its credentials should not be distributed with the generated app.
+To upload data to AWS.S3, create an AWS.IAM account with full AWS.S3 permissions.
+
+the user must first create an "s3_master.R" file as shown in "s3_master_template.R" with the credentials of an AWS IAM account that has full permissions in Amazon S3. This master account will upload data and its credentials should not be distributed with the generated app.
 
 Generated apps should each be distributed with an AWS key (id, secret, S3 bucket) that link to an account with limited permissions. These permissions generally ought to include list / get / put, but the overall budget and permissions are in the hands of the developer. Please see example_aws_json.txt for an example policy.
 
@@ -166,32 +172,26 @@ Generated apps should each be distributed with an AWS key (id, secret, S3 bucket
 
 ## Portable Executables
 
-To begin, install R-Portable and GoogleChromePortable into the portable folder that you intend to store your app in. Add this line to R-Portable/App/R-Portable/etc/Rprofile.site: 
+If you intend to create portable Windows executables, please follow the steps below:
 
+* Create a folder that you intend to store the app in (portable folder).
+* Install R-Portable and GoogleChromePortable into the portable folder.
+* Add this line to R-Portable/App/R-Portable/etc/Rprofile.site: 
 ```
 .First = function(){.libPaths(.Library)}
 ```
-  
-Run R-Portable as an admin. Check that the library location is portable with .libPaths(). Copy the application directory to the portable folder and follow the instructions in "Running App Code" to install all necessary packages. Then create a file called runShinyApp.R with the following contents:
-
-```
-message('library paths:\n', paste('... ', .libPaths(), sep='', collapse='\n'))
-options(browser='C:/Program Files (x86)/Google/Chrome/Application/chrome.exe')
-shiny::runApp('app', launch.browser=T)
-```
-
-Create a file called run.bat with the following contents:
-
-```
-SET ROPTS=--no-save --no-environ --no-init-file --no-restore --no-Rconsole
-R-Portable\App\R-Portable\bin\Rscript.exe %ROPTS% runShinyApp.R 1> ShinyApp.log 2>&1
-```
+* Run R-Portable as an admin and check that the library location is portable with .libPaths(). 
+* Copy the application directory, named "app", to the portable folder.
+* Copy the local storage directory, named "reference", to the portable folder.
+* Copy "runShinyApp.R" from the project directory to the portable folder.
+* Copy "run.bat" from the project directory to the portable folder.
+* Follow the instructions in "Running App Code" to install all necessary packages.
 
 After these steps, the portable folder should have the following structure:
 
-* runShinyApp.R
-* run.bat
-* app (folder)
-* reference (folder)
 * R-Portable (folder)
 * GoogleChromePortable (folder)
+* app (folder)
+* reference (folder)
+* runShinyApp.R
+* run.bat
