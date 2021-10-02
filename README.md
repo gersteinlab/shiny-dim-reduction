@@ -142,7 +142,7 @@ To use this tool's dimensionality reduction & visualization workflow, please per
 * Set the URL to https://github.com/gersteinlab/shiny-dim-reduction.git
 * Name the Project Directory and select the parent directory.
 * Press "Create Project" and wait for the project to open.
-* To set up the workflow, navigate to the project directory and run the following code in R: 
+* To set up the workflow, open the project, open "install.R", and source the file. 
 
 ```
 source("install.R")
