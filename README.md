@@ -1,11 +1,12 @@
+<!---
 ---
 title: "Shiny Dimensionality Reduction"
 pagetitle: Shiny Dimensionality Reduction
 ---
-
-<!---
-# Shiny Dimensionality Reduction
 -->
+
+# Shiny Dimensionality Reduction
+
 
 ##### Table of Contents  
 [Overview](#overview)  
