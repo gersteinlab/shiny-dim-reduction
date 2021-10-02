@@ -2,5 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
-aaa_ignore/*
+ignore/*
 README.html
