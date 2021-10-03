@@ -2,6 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
-s3_master.rds
+sdr_master_key.rds
 ignore/*
 README.html

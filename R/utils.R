@@ -2,28 +2,13 @@
 # across all files, from data validation to processing to the tool.
 # source("utils.R", encoding="UTF-8")
 
-source("installer.R", encoding="UTF-8")
-
+stopifnot(ran_install)
 require("dplyr")
 require("shiny")
 
 # ---------
 # FUNCTIONS
 # ---------
-
-# creates an empty list of length n
-len_n_list <- function(n)
-{
-  vector(mode="list", length=n)
-}
-
-# creates an empty list from names
-my_empty_list <- function(names)
-{
-  target <- len_n_list(length(names))
-  names(target) <- names
-  target
-}
 
 # Interpolates the number of truncated features in the range [pc_cap, total_features]
 # given a fraction of the distance.

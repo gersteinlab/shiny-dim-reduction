@@ -1,15 +1,33 @@
 # The purpose of this file is to manage Local / AWS.S3 storage.
+# source("storage.R", encoding="UTF-8")
 
 # Goals:
 # find_store: returns whether a file exists
 # save_store: saves a file, creating the directory if it doesn't exist
 # load_store: loads a file, returning NULL if it doesn't exist
 
+stopifnot(ran_install)
 require(aws.s3)
 
 # -------------
 # LOCAL STORAGE
 # -------------
+
+master_key_loc <- get_project_loc("sdr_master_key.rds")
+
+# create a master key and save it in the project directory
+save_master_key <- function(id, secret)
+{
+  sdr_master_key <- list("id" = id, "secret" = secret)
+  saveRDS(sdr_master_key, master_key_loc)
+}
+
+# load a master key from the project directory
+load_master_key <- function()
+{
+  sdr_master_key <- readRDS(master_key_loc)
+  assign("master_keys", sdr_master_key, envir = .GlobalEnv)
+}
 
 # assigns a root directory for local storage
 assign_root <- function(root)
@@ -120,7 +138,7 @@ set_storage <- function(use_local)
 # checks if the script is running locally
 is_local <- function()
 {
-  (Sys.getenv('SHINY_PORT') == "") && dir.exists(Sys.getenv("LOCAL_STORAGE_ROOT"))
+  sdr_project_loc && dir.exists(Sys.getenv("LOCAL_STORAGE_ROOT"))
 }
 
 # queries the user for a storage type

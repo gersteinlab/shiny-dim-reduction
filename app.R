@@ -1,14 +1,14 @@
 # The goal of this app is to perform dimensionality reduction.
-# setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
-# source("pipeline.R", encoding="UTF-8")
 
-source("authentication.R", encoding="UTF-8")
-source("plotting.R", encoding="UTF-8")
-source("storage.R", encoding="UTF-8")
+source("install.R")
+source_sdr("pipeline.R")
+source_sdr("authentication.R")
+source_sdr("plotting.R")
+source_sdr("storage.R")
 storage_query()
 # assign_root(sprintf("%s/../reference", getwd()))
 # set_storage(TRUE)
-source("options.R", encoding="UTF-8")
+source_sdr("options.R")
 
 # is the user authenticated by default?
 auth_default <- TRUE
