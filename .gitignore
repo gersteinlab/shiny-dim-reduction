@@ -3,6 +3,5 @@
 .RData
 .Ruserdata
 s3_master.rds
-s3_master.R
 ignore/*
 README.html
