@@ -1,13 +1,13 @@
 # The goal of this app is to perform dimensionality reduction.
 
+# In the project, app.R is located in the R folder so execution stops immediately
+stopifnot(file.exists("install.R"))
 source("install.R")
-source_sdr("pipeline.R")
+
 source_sdr("authentication.R")
 source_sdr("plotting.R")
 source_sdr("storage.R")
 storage_query()
-# assign_root(sprintf("%s/../reference", getwd()))
-# set_storage(TRUE)
 source_sdr("options.R")
 
 # is the user authenticated by default?

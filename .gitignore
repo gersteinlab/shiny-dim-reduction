@@ -3,5 +3,6 @@
 .RData
 .Ruserdata
 sdr_master_key.rds
+sdr_workflow_root.rds
 ignore/*
 README.html

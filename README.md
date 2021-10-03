@@ -144,11 +144,7 @@ To generate dimensionality reduction workflows, please perform the following ste
 * Press "Create Project" and wait for the project to open.
 * To set up the workflow, open the project, open "install.R", and source the file. 
 
-```
-source("install.R")
-```
-
-The following warning(s) can be safely ignored:  
+During installation, the following warning(s) can be safely ignored:  
 ```
 Your CPU supports instructions that this TensorFlow binary was not compiled to use ...
 ```

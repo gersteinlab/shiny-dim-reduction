@@ -1,19 +1,27 @@
 # The purpose of this file is to fulfill the following assumptions:
-# 1) that we have some basic functions and a start time
-# 2) that we know where code is being run from (local/online)
-# 3) that all required packages are installed
-# 4) that functions exist to set the project location
-# 5) that functions exist to set a folder to store workflows in
+# 1) that the start time is recorded
+# 2) that we have some useful functions needing only base R
+# 3) that we know where code is being run from (local/online)
+# 4) that all required packages are installed
+# 5) that functions exist to set the project location
+# The project location cannot be stored since a user could simply move the project.
+# We also cannot use getwd() because it's possible the user has performed setwd().
 # source("install.R")
 
-# ---------------
-# BASIC FUNCTIONS
-# ---------------
+# ----------
+# START TIME
+# ----------
 
 # returns the rounded elapsed system time since 'start'
 my_timer <- function(start = 0, num_digits = 4){
   round(as.numeric(Sys.time()) - start, num_digits)
 }
+
+install_start <- my_timer()
+
+# ---------------
+# BASIC FUNCTIONS
+# ---------------
 
 # prints a single line cleanly
 print_clean <- function(msg = ""){
@@ -41,8 +49,6 @@ empty_named_list <- function(...)
   names(target) <- names
   target
 }
-
-install_start <- my_timer()
 
 # --------------
 # LOCAL / ONLINE
@@ -117,9 +123,10 @@ Type anything else and press enter to exit. ")
       stop("An essential package is missing and cannot be installed since an old version is attached.")
     install.packages(sdr_pkg_names$missing_base, type = "binary", character.only = TRUE)
   }
-
   else
     stop("Quitting installation - some packages remain uninstalled.")
+
+  rm(confirm_base)
 }
 
 if (length(sdr_pkg_names$missing_data) > 0 && sdr_running_local)
@@ -141,6 +148,8 @@ If you are prompted by Bioconductor to install further packages, type 'n' and pr
     if ("limma" %in% sdr_pkg_names$missing_data)
       BiocManager::install("limma")
   }
+
+  rm(confirm_data)
 }
 
 # ----------------
@@ -193,7 +202,6 @@ message("*** SHINY DIMENSIONALITY REDUCTION ***")
 message("DEVELOPER: Justin Chang @ Gerstein Lab")
 message("ALL R PACKAGES INSTALLED; CHECK README")
 message("CHANGE PROJECT PATH: set_project_loc()")
-message("SET WORKFLOW ROOT: set_workflow_root()")
 message("*** SHINY DIMENSIONALITY REDUCTION ***")
 print_clean()
 
