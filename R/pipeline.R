@@ -1,26 +1,74 @@
 # The purpose of this script is to store functions for
 # building the files and folders of a dimensionality reduction app.
-# source("pipeline.R", encoding="UTF-8")
-# library(shiny)
-# runApp("~/Justin-Tool/ENTEx/app/app.R")
 
-setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
-source("utils.R", encoding="UTF-8")
-source("storage.R", encoding="UTF-8")
+if (!exists("ran_install"))
+{
+  if (file.exists("install.R"))
+    source("install.R")
+  else
+    stop("Could not confirm installation. Please source install.R manually.")
+}
 
-# --------------
-# USER VARIABLES
-# --------------
+# -----------------
+# SET WORKFLOW ROOT
+# -----------------
 
-root <- Sys.getenv("SHINY_DIM_REDUCTION_ROOT")
+workflow_root_loc <- get_project_loc("sdr_workflow_root.rds")
+
+# interactive prompt to set the location of the workflow root
+set_workflow_root_loc <- function()
+{
+  while (TRUE)
+  {
+    loc <- readline(prompt = "
+Type a valid directory to store all future workflows in.
+Type 'Q' and press enter to quit. ")
+
+    if (loc == "Q")
+      stop("Quitting reduction pipeline ... workflow root not set.")
+
+    if (dir.exists(loc))
+    {
+      assign("sdr_workflow_root", loc, envir = .GlobalEnv)
+      saveRDS(loc, workflow_root_loc)
+      break
+    }
+  }
+}
+
+# gets the absolute path of a file given its relative path to the workflow root
+get_workflow_loc <- function(file)
+{
+  if(!exists("sdr_workflow_root"))
+    set_workflow_root_loc()
+  sprintf("%s/%s", sdr_workflow_root, file)
+}
+
+# loads the workflow root or sets its location
+if (file.exists(workflow_root_loc))
+{
+  sdr_workflow_root <- readRDS(workflow_root_loc)
+  if (!dir.exists(sdr_workflow_root))
+    set_workflow_root_loc()
+} else
+{
+  set_workflow_root_loc()
+}
+
+source_sdr("utils.R")
+source_sdr("storage.R")
 
 # have the user enter the project name
 while (!exists("project_name"))
 {
   attempted_name <- readline(prompt = "
-Please enter the name of the project that you would like to work on.")
+Type the name of the project that you would like to work on and press enter.
+To change projects, restart this session. Type 'Q' and press enter to quit. ")
 
-  if (attempted_name %in% list.files(root))
+  if (attempted_name == "Q")
+    stop("Quitting ... project not selected.")
+
+  if (attempted_name %in% list.files(sdr_workflow_root))
     assign("project_name", attempted_name, envir = .GlobalEnv)
 }
 
@@ -38,7 +86,7 @@ safe_dir <- function(path)
 # -- ref (reference)
 # -- app (app)
 # -- -- dep (dependencies)
-roo_loc <- sprintf("%s/%s", root, project_name)
+roo_loc <- sprintf("%s/%s", sdr_workflow_root, project_name)
 safe_dir(roo_loc)
 raw_loc <- sprintf("%s/raw", roo_loc)
 safe_dir(raw_loc)
@@ -68,14 +116,6 @@ update_app <- function(filenames) {
     file.copy(sprintf("shiny-dim-reduction/%s", file), app_loc)
   }
   setwd(current)
-}
-
-# switches projects
-pro_swi <- function()
-{
-  rm(project_name, envir=.GlobalEnv)
-  setwd(sprintf("%s/shiny-dim-reduction", root))
-  source("pipeline.R", encoding="UTF-8")
 }
 
 # runs the app
