@@ -55,9 +55,6 @@ if (file.exists(workflow_root_loc))
   set_workflow_root_loc()
 }
 
-source_sdr("utils.R")
-source_sdr("storage.R")
-
 # have the user enter the project name
 while (!exists("project_name"))
 {

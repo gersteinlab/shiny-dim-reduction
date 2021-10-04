@@ -4,6 +4,7 @@
 stopifnot(file.exists("install.R"))
 source("install.R")
 
+source_sdr("utils.R")
 source_sdr("authentication.R")
 source_sdr("plotting.R")
 source_sdr("storage.R")

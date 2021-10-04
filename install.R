@@ -136,7 +136,7 @@ if (length(sdr_pkg_names$missing_data) > 0 && sdr_running_local)
   print_clean("If so, the following packages are missing and necessary:")
   print_clean(paste(sdr_pkg_names$missing_data, collapse = ", "))
   confirm_data <- readline(prompt="
-To proceed with additional package installation, type 'Y' and press enter to continue.
+Type 'Y' and press enter to install these additional packages.
 Type anything else and press enter to skip this step.
 If you are prompted by Bioconductor to install further packages, type 'n' and press enter. ")
 
@@ -169,13 +169,14 @@ set_project_loc <- function(loc = getwd())
     loc <- readline(prompt = "
 Error: install.R is not contained in this location.
 Please type the location of the project directory and press enter. ")
+
   assign("sdr_project_loc", loc, envir = .GlobalEnv)
 }
 
 # gets the absolute path of a file given its relative path to the project
 get_project_loc <- function(file)
 {
-  if(!exists(sdr_project_loc))
+  if(!exists("sdr_project_loc"))
     set_project_loc()
   sprintf("%s/%s", sdr_project_loc, file)
 }
