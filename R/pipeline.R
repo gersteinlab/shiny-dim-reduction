@@ -91,7 +91,6 @@ pro_loc <- sprintf("%s/processing", roo_loc)
 safe_dir(pro_loc)
 ref_loc <- sprintf("%s/reference", roo_loc)
 safe_dir(ref_loc)
-assign_root(ref_loc)
 app_loc <- sprintf("%s/app", roo_loc)
 safe_dir(app_loc)
 dep_loc <- sprintf("%s/dependencies", app_loc)
@@ -103,35 +102,32 @@ safe_dir(dep_loc)
 
 # update the selected files in the app
 update_app <- function(filenames) {
-  current <- getwd()
-  setwd(root)
+  safe_dir(sprintf("%s/R", app_loc))
+
+  file.copy(get_project_loc("R/app.R"), app_loc, overwrite = TRUE)
+  file.copy(get_project_loc("install.R"), app_loc, overwrite = TRUE)
+
   for (file in filenames)
-  {
-    loc <- sprintf("%s/%s", app_loc, file)
-    if (file.exists(loc))
-      file.remove(loc)
-    file.copy(sprintf("shiny-dim-reduction/%s", file), app_loc)
-  }
-  setwd(current)
+    file.copy(get_project_loc(sprintf("R/%s", file)), sprintf("%s/R", app_loc), overwrite = TRUE)
 }
+
+library(shiny)
 
 # runs the app
 rapp <- function(){
-  runApp(sprintf("%s/app.R", app_loc))
+  shiny::runApp(sprintf("%s/app.R", app_loc))
 }
 
 # updates and runs the app
 uapp <- function(){
-  update_app(c("app.R",
-               "options.R",
+  update_app(c("options.R",
                "ui_functions.R",
                "utils.R",
-               "installer.R",
-               "output_clean.R",
                "text_work.R",
                "find_replace.R",
                "plotting.R",
                "storage.R",
                "authentication.R"))
+  print_clean("Copying complete ...")
   rapp()
 }
