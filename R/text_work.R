@@ -1,6 +1,6 @@
 # The purpose of this file is to store long texts and functions for text manipulation.
 
-source("find_replace.R", encoding="UTF-8")
+source("R/find_replace.R")
 
 # ---------
 # FUNCTIONS

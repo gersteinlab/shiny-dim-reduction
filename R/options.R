@@ -4,9 +4,20 @@
 # Note: Most interface numbers are rounded to 4 decimal places.
 # This likely will not change in the near future.
 
-source("text_work.R", encoding="UTF-8")
-source("ui_functions.R", encoding="UTF-8")
-source("utils.R", encoding="UTF-8")
+if (!exists("ran_install"))
+{
+  if (file.exists("install.R"))
+    source("install.R")
+  else
+    stop("Could not confirm installation. Please source install.R manually.")
+}
+
+source("R/text_work.R")
+source("R/utils.R")
+source("R/authentication.R")
+source("R/plotting.R")
+source("R/ui_functions.R")
+source("R/storage.R")
 
 require("shinydashboard")
 require("shinyjs")
@@ -39,7 +50,7 @@ max_dend <- 200
 # Please see converter.R for an explanation of these dependencies.
 get_from_dir("categories_full")
 get_from_dir("amazon_keys")
-get_from_dir("order_total", my_empty_list(name_cat))
+get_from_dir("order_total", empty_named_list(name_cat))
 get_from_dir("decorations")
 get_from_dir("pc_cap", 3)
 get_from_dir("thresholds")
@@ -58,19 +69,6 @@ vis_to_noun <- function(vis)
   rep_str(vis, vis_options, vis_nouns)
 }
 
-# performs get_opt on every unique member of a vector v
-get_opts <- function(v)
-{
-  unlist(lapply(unique(v), function(sample){get_opt(sample, sum(v %in% sample))}))
-}
-
-# From sep_opt, return all As if ind = 1 or all Bs if ind = 2.
-parse_opt <- function(str, ind=1)
-{
-  result <- sep_opt(str)
-  result[(seq(result) + ind) %% 2 == 0]
-}
-
 # given a list of numeric vectors, returns get_opt(name, length) for each vector
 name_num_map <- function(list_num)
 {
@@ -82,6 +80,7 @@ perplexity_types <- as.character(perplexity_types)
 
 # assign keys and create bibliography
 assign_keys(amazon_keys)
+storage_query()
 citations <- rep_str(bibliography, "!!!!!!!!!!", app_citations)
 
 # creates a print version of the instructions / citations
@@ -121,7 +120,7 @@ assign_thre <- function(thre)
 }
 
 # thresholds
-thre_seqs <- rep(list(my_empty_list(name_cat)), 2)
+thre_seqs <- rep(list(empty_named_list(name_cat)), 2)
 names(thre_seqs) <- sca_options
 for (sca in sca_options)
   for (cat in name_cat)
@@ -134,7 +133,7 @@ for (sca in sca_options)
 # all bookmarking IDs for selections and thresholds
 select_ids <- NULL
 thre_ids <- NULL
-selected_chars <- my_empty_list(name_cat)
+selected_chars <- empty_named_list(name_cat)
 
 # empty lists for option boxes, to be presented to the user
 sub_opts <- vector(mode = "list", length = num_cat)

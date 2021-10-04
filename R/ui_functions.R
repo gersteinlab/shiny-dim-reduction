@@ -3,6 +3,19 @@
 require("shinycssloaders")
 require("shinyWidgets")
 
+# performs get_opt on every unique member of a vector v
+get_opts <- function(v)
+{
+  unlist(lapply(unique(v), function(sample){get_opt(sample, sum(v %in% sample))}))
+}
+
+# From sep_opt, return all As if ind = 1 or all Bs if ind = 2.
+parse_opt <- function(str, ind=1)
+{
+  result <- sep_opt(str)
+  result[(seq(result) + ind) %% 2 == 0]
+}
+
 # -------------------
 # INTERFACE FUNCTIONS
 # -------------------

@@ -1,15 +1,13 @@
 # The goal of this app is to perform dimensionality reduction.
 
 # In the project, app.R is located in the R folder so execution stops immediately
-stopifnot(file.exists("install.R"))
-source("install.R")
+if (!file.exists("install.R"))
+  stop("Could not confirm installation. Please source install.R manually.")
 
-source_sdr("utils.R")
-source_sdr("authentication.R")
-source_sdr("plotting.R")
-source_sdr("storage.R")
-storage_query()
-source_sdr("options.R")
+if (!exists(ran_install))
+  source("install.R")
+
+source("R/options.R")
 
 # is the user authenticated by default?
 auth_default <- TRUE
@@ -479,8 +477,11 @@ Seconds elapsed: %s", my_timer(start)), "message")
       return(upset_custom(data, nintersect(), bar_frac(), !legend(), text_scale()))
     }
 
+
     addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize,
                           feat(), iplot$embedding, iplot$visualize, 2, per_ind())
+
+    print(addr)
 
     data <- load_store(addr)
 
