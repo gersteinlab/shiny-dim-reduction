@@ -171,7 +171,7 @@ init_cat <- function()
 # to remove: rm(sub_groups)
 init_sub <- function(subset_map)
 {
-  sub_groups <- my_empty_list(name_cat)
+  sub_groups <- empty_named_list(name_cat)
 
   for (cat in name_cat)
     sub_groups[[cat]] <- list("Total"=rep(0, categories[[cat]])) %>% subset_map()
