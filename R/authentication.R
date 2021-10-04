@@ -1,5 +1,13 @@
 # The purpose of this file is to provide functions for basic bcrypt authentication
 
+if (!exists("ran_install"))
+{
+  if (file.exists("install.R"))
+    source("install.R")
+  else
+    stop("Could not confirm installation. Please source install.R manually.")
+}
+
 require("bcrypt")
 
 # straightforward password hashing
