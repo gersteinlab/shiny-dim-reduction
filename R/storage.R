@@ -6,12 +6,15 @@
 # save_store: saves a file, creating the directory if it doesn't exist
 # load_store: loads a file, returning NULL if it doesn't exist
 
-stopifnot(ran_install)
-require(aws.s3)
+if (!exists("ran_install"))
+{
+  if (file.exists("install.R"))
+    source("install.R")
+  else
+    stop("Could not confirm installation. Please source install.R manually.")
+}
 
-# -------------
-# LOCAL STORAGE
-# -------------
+require(aws.s3)
 
 master_key_loc <- get_project_loc("sdr_master_key.rds")
 
@@ -28,6 +31,10 @@ load_master_key <- function()
   sdr_master_key <- readRDS(master_key_loc)
   assign("master_keys", sdr_master_key, envir = .GlobalEnv)
 }
+
+# -------------
+# LOCAL STORAGE
+# -------------
 
 # assigns a root directory for local storage
 assign_root <- function(root)
@@ -136,7 +143,7 @@ set_storage <- function(use_local)
 # checks if the script is running locally
 is_local <- function()
 {
-  sdr_project_loc && dir.exists(Sys.getenv("LOCAL_STORAGE_ROOT"))
+  sdr_running_local # && dir.exists(Sys.getenv("LOCAL_STORAGE_ROOT"))
 }
 
 # queries the user for a storage type
