@@ -32,9 +32,7 @@ load_master_key <- function()
 # assigns a root directory for local storage
 assign_root <- function(root)
 {
-  if (length(root) != 1 || !dir.exists(root))
-    stop("Error: invalid root directory.")
-
+  stopifnot(length(root) == 1, is.character(root), dir.exists(root))
   Sys.setenv("LOCAL_STORAGE_ROOT" = root)
 }
 
