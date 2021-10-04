@@ -184,12 +184,6 @@ get_project_loc <- function(file)
 # sources a file given its relative path to the R folder of the project
 source_sdr <- function(file)
 {
-  if (file == "install.R")
-  {
-    source("install.R")
-    invisible()
-  }
-
   source_loc <- get_project_loc(sprintf("R/%s", file))
   stopifnot(file.exists(source_loc))
   source(source_loc, encoding = "UTF-8")
