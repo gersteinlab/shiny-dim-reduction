@@ -78,7 +78,6 @@ sdr_pkg_names$base <- c(
   , "stringi"
   , "aws.s3"
   , "bcrypt"
-  , "evaluate"
 
   , "shinydashboard"
   , "shinyjs"
@@ -111,10 +110,13 @@ sdr_pkg_names$data <- c(
 sdr_pkg_names$missing_base <- setdiff(sdr_pkg_names$base, sdr_pkg_names$installed)
 sdr_pkg_names$missing_data <- setdiff(sdr_pkg_names$data, sdr_pkg_names$installed)
 
+print(sdr_from_app)
+
 if (length(sdr_pkg_names$missing_base) > 0)
 {
   if (!sdr_running_local)
-    stop("An essential package is missing and cannot be installed to this host.")
+    stop(sprintf("The following packages are missing and cannot be installed to this host: %s",
+                 sdr_pkg_names$missing_base))
 
   print_clean("The following R packages are missing and necessary:")
   print_clean(paste(sdr_pkg_names$missing_base, collapse = ", "))
@@ -134,7 +136,7 @@ Type anything else and press enter to exit. ")
   rm(confirm_base)
 }
 
-if (length(sdr_pkg_names$missing_data) > 0 && sdr_running_local)
+if (length(sdr_pkg_names$missing_data) > 0 && sdr_running_local && !sdr_from_app)
 {
   print_clean()
   print_clean("Do you wish to generate dimensionality reduction workflows?")
@@ -170,7 +172,7 @@ set_project_loc <- function(loc = getwd())
     invisible()
   }
 
-  while (!("install.R" %in% list.files(loc)))
+  while (!("install.R" %in% list.files(loc)) || ("app.R" %in% list.files(loc)))
     loc <- readline(prompt = "
 Error: install.R is not contained in this location.
 Please type the location of the project directory and press enter. ")

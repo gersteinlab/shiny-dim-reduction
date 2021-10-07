@@ -1,13 +1,19 @@
 # The goal of this app is to perform dimensionality reduction.
 
 # In the project, app.R is located in the R folder so execution stops immediately
+assign("sdr_from_app", TRUE, envir = .GlobalEnv)
+
 if (!file.exists("install.R"))
   stop("Could not confirm installation. Please source install.R manually.")
 
-if (!exists(ran_install))
-  source("install.R")
+source("install.R")
 
-source("R/options.R")
+source_sdr("text_work.R")
+source_sdr("utils.R")
+source_sdr("plotting.R")
+source_sdr("ui_functions.R")
+source_sdr("authentication.R")
+source_sdr("options.R")
 
 # is the user authenticated by default?
 auth_default <- TRUE

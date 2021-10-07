@@ -122,7 +122,7 @@ rapp <- function(){
 # updates and runs the app
 uapp <- function(){
   print_clean("Beginning update ...")
-  update_app(c(# "options.R",
+  update_app(c("options.R",
                "ui_functions.R",
                "utils.R",
                "text_work.R",
@@ -133,3 +133,6 @@ uapp <- function(){
   print_clean("Updates complete ...")
   rapp()
 }
+
+# rsconnect::deployApp(app_loc, appName = "exrna_F21",
+#                      account = "justinchang1124", launch.browser = TRUE)

@@ -12,12 +12,7 @@ if (!exists("ran_install"))
     stop("Could not confirm installation. Please source install.R manually.")
 }
 
-source("R/text_work.R")
-source("R/utils.R")
-source("R/authentication.R")
-source("R/plotting.R")
-source("R/ui_functions.R")
-source("R/storage.R")
+source_sdr("storage.R")
 
 require("shinydashboard")
 require("shinyjs")
@@ -81,6 +76,7 @@ perplexity_types <- as.character(perplexity_types)
 # assign keys and create bibliography
 assign_keys(amazon_keys)
 storage_query()
+print(dim(load_store("Dim_Red/miRNA/Total/1_1_1_1_1_X_X.rds")))
 citations <- rep_str(bibliography, "!!!!!!!!!!", app_citations)
 
 # creates a print version of the instructions / citations
