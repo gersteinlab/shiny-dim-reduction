@@ -102,13 +102,14 @@ safe_dir(dep_loc)
 
 # update the selected files in the app
 update_app <- function(filenames) {
-  safe_dir(sprintf("%s/R", app_loc))
+  safe_dir(sprintf("%s/src", app_loc))
 
   file.copy(get_project_loc("R/app.R"), app_loc, overwrite = TRUE)
   file.copy(get_project_loc("install.R"), app_loc, overwrite = TRUE)
 
   for (file in filenames)
-    file.copy(get_project_loc(sprintf("R/%s", file)), sprintf("%s/R", app_loc), overwrite = TRUE)
+    file.copy(get_project_loc(sprintf("R/%s", file)),
+              sprintf("%s/src", app_loc), overwrite = TRUE)
 }
 
 library(shiny)
@@ -120,7 +121,8 @@ rapp <- function(){
 
 # updates and runs the app
 uapp <- function(){
-  update_app(c("options.R",
+  print_clean("Beginning update ...")
+  update_app(c(# "options.R",
                "ui_functions.R",
                "utils.R",
                "text_work.R",
@@ -128,6 +130,6 @@ uapp <- function(){
                "plotting.R",
                "storage.R",
                "authentication.R"))
-  print_clean("Copying complete ...")
+  print_clean("Updates complete ...")
   rapp()
 }
