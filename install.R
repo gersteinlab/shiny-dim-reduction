@@ -1,7 +1,7 @@
 # The purpose of this file is to fulfill the following assumptions:
 # 1) that the start time is recorded
 # 2) that we have some useful functions needing only base R
-# 3) that we know where code is being run from (local/online)
+# 3) that we know where code is being run from (local/online, app/source)
 # 4) that all required packages are installed
 # 5) that functions exist to set the project location
 # The project location cannot be stored since a user could simply move the project.
@@ -57,11 +57,16 @@ empty_named_list <- function(...)
 shiny_port <- Sys.getenv('SHINY_PORT')
 sdr_running_local <- (shiny_port == "")
 
+if (!exists("sdr_from_app"))
+  sdr_from_app <- FALSE
+
 # ------------
 # INSTALLATION
 # ------------
 
-sdr_pkg_names <- empty_named_list("installed", "loaded", "base", "data", "missing_base", "missing_data")
+sdr_pkg_names <- empty_named_list(
+  "installed", "loaded", "base", "data", "missing_base", "missing_data"
+)
 
 sdr_pkg_names$installed <- as.vector(installed.packages()[,1])
 sdr_pkg_names$loaded <- .packages()
@@ -184,7 +189,9 @@ get_project_loc <- function(file)
 # sources a file given its relative path to the R folder of the project
 source_sdr <- function(file)
 {
-  source_loc <- get_project_loc(sprintf("R/%s", file))
+  source_loc <- sprintf("src/%s", file)
+  if (!sdr_from_app)
+    source_loc <- get_project_loc(sprintf("R/%s", file))
   stopifnot(file.exists(source_loc))
   source(source_loc, encoding = "UTF-8")
 }
