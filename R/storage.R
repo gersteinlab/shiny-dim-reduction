@@ -140,18 +140,13 @@ set_storage <- function(use_local)
   }
 }
 
-# checks if the script is running locally
-is_local <- function()
-{
-  sdr_running_local # && dir.exists(Sys.getenv("LOCAL_STORAGE_ROOT"))
-}
-
 # queries the user for a storage type
 storage_query <- function()
 {
   user_local <- "N"
-  if (is_local())
-    user_local <- readline("Type 'Y' and press enter to use local storage.
-Type anything else and press enter to use AWS storage.")
+  if (sdr_running_local)
+    user_local <- readline(prompt = "
+Type 'Y' and press enter to use local storage.
+Type anything else and press enter to use AWS storage. ")
   set_storage(user_local == "Y")
 }
