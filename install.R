@@ -1,11 +1,11 @@
 # The purpose of this file is to fulfill the following assumptions:
 # 1) that the start time is recorded
 # 2) that we have some useful functions needing only base R
-# 3) that we know where code is being run from (local/online, app/source)
+# 3) that we know where code is being run from (online app, local app, or source)
 # 4) that all required packages are installed
 # 5) that functions exist to set the project location
 # The project location cannot be stored since a user could simply move the project.
-# We also cannot use getwd() because it's possible the user has performed setwd().
+# We also cannot use getwd() because that does not work on an online app.
 # source("install.R")
 
 # ----------
@@ -57,6 +57,7 @@ empty_named_list <- function(...)
 shiny_port <- Sys.getenv('SHINY_PORT')
 sdr_running_local <- (shiny_port == "")
 
+# sdr_from_app should be the first thing assigned by app.R
 if (!exists("sdr_from_app"))
   sdr_from_app <- FALSE
 
@@ -110,12 +111,10 @@ sdr_pkg_names$data <- c(
 sdr_pkg_names$missing_base <- setdiff(sdr_pkg_names$base, sdr_pkg_names$installed)
 sdr_pkg_names$missing_data <- setdiff(sdr_pkg_names$data, sdr_pkg_names$installed)
 
-print(sdr_from_app)
-
 if (length(sdr_pkg_names$missing_base) > 0)
 {
   if (!sdr_running_local)
-    stop(sprintf("The following packages are missing and cannot be installed to this host: %s",
+    stop(sprintf("These essential packages are missing and cannot be installed to this host: %s",
                  sdr_pkg_names$missing_base))
 
   print_clean("The following R packages are missing and necessary:")
@@ -169,7 +168,7 @@ set_project_loc <- function(loc = getwd())
   if (!sdr_running_local)
   {
     assign("sdr_project_loc", ".", envir = .GlobalEnv)
-    invisible()
+    return()
   }
 
   while (!("install.R" %in% list.files(loc)) || ("app.R" %in% list.files(loc)))
@@ -214,7 +213,7 @@ if (sdr_running_local)
   sprintf_clean("Project location: %s", sdr_project_loc)
 } else
 {
-  print_clean("Project location: Shiny Port %s", shiny_port)
+  sprintf_clean("Project location: Shiny Port %s", shiny_port)
 }
 
 ran_install <- TRUE
