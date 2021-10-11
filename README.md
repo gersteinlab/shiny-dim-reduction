@@ -18,6 +18,7 @@ pagetitle: Shiny Dimensionality Reduction
 [Performing Reduction](#performing-reduction)  
 [AWS Integration](#aws-integration)  
 [Portable Executables](#portable-executables)  
+[Running Tests](#running-tests)  
 
 <a name="overview"/>
 
@@ -189,3 +190,22 @@ After these steps, the portable folder should have the following structure:
 * reference (folder)
 * runShinyApp.R
 * run.bat
+
+<a name="running-tests"/>
+
+## Running Tests
+
+The tests folder contains tests used to ascertain the functionality of various source files.
+
+Tests ought to be run in the following order to optimize debugging:
+
+1. test_install.R
+2. test_authentication.R
+3. test_find_replace.R
+4. test_storage.R
+5. test_plotting.R
+6. test_utils.R
+7. test_red_methods.R
+8. test_converter.R
+9. test_packaging.R
+10. test_options.R
