@@ -9,6 +9,10 @@ if (!exists("ran_install"))
     stop("Could not confirm installation. Please source install.R manually.")
 }
 
+# this file is not meant to be sourced from
+if (sdr_from_app)
+  message("Warning: Apps should not use pipeline.R.")
+
 # -----------------
 # SET WORKFLOW ROOT
 # -----------------

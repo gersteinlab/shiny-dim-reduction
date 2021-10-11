@@ -76,7 +76,6 @@ perplexity_types <- as.character(perplexity_types)
 # assign keys and create bibliography
 assign_keys(amazon_keys)
 storage_query()
-print(dim(load_store("Dim_Red/miRNA/Total/1_1_1_1_1_X_X.rds")))
 citations <- rep_str(bibliography, "!!!!!!!!!!", app_citations)
 
 # creates a print version of the instructions / citations
