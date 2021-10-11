@@ -395,7 +395,7 @@ ui <- function(request){
       tabBox(
         width="100%",
         id = 'plotPanels',
-        tabPanel("Description", uiOutput("descriptionUI")),
+        # tabPanel("Description", uiOutput("descriptionUI")),
         tabPanel("Static 2D", uiOutput("ggplot2UI")),
         tabPanel("Interactive 2D", uiOutput("plotly2UI")),
         tabPanel("Interactive 3D", uiOutput("plotly3UI")),
