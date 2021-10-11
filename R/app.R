@@ -808,7 +808,9 @@ Seconds elapsed: %s", my_timer(start)), "message")
   # BOOKMARKING
   # -----------
 
-  session$onSessionEnded(stopApp)
+  session$onSessionEnded(function() {
+    stopApp()
+  })
   setBookmarkExclude(bookmark_exclude_vector)
 
   onBookmark(function(state) {
