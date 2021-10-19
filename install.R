@@ -100,7 +100,7 @@ sdr_pkg_names$data <- c(
   , "BiocManager"
   , "Rtsne"
   , "reticulate"
-  , "tfruns"
+  , "tensorflow"
   , "keras"
   , "dbscan"
   , "umap"
