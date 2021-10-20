@@ -134,8 +134,7 @@ Then set up r-reticulate in the Anaconda Command Prompt:
 conda create --name r-reticulate
 conda activate r-reticulate
 conda install tensorflow
-conda install keras matplotlib numba pandas scikit-learn
-pip install umap-learn phate
+pip install phate
 ```
 
 <a name="performing-reduction"/>
