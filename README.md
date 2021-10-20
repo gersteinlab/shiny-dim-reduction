@@ -119,16 +119,21 @@ Sys.which("make")
 
 ## Installing Anaconda
 
-To generate dimensionality reduction workflows, a specialized Anaconda environment is necessary:
+To generate dimensionality reduction workflows, a specialized environment in Anaconda (a Python package manager) is necessary. To install Anaconda, download an installer from https://anaconda.com, ensure RStudio is closed, and perform installation in a PATH without spaces, such as "C:/Anaconda".
 
-* If you do not have Anaconda, a Python package manager, please ensure RStudio is closed and install it from https://anaconda.com in a PATH without spaces, such as "C:/Anaconda".  
-* If you have Anaconda, please ensure that no existing environments are named "r-reticulate". To do so, run "conda env remove --name r-reticulate". If the r-reticulate folder persists, delete it manually.  
+Once Anaconda is installed, ensure that no existing environments are named "r-reticulate". You can do so through the following commands:
+
+```
+conda info --envs
+conda env remove --name r-reticulate
+```
 
 Then set up r-reticulate in the Anaconda Command Prompt:  
 
 ```
 conda create --name r-reticulate
 conda activate r-reticulate
+conda install tensorflow
 conda install keras matplotlib numba pandas scikit-learn
 pip install umap-learn phate
 ```

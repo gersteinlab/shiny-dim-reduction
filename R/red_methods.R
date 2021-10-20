@@ -9,9 +9,6 @@ library(keras)
 library(phateR)
 library(Matrix)
 
-if (tensorflow::tf$executing_eagerly())
-  tensorflow::tf$compat$v1$disable_eager_execution()
-
 # ---------------
 # GENERAL METHODS
 # ---------------
@@ -60,6 +57,15 @@ pca_to_summary <- function(pca)
 # VAE METHODS
 # -----------
 
+# must be done immediately after loading Keras!!
+K <- keras::backend()
+# disable eager execution and ensure reproducibility
+if (tensorflow::tf$executing_eagerly())
+  tensorflow::tf$compat$v1$disable_eager_execution()
+tensorflow::tf$random$set_seed(0)
+# patience determines how many times we allow increasing loss before finalization; 10 is standard
+pat_size <- 10
+
 pc_cap <- 10
 # latent dimensions ... the smallest neuron layer in VAE
 latent_dim <- pc_cap
@@ -67,12 +73,6 @@ latent_dim <- pc_cap
 batch_size <- 64
 # cap_size depends completely on the dataset and your willingness to wait
 cap_size <- 20000
-# patience depends completely on the dataset and your willingness to wait (10-20 standard)
-pat_size <- 10
-
-# must be done immediately after loading Keras!!
-K <- keras::backend()
-tensorflow::tf$random$set_seed(0)
 
 # caps the data at cap_size features
 cap <- function(data)

@@ -22,18 +22,15 @@ for (i in 1:nrow(test_table))
     test_table[i,j] <- sample(1:100/100, 1)
 
 sprintf_clean("Is this a valid table?: %s", valid_table(test_table))
+test_pca <- table_to_pca(test_table, 10)
+test_vae <- table_to_vae(test_table)
+test_umap <- table_to_umap(test_table, 10, 20)
+test_phate <- table_to_phate(test_table, 10, 20)
+test_tsne <- table_to_tsne(test_table, 10, 20)
 
-lol <- table_to_umap(test_table, 10, 20)
-
-if (tensorflow::tf$executing_eagerly())
-  tensorflow::tf$compat$v1$disable_eager_execution()
-
-derp <- table_to_vae(test_table)
-d2 <- table_to_phate(test_table, 10, 20)
-
-conda install -c conda-forge umap-learn==0.4
-conda install keras matplotlib numba pandas scikit-learn
-pip install phate
+# conda install -c conda-forge umap-learn==0.4
+# conda install keras matplotlib numba pandas scikit-learn
+# pip install phate
 
 # reticulate::use_condaenv("r-reticulate", conda = "C:/Anaconda/Scripts/conda.exe")
 # keras::use_condaenv("r-reticulate", conda = "C:/Anaconda/Scripts/conda.exe")
