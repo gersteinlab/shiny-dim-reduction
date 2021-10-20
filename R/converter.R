@@ -3,9 +3,16 @@
 # Actual converter.R files should source this file.
 # source("converter.R", encoding="UTF-8")
 
-setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
-source("pipeline.R", encoding="UTF-8")
-source("find_replace.R", encoding="UTF-8")
+if (!exists("ran_install"))
+{
+  if (file.exists("install.R"))
+    source("install.R")
+  else
+    stop("Could not confirm installation. Please source install.R manually.")
+}
+
+source_sdr("pipeline.R")
+source_sdr("find_replace.R")
 
 # ------------
 # DEPENDENCIES
