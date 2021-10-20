@@ -128,10 +128,13 @@ boxplot_beeswarm <- function(data, colors, title = "", legend = TRUE)
 # ... with appropriate colors in cq, symbols in sq.
 # The graph will have features (x_axis, y_axis, title), with legend
 # determining whether a legend will be displayed.
-ggplot2_2d <- function(x, y, color, shape = NULL,
+ggplot2_2d <- function(x, y, color = NULL, shape = NULL,
                        color_seq = NULL, mode = NULL, legend = TRUE,
                        title = "", x_axis = "", y_axis = "")
 {
+  if (length(color) < 1)
+    color <- rep("Unknown", length(x))
+
   if (length(shape) < 1)
     shape <- color
 
@@ -175,14 +178,17 @@ ggplot2_2d <- function(x, y, color, shape = NULL,
 # ... with appropriate colors in colors in c_seq, text.
 # The graph will have features (x_axis, y_axis, title), with legend
 # determining whether a legend will be displayed.
-plotly_2d <- function(x, y, color, text = NULL,
+plotly_2d <- function(x, y, color = NULL, text = NULL,
                       color_seq = NULL, lines = FALSE, legend = TRUE,
                       title = "", x_axis = "", y_axis = "")
 {
-  if (is.null(text))
+  if (length(color) < 1)
+    color <- rep("Unknown", length(x))
+
+  if (length(text) < 1)
     text <- color
 
-  if (is.null(color_seq))
+  if (length(color_seq) < 1)
     color_seq <- color_seq(length(unique(color)))
 
   plot <- plot_ly(x = as.numeric(x), y = as.numeric(y),
@@ -204,14 +210,17 @@ plotly_2d <- function(x, y, color, text = NULL,
 # ... with appropriate colors in c_seq, text.
 # The graph will have features (x_axis, y_axis, z_axis, title), with legend
 # determining whether a legend will be displayed.
-plotly_3d <- function(x, y, z, color, text = NULL,
+plotly_3d <- function(x, y, z, color = NULL, text = NULL,
                       color_seq = NULL, legend = TRUE,
                       title = "", x_axis = "", y_axis = "", z_axis = "")
 {
-  if (is.null(text))
+  if (length(color) < 1)
+    color <- rep("Unknown", length(x))
+
+  if (length(text) < 1)
     text <- color
 
-  if (is.null(color_seq))
+  if (length(color_seq) < 1)
     color_seq <- color_seq(length(unique(color)))
 
   plot <- plot_ly(x = as.numeric(x), y = as.numeric(y), z = as.numeric(z),
