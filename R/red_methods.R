@@ -1,12 +1,23 @@
 # The purpose of this file is to store all methods for reduction of a provided table.
 # By a table, we mean an object of class matrix and array that contains numerics for each cell.
 
-library(Rtsne)
+if (!exists("ran_install"))
+{
+  if (file.exists("install.R"))
+    source("install.R")
+  else
+    stop("Could not confirm installation. Please source install.R manually.")
+}
+
+# depends on Anaconda
 library(reticulate)
-library(umap)
 library(tensorflow)
 library(keras)
 library(phateR)
+
+# does not depend on Anaconda
+library(umap)
+library(Rtsne)
 library(Matrix)
 
 # ---------------
@@ -37,7 +48,7 @@ valid_table <- function(cand_table)
 
 table_to_pca <- function(table, dim)
 {
-  pca <- stats::prcomp(scaled, center = TRUE, rank. = pc_cap)
+  pca <- stats::prcomp(table, center = TRUE, rank. = pc_cap)
   pca$rotation <- NULL
   pca$center <- NULL
   pca
@@ -58,6 +69,7 @@ pca_to_summary <- function(pca)
 # -----------
 
 # must be done immediately after loading Keras!!
+tensorflow::use_condaenv("r-reticulate")
 K <- keras::backend()
 # disable eager execution and ensure reproducibility
 if (tensorflow::tf$executing_eagerly())
@@ -71,14 +83,6 @@ pc_cap <- 10
 latent_dim <- pc_cap
 # batch_size depends completely on the dataset and your willingness to wait
 batch_size <- 64
-# cap_size depends completely on the dataset and your willingness to wait
-cap_size <- 20000
-
-# caps the data at cap_size features
-cap <- function(data)
-{
-  data[,1:min(ncol(data), cap_size)]
-}
 
 # sampling with variation
 sampling <- function(arg){
@@ -152,9 +156,7 @@ my_fit <- function(vae, x_train){
     epochs = 1000,
     validation_split = 0.2,
     verbose = 2,
-    callbacks=list(early,
-                   # naani,
-                   histo)
+    callbacks=list(early, naani, histo)
   )
 }
 
@@ -180,12 +182,12 @@ table_to_vae <- function(data)
 {
   num_samp <- nrow(data)
   input_dim <- ncol(data)
-  print(sprintf("Number of features: %s", input_dim))
+  sprintf_clean("Number of features: %s", input_dim)
 
   dims <- get_intermediate(input_dim, latent_dim)
   dim_d1 <- dims[1]
   dim_d2 <- dims[2]
-  print(sprintf("Layers (x2): %s neurons, %s neurons", dim_d1, dim_d2))
+  sprintf_clean("Layers (x2): %s neurons, %s neurons", dim_d1, dim_d2)
 
   x_inputs <- layer_input(shape = input_dim)
   enc_d1 <- layer_dense(x_inputs, dim_d1, activation = "relu")
@@ -277,7 +279,7 @@ table_to_umap <- function(data, dim, perp)
 {
   umap::umap(
     data,
-    method = "umap-learn",
+    method = "naive",
     n_neighbors = perp,
     n_components = dim,
     metric = 'euclidean',
@@ -401,7 +403,7 @@ gather_char <- function(target, associated){
 # ------------
 
 # rTSNE with parameters set for speed on an m x n matrix
-# dims (d): the number of final features
+# dims (d): the number of final features; 1, 2, or 3
 # perlexity (p): the perplexity (nearest neighbors) for tSNE
 # max_iter (i): how many iterations the algorithm should run for
 # theta (t): tradeoff between exact O(n^2) and Barnes-Hut approximation O(n log n)
