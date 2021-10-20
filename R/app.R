@@ -487,8 +487,6 @@ Seconds elapsed: %s", my_timer(start)), "message")
     addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize,
                           feat(), iplot$embedding, iplot$visualize, 2, per_ind())
 
-    print(addr)
-
     data <- load_store(addr)
 
     if (is.null(data))
@@ -884,6 +882,8 @@ Seconds elapsed: %s", my_timer(start)), "message")
       updateTabsetPanel(session, name, selected = tabset_panel_data[[name]])
   })
 }
+
+assign("sdr_from_app", FALSE, envir = .GlobalEnv)
 
 # -----------
 # RUN THE APP
