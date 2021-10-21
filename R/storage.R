@@ -97,6 +97,12 @@ find_aws_s3 <- function(filename)
   length(get_bucket(Sys.getenv("AWS_ACCESS_BUCKET"), prefix=filename)) == 1
 }
 
+# lol <- get_bucket(Sys.getenv("AWS_ACCESS_BUCKET"))
+# bucket_names <- lapply(lol, function(x){
+#   x$Key
+# })
+# bucket_table <- matrix(bucket_names, ncol = 1)
+
 # saves a single object to AWS.s3 - modified from s3save
 save_aws_s3 <- function(data, filename)
 {
