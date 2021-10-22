@@ -1,7 +1,7 @@
 # The goal of this app is to perform dimensionality reduction.
 
 # In the project, app.R is located in the R folder so execution stops immediately
-assign("sdr_from_app", TRUE, envir = .GlobalEnv)
+set_sdr_from_app(TRUE)
 
 if (!file.exists("install.R"))
   stop("Could not confirm installation. Please source install.R manually.")
@@ -883,7 +883,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
   })
 }
 
-assign("sdr_from_app", FALSE, envir = .GlobalEnv)
+set_sdr_from_app(FALSE)
 
 # -----------
 # RUN THE APP

@@ -57,9 +57,15 @@ empty_named_list <- function(...)
 shiny_port <- Sys.getenv('SHINY_PORT')
 sdr_running_local <- (shiny_port == "")
 
+set_sdr_from_app <- function(x)
+{
+  stopifnot(is.logical(x), length(x) == 1)
+  assign("sdr_from_app", x, envir = .GlobalEnv)
+}
+
 # sdr_from_app should be the first thing assigned by app.R
 if (!exists("sdr_from_app"))
-  sdr_from_app <- FALSE
+  set_sdr_from_app(FALSE)
 
 # ------------
 # INSTALLATION
@@ -224,5 +230,5 @@ if (sdr_running_local)
 
 ran_install <- TRUE
 sprintf_clean("Installation time (seconds): %s", my_timer(install_start))
-
+print_clean()
 
