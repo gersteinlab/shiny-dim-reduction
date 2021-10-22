@@ -190,11 +190,18 @@ get_project_loc <- function(file)
 # sources a file given its relative path to the R folder of the project
 source_sdr <- function(file)
 {
-  source_loc <- sprintf("src/%s", file)
-  if (!sdr_from_app)
+  if (sdr_from_app)
+  {
+    source_loc <- sprintf("src/%s", file)
+    stopifnot(file.exists(source_loc))
+    source(source_loc, encoding = "UTF-8")
+  }
+  else
+  {
     source_loc <- get_project_loc(sprintf("R/%s", file))
-  stopifnot(file.exists(source_loc))
-  source(source_loc, encoding = "UTF-8")
+    stopifnot(file.exists(source_loc))
+    source(source_loc, encoding = "UTF-8")
+  }
 }
 
 if (!exists("sdr_project_loc"))
