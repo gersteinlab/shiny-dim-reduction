@@ -4,9 +4,15 @@
 # SETUP
 # -----
 
-setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
-source("plotting.R", encoding="UTF-8")
-source("output_clean.R", encoding="UTF-8")
+if (!exists("ran_install"))
+{
+  if (file.exists("install.R"))
+    source("install.R")
+  else
+    stop("Could not confirm installation. Please source install.R manually.")
+}
+
+source_sdr("plotting.R")
 
 library(dplyr)
 
