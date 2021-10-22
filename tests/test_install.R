@@ -4,13 +4,7 @@
 # SETUP
 # -----
 
-if (!exists("ran_install"))
-{
-  if (file.exists("install.R"))
-    source("install.R")
-  else
-    stop("Could not confirm installation. Please source install.R manually.")
-}
+source("install.R")
 
 # -----
 # TESTS
@@ -36,7 +30,20 @@ basic_test <- function()
                 paste(empty_named_list(NULL), collapse = ", "))
 }
 
+get_source_loc_test <- function()
+{
+  print_clean("*** Functions Tested: get_source_loc ***")
+  print_clean("Setting sdr_from_app to TRUE")
+  set_sdr_from_app(TRUE)
+  sprintf_clean("get_source_loc(\"find_replace.R\"): %s", get_source_loc("find_replace.R"))
+  print_clean("Setting sdr_from_app to FALSE")
+  set_sdr_from_app(FALSE)
+  sprintf_clean("get_source_loc(\"find_replace.R\"): %s", get_source_loc("find_replace.R"))
+}
+
 # -------
 # RUN ALL
 # -------
 basic_test()
+print_clean()
+get_source_loc_test()
