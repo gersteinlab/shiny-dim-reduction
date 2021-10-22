@@ -238,21 +238,52 @@ output_conditions <- c(
 # ASSEMBLE THE UI
 # ---------------
 
-data_selection_menu <- menuItem(
-  startExpanded=TRUE,
-  "Data Selection",
+settings_menu <- menuItem(
+  "Settings",
+  check_panel("sMenu", "Settings", c("Embed Title", "Embed Legend", "Separate Colors",
+                                     "Boost Graphics", "Uninverted Colors")),
+  select_panel("palette", "Color Palette", color_palettes),
+  numericInput("width", "Graph Width", value=NULL, min=1, max=4000),
+  numericInput("height", "Graph Height", value=graph_height, min=1, max=4000),
+  numericInput("notif_time", "Notification Time", value=6),
+  check_panel("console", "Console Output", bookmarkable_ids, NULL)
+)
+
+table_1_menu <- menuItem(
+  "Table 1 Selection",
+  startExpanded = TRUE,
+  icon = icon("table"),
   select_panel("category", "Category", cat_groups),
   sub_opts,
+  select_panel("scale", "Scale", sca_options),
+  conditionalPanel(
+    condition = "input.embedding != 'Sets'",
+    select_panel("normalize", "Normalization", nor_options),
+    select_panel("features", "Percentage of Features Used", fea_options)
+  )
+)
+
+table_2_menu <- menuItem(
+  "Table 2 Selection",
+  icon = icon("table"),
+  select_panel("table_1", "Select Table 1 Name", NULL),
+  select_panel("t1_opt_sou", "Desired Source(s)", NULL),
+  select_panel("t1_opt_row", "Desired Row Subset(s)", NULL),
+  select_panel("t1_opt_col", "Desired Column Subset(s)", NULL),
+  select_panel("t1_opt_sca", "Desired Scaling(s)", NULL), # log, lin
+  select_panel("t1_opt_nor", "Desired Normalization(s)", NULL) # global/local min-max, quant
+)
+
+analysis_1_menu <- menuItem(
+  "Analysis 1 Selection",
+  icon = icon("calculator"),
   select_panel("embedding", "Method of Dimensionality Reduction", emb_options),
   conditionalPanel(
     condition = "output.visualize_cond",
     select_panel("visualize", "Method of Visualization", vis_options)
   ),
-  select_panel("scale", "Scale", sca_options),
   conditionalPanel(
     condition = "input.embedding != 'Sets'",
-    select_panel("normalize", "Normalization", nor_options),
-    select_panel("features", "Percentage of Features Used", fea_options),
     conditionalPanel(
       condition = "output.perplexity_cond",
       select_panel("perplexity", "Perplexity", perplexity_types,
@@ -284,38 +315,16 @@ data_selection_menu <- menuItem(
   )
 )
 
-settings_menu <- menuItem(
-  "Settings",
-  check_panel("sMenu", "Settings", c("Embed Title", "Embed Legend", "Separate Colors",
-                                     "Boost Graphics", "Uninverted Colors")),
-  select_panel("palette", "Color Palette", color_palettes),
-  numericInput("width", "Graph Width", value=NULL, min=1, max=4000),
-  numericInput("height", "Graph Height", value=graph_height, min=1, max=4000),
-  numericInput("notif_time", "Notification Time", value=6),
-  conditionalPanel(
-    condition = "output.nintersect_cond",
-    numericInput("nintersect", "Number of Columns",
-                 value=def_set_col_num, min=3, max=max_set_col_num),
-    numericInput("bar_frac", "Bar Plot Fraction", value=def_bar_frac, min=0, max=1),
-    numericInput("text_scale", "Text Scale", value=1, min=0.01, max = 100)
-  ),
-  conditionalPanel(
-    condition = "output.pc_sliders_cond",
-    pc_slider(1, pc_cap),
-    conditionalPanel(
-      condition = "output.pc_slider2_cond",
-      pc_slider(2, pc_cap)
-    ),
-    conditionalPanel(
-      condition = "output.pc_slider3_cond",
-      pc_slider(3, pc_cap)
-    )
-  ),
-  check_panel("console", "Console Output", bookmarkable_ids, NULL)
+analysis_2_menu <- menuItem(
+  "Analysis 2 Selection",
+  icon = icon("calculator"),
+  select_panel("analysis_1", "Select Available Analyses", NULL),
+  select_panel("a1_opt_red", "Desired Reduction(s)", NULL) # pca, pca+tsne, vae, vae+tsne,
 )
 
-filters_menu <- menuItem(
-  "Filters",
+filters_1_menu <- menuItem(
+  "Filter Set 1 Selection",
+  icon = icon("filter"),
   conditionalPanel(
     condition = "input.embedding != 'Sets' &&
     (input.visualize != 'Summarize' || input.embedding == 'PHATE')",
@@ -332,12 +341,37 @@ filters_menu <- menuItem(
       label_opts
     )
   ),
+  conditionalPanel(
+    condition = "output.pc_sliders_cond",
+    pc_slider(1, pc_cap),
+    conditionalPanel(
+      condition = "output.pc_slider2_cond",
+      pc_slider(2, pc_cap)
+    ),
+    conditionalPanel(
+      condition = "output.pc_slider3_cond",
+      pc_slider(3, pc_cap)
+    )
+  ),
+  conditionalPanel(
+    condition = "output.nintersect_cond",
+    numericInput("nintersect", "Number of Columns",
+                 value=def_set_col_num, min=3, max=max_set_col_num),
+    numericInput("bar_frac", "Bar Plot Fraction", value=def_bar_frac, min=0, max=1),
+    numericInput("text_scale", "Text Scale", value=1, min=0.01, max = 100)
+  ),
   expand_cond_panel(
     condition = "input.embedding == 'Sets' ||
     (input.visualize != 'Summarize' || input.embedding == 'PHATE')",
     filter_opts,
     select_opts
   )
+)
+
+filters_2_menu <- menuItem(
+  "Filter Set 2 Selection",
+  icon = icon("filter"),
+  radioButtons("test", "TBD: Add Copies", c("A", "B"))
 )
 
 ui <- function(request){
@@ -347,35 +381,13 @@ ui <- function(request){
     dashboardSidebar(
       width=300,
       sidebarMenu(
-        menuItem(
-          "Table 1 Selection",
-          icon = icon("table"),
-          select_panel("table_1", "Select Table 1 Name", NULL),
-          select_panel("t1_opt_sou", "Desired Source(s)", NULL),
-          select_panel("t1_opt_row", "Desired Row Subset(s)", NULL),
-          select_panel("t1_opt_col", "Desired Column Subset(s)", NULL),
-          select_panel("t1_opt_sca", "Desired Scaling(s)", NULL), # log, lin
-          select_panel("t1_opt_nor", "Desired Normalization(s)", NULL) # global/local min-max, quant
-        ),
-        menuItem(
-          "Table 2 Selection",
-          icon = icon("table"),
-          select_panel("table_2", "Select Table 2 Name", NULL),
-          select_panel("t2_opt_sou", "Desired Source(s)", NULL),
-          select_panel("t2_opt_row", "Desired Row Subset(s)", NULL),
-          select_panel("t2_opt_col", "Desired Column Subset(s)", NULL),
-          select_panel("t2_opt_sca", "Desired Scaling(s)", NULL),
-          select_panel("t2_opt_nor", "Desired Normalization(s)", NULL)
-        ),
-        menuItem(
-          "Analysis 1 Selection",
-          icon = icon("calculator"),
-          select_panel("analysis_1", "Select Available Analyses", NULL),
-          select_panel("a1_opt_red", "Desired Reduction(s)", NULL) # pca, pca+tsne, vae, vae+tsne,
-        ),
-        data_selection_menu,
-        settings_menu,
-        filters_menu
+        table_1_menu,
+        table_2_menu,
+        analysis_1_menu,
+        analysis_2_menu,
+        filters_1_menu,
+        filters_2_menu,
+        settings_menu
       )
     ),
     dashboardBody(
