@@ -1,12 +1,12 @@
 # The goal of this app is to perform dimensionality reduction.
 
 # In the project, app.R is located in the R folder so execution stops immediately
-set_sdr_from_app(TRUE)
 
 if (!file.exists("install.R"))
   stop("Could not confirm installation. Please source install.R manually.")
-
 source("install.R")
+
+set_sdr_from_app(TRUE)
 
 source_sdr("text_work.R")
 source_sdr("utils.R")
@@ -70,6 +70,19 @@ server <- function(input, output, session) {
   # ----------------
   # DYNAMIC UI LOGIC
   # ----------------
+  observeEvent(input$request_analysis, {
+    showModal(modalDialog(
+      title = HTML("<b>Request Custom Analysis</b>"), easyClose = TRUE,
+      select_panel("t1_opt_sou", "Desired Source(s)", name_cat),
+      select_panel("t1_opt_row", "Desired Row Subset(s)", NULL),
+      select_panel("t1_opt_col", "Desired Column Subset(s)", NULL),
+      select_panel("t1_opt_sca", "Desired Scaling(s)", sca_options), # log, lin
+      select_panel("t1_opt_nor", "Desired Normalization(s)", nor_options),
+      select_panel("embedding", "Desired Embedding(s)", emb_options),
+      select_panel("embedding", "Desired Visualization(s)", vis_options)
+    ))
+  })
+
   observeEvent(input$instructions, {
     showModal(modalDialog(
       title = HTML("<b>Instructions</b>"), easyClose = TRUE, HTML(instructions)))

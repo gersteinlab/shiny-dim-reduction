@@ -421,7 +421,8 @@ ui <- function(request){
         action("instructions", "Instructions", "book", "#FFF", "#9400D3", "#00356B"),
         action("citations", "Citations", "book", "#FFF", "#9400D3", "#00356B"),
         downloadButton('downloadInstructions', 'Instructions'),
-        downloadButton('downloadCitations', 'Citations')
+        downloadButton('downloadCitations', 'Citations'),
+        action("request_analysis", "Request Analysis", "user-edit", "#FFF", "#29AB87", "#00356B")
       ),
       verbatimTextOutput("console_out")
     )
