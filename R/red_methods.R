@@ -131,21 +131,24 @@ get_intermediate <- function(input_dim, latent_dim)
   c(dim_d1, dim_d2)
 }
 
-# stops the training after no further progress is made
-early <- callback_early_stopping(
-  monitor='val_loss', mode='min',
-  verbose=1, patience=pat_size,
-  restore_best_weights = TRUE)
+# stops the training after 'patience' epoches of nondecreasing val_loss
+pat_callback <- function(patience)
+{
+  callback_early_stopping(
+    monitor='val_loss', mode='min',
+    verbose=1, patience=patience,
+    restore_best_weights = TRUE)
+}
 
 # stops the training if the loss gradient explodes
-naani <- callback_terminate_on_naan()
+naan_callback <- callback_terminate_on_naan()
 
 # records the history of all iterations
 loss <- numeric(0)
-loss_rec <- function(batch, logs){
+record_loss <- function(batch, logs){
   loss <<- c(loss, logs$loss)
 }
-histo <- callback_lambda(on_batch_end=loss_rec)
+record_callback <- callback_lambda(on_batch_end=record_loss)
 
 # adam is faster and more accurate than rmsprop
 # amsgrad fixes a mathematical hole in the convergence
