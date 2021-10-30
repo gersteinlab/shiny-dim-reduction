@@ -242,21 +242,19 @@ table_to_vae <- function(data)
                          experimental_run_tf_function=FALSE)
 
   # generate training data
-  x_train <- data[,1:input_dim]
-
   loss <<- numeric(0)
 
-  history <- my_fit(vae, x_train)
-
-  vae_final <- list(
-    "history"=history,
-    "predict"=predict(encoder, data[,1:input_dim], batch_size = batch_size),
-    "records"=make_records(loss, history$metrics$val_loss)
-  )
+  history <- my_fit(vae, data, batch_size = batch_size, patience = patience, max_epochs = max_epochs)
+  predict <- predict(encoder, data, batch_size = batch_size)
+  records <- make_records(loss, history$metrics$val_loss)
 
   k_clear_session()
 
-  vae_final
+  list(
+    "history"=history,
+    "predict"=predict,
+    "records"=records
+  )
 }
 
 # converts records to a summary
