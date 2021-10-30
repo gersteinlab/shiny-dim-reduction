@@ -67,12 +67,14 @@ table_to_pca <- function(table, dim = 2)
 
 pca_to_summary <- function(pca)
 {
-  eigs <- data$sdev^2
-  cols <- ncol(data$x)
+  eigs <- pca$sdev^2
+  dim <- ncol(pca$x)
   props <- cumsum(eigs/sum(eigs))
-  df <- cbind.data.frame(1:cols, props[1:cols])
-  colnames(df) <- prop_colnames
-  df
+
+  data.frame(
+    "Components" = 1:dim,
+    "Variance" = props[1:dim]
+  )
 }
 
 # -----------
@@ -82,18 +84,13 @@ pca_to_summary <- function(pca)
 # must be done immediately after loading Keras!!
 tensorflow::use_condaenv("r-reticulate")
 K <- keras::backend()
-# disable eager execution and ensure reproducibility
+
+# disable eager execution
 if (tensorflow::tf$executing_eagerly())
   tensorflow::tf$compat$v1$disable_eager_execution()
-tensorflow::tf$random$set_seed(0)
-# patience determines how many times we allow increasing loss before finalization; 10 is standard
-pat_size <- 10
 
-pc_cap <- 10
-# latent dimensions ... the smallest neuron layer in VAE
-latent_dim <- pc_cap
-# batch_size depends completely on the dataset and your willingness to wait
-batch_size <- 64
+# ensure reproducibility
+tensorflow::tf$random$set_seed(0)
 
 # sampling with variation
 sampling <- function(arg){
@@ -160,43 +157,39 @@ pref_comp <- optimizer_adam(
   clipnorm = 0.1)
 
 # a fit function for a VAE
-my_fit <- function(vae, x_train){
+my_fit <- function(vae, x_train, batch_size = 2, patience = 10, max_epochs = 1000){
   fit(
     vae,
     x = x_train,
     y = x_train,
     shuffle = TRUE,
     batch_size = batch_size,
-    epochs = 1000,
+    epochs = max_epochs,
     validation_split = 0.2,
     verbose = 2,
-    callbacks=list(early, naani, histo)
+    callbacks=list(pat_callback(patience), naan_callback, record_callback)
   )
 }
 
 # making records from loss, val_loss
-rec_colnames <- c("loss", "val_loss")
 make_records <- function(loss, val_loss)
 {
-  batch_per_epoch <- length(loss) / length(val_loss)
-  records <- matrix(0, nrow=length(loss), ncol=2)
-  colnames(records) <- rec_colnames
-  records[,1] <- loss
-  for (i in 1:length(val_loss))
-  {
-    range <- (i-1)*batch_per_epoch + 1:batch_per_epoch
-    records[range, 2] <- rep(val_loss[i], batch_per_epoch)
-  }
-  records
+  data.frame(
+    "Training Iterations" = rep(1:num_losses, 2),
+    "Loss Value" = c(loss, rep(val_loss, each = num_losses / length(val_loss))),
+    "Loss Type" = rep(c("Testing Loss", "Validation Loss"), each = num_losses)
+  )
 }
 
 # runs variational autoencoder
-# IMPORTANT: all data must be numeric between 0 and 1 !!!
-table_to_vae <- function(data)
+table_to_vae <- function(table, dim = 2, batch_size = 2, patience = 10, max_epochs = 1000)
 {
-  num_samp <- nrow(data)
-  input_dim <- ncol(data)
-  sprintf_clean("Number of features: %s", input_dim)
+  # require all entries to be within [0, 1]
+  stopifnot(sum(table > 1) + sum(table < 0) == 0)
+
+  num_samp <- nrow(table)
+  input_dim <- ncol(table)
+  sprintf_clean("Table Dimensions: (%s, %s)", num_samp, input_dim)
 
   dims <- get_intermediate(input_dim, latent_dim)
   dim_d1 <- dims[1]
