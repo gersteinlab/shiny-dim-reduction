@@ -92,13 +92,6 @@ if (tensorflow::tf$executing_eagerly())
 # ensure reproducibility
 tensorflow::tf$random$set_seed(0)
 
-# loss function
-vae_loss_full <- function(x, x_decoded_mean, dim, z_mean, z_log_var){
-  xent_loss <- dim/1.0*loss_binary_crossentropy(x, x_decoded_mean)
-  kl_loss <- k_mean(z_log_var - k_square(z_mean) - k_exp(z_log_var), axis = -1L)
-  xent_loss + 1 - 0.5*kl_loss
-}
-
 # The reason we are using small layers
 # is to improve scalability.
 # Let A be the number of input neurons.
@@ -117,10 +110,8 @@ get_intermediate <- function(input_dim, latent_dim)
 # stops the training after 'patience' epoches of nondecreasing val_loss
 pat_callback <- function(patience)
 {
-  callback_early_stopping(
-    monitor='val_loss', mode='min',
-    verbose=1, patience=patience,
-    restore_best_weights = TRUE)
+  callback_early_stopping(monitor = "val_loss", mode = "min", verbose = 1,
+                          patience = patience, restore_best_weights = TRUE)
 }
 
 # stops the training if the loss gradient explodes
@@ -137,10 +128,7 @@ record_callback <- callback_lambda(on_batch_end=record_loss)
 # amsgrad fixes a mathematical hole in the convergence
 # use gradient clipping to prevent an explosion
 # set learning rate low so the batch doesn't explode
-pref_comp <- optimizer_adam(
-  lr = 0.0001,
-  amsgrad = TRUE,
-  clipnorm = 0.1)
+pref_comp <- optimizer_adam(lr = 0.0001, amsgrad = TRUE, clipnorm = 0.1)
 
 # a fit function for a VAE
 my_fit <- function(vae, x_train, batch_size = 2, patience = 10, max_epochs = 1000){
@@ -153,7 +141,7 @@ my_fit <- function(vae, x_train, batch_size = 2, patience = 10, max_epochs = 100
     epochs = max_epochs,
     validation_split = 0.2,
     verbose = 2,
-    callbacks=list(pat_callback(patience), naan_callback, record_callback)
+    callbacks = list(pat_callback(patience), naan_callback, record_callback)
   )
 }
 
@@ -218,19 +206,20 @@ table_to_vae <- function(table, dim = 2, batch_size = 2, patience = 10, max_epoc
 
   # compile with the customized vae loss function
   vae_loss <- function(x, x_decoded_mean){
-    vae_loss_full(x, x_decoded_mean, input_dim, z_mean, z_log_var)
+    xent_loss <- input_dim / 1.0 * loss_binary_crossentropy(x, x_decoded_mean)
+    kl_loss <- k_mean(z_log_var - k_square(z_mean) - k_exp(z_log_var), axis = -1L)
+    xent_loss + 1 - 0.5*kl_loss
   }
 
   vae %>% keras::compile(optimizer = pref_comp,
                          loss = vae_loss,
                          experimental_run_tf_function=FALSE)
 
-  # generate training data
+  # reset loss before measurement
   loss <<- numeric(0)
 
-  history <- my_fit(vae, data, batch_size = batch_size, patience = patience, max_epochs = max_epochs)
-  predict <- predict(encoder, data, batch_size = batch_size)
-  records <- make_records(loss, history$metrics$val_loss)
+  history <- my_fit(vae, table, batch_size = batch_size, patience = patience, max_epochs = max_epochs)
+  predict <- predict(encoder, table, batch_size = batch_size)
 
   k_clear_session()
 
@@ -251,7 +240,8 @@ vae_to_sum <- function(vae)
   data.frame(
     "Training Iterations" = rep(1:num_losses, 2),
     "Loss Value" = c(loss, rep(val_loss, each = num_losses / length(val_loss))),
-    "Loss Type" = rep(c("Testing Loss", "Validation Loss"), each = num_losses)
+    "Loss Type" = rep(c("Testing Loss", "Validation Loss"), each = num_losses),
+    check.names = FALSE
   )
 }
 
