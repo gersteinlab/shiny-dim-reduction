@@ -379,7 +379,7 @@ my_datatable <- function(df = empty_df)
 # SPECIALIZED
 # -----------
 
-ggplot2_pca_sum <- function(data, pc_cap, legend, title)
+ggplot2_pca_sum <- function(data, pc_cap, legend = TRUE, title = "")
 {
   pca_var_metadata <- rep("Cumulative Variance", pc_cap)
   ggplot2_2d(
@@ -390,7 +390,7 @@ ggplot2_pca_sum <- function(data, pc_cap, legend, title)
   )
 }
 
-plotly_pca_sum <- function(data, pc_cap, lines, legend, title)
+plotly_pca_sum <- function(data, pc_cap, lines = TRUE, legend = TRUE, title = "")
 {
   pca_var_metadata <- rep("Cumulative Variance", pc_cap)
   plotly_2d(
@@ -401,7 +401,7 @@ plotly_pca_sum <- function(data, pc_cap, lines, legend, title)
   )
 }
 
-ggplot2_vae_sum <- function(data, reverse, legend, title)
+ggplot2_vae_sum <- function(data, reverse = FALSE, legend = TRUE, title = "")
 {
   ggplot2_2d(
     data[,"Training Iterations"], data[,"Loss Value"],
@@ -411,7 +411,7 @@ ggplot2_vae_sum <- function(data, reverse, legend, title)
   )
 }
 
-plotly_vae_sum <- function(data, lines, reverse, legend, title)
+plotly_vae_sum <- function(data, lines = TRUE, reverse = FALSE, legend = TRUE, title = "")
 {
   plotly_2d(
     data[,"Training Iterations"], data[,"Loss Value"],
@@ -421,7 +421,7 @@ plotly_vae_sum <- function(data, lines, reverse, legend, title)
   )
 }
 
-ggplot2_umap_sum <- function(data, paint, legend, title)
+ggplot2_umap_sum <- function(data, paint, legend = TRUE, title = "")
 {
   ggplot2_2d(
     data[,1], data[,2], data[,3], data[,3],
@@ -430,7 +430,7 @@ ggplot2_umap_sum <- function(data, paint, legend, title)
   )
 }
 
-plotly_umap_sum <- function(data, lines, paint, legend, title)
+plotly_umap_sum <- function(data, paint, lines = TRUE, legend = TRUE, title = "")
 {
   plotly_2d(
     data[,1], data[,2],

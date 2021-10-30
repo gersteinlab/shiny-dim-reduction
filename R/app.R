@@ -601,7 +601,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
         return(plotly_vae_sum(data, FALSE, !not_rev(), legend(), title_embed()))
 
       if (iplot$embedding == "UMAP")
-        return(plotly_umap_sum(data, FALSE, paint(), legend(), title_embed()))
+        return(plotly_umap_sum(data, paint(), FALSE, legend(), title_embed()))
     }
 
     data <- data[keep(),,drop=FALSE]
@@ -674,7 +674,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
         return(plotly_vae_sum(data, TRUE, !not_rev(), legend(), title_embed()))
 
       if (iplot$embedding == "UMAP")
-        return(plotly_umap_sum(data, TRUE, paint(), legend(), title_embed()))
+        return(plotly_umap_sum(data, paint(), TRUE, legend(), title_embed()))
     }
 
     data <- data[keep(),,drop=FALSE]
