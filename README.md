@@ -203,13 +203,13 @@ The tests folder contains tests used to ascertain the functionality of various s
 
 Tests ought to be run in the following order to optimize debugging:
 
-1. test_install.R
-2. test_authentication.R
-3. test_find_replace.R
-4. test_storage.R
-5. test_plotting.R
-6. test_utils.R
-7. test_red_methods.R
-8. test_converter.R
-9. test_packaging.R
-10. test_options.R
+* test_install.R
+* test_authentication.R
+* test_find_replace.R
+* test_plotting.R
+* test_red_methods.R
+* test_workflows.R
+* test_utils.R
+* test_storage.R
+* test_packaging.R
+* test_converter.R
