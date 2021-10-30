@@ -57,9 +57,9 @@ valid_table <- function(cand_table)
 # PCA METHODS
 # -----------
 
-table_to_pca <- function(table, dim)
+table_to_pca <- function(table, dim = 2)
 {
-  pca <- stats::prcomp(table, center = TRUE, rank. = pc_cap)
+  pca <- stats::prcomp(table, center = TRUE, rank. = dim)
   pca$rotation <- NULL
   pca$center <- NULL
   pca
