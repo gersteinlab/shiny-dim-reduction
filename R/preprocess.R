@@ -4,9 +4,16 @@
 # Criteria: all entries are numeric, data is in a matrix
 # source("scaling.R", encoding="UTF-8")
 
-setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
-source("pipeline.R", encoding="UTF-8")
-source("perform_tsne.R", encoding="UTF-8")
+if (!exists("ran_install"))
+{
+  if (file.exists("install.R"))
+    source("install.R")
+  else
+    stop("Could not confirm installation. Please source install.R manually.")
+}
+
+source_sdr("utils.R")
+source_sdr("workflows.R")
 
 library(limma)
 
@@ -30,7 +37,7 @@ init_sub(names)
 # note that the working directory after sourcing is pro_loc
 setwd(pro_loc)
 
-perplexity_list <- my_empty_list(perplexity_types)
+perplexity_list <- empty_named_list(perplexity_types)
 
 # -------------
 # NORMALIZATION
@@ -89,9 +96,9 @@ do_norm <- function(nor, scaled)
     return(t(normalizeQuantiles(t(scaled))))
 }
 
-# ---------
-# FUNCTIONS
-# ---------
+# -------
+# SCALING
+# -------
 
 # logarithmically scales data
 log_scale <- function(data)
@@ -105,14 +112,5 @@ do_scal <- function(sca, scaled)
   if (sca == "Logarithmic")
     return(log_scale(scaled))
   return(scaled)
-}
-
-# uses only a fraction of features, sorted by variance
-feature_start <- function(data, fraction)
-{
-  variances <- apply(data, 2, var)
-  data <- data[,order(variances, decreasing=TRUE),drop=FALSE]
-  num_features <- calc_feat(pc_cap, fraction, ncol(data))
-  data[,1:num_features, drop=FALSE]
 }
 
