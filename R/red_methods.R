@@ -36,14 +36,14 @@ library(Matrix)
 # - max_epochs is the maximum number of epochs that the VAE will run for (might stop earlier)
 
 # determines if a table is valid for dimensionality reduction
-# refuse to have less than 2 rows initially, since a point cannot have generalizable features
+# refuse to have less than 4 rows initially, since 3 points define a plane (2D)
 # refuse to have less than 3 columns initially, since then you can immediately plot on 2D
 valid_table <- function(cand_table)
 {
   if (!all.equal(class(matrix()), class(cand_table)))
     return(FALSE)
 
-  if (nrow(cand_table) < 2 || ncol(cand_table) < 3)
+  if (nrow(cand_table) < 4 || ncol(cand_table) < 3)
     return(FALSE)
 
     for (j in 1:ncol(cand_table))
@@ -230,8 +230,8 @@ table_to_vae <- function(table, dim = 2, batch_size = 2, patience = 10, max_epoc
   )
 }
 
-# converts records to a summary
-vae_to_sum <- function(vae)
+# extracts loss and val_loss from VAE results and makes a summary
+vae_to_summary <- function(vae)
 {
   loss <- vae$loss
   val_loss <- vae$history$metrics$val_loss
@@ -249,10 +249,10 @@ vae_to_sum <- function(vae)
 # UMAP METHODS
 # ------------
 
-table_to_umap <- function(data, dim, perp)
+table_to_umap <- function(table, dim = 2, perp = 2)
 {
   umap::umap(
-    data,
+    table,
     method = "naive",
     n_neighbors = perp,
     n_components = dim,
