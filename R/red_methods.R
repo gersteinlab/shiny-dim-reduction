@@ -24,15 +24,26 @@ library(Matrix)
 # GENERAL METHODS
 # ---------------
 
+# Parameters for methods:
+
+# table_to_pca(table, dim = 2)
+# - dim is the final number of dimensions
+
+# table_to_vae(table, dim = 2, batch_size = 2, patience = 10, max_epochs = 1000)
+# - dim is the final number of dimensions
+# - batch_size is the number of samples per batch; lower takes more time but higher takes more memory
+# - patience is the number of epochs of nondecreasing loss that must occur before learning ends
+# - max_epochs is the maximum number of epochs that the VAE will run for (might stop earlier)
+
 # determines if a table is valid for dimensionality reduction
 # refuse to have less than 2 rows initially, since a point cannot have generalizable features
-# refuse to have less than 4 rows initially, since then you can plot straight away
+# refuse to have less than 3 columns initially, since then you can immediately plot on 2D
 valid_table <- function(cand_table)
 {
   if (!all.equal(class(matrix()), class(cand_table)))
     return(FALSE)
 
-  if (nrow(cand_table) < 2 || ncol(cand_table) < 4)
+  if (nrow(cand_table) < 2 || ncol(cand_table) < 3)
     return(FALSE)
 
     for (j in 1:ncol(cand_table))
