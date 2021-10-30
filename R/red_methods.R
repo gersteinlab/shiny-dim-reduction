@@ -92,20 +92,6 @@ if (tensorflow::tf$executing_eagerly())
 # ensure reproducibility
 tensorflow::tf$random$set_seed(0)
 
-# sampling with variation
-sampling <- function(arg){
-  z_mean <- arg[, 1:latent_dim]
-  z_log_var <- arg[, (latent_dim + 1):(2 * latent_dim)]
-
-  epsilon <- k_random_normal(
-    shape = c(k_shape(z_mean)[[1]]),
-    mean = 0.0,
-    stddev = 1.0
-  )
-
-  z_mean + k_exp(z_log_var/2)*epsilon
-}
-
 # loss function
 vae_loss_full <- function(x, x_decoded_mean, dim, z_mean, z_log_var){
   xent_loss <- dim/1.0*loss_binary_crossentropy(x, x_decoded_mean)
@@ -171,16 +157,6 @@ my_fit <- function(vae, x_train, batch_size = 2, patience = 10, max_epochs = 100
   )
 }
 
-# making records from loss, val_loss
-make_records <- function(loss, val_loss)
-{
-  data.frame(
-    "Training Iterations" = rep(1:num_losses, 2),
-    "Loss Value" = c(loss, rep(val_loss, each = num_losses / length(val_loss))),
-    "Loss Type" = rep(c("Testing Loss", "Validation Loss"), each = num_losses)
-  )
-}
-
 # runs variational autoencoder
 table_to_vae <- function(table, dim = 2, batch_size = 2, patience = 10, max_epochs = 1000)
 {
@@ -189,6 +165,7 @@ table_to_vae <- function(table, dim = 2, batch_size = 2, patience = 10, max_epoc
 
   num_samp <- nrow(table)
   input_dim <- ncol(table)
+  latent_dim <- dim
   sprintf_clean("Table Dimensions: (%s, %s)", num_samp, input_dim)
 
   dims <- get_intermediate(input_dim, latent_dim)
@@ -207,6 +184,20 @@ table_to_vae <- function(table, dim = 2, batch_size = 2, patience = 10, max_epoc
   z_mean <- layer_dense(enc_d2, latent_dim)
   z_log_var <- layer_dense(enc_d2, latent_dim)
   z_combine <- layer_concatenate(list(z_mean, z_log_var))
+
+  # sampling with variation
+  sampling <- function(arg){
+    z_mean <- arg[, 1:latent_dim]
+    z_log_var <- arg[, (latent_dim + 1):(2 * latent_dim)]
+
+    epsilon <- k_random_normal(
+      shape = c(k_shape(z_mean)[[1]]),
+      mean = 0.0,
+      stddev = 1.0
+    )
+
+    z_mean + k_exp(z_log_var/2)*epsilon
+  }
 
   # inputs-derived z, from taking variables in inputs space as inputs
   z_inputs <- z_combine %>% layer_lambda(sampling)
@@ -246,34 +237,22 @@ table_to_vae <- function(table, dim = 2, batch_size = 2, patience = 10, max_epoc
   list(
     "history"=history,
     "predict"=predict,
-    "records"=records
+    "loss"=loss
   )
 }
 
 # converts records to a summary
-sum_names <- c("Training Iterations", "Loss Value", "Loss Type")
 vae_to_sum <- function(vae)
 {
-  records <- vae$records
-  rec_num <- nrow(records)
+  loss <- vae$loss
+  val_loss <- vae$history$metrics$val_loss
+  num_losses <- length(loss)
 
-  for (i in 1:rec_num)
-  {
-    if (is.na(records[i, 1]) || is.nan(records[i, 1]))
-      print(sprintf("NAN Loss: VAE/VAE_%s", loc))
-
-    if (is.na(records[i, 2]) || is.nan(records[i, 2]))
-      print(sprintf("NAN Val Loss: VAE/VAE_%s", loc))
-  }
-
-  vae_sum <- cbind.data.frame(
-    rep(1:rec_num, 2),
-    c(records[,1], records[,2]),
-    c(rep("Testing Loss", rec_num), rep("Validation Loss", rec_num))
+  data.frame(
+    "Training Iterations" = rep(1:num_losses, 2),
+    "Loss Value" = c(loss, rep(val_loss, each = num_losses / length(val_loss))),
+    "Loss Type" = rep(c("Testing Loss", "Validation Loss"), each = num_losses)
   )
-
-  colnames(vae_sum) <- sum_names
-  vae_sum
 }
 
 # ------------
