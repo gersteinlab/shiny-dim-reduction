@@ -1,16 +1,23 @@
 # The goal of this script is to convert vis data to packaged data.
 
-setwd(sprintf("%s/shiny-dim-reduction", Sys.getenv("SHINY_DIM_REDUCTION_ROOT")))
-source("aaa_ignore/s3_master.R", encoding="UTF-8")
-source("storage.R", encoding="UTF-8")
-source("find_replace.R", encoding="UTF-8")
-source("scaling.R", encoding="UTF-8")
+if (!exists("ran_install"))
+{
+  if (file.exists("install.R"))
+    source("install.R")
+  else
+    stop("Could not confirm installation. Please source install.R manually.")
+}
+
+source_sdr("storage.R")
+source_sdr("find_replace.R")
+source_sdr("preprocess.R")
 
 setwd(app_loc)
 get_from_dir("amazon_keys")
 
 # assign keys to admin plus decided bucket
-assign_keys(c(master_keys, amazon_keys[3]))
+load_master_key(amazon_keys$bucket)
+set_working_key(master_key)
 storage_query()
 
 # -----------
@@ -19,6 +26,8 @@ storage_query()
 setwd(pro_loc)
 dog <- name_cat
 emb <- "PCA"
+derp <- matrix(0, nrow = 100, ncol = 9)
+ind <- 1
 for (cat in dog)
 {
   print(cat)
@@ -34,32 +43,34 @@ for (cat in dog)
         {
           loc <- sprintf("%s_%s_%s_%s_%s.rds", fea, nor, sca, sub, cat)
 
-          none <- readRDS(sprintf("vis-%s/NONE_%s_%s", emb, emb, loc))
-          save_store(
-            none,
-            make_aws_name(cat, sub, sca, nor, fea, emb, "Explore", "", "")
-          )
-
-          sum <- readRDS(sprintf("vis-%s/SUM_%s_%s", emb, emb, loc))
-          save_store(
-            sum,
-            make_aws_name(cat, sub, sca, nor, fea, emb, "Summarize", "", "")
-          )
-
-          tsne_vis <- readRDS(sprintf("vis-%s/TSNE_%s_%s", emb, emb, loc))
-
-          for (nei in perplexity_types)
-          {
-            nei_ind <- which(perplexity_types == nei)
-
-            for (dim in c(2,3))
-            {
-              save_store(
-                tsne_vis[[sprintf("TSNE%s", dim)]][[sprintf("P%s", nei)]],
-                make_aws_name(cat, sub, sca, nor, fea, emb, "tSNE", dim, nei_ind)
-              )
-            }
-          }
+          derp[ind,] <- c(cat, sub, sca, nor, fea, emb, "Explore", "", "")
+          ind <- ind + 1
+          # none <- readRDS(sprintf("vis-%s/NONE_%s_%s", emb, emb, loc))
+          # save_store(
+          #   none,
+          #   make_aws_name(cat, sub, sca, nor, fea, emb, "Explore", "", "")
+          # )
+          #
+          # sum <- readRDS(sprintf("vis-%s/SUM_%s_%s", emb, emb, loc))
+          # save_store(
+          #   sum,
+          #   make_aws_name(cat, sub, sca, nor, fea, emb, "Summarize", "", "")
+          # )
+          #
+          # tsne_vis <- readRDS(sprintf("vis-%s/TSNE_%s_%s", emb, emb, loc))
+          #
+          # for (nei in perplexity_types)
+          # {
+          #   nei_ind <- which(perplexity_types == nei)
+          #
+          #   for (dim in c(2,3))
+          #   {
+          #     save_store(
+          #       tsne_vis[[sprintf("TSNE%s", dim)]][[sprintf("P%s", nei)]],
+          #       make_aws_name(cat, sub, sca, nor, fea, emb, "tSNE", dim, nei_ind)
+          #     )
+          #   }
+          # }
         }
       }
     }
@@ -118,6 +129,22 @@ for (cat in dog)
     }
   }
 }
+
+# columns:
+# name
+# date
+# source
+# row subset
+# col subset
+# scaling
+# normalization
+
+# embedding
+# visualization
+# dimension (not user-filterable; depends on source)
+# perplexity
+
+records <- data.frame()
 
 # ------------
 # PACKAGE UMAP
