@@ -64,10 +64,10 @@ table_to_pca <- function(table, dim = 2)
   pca
 }
 
-pca_to_summary <- function(pca)
+pca_to_summary <- function(pca_result)
 {
-  eigs <- pca$sdev^2
-  dim <- ncol(pca$x)
+  eigs <- pca_result$sdev^2
+  dim <- ncol(pca_result$x)
   props <- cumsum(eigs/sum(eigs))
 
   data.frame(
@@ -230,10 +230,10 @@ table_to_vae <- function(table, dim = 2, batch_size = 2, patience = 10, max_epoc
 }
 
 # extracts loss and val_loss from VAE results and makes a summary
-vae_to_summary <- function(vae)
+vae_to_summary <- function(vae_result)
 {
-  loss <- vae$loss
-  val_loss <- vae$history$metrics$val_loss
+  loss <- vae_result$loss
+  val_loss <- vae_result$history$metrics$val_loss
   num_losses <- length(loss)
 
   data.frame(
@@ -264,6 +264,11 @@ table_to_umap <- function(table, dim = 2, perp = 2)
     random_state = 0,
     transform_state = 0
   )
+}
+
+umap_to_summary <- function(umap)
+{
+
 }
 
 # -------------
