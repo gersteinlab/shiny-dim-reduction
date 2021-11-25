@@ -94,25 +94,50 @@ test_umap <- table_to_umap(test_table, 2, 10)
 after <- get.knn(test_umap$layout, 5)$nn.index
 labels <- rep(1:5, each = 80)
 
-heatmat_before <- matrix(0, nrow = 5, ncol = 5)
-for (i in 1:nrow(before))
+make_heatmat <- function(knn_indices, labels)
 {
-  for (j in 1:ncol(before))
+  n <- nrow(knn_indices)
+  k <- ncol(knn_indices)
+
+  uni_labels <- unique(labels)
+  m <- length(uni_labels)
+  heatmat <- matrix(0, nrow = m, ncol = m)
+  rownames(heatmat) <- uni_labels
+  colnames(heatmat) <- uni_labels
+
+  for (i in 1:n)
   {
-    heatmat_before[labels[i], labels[before[i,j]]] <- heatmat_before[labels[i], labels[before[i,j]]] + 1
+    point_type <- labels[i]
+    for (j in 1:k)
+    {
+      nn_type <- labels[knn_indices[i,j]]
+      heatmat[point_type, nn_type] <- heatmat[point_type, nn_type] + 1
+    }
   }
+
+  for (i in 1:m)
+  {
+    heatmat[i,] <- heatmat[i,] / sum(heatmat[i,])
+  }
+
+  heatmat
 }
 
 plotly_heatmap_variance(heatmat_before, color_seq(5, "Inferno"), smooth = FALSE)
 
 heatmat_after <- matrix(0, nrow = 5, ncol = 5)
 
-for (i in 1:nrow(after))
-{
-  for (j in 1:ncol(after))
-  {
-    heatmat_after[labels[i], labels[after[i,j]]] <- heatmat_after[labels[i], labels[after[i,j]]] + 1
-  }
-}
+setwd(pro_loc)
+
+test <- readRDS("combined/combined_miRNA.rds")
+result <-  table_to_umap(test, 2, 10)
+
+start <- get.knn(test)$nn.index
+end <- get.knn(result$layout)$nn.index
+labels <- order_total$miRNA$BIOFLUID
+
+h1 <- make_heatmat(start, labels)
+h2 <- make_heatmat(end, labels)
+plotly_heatmap_variance(h2-h1, color_seq(5, "Inferno"), smooth = FALSE)
 
 plotly_heatmap_variance(heatmat_after, color_seq(5, "Inferno"), smooth = FALSE)
