@@ -430,6 +430,36 @@ ggplot2_umap_sum <- function(data, paint, legend = TRUE, title = "")
   )
 }
 
+# makes a matrix that summarizes nearest neighbors for heatmap use
+knn_label_matrix <- function(knn_indices, labels)
+{
+  n <- nrow(knn_indices)
+  k <- ncol(knn_indices)
+
+  uni_labels <- unique(labels)
+  m <- length(uni_labels)
+  heatmat <- matrix(0, nrow = m, ncol = m)
+  rownames(heatmat) <- uni_labels
+  colnames(heatmat) <- uni_labels
+
+  for (i in 1:n)
+  {
+    point_type <- labels[i]
+    for (j in 1:k)
+    {
+      nn_type <- labels[knn_indices[i,j]]
+      heatmat[point_type, nn_type] <- heatmat[point_type, nn_type] + 1
+    }
+  }
+
+  for (i in 1:m)
+  {
+    heatmat[i,] <- heatmat[i,] / sum(heatmat[i,])
+  }
+
+  heatmat
+}
+
 plotly_umap_sum <- function(data, paint, lines = TRUE, legend = TRUE, title = "")
 {
   plotly_2d(
