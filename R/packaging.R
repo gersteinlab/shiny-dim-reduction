@@ -9,7 +9,6 @@ if (!exists("ran_install"))
 }
 
 source_sdr("storage.R")
-source_sdr("find_replace.R")
 source_sdr("preprocess.R")
 
 setwd(app_loc)
