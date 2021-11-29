@@ -268,7 +268,7 @@ table_to_umap <- function(table, dim = 2, perp = 2)
 
 umap_to_summary <- function(umap)
 {
-
+  umap$knn$indexes
 }
 
 # -------------
@@ -290,7 +290,7 @@ table_to_phate <- function(data, dim, perp) {
     mds.method = "metric",
     mds.dist.method = "euclidean",
     t.max = 100,
-    npca = pc_cap,
+    npca = 10,
     verbose = 1,
     n.jobs = 1,
     seed = 0)
