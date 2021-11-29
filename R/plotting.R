@@ -320,9 +320,12 @@ venn1_custom <- function(data, legend = TRUE)
 }
 
 # creates a variance-based heatmap for sets on plotly
-plotly_heatmap_variance <- function(binary, colors,
+plotly_heatmap_variance <- function(binary, colors = NULL,
                                     title = "", legend = TRUE, smooth = TRUE)
 {
+  if (length(colors) < 1)
+    colors <- color_seq(5, "Inferno")
+
   rows <- sprintf("X:%s", substring(rownames(binary), 0, 50))
   cols <- sprintf("Y:%s", substring(colnames(binary), 0, 50))
   rownames(binary) <- NULL
