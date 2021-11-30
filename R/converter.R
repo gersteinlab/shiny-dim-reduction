@@ -14,6 +14,8 @@ if (!exists("ran_install"))
 source_sdr("workflows.R")
 source_sdr("find_replace.R")
 
+library(dplyr)
+
 # ------------
 # DEPENDENCIES
 # ------------
