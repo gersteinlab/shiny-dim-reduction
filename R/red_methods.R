@@ -18,6 +18,7 @@ library(phateR)
 # does not depend on Anaconda
 library(umap)
 library(Rtsne)
+library(Matrix)
 
 # ---------------
 # GENERAL METHODS
@@ -322,4 +323,59 @@ table_to_tsne <- function(table, dim = 2, perp = 1, max_iter = 500, theta = 0.5,
         check_duplicates = FALSE, pca = FALSE, partial_pca = FALSE,
         is_distance = FALSE, Y_init = NULL,
         pca_center = FALSE, pca_scale = FALSE, normalize = FALSE)
+}
+
+# ------------
+# Sets METHODS
+# ------------
+
+# target[i, j] returns whether data[i, j] >= cutoff,
+# removing columns with no values at the cutoff or above
+table_to_sets <- function(data, cutoff) {
+  target <- matrix(as.numeric(data >= cutoff), nrow=nrow(data), dimnames = dimnames(data))
+  target[, colSums(target) > 0, drop = FALSE]
+}
+
+# given a binary matrix SETS from calculate_sets, let final[feature][label] be the
+# fraction of samples with that label where that feature was present in SETS
+set_label_matrix <- function(sets, labels){
+  # validate that this is a binary matrix WITH FEATURE NAMES
+  stopifnot(all.equal(class(matrix()), class(sets)))
+  stopifnot(sum(sets == 0) + sum(sets == 1) == nrow(sets) * ncol(sets))
+  stopifnot(length(colnames(sets)) == ncol(sets))
+  # validate that labels is a vector of characters
+  stopifnot(is.character(labels))
+
+  # note: this code is very optimized but also very obtuse ...
+  # might be worth clarifying further
+  rownames_final <- colnames(sets)
+  summary <- summary(Matrix(sets, sparse = TRUE))
+  summary_i <- summary[, 1]
+  summary_j <- summary[, 2]
+
+  set_types <- unique(labels)
+  num_types <- length(set_types)
+  rowlen_final <- length(rownames_final)
+
+  final <- rep(0, rowlen_final*num_types)
+  lookup <- match(labels, set_types)
+  lookup2 <- (lookup - 1) * rowlen_final
+
+  for (len in 1:length(summary_i))
+  {
+    num_i <- summary_i[len]
+    index <- lookup2[num_i] + summary_j[len]
+    final[index] <- final[index] + 1
+  }
+
+  final <- matrix(final, ncol=num_types)
+
+  numbers <- rep(0, num_types)
+  for (a in lookup)
+    numbers[a] <- numbers[a] + 1
+  for (j in 1:num_types)
+    final[,j] <- final[,j] / numbers[j]
+
+  dimnames(final) <- list(rownames_final, set_types)
+  final
 }
