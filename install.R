@@ -229,6 +229,6 @@ if (sdr_running_local)
 }
 
 ran_install <- TRUE
-sprintf_clean("Installation time (seconds): %s", my_timer(install_start))
+sprintf_clean("Installation verification time (seconds): %s", my_timer(install_start))
 print_clean()
 
