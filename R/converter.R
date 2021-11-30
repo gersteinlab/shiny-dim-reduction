@@ -11,7 +11,7 @@ if (!exists("ran_install"))
     stop("Could not confirm installation. Please source install.R manually.")
 }
 
-source_sdr("pipeline.R")
+source_sdr("workflows.R")
 source_sdr("find_replace.R")
 
 # ------------
