@@ -275,7 +275,7 @@ umap_to_summary <- function(umap)
 # PHATE METHODS
 # -------------
 
-table_to_phate <- function(data, dim, perp) {
+table_to_phate <- function(data, dim = 2, perp = 1) {
   phateR::phate(
     data,
     ndim = dim,
