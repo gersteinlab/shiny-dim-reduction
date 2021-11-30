@@ -19,11 +19,13 @@ source_sdr("preprocess.R")
 
 # get random data
 test_table <- matrix(0, nrow = 400, ncol = 20)
-test_labels <- rep(1:5, each = 80)
+test_labels <- as.character(rep(1:5, each = 80))
 
 for (i in 1:nrow(test_table))
   for (j in 1:ncol(test_table))
     test_table[i,j] <- runif(1, min = 0, max = 0.5 + test_labels[i] / 10)
+
+colnames(test_table) <- sprintf("Component %s", 1:20)
 
 # test random data
 start1 <- my_timer()
@@ -50,6 +52,11 @@ plotly_2d(test_phate$embedding[,1], test_phate$embedding[,2], test_labels)
 test_tsne <- table_to_tsne(test_table, 2, 10)
 plotly_2d(test_tsne$Y[,1], test_tsne$Y[,2], test_labels)
 end1 <- my_timer(start1)
+
+test_sets <- calculate_sets(test_table, 0.4)
+test_gathered <- set_label_matrix(test_sets, test_labels)
+test_gathered %>% truncate_rows() %>% sort_row_sums() %>%
+  set_f1_f2(c(0, 1), c(0, 5)) %>% plotly_heatmap_variance(smooth = FALSE)
 
 # get miRNA data
 setwd(pro_loc)
@@ -99,7 +106,7 @@ end2 <- my_timer(start2)
 mirna_sets <- calculate_sets(mirna_table, 0.4)
 mirna_gathered <- set_label_matrix(mirna_sets, mirna_labels)
 mirna_gathered %>% truncate_rows() %>% sort_row_sums() %>%
-  set_f1_f2(c(0, 1), c(0, 32)) %>% plotly_heatmap_variance(inferno, smooth = FALSE)
+  set_f1_f2(c(0, 1), c(0, 32)) %>% plotly_heatmap_variance(smooth = FALSE)
 
 print(end1)
 print(end2)

@@ -28,9 +28,10 @@ calculate_sets <- function(data, cutoff) {
 # given a binary matrix SETS from calculate_sets, let final[feature][label] be the
 # fraction of samples with that label where that feature was present in SETS
 set_label_matrix <- function(sets, labels){
-  # validate that this is a binary matrix
+  # validate that this is a binary matrix WITH FEATURE NAMES
   stopifnot(all.equal(class(matrix()), class(sets)))
   stopifnot(sum(sets == 0) + sum(sets == 1) == nrow(sets) * ncol(sets))
+  stopifnot(length(colnames(sets)) == ncol(sets))
   # validate that labels is a vector of characters
   stopifnot(is.character(labels))
 
@@ -149,12 +150,12 @@ for (cat in dog)
       target <- calculate_sets(scaled, chord[ind])
 
       for (cha in colnames(short_list))
-        final_saver[[cha]] <- gather_char(target, short_list[[cha]])
+        final_saver[[cha]] <- set_label_matrix(target, short_list[[cha]])
 
       saveRDS(final_saver, sprintf("Sets/Sets-%s_%s_%s.rds", ind, sca, cat))
     }
   }
 }
 
-setwd(dep_loc)
-saveRDS(thresholds, "thresholds.rds")
+# setwd(dep_loc)
+# saveRDS(thresholds, "thresholds.rds")
