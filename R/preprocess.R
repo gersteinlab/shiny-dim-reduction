@@ -93,7 +93,7 @@ do_norm <- function(nor, scaled)
   if (nor == nor_options[4])
     return(local_z_score(scaled))
   if (nor == nor_options[5])
-    return(t(normalizeQuantiles(t(scaled))))
+    return(t(limma::normalizeQuantiles(t(scaled))))
 }
 
 # -------
