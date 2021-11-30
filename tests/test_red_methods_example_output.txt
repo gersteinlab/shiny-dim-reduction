@@ -1,0 +1,342 @@
+R version 4.0.3 (2020-10-10) -- "Bunny-Wunnies Freak Out"
+Copyright (C) 2020 The R Foundation for Statistical Computing
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> source("~/shiny-dim-reduction/tests/test_red_methods.R")
+
+*** SHINY DIMENSIONALITY REDUCTION ***
+DEVELOPER: Justin Chang @ Gerstein Lab
+ALL R PACKAGES INSTALLED; CHECK README
+CHANGE PROJECT PATH: set_project_loc()
+*** SHINY DIMENSIONALITY REDUCTION ***
+
+Project location: C:/Users/Justin Chang/Desktop/ProjectsR/shiny-dim-reduction
+Installation verification time (seconds): 0.2698
+
+Loading required package: Matrix
+Loading required package: viridis
+Loading required package: viridisLite
+Loading required package: ggplot2
+Loading required package: plotly
+
+Attaching package: ‘plotly’
+
+The following object is masked from ‘package:ggplot2’:
+
+    last_plot
+
+The following object is masked from ‘package:stats’:
+
+    filter
+
+The following object is masked from ‘package:graphics’:
+
+    layout
+
+Loading required package: UpSetR
+Loading required package: VennDiagram
+Loading required package: grid
+Loading required package: futile.logger
+Loading required package: beeswarm
+Loading required package: heatmaply
+
+======================
+Welcome to heatmaply version 1.2.1
+
+Type citation('heatmaply') for how to cite the package.
+Type ?heatmaply for the main documentation.
+
+The github page is: https://github.com/talgalili/heatmaply/
+Please submit your suggestions and bug-reports at: https://github.com/talgalili/heatmaply/issues
+Or contact: <tal.galili@gmail.com>
+======================
+
+
+Attaching package: ‘heatmaply’
+
+The following object is masked from ‘package:keras’:
+
+    normalize
+
+Loading required package: DT
+Loading required package: dplyr
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+Loading required package: shiny
+
+Attaching package: ‘shiny’
+
+The following objects are masked from ‘package:DT’:
+
+    dataTableOutput, renderDataTable
+
+Is this a valid table?: TRUE
+Table Dimensions: (400, 20)
+Layers (x2): 6 neurons, 3 neurons
+C:\Anaconda\envs\R-RETI~1\lib\site-packages\tensorflow\python\keras\optimizer_v2\optimizer_v2.py:374: UserWarning: The `lr` argument is deprecated, use `learning_rate` instead.
+  warnings.warn(
+2021-11-29 23:30:22.125629: I tensorflow/core/platform/cpu_feature_guard.cc:142] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2021-11-29 23:30:22.127279: I tensorflow/core/common_runtime/process_util.cc:146] Creating new thread pool with default inter op setting: 2. Tune using inter_op_parallelism_threads for best performance.
+C:\Anaconda\envs\R-RETI~1\lib\site-packages\tensorflow\python\keras\engine\training.py:2464: UserWarning: `Model.state_updates` will be removed in a future version. This property should not be used in TensorFlow 2.0, as `updates` are applied automatically.
+  warnings.warn('`Model.state_updates` will be removed in a future version. '
+Train on 320 samples, validate on 80 samples
+Epoch 1/1000
+320/320 - 1s - loss: 15.4480 - val_loss: 15.9563
+Epoch 2/1000
+320/320 - 0s - loss: 15.4384 - val_loss: 15.5568
+Epoch 3/1000
+320/320 - 0s - loss: 15.4294 - val_loss: 15.8276
+Epoch 4/1000
+320/320 - 0s - loss: 15.4863 - val_loss: 15.5514
+Epoch 5/1000
+320/320 - 0s - loss: 15.4114 - val_loss: 15.6107
+Epoch 6/1000
+320/320 - 0s - loss: 15.3701 - val_loss: 15.6042
+Epoch 7/1000
+320/320 - 0s - loss: 15.3580 - val_loss: 15.6784
+Epoch 8/1000
+320/320 - 0s - loss: 15.3263 - val_loss: 15.4539
+Epoch 9/1000
+320/320 - 0s - loss: 15.3466 - val_loss: 15.4981
+Epoch 10/1000
+320/320 - 0s - loss: 15.3383 - val_loss: 15.5585
+Epoch 11/1000
+320/320 - 0s - loss: 15.2969 - val_loss: 15.4950
+Epoch 12/1000
+320/320 - 0s - loss: 15.2992 - val_loss: 15.5389
+Epoch 13/1000
+320/320 - 0s - loss: 15.3376 - val_loss: 15.5729
+Epoch 14/1000
+320/320 - 0s - loss: 15.3206 - val_loss: 15.4214
+Epoch 15/1000
+320/320 - 0s - loss: 15.3165 - val_loss: 15.6197
+Epoch 16/1000
+320/320 - 0s - loss: 15.2964 - val_loss: 15.5690
+Epoch 17/1000
+320/320 - 0s - loss: 15.2300 - val_loss: 15.4996
+Epoch 18/1000
+320/320 - 0s - loss: 15.2436 - val_loss: 15.4752
+Epoch 19/1000
+320/320 - 0s - loss: 15.2473 - val_loss: 15.4006
+Epoch 20/1000
+320/320 - 0s - loss: 15.3010 - val_loss: 15.5390
+Epoch 21/1000
+320/320 - 0s - loss: 15.2384 - val_loss: 15.6336
+Epoch 22/1000
+320/320 - 0s - loss: 15.2020 - val_loss: 15.5510
+Epoch 23/1000
+320/320 - 0s - loss: 15.1906 - val_loss: 15.4769
+Epoch 24/1000
+320/320 - 0s - loss: 15.2314 - val_loss: 15.4784
+Epoch 25/1000
+320/320 - 0s - loss: 15.1821 - val_loss: 15.4571
+Epoch 26/1000
+320/320 - 0s - loss: 15.1614 - val_loss: 15.4548
+Epoch 27/1000
+320/320 - 0s - loss: 15.1480 - val_loss: 15.4439
+Epoch 28/1000
+320/320 - 0s - loss: 15.1717 - val_loss: 15.5293
+Epoch 29/1000
+Restoring model weights from the end of the best epoch.
+320/320 - 0s - loss: 15.1104 - val_loss: 15.5286
+[2021-11-29 23:30:29]  starting umap
+[2021-11-29 23:30:30]  creating graph of nearest neighbors
+[2021-11-29 23:30:30]  creating initial embedding
+[2021-11-29 23:30:30]  optimizing embedding
+[2021-11-29 23:30:32]  done
+Calculating PHATE...
+Epoch 00029: early stopping
+  Running PHATE on 400 observations and 20 variables.
+  Calculating graph and diffusion operator...
+    Calculating PCA...
+    Calculated PCA in 0.01 seconds.
+    Calculating KNN search...
+    Calculating affinities...
+  Calculated graph and diffusion operator in 0.03 seconds.
+  Calculating optimal t...
+    Automatically selected t = 17
+  Calculated optimal t in 0.17 seconds.
+  Calculating diffusion potential...
+  Calculated diffusion potential in 0.01 seconds.
+  Calculating metric MDS...
+  Calculated metric MDS in 0.11 seconds.
+Calculated PHATE in 0.32 seconds.
+Is this a valid table?: TRUE
+Table Dimensions: (5381, 265)
+Layers (x2): 23 neurons, 6 neurons
+C:\Anaconda\envs\R-RETI~1\lib\site-packages\tensorflow\python\keras\optimizer_v2\optimizer_v2.py:374: UserWarning: The `lr` argument is deprecated, use `learning_rate` instead.
+  warnings.warn(
+C:\Anaconda\envs\R-RETI~1\lib\site-packages\tensorflow\python\keras\engine\training.py:2464: UserWarning: `Model.state_updates` will be removed in a future version. This property should not be used in TensorFlow 2.0, as `updates` are applied automatically.
+  warnings.warn('`Model.state_updates` will be removed in a future version. '
+Train on 4304 samples, validate on 1077 samples
+Epoch 1/1000
+4304/4304 - 1s - loss: 184.6070 - val_loss: 183.7186
+Epoch 2/1000
+4304/4304 - 0s - loss: 182.8808 - val_loss: 182.3644
+Epoch 3/1000
+4304/4304 - 0s - loss: 180.0523 - val_loss: 178.6227
+Epoch 4/1000
+4304/4304 - 0s - loss: 175.2947 - val_loss: 173.2753
+Epoch 5/1000
+4304/4304 - 0s - loss: 171.6010 - val_loss: 171.8285
+Epoch 6/1000
+4304/4304 - 0s - loss: 164.7038 - val_loss: 164.7755
+Epoch 7/1000
+4304/4304 - 0s - loss: 160.4452 - val_loss: 160.4780
+Epoch 8/1000
+4304/4304 - 0s - loss: 155.8189 - val_loss: 156.6755
+Epoch 9/1000
+4304/4304 - 0s - loss: 150.3508 - val_loss: 151.2269
+Epoch 10/1000
+4304/4304 - 0s - loss: 146.1825 - val_loss: 147.8716
+Epoch 11/1000
+4304/4304 - 0s - loss: 142.1358 - val_loss: 148.5016
+Epoch 12/1000
+4304/4304 - 0s - loss: 140.2384 - val_loss: 144.1212
+Epoch 13/1000
+4304/4304 - 0s - loss: 136.7719 - val_loss: 142.3146
+Epoch 14/1000
+4304/4304 - 0s - loss: 134.5775 - val_loss: 141.0247
+Epoch 15/1000
+4304/4304 - 0s - loss: 132.5238 - val_loss: 139.4746
+Epoch 16/1000
+4304/4304 - 0s - loss: 131.1478 - val_loss: 138.7078
+Epoch 17/1000
+4304/4304 - 0s - loss: 129.2614 - val_loss: 136.8194
+Epoch 18/1000
+4304/4304 - 0s - loss: 128.6017 - val_loss: 136.7187
+Epoch 19/1000
+4304/4304 - 0s - loss: 127.0795 - val_loss: 135.0434
+Epoch 20/1000
+4304/4304 - 0s - loss: 126.6065 - val_loss: 135.0659
+Epoch 21/1000
+4304/4304 - 0s - loss: 125.1840 - val_loss: 133.6545
+Epoch 22/1000
+4304/4304 - 0s - loss: 124.5543 - val_loss: 134.7194
+Epoch 23/1000
+4304/4304 - 0s - loss: 124.0296 - val_loss: 132.4043
+Epoch 24/1000
+4304/4304 - 0s - loss: 123.2242 - val_loss: 132.6926
+Epoch 25/1000
+4304/4304 - 2s - loss: 122.4413 - val_loss: 131.4867
+Epoch 26/1000
+4304/4304 - 0s - loss: 121.4735 - val_loss: 132.4013
+Epoch 27/1000
+4304/4304 - 0s - loss: 121.3963 - val_loss: 131.6606
+Epoch 28/1000
+4304/4304 - 0s - loss: 121.3278 - val_loss: 131.1856
+Epoch 29/1000
+4304/4304 - 1s - loss: 120.3215 - val_loss: 130.8656
+Epoch 30/1000
+4304/4304 - 0s - loss: 120.7369 - val_loss: 131.0070
+Epoch 31/1000
+4304/4304 - 0s - loss: 120.1425 - val_loss: 129.2658
+Epoch 32/1000
+4304/4304 - 0s - loss: 119.7413 - val_loss: 130.2618
+Epoch 33/1000
+4304/4304 - 0s - loss: 119.8631 - val_loss: 130.2786
+Epoch 34/1000
+4304/4304 - 0s - loss: 119.3775 - val_loss: 129.8962
+Epoch 35/1000
+4304/4304 - 0s - loss: 119.3892 - val_loss: 129.3088
+Epoch 36/1000
+4304/4304 - 0s - loss: 119.0930 - val_loss: 130.8599
+Epoch 37/1000
+4304/4304 - 1s - loss: 118.9941 - val_loss: 129.8124
+Epoch 38/1000
+4304/4304 - 0s - loss: 119.4701 - val_loss: 130.9274
+Epoch 39/1000
+4304/4304 - 0s - loss: 118.7943 - val_loss: 129.6789
+Epoch 40/1000
+4304/4304 - 0s - loss: 118.7665 - val_loss: 131.9308
+Epoch 41/1000
+4304/4304 - 0s - loss: 118.9262 - val_loss: 129.0802
+Epoch 42/1000
+4304/4304 - 1s - loss: 118.3381 - val_loss: 128.5096
+Epoch 43/1000
+4304/4304 - 0s - loss: 118.0195 - val_loss: 130.8580
+Epoch 44/1000
+4304/4304 - 0s - loss: 118.4816 - val_loss: 129.6709
+Epoch 45/1000
+4304/4304 - 0s - loss: 118.7701 - val_loss: 129.6849
+Epoch 46/1000
+4304/4304 - 0s - loss: 118.6817 - val_loss: 130.5710
+Epoch 47/1000
+4304/4304 - 0s - loss: 117.9332 - val_loss: 129.4861
+Epoch 48/1000
+4304/4304 - 0s - loss: 118.1251 - val_loss: 129.0059
+Epoch 49/1000
+4304/4304 - 0s - loss: 118.3251 - val_loss: 129.8528
+Epoch 50/1000
+4304/4304 - 0s - loss: 118.1299 - val_loss: 131.1106
+Epoch 51/1000
+4304/4304 - 0s - loss: 118.0130 - val_loss: 129.7457
+Epoch 52/1000
+Restoring model weights from the end of the best epoch.
+4304/4304 - 1s - loss: 117.5022 - val_loss: 129.8940
+[2021-11-29 23:31:07]  starting umap
+[2021-11-29 23:31:07]  creating graph of nearest neighbors
+[2021-11-29 23:31:19]  creating initial embedding
+[2021-11-29 23:31:19]  optimizing embedding
+[2021-11-29 23:31:40]  done
+Calculating PHATE...
+Epoch 00052: early stopping
+  Running PHATE on 5381 observations and 265 variables.
+  Calculating graph and diffusion operator...
+    Calculating PCA...
+    Calculated PCA in 0.06 seconds.
+    Calculating KNN search...
+C:\Anaconda\envs\R-RETI~1\lib\site-packages\graphtools\graphs.py:287: RuntimeWarning: Detected zero distance between 595 pairs of samples. Consider removing duplicates to avoid errors in downstream processing.
+  warnings.warn(
+    Calculated KNN search in 0.37 seconds.
+    Calculating affinities...
+C:\Anaconda\envs\R-RETI~1\lib\site-packages\graphtools\graphs.py:451: RuntimeWarning: overflow encountered in power
+  K.data = np.exp(-1 * np.power(K.data, self.decay))
+    Calculated affinities in 0.06 seconds.
+  Calculated graph and diffusion operator in 0.49 seconds.
+  Calculating landmark operator...
+    Calculating SVD...
+    Calculated SVD in 0.38 seconds.
+    Calculating KMeans...
+    Calculated KMeans in 8.82 seconds.
+  Calculated landmark operator in 11.26 seconds.
+  Calculating optimal t...
+    Automatically selected t = 35
+  Calculated optimal t in 2.62 seconds.
+  Calculating diffusion potential...
+  Calculated diffusion potential in 1.53 seconds.
+  Calculating metric MDS...
+  Calculated metric MDS in 6.26 seconds.
+Calculated PHATE in 22.16 seconds.
+[1] 16.2371
+[1] 94.9986
+Warning messages:
+1: package ‘tensorflow’ was built under R version 4.0.5
+2: package ‘phateR’ was built under R version 4.0.4
+3: package ‘Rtsne’ was built under R version 4.0.5
+4: package ‘UpSetR’ was built under R version 4.0.5
+5: package ‘heatmaply’ was built under R version 4.0.4
+6: package ‘dplyr’ was built under R version 4.0.4
+7: package ‘shiny’ was built under R version 4.0.4
