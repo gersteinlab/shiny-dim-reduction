@@ -14,27 +14,56 @@ source_sdr("preprocess.R")
 
 library(Matrix)
 
-# --------------
-# USER VARIABLES
-# --------------
-
-# threshold caps
-lower <- 8 # 2^3
-upper <- 262144 # 2^18
-numdigits <- 4
-len_inter <- 10
-
-# Only allow filtering on a characteristic with <= num_filters distinct values.
-num_filters <- 60
-
 # ---------
 # FUNCTIONS
 # ---------
 
-# Given a lower bound, converts into a binary matrix
-calculate_sets <- function(data, low_t) {
-  target <- matrix(as.numeric(data >= low_t), nrow=nrow(data), dimnames = dimnames(data))
+# target[i, j] returns whether data[i, j] >= cutoff,
+# removing columns with no values at the cutoff or above
+calculate_sets <- function(data, cutoff) {
+  target <- matrix(as.numeric(data >= cutoff), nrow=nrow(data), dimnames = dimnames(data))
   target[, colSums(target) > 0, drop = FALSE]
+}
+
+# given a binary matrix SETS from calculate_sets, let final[feature][label] be the
+# fraction of samples with that label where that feature was present in SETS
+set_label_matrix <- function(sets, labels){
+  # validate that this is a binary matrix
+  stopifnot(all.equal(class(matrix()), class(sets)))
+  stopifnot(sum(sets == 0) + sum(sets == 1) == nrow(sets) * ncol(sets))
+  # validate that labels is a vector of characters
+  stopifnot(is.character(labels))
+
+  rownames_final <- colnames(sets)
+  summary <- summary(Matrix(sets, sparse = TRUE))
+  summary_i <- summary[, 1]
+  summary_j <- summary[, 2]
+
+  set_types <- unique(labels)
+  num_types <- length(set_types)
+  rowlen_final <- length(rownames_final)
+
+  final <- rep(0, rowlen_final*num_types)
+  lookup <- match(labels, set_types)
+  lookup2 <- (lookup - 1) * rowlen_final
+
+  for (len in 1:length(summary_i))
+  {
+    num_i <- summary_i[len]
+    index <- lookup2[num_i] + summary_j[len]
+    final[index] <- final[index] + 1
+  }
+
+  final <- matrix(final, ncol=num_types)
+
+  numbers <- rep(0, num_types)
+  for (a in lookup)
+    numbers[a] <- numbers[a] + 1
+  for (j in 1:num_types)
+    final[,j] <- final[,j] / numbers[j]
+
+  dimnames(final) <- list(rownames_final, set_types)
+  final
 }
 
 # searches for a threshold to numdigits precision
@@ -64,39 +93,18 @@ select_chars <- function(order){
   })
 }
 
-# rearranges a target matrix based on associated metadata
-gather_char <- function(target, associated){
-  rownames_final <- colnames(target)
-  summary <- summary(Matrix(target, sparse = TRUE))
-  summary_i <- summary[, 1]
-  summary_j <- summary[, 2]
+# --------------
+# USER VARIABLES
+# --------------
 
-  set_types <- unique(associated)
-  num_types <- length(set_types)
-  rowlen_final <- length(rownames_final)
+# threshold caps
+lower <- 8 # 2^3
+upper <- 262144 # 2^18
+numdigits <- 4
+len_inter <- 10
 
-  final <- rep(0, rowlen_final*num_types)
-  lookup <- match(associated, set_types)
-  lookup2 <- (lookup - 1) * rowlen_final
-
-  for (len in 1:length(summary_i))
-  {
-    num_i <- summary_i[len]
-    index <- lookup2[num_i] + summary_j[len]
-    final[index] <- final[index] + 1
-  }
-
-  final <- matrix(final, ncol=num_types)
-
-  numbers <- rep(0, num_types)
-  for (a in lookup)
-    numbers[a] <- numbers[a] + 1
-  for (j in 1:num_types)
-    final[,j] <- final[,j] / numbers[j]
-
-  dimnames(final) <- list(rownames_final, set_types)
-  final
-}
+# Only allow filtering on a characteristic with <= num_filters distinct values.
+num_filters <- 60
 
 # ------------
 # SET ANALYSIS
