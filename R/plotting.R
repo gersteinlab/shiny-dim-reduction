@@ -436,7 +436,9 @@ ggplot2_umap_sum <- function(data, paint, legend = TRUE, title = "")
 # makes a matrix that summarizes nearest neighbors for heatmap use
 knn_label_matrix <- function(knn_indices, labels)
 {
+  # validate knn_indices is a matrix of indices
   stopifnot(all.equal(class(matrix()), class(knn_indices)))
+  stopifnot(sum(knn_indices > 0) == nrow(knn_indices) * ncol(knn_indices))
 
   n <- nrow(knn_indices)
   k <- ncol(knn_indices)
