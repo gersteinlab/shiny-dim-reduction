@@ -93,7 +93,7 @@ mirna_phate <- table_to_phate(mirna_table, 2, 10)
 plotly_2d(mirna_phate$embedding[,1], mirna_phate$embedding[,2], mirna_labels)
 
 mirna_tsne <- table_to_tsne(mirna_table, 2, 10)
-plotly_2d(mirna_tsne$Y[,1], mirna_tsne$Y[,2])
+plotly_2d(mirna_tsne$Y[,1], mirna_tsne$Y[,2], mirna_labels)
 end2 <- my_timer(start2)
 
 print(end1)

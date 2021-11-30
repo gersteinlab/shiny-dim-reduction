@@ -123,12 +123,6 @@ record_loss <- function(batch, logs){
 }
 record_callback <- callback_lambda(on_batch_end=record_loss)
 
-# adam is faster and more accurate than rmsprop
-# amsgrad fixes a mathematical hole in the convergence
-# use gradient clipping to prevent an explosion
-# set learning rate low so the batch doesn't explode
-pref_comp <- optimizer_adam(lr = 0.0001, amsgrad = TRUE, clipnorm = 0.1)
-
 # a fit function for a VAE
 my_fit <- function(vae, x_train, batch_size = 2, patience = 10, max_epochs = 1000){
   fit(
@@ -209,6 +203,12 @@ table_to_vae <- function(table, dim = 2, batch_size = 2, patience = 10, max_epoc
     kl_loss <- k_mean(z_log_var - k_square(z_mean) - k_exp(z_log_var), axis = -1L)
     xent_loss + 1 - 0.5*kl_loss
   }
+
+  # adam is faster and more accurate than rmsprop
+  # amsgrad fixes a mathematical hole in the convergence
+  # use gradient clipping to prevent an explosion
+  # set learning rate low so the batch doesn't explode
+  pref_comp <- optimizer_adam(lr = 0.0001, amsgrad = TRUE, clipnorm = 0.1)
 
   vae %>% keras::compile(optimizer = pref_comp,
                          loss = vae_loss,
