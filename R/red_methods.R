@@ -267,9 +267,9 @@ table_to_umap <- function(table, dim = 2, perp = 2)
   )
 }
 
-umap_to_summary <- function(umap)
+umap_to_summary <- function(umap_result)
 {
-  umap$knn$indexes
+  umap_result$knn$indexes
 }
 
 # -------------
@@ -338,18 +338,20 @@ table_to_sets <- function(data, cutoff) {
 
 # given a binary matrix SETS from calculate_sets, let final[feature][label] be the
 # fraction of samples with that label where that feature was present in SETS
-set_label_matrix <- function(sets, labels){
+set_label_matrix <- function(sets_result, labels){
   # validate that this is a binary matrix WITH FEATURE NAMES
-  stopifnot(all.equal(class(matrix()), class(sets)))
-  stopifnot(sum(sets == 0) + sum(sets == 1) == nrow(sets) * ncol(sets))
-  stopifnot(length(colnames(sets)) == ncol(sets))
+  stopifnot(all.equal(class(matrix()), class(sets_result)))
+  num_binary <- sum(sets_result == 0) + sum(sets_result == 1)
+  stopifnot(num_binary == nrow(sets_result) * ncol(sets_result))
+  stopifnot(length(colnames(sets_result)) == ncol(sets_result))
+
   # validate that labels is a vector of characters
   stopifnot(is.character(labels))
 
   # note: this code is very optimized but also very obtuse ...
   # might be worth clarifying further
-  rownames_final <- colnames(sets)
-  summary <- summary(Matrix(sets, sparse = TRUE))
+  rownames_final <- colnames(sets_result)
+  summary <- summary(Matrix(sets_result, sparse = TRUE))
   summary_i <- summary[, 1]
   summary_j <- summary[, 2]
 
