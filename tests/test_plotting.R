@@ -120,5 +120,8 @@ inferno <- color_seq(5, "Inferno", TRUE)
 upset_custom_data %>% truncate_rows() %>% sort_row_sums() %>%
   set_f1_f2(c(0, 1), c(0, 4)) %>% plotly_heatmap_variance(inferno)
 
+upset_custom_data %>% truncate_rows() %>% sort_row_sums() %>%
+  set_f1_f2(c(0, 1), c(0, 4)) %>% plotly_heatmap_variance(inferno, smooth = FALSE)
+
 upset_custom_data %>% truncate_rows(500) %>% sort_row_sums() %>%
   set_f1_f2(c(0, 1), c(0, 4)) %>% plotly_heatmap_dendrogram(inferno)

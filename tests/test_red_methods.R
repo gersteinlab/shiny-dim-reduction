@@ -96,5 +96,10 @@ mirna_tsne <- table_to_tsne(mirna_table, 2, 10)
 plotly_2d(mirna_tsne$Y[,1], mirna_tsne$Y[,2], mirna_labels)
 end2 <- my_timer(start2)
 
+mirna_sets <- calculate_sets(mirna_table, 0.4)
+mirna_gathered <- set_label_matrix(mirna_sets, mirna_labels)
+mirna_gathered %>% truncate_rows() %>% sort_row_sums() %>%
+  set_f1_f2(c(0, 1), c(0, 32)) %>% plotly_heatmap_variance(inferno, smooth = FALSE)
+
 print(end1)
 print(end2)
