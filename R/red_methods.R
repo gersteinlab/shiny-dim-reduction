@@ -331,8 +331,14 @@ table_to_tsne <- function(table, dim = 2, perp = 1, max_iter = 500, theta = 0.5,
 
 # target[i, j] returns whether data[i, j] >= cutoff,
 # removing columns with no values at the cutoff or above
-table_to_sets <- function(data, cutoff) {
-  target <- matrix(as.numeric(data >= cutoff), nrow=nrow(data), dimnames = dimnames(data))
+# since all Sets undergo Global Min-Max, all values in table
+# and the cutoff must be in the range [0,1]
+table_to_sets <- function(table, cutoff) {
+  # require all entries and the cutoff to be within [0, 1]
+  stopifnot(sum(table > 1) + sum(table < 0) == 0)
+  stopifnot(between(cutoff, 0, 1))
+
+  target <- matrix(as.numeric(table >= cutoff), nrow=nrow(table), dimnames = dimnames(table))
   target[, colSums(target) > 0, drop = FALSE]
 }
 
