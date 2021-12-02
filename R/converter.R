@@ -42,8 +42,8 @@ Each data frame has samples as rows and columns as metadata features.")
 
   print_clean("DEPENDENCY 04 (OPTIONAL): decorations.rds")
   print_clean("A list of decorations, where each decoration contains (i) a
-vector of applicable categories and (ii) the subsets. Each subset contains
-(a) a reference character vector and (b) indices that constitute subsets.")
+vector of applicable categories, (ii) the row subsets, and (iii) the column subsets.
+Each subset contains (a) a reference character vector and (b) indices that constitute subsets.")
   print_clean("")
 
   print_clean("DEPENDENCY 05 (OPTIONAL): pc_cap.rds")
