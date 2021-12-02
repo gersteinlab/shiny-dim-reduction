@@ -106,14 +106,29 @@ get_from_dir <- function(filename, default = NULL, dir = "dependencies")
 
 # retrieves a subset based on the list of subsets, the subset name, and the category
 # assumes the existence of an object named 'decorations'
-get_decor_subset <- function(cat, sub)
+get_row_decor_subset <- function(cat, sub)
 {
   for (dec_group in decorations)
   {
-    if (cat %in% dec_group$Categories)
+    if (cat %in% dec_group$CATEGORIES)
     {
-      ref <- dec_group$Subsets$Reference
-      ind <- dec_group$Subsets[[sub]]
+      ref <- dec_group$ROW_SUBSETS$Reference
+      ind <- dec_group$ROW_SUBSETS[[sub]]
+      return(ref[ind])
+    }
+  }
+
+  return(NULL)
+}
+
+get_col_decor_subset <- function(cat, sub)
+{
+  for (dec_group in decorations)
+  {
+    if (cat %in% dec_group$CATEGORIES)
+    {
+      ref <- dec_group$COL_SUBSETS$Reference
+      ind <- dec_group$COL_SUBSETS[[sub]]
       return(ref[ind])
     }
   }
@@ -126,7 +141,7 @@ get_decor_subset <- function(cat, sub)
 get_row_sub <- function(data, cat, sub)
 {
   if (sub != "Total")
-    return(data[rownames(data) %in% get_decor_subset(cat, sub),,drop=FALSE])
+    return(data[rownames(data) %in% get_row_decor_subset(cat, sub),,drop=FALSE])
 
   data
 }
@@ -136,7 +151,7 @@ get_row_sub <- function(data, cat, sub)
 get_col_sub <- function(data, cat, sub)
 {
   if (sub != "Total")
-    return(data[,colnames(data) %in% get_decor_subset(cat, sub),drop=FALSE])
+    return(data[,colnames(data) %in% get_col_decor_subset(cat, sub),drop=FALSE])
 
   data
 }
