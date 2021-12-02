@@ -8,26 +8,56 @@ if (!exists("ran_install"))
     stop("Could not confirm installation. Please source install.R manually.")
 }
 
-source_sdr("preprocess.R")
 source_sdr("red_methods.R")
+source_sdr("preprocess.R")
 
-empty_request <- function()
+make_request <- function(
+  cat = character(0),
+  row = character(0),
+  col = character(0),
+  sca = character(0),
+  nor = character(0),
+  emb = character(0),
+  vis = character(0),
+  dim = numeric(0),
+  per = numeric(0),
+  bat = numeric(0),
+  knn = numeric(0),
+  thr = numeric(0)
+)
 {
+  all_lengths <- c(
+    length(cat), length(row), length(col), length(sca), length(nor), length(emb),
+    length(vis), length(dim), length(per), length(bat), length(knn), length(thr)
+  )
+  stopifnot(length(unique(all_lengths))  == 1)
+
   data.frame(
-    "CATEGORIES" = character(0),
-    "ROW_SUBSETS" = character(0),
-    "COL_SUBSETS" = character(0),
-    "SCALING" = character(0),
-    "NORMALIZATION" = character(0),
-    "EMBEDDING" = character(0),
-    "VISUALIZATION" = character(0),
-    "DIMENSION" = numeric(0),
-    "PERPLEXITY" = numeric(0),
-    "BATCH_SIZE" = numeric(0),
-    "KNN" = numeric(0),
-    "CUTOFF" = numeric(0)
+    "CATEGORIES" = cat,
+    "ROW_SUBSETS" = row,
+    "COL_SUBSETS" = col,
+    "SCALING" = sca,
+    "NORMALIZATION" = nor,
+    "EMBEDDING" = emb,
+    "VISUALIZATION" = vis,
+    "DIMENSION" = dim,
+    "PERPLEXITY" = per,
+    "BATCH_SIZE" = bat,
+    "KNN" = knn,
+    "THRESHOLD" = thr
   )
 }
+
+test_requests <- make_request()
+test_requests <- rbind(test_requests, make_request(
+  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "PCA", "Explore", 10, -1, -1, -1, -1))
+test_requests <- rbind(test_requests, make_request(
+  "miRNA", "Plasma", "SD_Top_1000", "Logarithmic", "Global Min-Max", "PCA", "Explore", 10, -1, -1, -1, -1))
+test_requests <- rbind(test_requests, make_request(
+  "miRNA", "Total", "SD_Top_100", "Logarithmic", "Global Min-Max", "PCA", "Explore", 10, -1, -1, -1, -1))
+test_requests <- rbind(test_requests, make_request(
+  "miRNA", "Plasma", "SD_Top_100", "Logarithmic", "Global Min-Max", "PCA", "Explore", 10, -1, -1, -1, -1))
+perform_reduction(test_requests)
 
 valid_request <- function(request)
 {
@@ -57,7 +87,10 @@ prune_requests <- function(requests)
 # if vis == "tSNE": require perplexity
 # if emb == "VAE": require nor to be one of the 3 VAE-ok options
 # set a hard limit on perplexity
-perform_reduction <- function(requests, max_analyses = 100)
+# force = 0: if a file already exists, do nothing
+# force = 1: override the final-level file
+# force = 2: override all intermediate files
+perform_reduction <- function(requests, max_analyses = 100, force = 0)
 {
   for (cat in unique(requests$CATEGORIES))
   {
@@ -72,7 +105,7 @@ perform_reduction <- function(requests, max_analyses = 100)
       for (col in unique(subrequests_row$COL_SUBSETS))
       {
         subrequests_col <- subrequests_row[subrequests_row$COL_SUBSETS == col,]
-        col_table <- get_col_sub(row_sub_table, cat, col)
+        col_table <- get_col_sub(row_table, cat, col)
 
         for (sca in unique(subrequests_col$SCALING))
         {
@@ -86,11 +119,30 @@ perform_reduction <- function(requests, max_analyses = 100)
 
             stopifnot(valid_table(nor_table))
 
-            for (emb in unique(subrequests_sca$EMBEDDING))
+            table_name <- paste(cat, row, col, sca, nor, sep = "_")
+            print(table_name)
+            print(dim(nor_table))
+
+            for (emb in unique(subrequests_nor$EMBEDDING))
             {
+              subrequests_emb <- subrequests_sca[subrequests_sca$EMBEDDING == emb,]
+
               if (emb == "PCA")
               {
-
+                for (dim in unique(subrequests_emb$DIMENSION))
+                {
+                  explore_loc <- sprintf("inter/%s_%s_%s.rds", table_name, emb, dim)
+                  explore <- NULL
+                  if (!file.exists(explore_loc))
+                  {
+                    explore <- table_to_pca(nor_table, dim)
+                    saveRDS(explore, explore_loc)
+                  }
+                  else
+                  {
+                    explore <- readRDS(explore_loc)
+                  }
+                }
               }
 
               if (emb == "VAE")
