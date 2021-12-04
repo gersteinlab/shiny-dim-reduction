@@ -341,9 +341,12 @@ plotly_heatmap_variance <- function(binary, colors = NULL,
 }
 
 # creates a correlation-based heatmap for sets on plotly
-plotly_heatmap_dendrogram <- function(binary, colors,
+plotly_heatmap_dendrogram <- function(binary, colors = NULL,
                                       title = "", legend = TRUE, dend = TRUE)
 {
+  if (length(colors) < 1)
+    colors <- color_seq(5, "Inferno")
+
   if (nrow(binary) < 1 || ncol(binary) < 1)
     return(NULL)
 

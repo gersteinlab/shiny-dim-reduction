@@ -23,7 +23,7 @@ test_labels <- as.character(rep(1:5, each = 80))
 
 for (i in 1:nrow(test_table))
   for (j in 1:ncol(test_table))
-    test_table[i,j] <- runif(1, min = 0, max = 0.5 + test_labels[i] / 10)
+    test_table[i,j] <- runif(1, min = 0, max = 0.5 + as.numeric(test_labels[i]) / 10)
 
 colnames(test_table) <- sprintf("Component %s", 1:20)
 
@@ -95,6 +95,7 @@ mirna_umap <- table_to_umap(mirna_table, 2, 10)
 mirna_umap_sum <- umap_to_summary(mirna_umap)
 plotly_2d(mirna_umap$layout[,1], mirna_umap$layout[,2], mirna_labels)
 plotly_heatmap_variance(knn_label_matrix(mirna_umap_sum, mirna_labels), smooth = FALSE)
+plotly_heatmap_dendrogram(knn_label_matrix(mirna_umap_sum, mirna_labels))
 
 mirna_phate <- table_to_phate(mirna_table, 2, 10)
 plotly_2d(mirna_phate$embedding[,1], mirna_phate$embedding[,2], mirna_labels)

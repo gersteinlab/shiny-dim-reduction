@@ -19,7 +19,7 @@ make_request <- function(
   nor = character(0),
   emb = character(0),
   vis = character(0),
-  dim = numeric(0),
+  dim = numeric(0), # note: you need dimensions for first round and second round
   per = numeric(0),
   bat = numeric(0),
   knn = numeric(0),
@@ -182,3 +182,9 @@ perform_reduction <- function(requests, max_analyses = 100, force = 0)
   # table_to_tsne(table, dim = 2, perp = 1)
   # table_to_sets(data, cutoff), set_label_matrix(sets_result, labels)
 }
+
+table_name <- paste(test_requests[4, 1:5], collapse = "_")
+pca_100_plasma <- readRDS(sprintf("inter/%s_%s_%s.rds", table_name, "PCA", 10))
+subset_labels <- order_total$miRNA[rownames(combined_miRNA) %in% get_row_decor_subset("miRNA", "Plasma"),,drop=FALSE]
+plotly_2d(pca_100_plasma$x[,1], pca_100_plasma$x[,2], subset_labels$BIOFLUID)
+plotly_2d(pca_100_plasma$x[,1], pca_100_plasma$x[,2], subset_labels$CONDITION)
