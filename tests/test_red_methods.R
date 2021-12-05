@@ -49,14 +49,24 @@ plotly_heatmap_variance(knn_label_matrix(test_umap_sum, test_labels), smooth = F
 test_phate <- table_to_phate(test_table, 2, 10)
 plotly_2d(test_phate$embedding[,1], test_phate$embedding[,2], test_labels)
 
-test_tsne <- table_to_tsne(test_table, 2, 10)
-plotly_2d(test_tsne$Y[,1], test_tsne$Y[,2], test_labels)
-end1 <- my_timer(start1)
-
 test_sets <- table_to_sets(test_table, 0.4)
 test_gathered <- set_label_matrix(test_sets, test_labels)
 test_gathered %>% truncate_rows() %>% sort_row_sums() %>%
   set_f1_f2(c(0, 1), c(0, 5)) %>% plotly_heatmap_variance(smooth = FALSE)
+
+test_tsne <- table_to_tsne(test_table, 2, 10)
+plotly_2d(test_tsne$Y[,1], test_tsne$Y[,2], test_labels)
+
+test_pca_tsne <- table_to_tsne(test_pca$x, 2, 10)
+plotly_2d(test_pca_tsne$Y[,1], test_pca_tsne$Y[,2], test_labels)
+
+test_vae_tsne <- table_to_tsne(test_vae$predict, 2, 10)
+plotly_2d(test_vae_tsne$Y[,1], test_vae_tsne$Y[,2], test_labels)
+
+test_umap_tsne <- table_to_tsne(test_umap$layout, 2, 10)
+plotly_2d(test_umap_tsne$Y[,1], test_umap_tsne$Y[,2], test_labels)
+
+end1 <- my_timer(start1)
 
 # get miRNA data
 setwd(pro_loc)
@@ -100,14 +110,24 @@ plotly_heatmap_dendrogram(knn_label_matrix(mirna_umap_sum, mirna_labels))
 mirna_phate <- table_to_phate(mirna_table, 2, 10)
 plotly_2d(mirna_phate$embedding[,1], mirna_phate$embedding[,2], mirna_labels)
 
-mirna_tsne <- table_to_tsne(mirna_table, 2, 10)
-plotly_2d(mirna_tsne$Y[,1], mirna_tsne$Y[,2], mirna_labels)
-end2 <- my_timer(start2)
-
 mirna_sets <- table_to_sets(mirna_table, 0.4)
 mirna_gathered <- set_label_matrix(mirna_sets, mirna_labels)
 mirna_gathered %>% truncate_rows() %>% sort_row_sums() %>%
   set_f1_f2(c(0, 1), c(0, 32)) %>% plotly_heatmap_variance(smooth = FALSE)
+
+mirna_tsne <- table_to_tsne(mirna_table, 2, 10)
+plotly_2d(mirna_tsne$Y[,1], mirna_tsne$Y[,2], mirna_labels)
+
+mirna_pca_tsne <- table_to_tsne(mirna_pca$x, 2, 10)
+plotly_2d(mirna_pca_tsne$Y[,1], mirna_pca_tsne$Y[,2], mirna_labels)
+
+mirna_vae_tsne <- table_to_tsne(mirna_vae$predict, 2, 10)
+plotly_2d(mirna_vae_tsne$Y[,1], mirna_vae_tsne$Y[,2], mirna_labels)
+
+mirna_umap_tsne <- table_to_tsne(mirna_umap$layout, 2, 10)
+plotly_2d(mirna_umap_tsne$Y[,1], mirna_umap_tsne$Y[,2], mirna_labels)
+
+end2 <- my_timer(start2)
 
 print(end1)
 print(end2)
