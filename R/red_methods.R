@@ -329,16 +329,16 @@ table_to_tsne <- function(table, dim = 2, perp = 1, max_iter = 500, theta = 0.5,
 # Sets METHODS
 # ------------
 
-# target[i, j] returns whether data[i, j] >= cutoff,
-# removing columns with no values at the cutoff or above
+# target[i, j] returns whether data[i, j] >= threshold,
+# removing columns with no values at the threshold or above
 # since all Sets undergo Global Min-Max, all values in table
-# and the cutoff must be in the range [0,1]
-table_to_sets <- function(table, cutoff) {
-  # require all entries and the cutoff to be within [0, 1]
+# and the threshold must be in the range [0,1]
+table_to_sets <- function(table, threshold) {
+  # require all entries and the threshold to be within [0, 1]
   stopifnot(sum(table > 1) + sum(table < 0) == 0)
-  stopifnot(between(cutoff, 0, 1))
+  stopifnot(between(threshold, 0, 1))
 
-  target <- matrix(as.numeric(table >= cutoff), nrow=nrow(table), dimnames = dimnames(table))
+  target <- matrix(as.numeric(table >= threshold), nrow=nrow(table), dimnames = dimnames(table))
   target[, colSums(target) > 0, drop = FALSE]
 }
 
