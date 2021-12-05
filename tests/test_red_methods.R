@@ -31,40 +31,52 @@ colnames(test_table) <- sprintf("Component %s", 1:20)
 start1 <- my_timer()
 sprintf_clean("Is this a valid table?: %s", valid_table(test_table))
 
-test_pca <- table_to_pca(test_table, 10)
-test_pca_sum <- pca_to_summary(test_pca)
-plotly_2d(test_pca$x[,1], test_pca$x[,2], test_labels)
-plotly_pca_sum(test_pca_sum)
-
-test_vae <- table_to_vae(test_table, 2, 10)
-test_vae_sum <- vae_to_summary(test_vae)
-plotly_2d(test_vae$predict[,1], test_vae$predict[,2], test_labels)
-plotly_vae_sum(test_vae_sum)
-
-test_umap <- table_to_umap(test_table, 2, 10)
-test_umap_sum <- umap_to_summary(test_umap)
-plotly_2d(test_umap$layout[,1], test_umap$layout[,2], test_labels)
-plotly_heatmap_variance(knn_label_matrix(test_umap_sum, test_labels), smooth = FALSE)
-
-test_phate <- table_to_phate(test_table, 2, 10)
-plotly_2d(test_phate$embedding[,1], test_phate$embedding[,2], test_labels)
-
-test_sets <- table_to_sets(test_table, 0.4)
-test_gathered <- set_label_matrix(test_sets, test_labels)
-test_gathered %>% truncate_rows() %>% sort_row_sums() %>%
-  set_f1_f2(c(0, 1), c(0, 5)) %>% plotly_heatmap_variance(smooth = FALSE)
-
+# test tsne
 test_tsne <- table_to_tsne(test_table, 2, 10)
 plotly_2d(test_tsne$Y[,1], test_tsne$Y[,2], test_labels)
 
-test_pca_tsne <- table_to_tsne(test_pca$x, 2, 10)
+# test pca
+test_pca <- table_to_pca(test_table, 10)
+test_pca_explore <- pca_to_explore(test_pca)
+test_pca_sum <- pca_to_summary(test_pca)
+test_pca_tsne <- pca_to_tsne(test_pca, 2, 10)
+
+plotly_2d(test_pca_explore[,1], test_pca_explore[,2], test_labels)
+plotly_pca_sum(test_pca_sum)
 plotly_2d(test_pca_tsne$Y[,1], test_pca_tsne$Y[,2], test_labels)
 
-test_vae_tsne <- table_to_tsne(test_vae$predict, 2, 10)
+# test vae
+test_vae <- table_to_vae(test_table, 2, 20) # batch size 20
+test_vae_explore <- vae_to_explore(test_vae)
+test_vae_sum <- vae_to_summary(test_vae)
+test_vae_tsne <- vae_to_tsne(test_vae, 2, 10)
+
+plotly_2d(test_vae_explore[,1], test_vae_explore[,2], test_labels)
+plotly_vae_sum(test_vae_sum)
 plotly_2d(test_vae_tsne$Y[,1], test_vae_tsne$Y[,2], test_labels)
 
-test_umap_tsne <- table_to_tsne(test_umap$layout, 2, 10)
+# test umap
+test_umap <- table_to_umap(test_table, 2, 10)
+test_umap_explore <- umap_to_explore(test_umap)
+test_umap_sum <- umap_to_summary(test_umap)
+test_umap_tsne <- umap_to_tsne(test_umap, 2)
+
+plotly_2d(test_umap_explore[,1], test_umap_explore[,2], test_labels)
+plotly_heatmap_variance(knn_label_matrix(test_umap_sum, test_labels))
+plotly_heatmap_dendrogram(knn_label_matrix(test_umap_sum, test_labels))
 plotly_2d(test_umap_tsne$Y[,1], test_umap_tsne$Y[,2], test_labels)
+
+# test phate
+test_phate <- table_to_phate(test_table, 2, 10)
+plotly_2d(test_phate$embedding[,1], test_phate$embedding[,2], test_labels)
+
+# test sets
+test_sets <- table_to_sets(test_table, 0.4)
+test_sets_labels <- set_label_matrix(test_sets, test_labels)
+test_sets_frac <- test_sets_labels %>% truncate_rows() %>% sort_row_sums() %>%
+  set_f1_f2(c(0, 1), c(0, 5))
+plotly_heatmap_variance(test_sets_frac)
+plotly_heatmap_dendrogram(test_sets_frac)
 
 end1 <- my_timer(start1)
 
@@ -91,43 +103,55 @@ mirna_labels <- order_total$miRNA$CONDITION
 start2 <- my_timer()
 sprintf_clean("Is this a valid table?: %s", valid_table(mirna_table))
 
-mirna_pca <- table_to_pca(mirna_table, 10)
-mirna_pca_sum <- pca_to_summary(mirna_pca)
-plotly_2d(mirna_pca$x[,1], mirna_pca$x[,2], mirna_labels)
-plotly_pca_sum(mirna_pca_sum)
-
-mirna_vae <- table_to_vae(mirna_table, 2, 64)
-mirna_vae_sum <- vae_to_summary(mirna_vae)
-plotly_2d(mirna_vae$predict[,1], mirna_vae$predict[,2], mirna_labels)
-plotly_vae_sum(mirna_vae_sum)
-
-mirna_umap <- table_to_umap(mirna_table, 2, 10)
-mirna_umap_sum <- umap_to_summary(mirna_umap)
-plotly_2d(mirna_umap$layout[,1], mirna_umap$layout[,2], mirna_labels)
-plotly_heatmap_variance(knn_label_matrix(mirna_umap_sum, mirna_labels), smooth = FALSE)
-plotly_heatmap_dendrogram(knn_label_matrix(mirna_umap_sum, mirna_labels))
-
-mirna_phate <- table_to_phate(mirna_table, 2, 10)
-plotly_2d(mirna_phate$embedding[,1], mirna_phate$embedding[,2], mirna_labels)
-
-mirna_sets <- table_to_sets(mirna_table, 0.4)
-mirna_gathered <- set_label_matrix(mirna_sets, mirna_labels)
-mirna_gathered %>% truncate_rows() %>% sort_row_sums() %>%
-  set_f1_f2(c(0, 1), c(0, 32)) %>% plotly_heatmap_variance(smooth = FALSE)
-
+# test tsne
 mirna_tsne <- table_to_tsne(mirna_table, 2, 10)
 plotly_2d(mirna_tsne$Y[,1], mirna_tsne$Y[,2], mirna_labels)
 
-mirna_pca_tsne <- table_to_tsne(mirna_pca$x, 2, 10)
+# test pca
+mirna_pca <- table_to_pca(mirna_table, 10)
+mirna_pca_explore <- pca_to_explore(mirna_pca)
+mirna_pca_sum <- pca_to_summary(mirna_pca)
+mirna_pca_tsne <- pca_to_tsne(mirna_pca, 2, 10)
+
+plotly_2d(mirna_pca_explore[,1], mirna_pca_explore[,2], mirna_labels)
+plotly_pca_sum(mirna_pca_sum)
 plotly_2d(mirna_pca_tsne$Y[,1], mirna_pca_tsne$Y[,2], mirna_labels)
 
-mirna_vae_tsne <- table_to_tsne(mirna_vae$predict, 2, 10)
+# test vae
+mirna_vae <- table_to_vae(mirna_table, 2, 64) # batch size 64
+mirna_vae_explore <- vae_to_explore(mirna_vae)
+mirna_vae_sum <- vae_to_summary(mirna_vae)
+mirna_vae_tsne <- vae_to_tsne(mirna_vae, 2, 10)
+
+plotly_2d(mirna_vae_explore[,1], mirna_vae_explore[,2], mirna_labels)
+plotly_vae_sum(mirna_vae_sum)
 plotly_2d(mirna_vae_tsne$Y[,1], mirna_vae_tsne$Y[,2], mirna_labels)
 
-mirna_umap_tsne <- table_to_tsne(mirna_umap$layout, 2, 10)
+# test umap
+mirna_umap <- table_to_umap(mirna_table, 2, 10)
+mirna_umap_explore <- umap_to_explore(mirna_umap)
+mirna_umap_sum <- umap_to_summary(mirna_umap)
+mirna_umap_tsne <- umap_to_tsne(mirna_umap, 2)
+
+plotly_2d(mirna_umap_explore[,1], mirna_umap_explore[,2], mirna_labels)
+plotly_heatmap_variance(knn_label_matrix(mirna_umap_sum, mirna_labels))
+plotly_heatmap_dendrogram(knn_label_matrix(mirna_umap_sum, mirna_labels))
 plotly_2d(mirna_umap_tsne$Y[,1], mirna_umap_tsne$Y[,2], mirna_labels)
+
+# test phate
+mirna_phate <- table_to_phate(mirna_table, 2, 10)
+plotly_2d(mirna_phate$embedding[,1], mirna_phate$embedding[,2], mirna_labels)
+
+# test sets
+mirna_sets <- table_to_sets(mirna_table, 0.4)
+mirna_sets_labels <- set_label_matrix(mirna_sets, mirna_labels)
+mirna_sets_frac <- mirna_sets_labels %>% truncate_rows() %>% sort_row_sums() %>%
+  set_f1_f2(c(0, 1), c(0, 32))
+plotly_heatmap_variance(mirna_sets_frac)
+plotly_heatmap_dendrogram(mirna_sets_frac)
 
 end2 <- my_timer(start2)
 
+# print out times
 print(end1)
 print(end2)
