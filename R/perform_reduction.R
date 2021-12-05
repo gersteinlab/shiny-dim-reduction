@@ -27,9 +27,15 @@ request_colnames <- c(
   "THRESHOLD"
 )
 
+# check if we have an integer for an attribute
+att_is_int <- function(x)
+{
+  x == as.integer(x)
+}
+
 # returns whether a request (a requests data.frame with a single row) is valid
 # note: should only be called through are_valid_requests
-# note: NOT YET COMPLETE
+# note: if an attribute is unused, we don't check it (ex: batch_size for pca)
 is_valid_request <- function(request)
 {
   cat <- request$CATEGORIES
@@ -45,25 +51,97 @@ is_valid_request <- function(request)
   bat <- request$BATCH_SIZE
   thr <- request$THRESHOLD
 
-  if (!(cat %in% name_cat))
+  if (!is.character(cat) || !(cat %in% name_cat))
     return(FALSE)
 
-  if (is.null(get_row_decor_subset(cat, row)))
+  if (!is.character(emb) || !(emb %in% emb_options))
     return(FALSE)
 
-  if (is.null(get_col_decor_subset(cat, col)))
+  if (!is.character(sca) || !(sca %in% sca_options))
     return(FALSE)
 
-  if (!(sca %in% sca_options))
+  if (!is.character(nor) || !(nor %in% nor_options))
     return(FALSE)
 
-  if (!(nor %in% nor_options))
-    return(FALSE)
+  # Sets doesn't care about row, col
+  if (emb == "Sets")
+  {
+    # needs a valid threshold
+    if (!is.numeric(thr) || !dplyr::between(thr, 0, 1))
+      return(FALSE)
 
-  if (!(emb %in% emb_options))
-    return(FALSE)
+    # only Global Min-Max allowed
+    if (nor != "Global Min-Max")
+      return(FALSE)
+  }
+  else
+  {
+    # must be a valid name of a subset
+    if (!is.character(row) || !is.character(col))
+      return(FALSE)
 
-  return(TRUE);
+    row_subset <- get_row_decor_subset(cat, row)
+
+    # refuse to have less than 4 rows initially
+    if (length(row_subset) < 4)
+      return(FALSE)
+
+    col_subset <- get_col_decor_subset(cat, col)
+
+    # refuse to have less than 4 columns initially
+    if (length(col_subset) < 4)
+      return(FALSE)
+
+    # we will definitely need com to be an integer
+    if (!att_is_int(com))
+      return(FALSE)
+
+    # calculate maximum perplexity in advance
+    max_perplexity <- min(100, floor((length(row_subset) - 1)/3))
+
+    # PHATE
+    if (emb == "PHATE")
+    {
+      # must be reduced down to 2 or 3 dimensions for plotting
+      if (com != 2 || com != 3)
+        return(FALSE)
+
+      # avoid non-integral or out-of-range perplexities
+      if (!att_is_int(per) || !dplyr::between(per, 0, ))
+        return(FALSE)
+    }
+
+
+    # first round reduction must be plottable in 2D, at least
+    if (com < 2)
+      return(FALSE)
+
+
+  }
+
+
+
+  # first round PCA must be at least 2
+  if (emb == "PCA")
+  {
+
+
+    # second round reduction
+    if (vis == "tSNE")
+    {
+      # must go to 2D or 3D and have less columns than first-round reduction
+      if (!((dim == 2 || dim == 3) && dim < com))
+        return(FALSE)
+
+      # forbid a perplexity greater than 100 or the cap suggesting by the number of samples
+
+    }
+  }
+
+
+  if ()
+
+  TRUE
 }
 
 # returns whether a set of requests is valid, by going row-by-row
@@ -88,36 +166,18 @@ are_valid_requests <- function(requests)
 # if the inputs do not correspond to a valid set of requests, return NULL.
 # otherwise, return a set of requests in the appropriate form.
 make_requests <- function(
-  cat = character(0),
-  row = character(0),
-  col = character(0),
-  sca = character(0),
-  nor = character(0),
-  emb = character(0),
-  vis = character(0),
-  com = numeric(0),
-  dim = numeric(0),
-  per = numeric(0),
-  bat = numeric(0),
-  thr = numeric(0)
+  cat = character(0), row = character(0), col = character(0),
+  sca = character(0), nor = character(0), emb = character(0),
+  vis = character(0), com = numeric(0), dim = numeric(0),
+  per = numeric(0), bat = numeric(0), thr = numeric(0)
 ){
-  # it's not a valid request if one set of attributes is longer than another or of the wrong type
-  n <- length(cat)
-  if (!(
-    length(cat) == n && is.character(cat) &&
-    length(row) == n && is.character(row) &&
-    length(col) == n && is.character(col) &&
-    length(sca) == n && is.character(sca) &&
-    length(nor) == n && is.character(nor) &&
-    length(emb) == n && is.character(emb) &&
-    length(vis) == n && is.character(vis) &&
-    length(com) == n && is.numeric(com) &&
-    length(dim) == n && is.numeric(dim) &&
-    length(per) == n && is.numeric(per) &&
-    length(bat) == n && is.numeric(bat) &&
-    length(thr) == n && is.numeric(thr)
-  ))
-  return(NULL)
+  # it's not a valid request if the lengths of all attributes aren't equal
+  att_lengths <- c(
+    length(cat), length(row), length(col), length(sca), length(nor), length(emb),
+    length(vis), length(com), length(dim), length(per), length(bat), length(thr)
+  )
+  if (!length(unique(att_lengths)) == 1)
+    return(NULL)
 
   # create a data frame of requests
   requests <- data.frame(
@@ -135,6 +195,7 @@ make_requests <- function(
     "THRESHOLD" = thr
   )
 
+  # check if every single request is valid
   if (sum(are_valid_requests(requests)) != n)
     return(NULL)
 

@@ -106,14 +106,14 @@ get_from_dir <- function(filename, default = NULL, dir = "dependencies")
 
 # retrieves a subset based on the list of subsets, the subset name, and the category
 # assumes the existence of an object named 'decorations'
-get_row_decor_subset <- function(cat, sub)
+get_row_decor_subset <- function(cat, row)
 {
   for (dec_group in decorations)
   {
     if (cat %in% dec_group$CATEGORIES)
     {
       ref <- dec_group$ROW_SUBSETS$Reference
-      ind <- dec_group$ROW_SUBSETS[[sub]]
+      ind <- dec_group$ROW_SUBSETS[[row]]
       return(ref[ind])
     }
   }
@@ -121,14 +121,14 @@ get_row_decor_subset <- function(cat, sub)
   return(NULL)
 }
 
-get_col_decor_subset <- function(cat, sub)
+get_col_decor_subset <- function(cat, col)
 {
   for (dec_group in decorations)
   {
     if (cat %in% dec_group$CATEGORIES)
     {
       ref <- dec_group$COL_SUBSETS$Reference
-      ind <- dec_group$COL_SUBSETS[[sub]]
+      ind <- dec_group$COL_SUBSETS[[col]]
       return(ref[ind])
     }
   }

@@ -315,7 +315,7 @@ table_to_tsne <- function(table, dim = 2, perp = 1, max_iter = 500, theta = 0.5,
                      eta = 200, momentum = 0.5, verbose = FALSE)
 {
   # the perplexity can't be too big
-  stopifnot(perp < floor((nrow(table))/3))
+  stopifnot(perp <= floor((nrow(table) - 1)/3))
   set.seed(0)
 
   Rtsne(table, dims = dim, perplexity = perp, max_iter = max_iter, theta = theta,
