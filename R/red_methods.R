@@ -37,13 +37,14 @@ library(Matrix)
 
 # determines if a table is valid for dimensionality reduction
 # refuse to have less than 4 rows initially, since 3 points define a plane (2D)
-# refuse to have less than 3 columns initially, since then you can immediately plot on 2D
+# refuse to have less than 4 columns initially, since then you can immediately plot on 3D
+# and plot on 2D for second-round reductions.
 valid_table <- function(cand_table)
 {
   if (!all.equal(class(matrix()), class(cand_table)))
     return(FALSE)
 
-  if (nrow(cand_table) < 4 || ncol(cand_table) < 3)
+  if (nrow(cand_table) < 4 || ncol(cand_table) < 4)
     return(FALSE)
 
     for (j in 1:ncol(cand_table))
@@ -313,8 +314,9 @@ table_to_phate <- function(data, dim = 2, perp = 1) {
 table_to_tsne <- function(table, dim = 2, perp = 1, max_iter = 500, theta = 0.5,
                      eta = 200, momentum = 0.5, verbose = FALSE)
 {
-  perplexity <- min(perp, floor((nrow(table)-1)/3))
-  set.seed(42)
+  # the perplexity can't be too big
+  stopifnot(perp < floor((nrow(table))/3))
+  set.seed(0)
 
   Rtsne(table, dims = dim, perplexity = perp, max_iter = max_iter, theta = theta,
         eta = eta, momentum = momentum, final_momentum = momentum, verbose = verbose,
