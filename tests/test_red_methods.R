@@ -17,6 +17,10 @@ source_sdr("plotting.R")
 project_name <- "exRNA"
 source_sdr("preprocess.R")
 
+# -----
+# TESTS
+# -----
+
 # get random data
 test_table <- matrix(0, nrow = 400, ncol = 20)
 test_labels <- as.character(rep(1:5, each = 80))

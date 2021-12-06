@@ -107,8 +107,12 @@ is_valid_request <- function(request)
         return(FALSE)
 
       # avoid non-integral or out-of-range perplexities
-      if (!att_is_int(per) || !dplyr::between(per, 0, ))
+      if (!att_is_int(per) || !dplyr::between(per, 0, max_perplexity))
         return(FALSE)
+    }
+    else # PCA, VAE, UMAP
+    {
+
     }
 
 
@@ -137,9 +141,6 @@ is_valid_request <- function(request)
 
     }
   }
-
-
-  if ()
 
   TRUE
 }
@@ -303,15 +304,11 @@ perform_reduction <- function(requests, force = 0)
     }
   }
 
-  # table_to_pca(table, dim = 2)
-  # pca_to_summary(pca_result)
-  # table_to_vae(table, dim = 2, batch_size = 2)
+  # table_to_pca(table, dim = 2), pca_to_summary(pca_result)
+  # table_to_vae(table, dim = 2, batch_size = 2), vae_to_summary(vae_result)
+  # table_to_umap(table, dim = 2, perp = 2), umap_to_summary(umap_result)
+  # table_to_phate(data, dim = 2, perp = 1), table_to_tsne(table, dim = 2, perp = 1)
 
-  # vae_to_summary(vae_result)
-  # table_to_umap(table, dim = 2, perp = 2)
-  # umap_to_summary(umap_result)
-  # table_to_phate(data, dim = 2, perp = 1)
-  # table_to_tsne(table, dim = 2, perp = 1)
   # table_to_sets(data, thre), set_label_matrix(sets_result, labels)
 }
 
