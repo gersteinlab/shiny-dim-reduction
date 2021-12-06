@@ -14,9 +14,8 @@ source_sdr("preprocess.R")
 setwd(app_loc)
 get_from_dir("amazon_keys")
 
-# assign keys to admin plus decided bucket
-load_master_key(amazon_keys$bucket)
-set_working_key(master_key)
+set_working_key(amazon_keys)
+sudo_working_key()
 storage_query()
 
 # -----------

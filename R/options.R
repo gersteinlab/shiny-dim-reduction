@@ -74,7 +74,7 @@ name_num_map <- function(list_num)
 perplexity_types <- as.character(perplexity_types)
 
 # assign keys and create bibliography
-assign_keys(amazon_keys)
+set_working_key(amazon_keys)
 storage_query()
 citations <- rep_str(bibliography, "!!!!!!!!!!", app_citations)
 
@@ -148,7 +148,7 @@ for (cn in 1:num_cat)
   order_names <- colnames(order_gen)
 
   # subsets
-  subsets <- sub_groups[[cat]]
+  subsets <- sub_col_groups[[cat]]
   sub_opts[[cn]] <- cat_select_panel(
     cat, id_subset(cat), sprintf("Feature Subset (%s)", cat), subsets, 1)
 

@@ -26,7 +26,7 @@ master_key_loc <- get_project_loc("sdr_master_key.rds")
 # sets the current working AWS access key, which comprises: id, secret, bucket
 set_working_key <- function(key)
 {
-  if (class(keys) != "list")
+  if (class(key) != "list")
     stop("Provided keys are not a list.")
 
   if (!isTRUE(all.equal(names(key), c("id", "secret", "bucket"))))
