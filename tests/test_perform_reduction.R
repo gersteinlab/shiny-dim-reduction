@@ -16,7 +16,8 @@ source_sdr("perform_reduction.R")
 
 # a collection of invalid potential inputs
 invalid_candidates <- c(
-  "~!@#$%^&*()", .Machine$double.xmin, -.Machine$double.xmax, NA, NaN, 0
+  NA
+  # , "~!@#$%^&*()", .Machine$double.xmin, -.Machine$double.xmax, NaN, 0
 )
 
 # used to populate invalid inputs randomly
@@ -91,6 +92,10 @@ val_req <- rbind(
 
 sprintf_clean("Number of Valid Requests: Expected 12, Received %s", nrow(val_req))
 
+# ----------------------
+# PERFORM VALID REQUESTS
+# ----------------------
+
 # ---------------------
 # TEST INVALID REQUESTS
 # ---------------------
@@ -110,12 +115,26 @@ invalid3 <- make_requests(
   10, 2, 5000, 30, inv()
 )
 
+# Sets with wrong normalization
+invalid4 <- make_requests(
+    "miRNA", inv(), inv(), "Logarithmic", "Quantile", "Sets", inv(),
+    inv(), inv(), inv(), inv(), 0.4
+)
+
+# VAE with wrong normalization
+invalid5 <- make_requests(
+  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Quantile", "VAE", "tSNE",
+  10, 2, 15, 64, "hi"
+)
+
 sprintf_clean("Is expected invalid request 1 valid?: %s", !is.null(invalid1))
 sprintf_clean("Is expected invalid request 2 valid?: %s", !is.null(invalid2))
 sprintf_clean("Is expected invalid request 3 valid?: %s", !is.null(invalid3))
+sprintf_clean("Is expected invalid request 4 valid?: %s", !is.null(invalid4))
+sprintf_clean("Is expected invalid request 5 valid?: %s", !is.null(invalid5))
 
-table_name <- paste(test_requests[4, 1:5], collapse = "_")
-pca_100_plasma <- readRDS(sprintf("inter/%s_%s_%s.rds", table_name, "PCA", 10))
-subset_labels <- order_total$miRNA[get_row_decor_indices("miRNA", "Plasma"),,drop=FALSE]
-plotly_2d(pca_100_plasma$x[,1], pca_100_plasma$x[,2], subset_labels$BIOFLUID)
-plotly_2d(pca_100_plasma$x[,1], pca_100_plasma$x[,2], subset_labels$CONDITION)
+# table_name <- paste(test_requests[4, 1:5], collapse = "_")
+# pca_100_plasma <- readRDS(sprintf("inter/%s_%s_%s.rds", table_name, "PCA", 10))
+# subset_labels <- order_total$miRNA[get_row_decor_indices("miRNA", "Plasma"),,drop=FALSE]
+# plotly_2d(pca_100_plasma$x[,1], pca_100_plasma$x[,2], subset_labels$BIOFLUID)
+# plotly_2d(pca_100_plasma$x[,1], pca_100_plasma$x[,2], subset_labels$CONDITION)
