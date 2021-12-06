@@ -17,7 +17,7 @@ source_sdr("perform_reduction.R")
 # a collection of invalid potential inputs
 invalid_candidates <- c(
   NA
-  # , "~!@#$%^&*()", .Machine$double.xmin, -.Machine$double.xmax, NaN, 0
+  # , "~!@#$%^&*()", .Machine$double.xmin, -.Machine$double.xmax, NaN
 )
 
 # used to populate invalid inputs randomly
@@ -127,11 +127,18 @@ invalid5 <- make_requests(
   10, 2, 15, 64, "hi"
 )
 
+# PHATE but no perplexity provided
+invalid6 <- make_requests(
+  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "PHATE", inv(),
+  2, inv(), inv(), inv(), inv()
+)
+
 sprintf_clean("Is expected invalid request 1 valid?: %s", !is.null(invalid1))
 sprintf_clean("Is expected invalid request 2 valid?: %s", !is.null(invalid2))
 sprintf_clean("Is expected invalid request 3 valid?: %s", !is.null(invalid3))
 sprintf_clean("Is expected invalid request 4 valid?: %s", !is.null(invalid4))
 sprintf_clean("Is expected invalid request 5 valid?: %s", !is.null(invalid5))
+sprintf_clean("Is expected invalid request 6 valid?: %s", !is.null(invalid6))
 
 # table_name <- paste(test_requests[4, 1:5], collapse = "_")
 # pca_100_plasma <- readRDS(sprintf("inter/%s_%s_%s.rds", table_name, "PCA", 10))

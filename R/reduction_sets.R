@@ -37,13 +37,6 @@ binary_search <- function(data, target, numdigits)
   round((lower+upper)/2,numdigits)
 }
 
-# selects only worthwhile characteristics
-select_chars <- function(order){
-  select_if(order, function(x){
-    between(length(unique(x)), 2, num_filters)
-  })
-}
-
 # --------------
 # USER VARIABLES
 # --------------
@@ -53,9 +46,6 @@ lower <- 8 # 2^3
 upper <- 262144 # 2^18
 numdigits <- 4
 len_inter <- 10
-
-# Only allow filtering on a characteristic with <= num_filters distinct values.
-num_filters <- 60
 
 # ------------
 # SET ANALYSIS
