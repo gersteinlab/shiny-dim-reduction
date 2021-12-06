@@ -30,12 +30,13 @@ request_colnames <- c(
 # check if we have an integer for an attribute
 att_is_int <- function(x)
 {
-  x == as.integer(x)
+  suppressWarnings(isTRUE(x == as.integer(x)))
 }
 
 # returns whether a request (a requests data.frame with a single row) is valid
 # note: should only be called through are_valid_requests
 # note: if an attribute is unused, we don't check it (ex: batch_size for pca)
+# note: a request can be valid but still impossible to execute (perplexity too high)
 is_valid_request <- function(request)
 {
   cat <- request$CATEGORIES
@@ -60,9 +61,6 @@ is_valid_request <- function(request)
   if (!is.character(sca) || !(sca %in% sca_options))
     return(FALSE)
 
-  if (!is.character(nor) || !(nor %in% nor_options))
-    return(FALSE)
-
   # Sets doesn't care about row, col
   if (emb == "Sets")
   {
@@ -70,75 +68,86 @@ is_valid_request <- function(request)
     if (!is.numeric(thr) || !dplyr::between(thr, 0, 1))
       return(FALSE)
 
-    # only Global Min-Max allowed
+    # only Global Min-Max normalization allowed
     if (nor != "Global Min-Max")
       return(FALSE)
   }
   else
   {
-    # must be a valid name of a subset
-    if (!is.character(row) || !is.character(col))
+    # must be a valid row subset
+    if (!is.character(row) || !(row %in% sub_row_groups[[cat]]))
       return(FALSE)
 
-    row_subset <- get_row_decor_subset(cat, row)
+    row_num <- categories[[cat]][1]
+    if (row != "Total")
+      row_num <- length(get_row_decor_subset(cat, row))
 
-    # refuse to have less than 4 rows initially
-    if (length(row_subset) < 4)
+    # must be a valid column subset
+    if (!is.character(col) || !(col %in% sub_col_groups[[cat]]))
       return(FALSE)
 
-    col_subset <- get_col_decor_subset(cat, col)
+    col_num <- categories[[cat]][2]
+    if (col != "Total")
+      col_num <- length(get_col_decor_subset(cat, col))
 
-    # refuse to have less than 4 columns initially
-    if (length(col_subset) < 4)
-      return(FALSE)
-
-    # we will definitely need com to be an integer
-    if (!att_is_int(com))
-      return(FALSE)
-
-    # calculate maximum perplexity in advance
-    max_perplexity <- min(100, floor((length(row_subset) - 1)/3))
+    # avoid non-integral or out-of-range perplexities
+    max_perplexity <- min(100, floor((row_num - 1)/3))
 
     # PHATE
     if (emb == "PHATE")
     {
-      # must be reduced down to 2 or 3 dimensions for plotting
-      if (com != 2 || com != 3)
+      if (!is.character(nor) || !(nor %in% nor_options))
         return(FALSE)
-
+      # must be reduced down to 2 or 3 dimensions for plotting
+      if (com != 2 && com != 3)
+        return(FALSE)
       # avoid non-integral or out-of-range perplexities
       if (!att_is_int(per) || !dplyr::between(per, 0, max_perplexity))
         return(FALSE)
     }
     else # PCA, VAE, UMAP
     {
-
-    }
-
-
-    # first round reduction must be plottable in 2D, at least
-    if (com < 2)
-      return(FALSE)
-
-
-  }
-
-
-
-  # first round PCA must be at least 2
-  if (emb == "PCA")
-  {
-
-
-    # second round reduction
-    if (vis == "tSNE")
-    {
-      # must go to 2D or 3D and have less columns than first-round reduction
-      if (!((dim == 2 || dim == 3) && dim < com))
+      if (!is.character(vis) || !(vis %in% vis_options))
         return(FALSE)
 
-      # forbid a perplexity greater than 100 or the cap suggesting by the number of samples
+      # avoid non-integral or out-of-range components
+      if (!att_is_int(com) || !dplyr::between(com, 2, col_num - 1))
+        return(FALSE)
 
+      if (vis == "tSNE")
+      {
+        # must go to 2D or 3D and have less columns than first-round reduction
+        if ((dim != 2 && dim != 3) || dim >= com)
+          return(FALSE)
+
+        if (!att_is_int(per) || !dplyr::between(per, 0, max_perplexity))
+          return(FALSE)
+      }
+
+      # first round reduction must be plottable in 2D, at least
+      if (com < 2)
+        return(FALSE)
+
+      if (emb == "VAE")
+      {
+        # prevent normalizations that don't end in [0, 1]
+        if (nor %in% nor_options[4:5])
+          return(FALSE)
+
+        # avoid non-integral or out-of-range batch sizes
+        if (!att_is_int(bat) || !dplyr::between(bat, 1, row_num))
+          return(FALSE)
+      }
+
+      if (!is.character(nor) || !(nor %in% nor_options))
+        return(FALSE)
+
+      if (emb == "UMAP")
+      {
+        # avoid non-integral or negative perplexities
+        if (!att_is_int(per) || !dplyr::between(per, 0, max_perplexity))
+          return(FALSE)
+      }
     }
   }
 
@@ -148,12 +157,6 @@ is_valid_request <- function(request)
 # returns whether a set of requests is valid, by going row-by-row
 are_valid_requests <- function(requests)
 {
-  # ensure it's a data frame
-  stopifnot(all.equal(class(data.frame()), class(requests)))
-
-  # ensure its colnames are correct
-  stopifnot(all.equal(colnames(requests), request_colnames))
-
   row_num <- nrow(requests)
   valid_rows <- rep(TRUE, row_num)
 
@@ -173,11 +176,12 @@ make_requests <- function(
   per = numeric(0), bat = numeric(0), thr = numeric(0)
 ){
   # it's not a valid request if the lengths of all attributes aren't equal
+  n_cat <- length(cat)
   att_lengths <- c(
-    length(cat), length(row), length(col), length(sca), length(nor), length(emb),
+    n_cat, length(row), length(col), length(sca), length(nor), length(emb),
     length(vis), length(com), length(dim), length(per), length(bat), length(thr)
   )
-  if (!length(unique(att_lengths)) == 1)
+  if (length(unique(att_lengths)) != 1)
     return(NULL)
 
   # create a data frame of requests
@@ -197,22 +201,11 @@ make_requests <- function(
   )
 
   # check if every single request is valid
-  if (sum(are_valid_requests(requests)) != n)
+  if (sum(are_valid_requests(requests)) != n_cat)
     return(NULL)
 
   requests
 }
-
-r1 <- make_requests(
-  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "PCA", "Explore", 10, -1, -1, -1, -1)
-test_requests <- rbind(test_requests, )
-test_requests <- rbind(test_requests, make_request(
-  "miRNA", "Plasma", "SD_Top_1000", "Logarithmic", "Global Min-Max", "PCA", "Explore", 10, -1, -1, -1, -1))
-test_requests <- rbind(test_requests, make_request(
-  "miRNA", "Total", "SD_Top_100", "Logarithmic", "Global Min-Max", "PCA", "Explore", 10, -1, -1, -1, -1))
-test_requests <- rbind(test_requests, make_request(
-  "miRNA", "Plasma", "SD_Top_100", "Logarithmic", "Global Min-Max", "PCA", "Explore", 10, -1, -1, -1, -1))
-perform_reduction(test_requests)
 
 # note: valid requests have the following characteristics:
 # if emb == "Sets": row == "Total", col == "Total", nor == "Global Min-Max"
@@ -311,9 +304,3 @@ perform_reduction <- function(requests, force = 0)
 
   # table_to_sets(data, thre), set_label_matrix(sets_result, labels)
 }
-
-table_name <- paste(test_requests[4, 1:5], collapse = "_")
-pca_100_plasma <- readRDS(sprintf("inter/%s_%s_%s.rds", table_name, "PCA", 10))
-subset_labels <- order_total$miRNA[rownames(combined_miRNA) %in% get_row_decor_subset("miRNA", "Plasma"),,drop=FALSE]
-plotly_2d(pca_100_plasma$x[,1], pca_100_plasma$x[,2], subset_labels$BIOFLUID)
-plotly_2d(pca_100_plasma$x[,1], pca_100_plasma$x[,2], subset_labels$CONDITION)

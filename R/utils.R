@@ -121,6 +121,20 @@ get_row_decor_subset <- function(cat, row)
   return(NULL)
 }
 
+# used for order
+get_row_decor_indices <- function(cat, row)
+{
+  for (dec_group in decorations)
+  {
+    if (cat %in% dec_group$CATEGORIES)
+    {
+      return(dec_group$ROW_SUBSETS[[row]])
+    }
+  }
+
+  return(NULL)
+}
+
 get_col_decor_subset <- function(cat, col)
 {
   for (dec_group in decorations)
@@ -186,20 +200,29 @@ init_cat <- function()
 # to remove: rm(sub_groups)
 init_sub <- function(subset_map)
 {
-  sub_groups <- empty_named_list(name_cat)
+  sub_row_groups <- empty_named_list(name_cat)
+  sub_col_groups <- empty_named_list(name_cat)
 
   for (cat in name_cat)
-    sub_groups[[cat]] <- list("Total"=rep(0, categories[[cat]])) %>% subset_map()
+  {
+    sub_row_groups[[cat]] <- list("Total"=rep(0, categories[[cat]][1])) %>% subset_map()
+    sub_col_groups[[cat]] <- list("Total"=rep(0, categories[[cat]][2])) %>% subset_map()
+  }
 
   for (dec_group in decorations)
   {
-    mapping <- dec_group$Subsets[-1] %>% subset_map()
+    mapping_row <- dec_group$ROW_SUBSETS[-1] %>% subset_map()
+    mapping_col <- dec_group$COL_SUBSETS[-1] %>% subset_map()
 
-    for (good_cat in dec_group$Categories)
-      sub_groups[[good_cat]] <- c(sub_groups[[good_cat]], mapping)
+    for (good_cat in dec_group$CATEGORIES)
+    {
+      sub_row_groups[[good_cat]] <- c(sub_row_groups[[good_cat]], mapping_row)
+      sub_col_groups[[good_cat]] <- c(sub_col_groups[[good_cat]], mapping_col)
+    }
   }
 
-  assign("sub_groups", sub_groups, envir = .GlobalEnv)
+  assign("sub_row_groups", sub_row_groups, envir = .GlobalEnv)
+  assign("sub_col_groups", sub_col_groups, envir = .GlobalEnv)
 
   invisible()
 }
