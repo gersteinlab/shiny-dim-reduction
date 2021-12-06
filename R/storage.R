@@ -16,7 +16,26 @@ if (!exists("ran_install"))
 
 require(aws.s3)
 
+# --------------
+# KEY MANAGEMENT
+# --------------
+
+# the expected location of the master key
 master_key_loc <- get_project_loc("sdr_master_key.rds")
+
+# sets the current working AWS access key, which comprises: id, secret, bucket
+set_working_key <- function(key)
+{
+  if (class(keys) != "list")
+    stop("Provided keys are not a list.")
+
+  if (!isTRUE(all.equal(names(key), c("id", "secret", "bucket"))))
+    stop("Incorrect key components provided.")
+
+  Sys.setenv("AWS_ACCESS_KEY_ID" = key$id,
+             "AWS_SECRET_ACCESS_KEY" = key$secret,
+             "AWS_ACCESS_BUCKET" = key$bucket)
+}
 
 # create a master key and save it in the project directory
 save_master_key <- function(id, secret)
@@ -25,11 +44,15 @@ save_master_key <- function(id, secret)
   saveRDS(sdr_master_key, master_key_loc)
 }
 
-# load a master key from the project directory
-load_master_key <- function()
+# give the current working key MASTER KEY privileges
+sudo_working_key <- function()
 {
   sdr_master_key <- readRDS(master_key_loc)
-  assign("master_keys", sdr_master_key, envir = .GlobalEnv)
+  set_working_key(list(
+    "id" = sdr_master_key$id,
+    "secret" = sdr_master_key$secret,
+    "bucket" = Sys.getenv("AWS_ACCESS_BUCKET")
+  ))
 }
 
 # -------------
@@ -78,18 +101,7 @@ load_local <- function(filename)
 my_amazon_obj <- NULL
 
 # assigns keys for AWS.S3 - must be used first
-assign_keys <- function(keys)
-{
-  if (class(keys) != "list")
-    stop("Provided keys are not a list.")
 
-  if (!isTRUE(all.equal(names(keys), c("id", "secret", "bucket"))))
-    stop("Incorrect key components provided.")
-
-  Sys.setenv("AWS_ACCESS_KEY_ID" = keys$id,
-             "AWS_SECRET_ACCESS_KEY" = keys$secret,
-             "AWS_ACCESS_BUCKET" = keys$bucket)
-}
 
 # determines whether a single object with the given filename exists
 find_aws_s3 <- function(filename)
