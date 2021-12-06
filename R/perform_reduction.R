@@ -218,25 +218,37 @@ make_requests <- function(
 # note: to do requests in steps, just subset the requests data.frame
 perform_reduction <- function(requests, force = 0)
 {
+  # select the category
   for (cat in unique(requests$CATEGORIES))
   {
     subrequests_cat <- requests[requests$CATEGORIES == cat,]
     cat_table <- readRDS(sprintf("combined/combined_%s.rds", cat))
 
+    # perform scaling
+    for (sca in unique(subrequests_cat$SCALING))
+    {
+      subrequests_sca <- subrequests_cat[subrequests_cat$SCALING == sca,]
+      sca_table <- do_scal(sca, cat_table)
+
+      subrequests_sets <- requests[requests$EMBEDDING == "Sets",]
+      subrequests_phate <- requests[requests$EMBEDDING == "PHATE", ]
+
     for (row in unique(subrequests_cat$ROW_SUBSETS))
     {
       subrequests_row <- subrequests_cat[subrequests_cat$ROW_SUBSETS == row,]
+
+      # Sets doesn't care about row / col subsetting, so treat it like a custom case
+      if (unique(subrequests_row$EMBEDDING) == "Sets")
+      {
+
+      }
+
       row_table <- get_row_sub(cat_table, cat, row)
 
       for (col in unique(subrequests_row$COL_SUBSETS))
       {
         subrequests_col <- subrequests_row[subrequests_row$COL_SUBSETS == col,]
         col_table <- get_col_sub(row_table, cat, col)
-
-        for (sca in unique(subrequests_col$SCALING))
-        {
-          subrequests_sca <- subrequests_col[subrequests_col$SCALING == sca,]
-          sca_table <- do_scal(sca, col_table)
 
           for (nor in unique(subrequests_sca$NORMALIZATION))
           {
@@ -245,7 +257,7 @@ perform_reduction <- function(requests, force = 0)
 
             stopifnot(valid_table(nor_table))
 
-            table_name <- paste(cat, row, col, sca, nor, sep = "_")
+            table_name <- paste(cat, row, col, sca, nor, sep = ", ")
             print(table_name)
             print(dim(nor_table))
 
@@ -257,16 +269,16 @@ perform_reduction <- function(requests, force = 0)
               {
                 for (dim in unique(subrequests_emb$DIMENSION))
                 {
-                  explore_loc <- sprintf("inter/%s_%s_%s.rds", table_name, emb, dim)
-                  explore <- NULL
-                  if (!file.exists(explore_loc))
+                  pca_loc <- sprintf("inter/%s_%s_%s.rds", table_name, emb, dim)
+                  pca_result <- NULL
+                  if (force == 2 || !file.exists(explore_loc))
                   {
-                    explore <- table_to_pca(nor_table, dim)
+                    pca_result <- table_to_pca(nor_table, dim)
                     saveRDS(explore, explore_loc)
                   }
                   else
                   {
-                    explore <- readRDS(explore_loc)
+                    pca_result <- readRDS(pca_loc)
                   }
                 }
               }
