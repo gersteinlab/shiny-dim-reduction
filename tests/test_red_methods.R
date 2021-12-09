@@ -112,17 +112,17 @@ mirna_tsne <- table_to_tsne(mirna_table, 2, 10)
 plotly_2d(mirna_tsne$Y[,1], mirna_tsne$Y[,2], mirna_labels)
 
 # test pca
-mirna_pca <- table_to_pca(mirna_table, 10)
+mirna_pca <- table_to_pca(mirna_table, 10) # dim 10
 mirna_pca_explore <- pca_to_explore(mirna_pca)
 mirna_pca_sum <- pca_to_summary(mirna_pca)
-mirna_pca_tsne <- pca_to_tsne(mirna_pca, 2, 10)
+mirna_pca_tsne <- pca_to_tsne(mirna_pca, 2, 25) # perplexity 25
 
 plotly_2d(mirna_pca_explore[,1], mirna_pca_explore[,2], mirna_labels)
 plotly_pca_sum(mirna_pca_sum)
 plotly_2d(mirna_pca_tsne$Y[,1], mirna_pca_tsne$Y[,2], mirna_labels)
 
 # test vae
-mirna_vae <- table_to_vae(mirna_table, 2, 64) # batch size 64
+mirna_vae <- table_to_vae(mirna_table, 10, 64) # dim 10, batch size 64
 mirna_vae_explore <- vae_to_explore(mirna_vae)
 mirna_vae_sum <- vae_to_summary(mirna_vae)
 mirna_vae_tsne <- vae_to_tsne(mirna_vae, 2, 10)
@@ -132,7 +132,7 @@ plotly_vae_sum(mirna_vae_sum)
 plotly_2d(mirna_vae_tsne$Y[,1], mirna_vae_tsne$Y[,2], mirna_labels)
 
 # test umap
-mirna_umap <- table_to_umap(mirna_table, 2, 10)
+mirna_umap <- table_to_umap(mirna_table, 10, 25) # dim 10, perplexity 25
 mirna_umap_explore <- umap_to_explore(mirna_umap)
 mirna_umap_sum <- umap_to_summary(mirna_umap)
 mirna_umap_tsne <- umap_to_tsne(mirna_umap, 2)
@@ -143,7 +143,7 @@ plotly_heatmap_dendrogram(knn_label_matrix(mirna_umap_sum, mirna_labels))
 plotly_2d(mirna_umap_tsne$Y[,1], mirna_umap_tsne$Y[,2], mirna_labels)
 
 # test phate
-mirna_phate <- table_to_phate(mirna_table, 2, 10)
+mirna_phate <- table_to_phate(mirna_table, 2, 25) # perplexity 25
 plotly_2d(mirna_phate$embedding[,1], mirna_phate$embedding[,2], mirna_labels)
 
 # test sets
@@ -156,6 +156,66 @@ plotly_heatmap_dendrogram(mirna_sets_frac)
 
 end2 <- my_timer(start2)
 
+# get RNA binding protein data
+setwd(pro_loc)
+combined_RBP <- readRDS("combined/combined_RNA_binding_proteins.rds")
+rbp_table <- norm_min_max(log_scale(combined_RBP))
+rbp_labels <- order_total$RNA_binding_proteins$CONDITION
+
+# test RBP data
+start3 <- my_timer()
+sprintf_clean("Is this a valid table?: %s", valid_table(rbp_table))
+
+# test tsne
+rbp_tsne <- table_to_tsne(rbp_table, 2, 10)
+plotly_2d(rbp_tsne$Y[,1], rbp_tsne$Y[,2], rbp_labels)
+
+# test pca
+rbp_pca <- table_to_pca(rbp_table, 10) # dim 10
+rbp_pca_explore <- pca_to_explore(rbp_pca)
+rbp_pca_sum <- pca_to_summary(rbp_pca)
+rbp_pca_tsne <- pca_to_tsne(rbp_pca, 2, 25) # perplexity 25
+
+plotly_2d(rbp_pca_explore[,1], rbp_pca_explore[,2], rbp_labels)
+plotly_pca_sum(rbp_pca_sum)
+plotly_2d(rbp_pca_tsne$Y[,1], rbp_pca_tsne$Y[,2], rbp_labels)
+
+# test vae
+rbp_vae <- table_to_vae(rbp_table, 10, 64) # dim 10, batch size 64
+rbp_vae_explore <- vae_to_explore(rbp_vae)
+rbp_vae_sum <- vae_to_summary(rbp_vae)
+rbp_vae_tsne <- vae_to_tsne(rbp_vae, 2, 10)
+
+plotly_2d(rbp_vae_explore[,1], rbp_vae_explore[,2], rbp_labels)
+plotly_vae_sum(rbp_vae_sum)
+plotly_2d(rbp_vae_tsne$Y[,1], rbp_vae_tsne$Y[,2], rbp_labels)
+
+# test umap
+rbp_umap <- table_to_umap(rbp_table, 10, 25) # dim 10, perplexity 25
+rbp_umap_explore <- umap_to_explore(rbp_umap)
+rbp_umap_sum <- umap_to_summary(rbp_umap)
+rbp_umap_tsne <- umap_to_tsne(rbp_umap, 2)
+
+plotly_2d(rbp_umap_explore[,1], rbp_umap_explore[,2], rbp_labels)
+plotly_heatmap_variance(knn_label_matrix(rbp_umap_sum, rbp_labels))
+plotly_heatmap_dendrogram(knn_label_matrix(rbp_umap_sum, rbp_labels))
+plotly_2d(rbp_umap_tsne$Y[,1], rbp_umap_tsne$Y[,2], rbp_labels)
+
+# test phate
+rbp_phate <- table_to_phate(rbp_table, 2, 25) # perplexity 25
+plotly_2d(rbp_phate$embedding[,1], rbp_phate$embedding[,2], rbp_labels)
+
+# test sets
+rbp_sets <- table_to_sets(rbp_table, 0.4)
+rbp_sets_labels <- set_label_matrix(rbp_sets, rbp_labels)
+rbp_sets_frac <- rbp_sets_labels %>% truncate_rows() %>% sort_row_sums() %>%
+  set_f1_f2(c(0, 1), c(0, 32))
+plotly_heatmap_variance(rbp_sets_frac)
+plotly_heatmap_dendrogram(rbp_sets_frac)
+
+end3 <- my_timer(start3)
+
 # print out times
 print(end1)
 print(end2)
+print(end3)
