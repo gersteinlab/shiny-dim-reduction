@@ -197,8 +197,11 @@ make_requests <- function(
     "DIMENSION" = dim,
     "PERPLEXITY" = per,
     "BATCH_SIZE" = bat,
-    "THRESHOLD" = thr
+    "THRESHOLD" = thr # note that only 3 digits past the decimal point count
   )
+
+  if (is.numeric(thr))
+    requests$THRESHOLD <- round(thr, 3)
 
   # check if every single request is valid
   if (sum(are_valid_requests(requests)) != n_cat)
@@ -223,6 +226,7 @@ perform_reduction <- function(requests, force = 0)
   {
     subrequests_cat <- requests[requests$CATEGORIES == cat,]
     cat_table <- readRDS(sprintf("combined/combined_%s.rds", cat))
+    short_order <- select_chars(order_total[[cat]])
 
     # perform scaling
     for (sca in unique(subrequests_cat$SCALING))
@@ -230,30 +234,53 @@ perform_reduction <- function(requests, force = 0)
       subrequests_sca <- subrequests_cat[subrequests_cat$SCALING == sca,]
       sca_table <- do_scal(sca, cat_table)
 
-      subrequests_sets <- requests[requests$EMBEDDING == "Sets",]
-      subrequests_phate <- requests[requests$EMBEDDING == "PHATE", ]
-
-    for (row in unique(subrequests_cat$ROW_SUBSETS))
-    {
-      subrequests_row <- subrequests_cat[subrequests_cat$ROW_SUBSETS == row,]
-
-      # Sets doesn't care about row / col subsetting, so treat it like a custom case
-      if (unique(subrequests_row$EMBEDDING) == "Sets")
+      # perform normalization
+      for (nor in unique(subrequests_sca$NORMALIZATION))
       {
+        subrequests_nor <- subrequests_sca[subrequests_sca$NORMALIZATION == nor,]
+        nor_table <- do_norm(nor, sca_table)
 
-      }
+        # divide into embeddings
+        subrequests_sets <- requests[requests$EMBEDDING == "Sets",]
 
-      row_table <- get_row_sub(cat_table, cat, row)
+        # perform Sets
+        for (thr in unique(subrequests_sets$THRESHOLD))
+        {
+          set_result <- table_to_sets(nor_table, thr)
 
-      for (col in unique(subrequests_row$COL_SUBSETS))
-      {
-        subrequests_col <- subrequests_row[subrequests_row$COL_SUBSETS == col,]
-        col_table <- get_col_sub(row_table, cat, col)
-
-          for (nor in unique(subrequests_sca$NORMALIZATION))
+          for (cha in colnames(short_order))
           {
-            subrequests_nor <- subrequests_sca[subrequests_sca$NORMALIZATION == nor,]
-            nor_table <- do_norm(nor, sca_table)
+            set_loc <- sprintf("Sets/Sets-%s_%s_%s_%s.rds",
+                              ind, sca_ind, cha, cat)
+
+            if (force > 0 || !file.exists(set_loc))
+              saveRDS(set_label_matrix(set_result, short_order[[cha]]), set_loc)
+          }
+        }
+
+        subrequests_pca <- requests[requests$EMBEDDING == "PCA", ]
+        subrequests_vae <- requests[requests$EMBEDDING == "VAE", ]
+        subrequests_umap <- requests[requests$EMBEDDING == "UMAP", ]
+        subrequests_phate <- requests[requests$EMBEDDING == "PHATE", ]
+
+        for (row in unique(subrequests_cat$ROW_SUBSETS))
+        {
+          subrequests_row <- subrequests_cat[subrequests_cat$ROW_SUBSETS == row,]
+
+          # Sets doesn't care about row / col subsetting, so treat it like a custom case
+          if (unique(subrequests_row$EMBEDDING) == "Sets")
+          {
+
+          }
+
+          row_table <- get_row_sub(cat_table, cat, row)
+
+          for (col in unique(subrequests_row$COL_SUBSETS))
+          {
+            subrequests_col <- subrequests_row[subrequests_row$COL_SUBSETS == col,]
+            col_table <- get_col_sub(row_table, cat, col)
+
+
 
             stopifnot(valid_table(nor_table))
 
