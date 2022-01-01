@@ -12,6 +12,8 @@ if (!exists("ran_install"))
     stop("Could not confirm installation. Please source install.R manually.")
 }
 
+# optional but default for now; avoids prompt
+project_name <- "exRNA"
 source_sdr("perform_reduction.R")
 
 # a collection of invalid potential inputs
@@ -92,10 +94,6 @@ val_req <- rbind(
 
 sprintf_clean("Number of Valid Requests: Expected 12, Received %s", nrow(val_req))
 
-# ----------------------
-# PERFORM VALID REQUESTS
-# ----------------------
-
 # ---------------------
 # TEST INVALID REQUESTS
 # ---------------------
@@ -133,12 +131,16 @@ invalid6 <- make_requests(
   2, inv(), inv(), inv(), inv()
 )
 
-sprintf_clean("Is expected invalid request 1 valid?: %s", !is.null(invalid1))
-sprintf_clean("Is expected invalid request 2 valid?: %s", !is.null(invalid2))
-sprintf_clean("Is expected invalid request 3 valid?: %s", !is.null(invalid3))
-sprintf_clean("Is expected invalid request 4 valid?: %s", !is.null(invalid4))
-sprintf_clean("Is expected invalid request 5 valid?: %s", !is.null(invalid5))
-sprintf_clean("Is expected invalid request 6 valid?: %s", !is.null(invalid6))
+invalid_requests <- list(
+  invalid1, invalid2, invalid3, invalid4, invalid5, invalid6
+)
+
+for (i in seq_along(invalid_requests))
+  sprintf_clean("Is expected invalid request %s valid?: %s", i, !is.null(invalid_requests[[i]]))
+
+# ----------------------
+# PERFORM VALID REQUESTS
+# ----------------------
 
 # table_name <- paste(test_requests[4, 1:5], collapse = "_")
 # pca_100_plasma <- readRDS(sprintf("inter/%s_%s_%s.rds", table_name, "PCA", 10))
