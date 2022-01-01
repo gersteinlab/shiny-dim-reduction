@@ -97,7 +97,8 @@ all_reductions <- function(table, labels)
 # INVALID
 # -------
 
-all_reductions(data.frame(), NULL)
+tryCatch(all_reductions(data.frame(), NULL),
+         error = function(e){print_clean("Caught error!")})
 
 # ------
 # RANDOM
