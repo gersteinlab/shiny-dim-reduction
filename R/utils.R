@@ -13,17 +13,6 @@ if (!exists("ran_install"))
 require("dplyr")
 require("shiny")
 
-# ---------
-# FUNCTIONS
-# ---------
-
-# Interpolates the number of truncated features in the range [pc_cap, total_features]
-# given a fraction of the distance.
-calc_feat <- function(pc_cap, fraction, total_features)
-{
-  pc_cap + ceiling(fraction * (total_features - pc_cap))
-}
-
 # ----------------
 # ANALYSIS OPTIONS
 # ----------------

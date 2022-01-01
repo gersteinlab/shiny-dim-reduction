@@ -386,7 +386,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
       subi() == "Total",
       categories[[cati()]],
       length(get_decor_subset(cati(), subi()))
-    ) %>% calc_feat(pc_cap, feat()/100, .)
+    )
   })
 
   # numeric data for displaying / downloading
