@@ -1,12 +1,14 @@
 # The goal of this app is to perform dimensionality reduction.
 
 # In the project, app.R is located in the R folder so execution stops immediately
-
 if (!file.exists("install.R"))
   stop("Could not confirm installation. Please source install.R manually.")
 source("install.R")
 
 set_sdr_from_app(TRUE)
+
+require("shiny")
+require("dplyr")
 
 source_sdr("text_work.R")
 source_sdr("utils.R")

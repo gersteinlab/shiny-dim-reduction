@@ -1,6 +1,5 @@
 # This file stores all functions and constants that should be preserved
 # across all files, from data validation to processing to the tool.
-# source("utils.R", encoding="UTF-8")
 
 if (!exists("ran_install"))
 {
@@ -9,9 +8,6 @@ if (!exists("ran_install"))
   else
     stop("Could not confirm installation. Please source install.R manually.")
 }
-
-require("dplyr")
-require("shiny")
 
 # ----------------
 # ANALYSIS OPTIONS
@@ -23,8 +19,6 @@ sca_options <- c("Logarithmic", "Linear")
 nor_options <- c("Global Min-Max", "Local Min-Max",
                  "Global Z-Score", "Local Z-Score",
                  "Quantile")
-# feature options
-fea_options <- c("100%", "10%", "1%")
 # embedding options
 emb_options <- c("PCA", "VAE", "UMAP", "PHATE", "Sets")
 # visualization options

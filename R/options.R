@@ -90,6 +90,8 @@ init_sub(name_num_map)
 # FIX DEPENDENCIES
 # ----------------
 
+fea_options <- c("100%", "10%", "1%")
+
 # gets the very first file associated with a category, counts the number of rows,
 # and creates an empty metadata table for that category
 get_empty_cat_meta <- function(cat){
