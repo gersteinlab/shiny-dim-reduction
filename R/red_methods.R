@@ -258,7 +258,7 @@ table_to_vae <- function(table, dim = 2, batch_size = 2,
   # amsgrad fixes a mathematical hole in the convergence
   # use gradient clipping to prevent an explosion
   # set learning rate low so the batch doesn't explode
-  pref_comp <- optimizer_adam(lr = 0.0001, amsgrad = TRUE, clipnorm = 0.1)
+  pref_comp <- optimizer_adam(learning_rate = 0.0001, amsgrad = TRUE, clipnorm = 0.1)
 
   vae %>% keras::compile(optimizer = pref_comp,
                          loss = vae_loss,

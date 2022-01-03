@@ -155,6 +155,8 @@ rbp_labels <- order_total$RNA_binding_proteins$CONDITION
 # test RBP data
 rbp_red <- all_reductions(rbp_table, rbp_labels)
 
+# test <- table_to_vae(rbp_table, 2, 20, verbose = 2)
+
 # -----
 # TIMES
 # -----

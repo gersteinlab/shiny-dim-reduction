@@ -548,7 +548,7 @@ perform_reduction <- function(requests, force = 0)
                   umap_result <- inter_readRDS(force, umap_loc)
                   if (is.null(umap_result))
                   {
-                    sprintf_clean("Generating INTER: %s", umap_loc)
+                    sprintf_clean("Generating UMAP INTER: %s", umap_loc)
                     umap_result <- table_to_umap(col_table, com, per)
                     mkdir_saveRDS(umap_result, umap_loc)
                   }
