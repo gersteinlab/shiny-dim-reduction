@@ -357,24 +357,13 @@ umap_to_tsne <- function(umap_result, dim = 2)
 
 table_to_phate <- function(table, dim = 2, perp = 0, verbose = verbose_red) {
   sprintf_clean("PHATE Table Dimensions: (%s, %s)", nrow(table), ncol(table))
-  phateR::phate(
-    table,
-    ndim = dim,
-    knn = perp,
-    decay = 40,
-    n.landmark = 2000,
-    gamma = 1,
-    t = "auto",
-    mds.solver = "sgd",
-    knn.dist.method = "euclidean",
-    init = NULL,
-    mds.method = "metric",
-    mds.dist.method = "euclidean",
-    t.max = 100,
-    npca = 10,
-    verbose = verbose,
-    n.jobs = 1,
-    seed = 0)
+  result <- phateR::phate(
+    table, ndim = dim, knn = perp, decay = 40, n.landmark = 2000,
+    gamma = 1, t = "auto", mds.solver = "sgd", knn.dist.method = "euclidean",
+    init = NULL, mds.method = "metric", mds.dist.method = "euclidean",
+    t.max = 100, npca = 10, verbose = verbose, n.jobs = 1, seed = 0)
+  result$params$data <- NULL # saves a lot of storage space
+  result
 }
 
 # ------------
