@@ -128,22 +128,6 @@ for (cat in dog)
   }
 }
 
-# columns:
-# name
-# date
-# source
-# row subset
-# col subset
-# scaling
-# normalization
-
-# embedding
-# visualization
-# dimension (not user-filterable; depends on source)
-# perplexity
-
-records <- data.frame()
-
 # ------------
 # PACKAGE UMAP
 # ------------
