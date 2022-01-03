@@ -71,7 +71,7 @@ valid_table <- function(cand_table)
 # verbose (v): whether input is displayed as tSNE is run
 # time complexity from tests: O(m^2 n i (d + p))
 table_to_tsne <- function(table, dim = 2, perp = 0, max_iter = 500, theta = 0.5,
-                          eta = 200, momentum = 0.5, verbose = FALSE)
+                          eta = 200, momentum = 0.5, verbose = verbose_red)
 {
   # the perplexity can't be too big
   stopifnot(perp <= floor((nrow(table) - 1)/3))
@@ -82,7 +82,7 @@ table_to_tsne <- function(table, dim = 2, perp = 0, max_iter = 500, theta = 0.5,
         initial_dims = ncol(table), exaggeration_factor = 1, num_threads = 1,
         stop_lying_iter = 0, mom_switch_iter = 0,
         check_duplicates = FALSE, pca = FALSE, partial_pca = FALSE,
-        is_distance = FALSE, Y_init = NULL, verbose = verbose_red,
+        is_distance = FALSE, Y_init = NULL,
         pca_center = FALSE, pca_scale = FALSE, normalize = FALSE)
 }
 
@@ -156,9 +156,9 @@ get_intermediate <- function(input_dim, latent_dim)
 }
 
 # stops the training after 'patience' epoches of nondecreasing val_loss
-pat_callback <- function(patience)
+pat_callback <- function(patience, verbose = 1)
 {
-  callback_early_stopping(monitor = "val_loss", mode = "min", verbose = 1,
+  callback_early_stopping(monitor = "val_loss", mode = "min", verbose = verbose,
                           patience = patience, restore_best_weights = TRUE)
 }
 
@@ -173,7 +173,7 @@ record_loss <- function(batch, logs){
 record_callback <- callback_lambda(on_batch_end=record_loss)
 
 # a fit function for a VAE
-my_fit <- function(vae, x_train, batch_size = 2, patience = 10, max_epochs = 1000){
+my_fit <- function(vae, x_train, batch_size = 2, patience = 10, max_epochs = 1000, verbose = 1){
   fit(
     vae,
     x = x_train,
@@ -182,13 +182,14 @@ my_fit <- function(vae, x_train, batch_size = 2, patience = 10, max_epochs = 100
     batch_size = batch_size,
     epochs = max_epochs,
     validation_split = 0.2,
-    verbose = ifelse(verbose_red, 2, 0),
-    callbacks = list(pat_callback(patience), naan_callback, record_callback)
+    verbose = verbose,
+    callbacks = list(pat_callback(patience, verbose), naan_callback, record_callback)
   )
 }
 
 # runs variational autoencoder
-table_to_vae <- function(table, dim = 2, batch_size = 2, patience = 10, max_epochs = 1000)
+table_to_vae <- function(table, dim = 2, batch_size = 2,
+                         patience = 10, max_epochs = 1000, verbose = ifelse(verbose_red, 2, 0))
 {
   # require all entries to be within [0, 1]
   stopifnot(sum(table > 1) + sum(table < 0) == 0)
@@ -266,8 +267,8 @@ table_to_vae <- function(table, dim = 2, batch_size = 2, patience = 10, max_epoc
   # reset loss before measurement
   loss <<- numeric()
 
-  history <- my_fit(vae, table, batch_size = batch_size, patience = patience, max_epochs = max_epochs)
-  predict <- predict(encoder, table, batch_size = batch_size)
+  history <- my_fit(vae, table, batch_size, patience, max_epochs, verbose)
+  predict <- predict(encoder, table, batch_size)
 
   k_clear_session()
 
@@ -313,7 +314,7 @@ vae_to_tsne <- function(vae_result, dim = 2, perp = 0)
 # UMAP METHODS
 # ------------
 
-table_to_umap <- function(table, dim = 2, perp = 0)
+table_to_umap <- function(table, dim = 2, perp = 0, verbose = verbose_red)
 {
   sprintf_clean("Table Dimensions: (%s, %s)", nrow(table), ncol(table))
   umap::umap(
@@ -326,7 +327,7 @@ table_to_umap <- function(table, dim = 2, perp = 0)
     min_dist = 0.1,
     input = "data",
     init = "random",
-    verbose = FALSE,
+    verbose = verbose,
     random_state = 0,
     transform_state = 0
   )
@@ -354,7 +355,7 @@ umap_to_tsne <- function(umap_result, dim = 2)
 # PHATE METHODS
 # -------------
 
-table_to_phate <- function(table, dim = 2, perp = 0) {
+table_to_phate <- function(table, dim = 2, perp = 0, verbose = verbose_red) {
   sprintf_clean("Table Dimensions: (%s, %s)", nrow(table), ncol(table))
   phateR::phate(
     table,
@@ -371,7 +372,7 @@ table_to_phate <- function(table, dim = 2, perp = 0) {
     mds.dist.method = "euclidean",
     t.max = 100,
     npca = 10,
-    verbose = verbose_red,
+    verbose = verbose,
     n.jobs = 1,
     seed = 0)
 }
