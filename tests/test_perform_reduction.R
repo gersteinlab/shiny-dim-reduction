@@ -133,4 +133,6 @@ for (i in seq_along(invalid_requests))
 # PERFORM VALID REQUESTS
 # ----------------------
 
-val_res <- perform_reduction(val_req, 0)
+# val_res <- perform_reduction(val_req, 0)
+# val_res <- perform_reduction(val_req, 1)
+val_res <- perform_reduction(val_req, 2)

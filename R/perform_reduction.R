@@ -365,36 +365,12 @@ index_request <- function(requests, r)
   return(-1)
 }
 
-# gives the absolute path of a request with respect to the intermediate file location
-get_inter_loc <- function(request)
-{
-  sprintf("%s/inter/%s", pro_loc, request$INTER_LOC)
-}
-
-# gives the absolute path of a request with respect to the final file location
-get_final_loc <- function(request)
-{
-  sprintf("%s/%s", ref_loc, request$FINAL_LOC)
-}
-
-# get certain rows of requests
-reqs_get <- function(requests, col, val)
-{
-  requests[requests[[col]] == val,]
-}
-
 # readRDS but return NULL if force_inter
 inter_readRDS <- function(force, int_loc)
 {
   if (force != 2 && file.exists(int_loc))
     return(readRDS(int_loc))
   return(NULL)
-}
-
-# syntactic sugar for seq_len(nrow(mat))
-seq_row <- function(mat)
-{
-  seq_len(nrow(mat))
 }
 
 # performs reduction on a group of valid requests,
@@ -413,14 +389,14 @@ seq_row <- function(mat)
 perform_reduction <- function(requests, force = 0)
 {
   # used to make intermediate files easily
-  inter_locs <- get_inter_loc(requests_to_inter(requests))
+  inter_locs <- sprintf("%s/inter/%s", pro_loc, requests_to_inter(requests))
   # used to make final files easily
-  final_locs <- get_final_loc(requests_to_final(requests))
+  final_locs <- sprintf("%s/%s", ref_loc, requests_to_final(requests))
   # used to easily edit completion timestamps
   times_done <- requests$TIME_COMPLETED
 
   # a true-false vector determining if an analysis should be performed
-  i_fin <- !file.exists(get_final_loc(requests)) | force > 0
+  i_fin <- !file.exists(final_locs) | rep(force > 0, nrow(requests))
 
   # select the category
   for (cat in unique(requests$CATEGORIES[i_fin]))
@@ -457,7 +433,7 @@ perform_reduction <- function(requests, force = 0)
           for (i in which(i_thr)) # only attributes left: characteristic
           {
             r <- requests[i,]
-            f_loc <- get_final_loc(r)
+            f_loc <- final_locs[i]
 
             sprintf_clean("Generating Sets FINAL: %s", f_loc)
             set_label_matrix(set_result, short_order[[r$CHARACTERISTIC]]) %>% mkdir_saveRDS(f_loc)
@@ -489,7 +465,7 @@ perform_reduction <- function(requests, force = 0)
               if (sum(i_pca) > 0) # only attributes left: vis [dim] [per]
               {
                 # make the intermediate file
-                pca_loc <- get_inter_loc(requests[match(TRUE, i_pca),])
+                pca_loc <- inter_locs[match(TRUE, i_pca)]
                 pca_result <- inter_readRDS(force, pca_loc)
                 if (is.null(pca_result))
                 {
@@ -502,7 +478,7 @@ perform_reduction <- function(requests, force = 0)
                 for (i in which(i_pca))
                 {
                   r <- requests[i,]
-                  f_loc <- get_final_loc(r)
+                  f_loc <-  final_locs[i]
                   sprintf_clean("Generating PCA FINAL: %s", f_loc)
 
                   if (r$VISUALIZATION == "Explore")
@@ -528,7 +504,7 @@ perform_reduction <- function(requests, force = 0)
                 if (sum(i_bat) > 0) # only attributes left: vis [dim] [per]
                 {
                   # make the intermediate file
-                  vae_loc <- get_inter_loc(requests[match(TRUE, i_bat),])
+                  vae_loc <- inter_locs[match(TRUE, i_bat)]
                   vae_result <- inter_readRDS(force, vae_loc)
                   if (is.null(vae_result))
                   {
@@ -541,7 +517,7 @@ perform_reduction <- function(requests, force = 0)
                   for (i in which(i_bat))
                   {
                     r <- requests[i,]
-                    f_loc <- get_final_loc(r)
+                    f_loc <-  final_locs[i]
                     sprintf_clean("Generating VAE FINAL: %s", f_loc)
 
                     if (r$VISUALIZATION == "Explore")
@@ -568,7 +544,7 @@ perform_reduction <- function(requests, force = 0)
                 if (sum(i_per) > 0) # only attributes left: [dim]
                 {
                   # make the intermediate file
-                  umap_loc <- get_inter_loc(requests[match(TRUE, i_per),])
+                  umap_loc <- inter_locs[match(TRUE, i_per)]
                   umap_result <- inter_readRDS(force, umap_loc)
                   if (is.null(umap_result))
                   {
@@ -581,7 +557,7 @@ perform_reduction <- function(requests, force = 0)
                   for (i in which(i_per))
                   {
                     r <- requests[i,]
-                    f_loc <- get_final_loc(r)
+                    f_loc <-  final_locs[i]
                     sprintf_clean("Generating UMAP FINAL: %s", f_loc)
 
                     if (r$VISUALIZATION == "Explore")
@@ -604,8 +580,8 @@ perform_reduction <- function(requests, force = 0)
               for (i in which(i_phate)) # only attribute left: per
               {
                 r <- requests[i,]
-                f_loc <- get_final_loc(r)
-                sprintf_clean("Generating FINAL: %s", f_loc)
+                f_loc <-  final_locs[i]
+                sprintf_clean("Generating PHATE FINAL: %s", f_loc)
 
                 table_to_phate(col_table, com, r$PERPLEXITY) %>% mkdir_saveRDS(f_loc)
                 times_done[i] <- Sys.time()
