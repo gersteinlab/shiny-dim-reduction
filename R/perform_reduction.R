@@ -13,19 +13,38 @@ if (!exists("ran_install"))
 source_sdr("red_methods.R")
 source_sdr("preprocess.R")
 
-# ---------
-# FUNCTIONS
-# ---------
+# -----------------------------
+# REQUEST CREATION / VALIDATION
+# -----------------------------
 
 # syntactic sugar for !(a %in% b)
-`%nin%` <- function(a, a) {
+`%nin%` <- function(a, b) {
   !(a %in% b)
 }
 
-# returns whether a request (a requests data.frame with a single row) is valid
+# for integers and numerics: default value is -1
+# for author: default value is "ADMIN"
+# for all other characters: default value is "-"
+num_d <- function(n = 1)
+{
+  rep(-1, n)
+}
+
+aut_d <- function(n = 1)
+{
+  rep("ADMIN", n)
+}
+
+chr_d <- function(n = 1)
+{
+  rep("-", n)
+}
+
+# cleans a request (a requests data.frame with a single row) and returns the cleaned version,
+# returning NULL if the request cannot be properly cleaned.
 # note: should only be called through make_requests, assuming valid types
-# note: if an attribute is unused, we don't check it (ex: batch_size for pca)
-is_valid_request <- function(request)
+# note: if an attribute is unused, we set it to a default value (ex: batch_size to NaN for PCA)
+clean_request <- function(request)
 {
   cat <- request$CATEGORIES
   sca <- request$SCALING
@@ -42,29 +61,47 @@ is_valid_request <- function(request)
   cha <- request$CHARACTERISTIC
 
   if (cat %nin% name_cat || emb %nin% emb_options || sca %nin% sca_options)
-    return(FALSE)
+    return(NULL)
 
-  # Sets doesn't care about row, col
   if (emb == "Sets")
   {
+    # Global Min-Max normalization is required
+    if (nor != "Global Min-Max")
+      return(NULL)
+
     # needs a valid threshold
     if (!dplyr::between(thr, 0, 1))
-      return(FALSE)
-
-    # only Global Min-Max normalization allowed
-    if (nor != "Global Min-Max")
-      return(FALSE)
+      return(NULL)
 
     # ensure the characteristic is valid
     characteristics <- colnames(select_chars(order_total[[cat]]))
     if (cha %nin% characteristics)
-      return(FALSE)
+      return(NULL)
+
+    # clean all irrelevant attributes
+    request$ROW_SUBSETS <- chr_d()
+    request$COL_SUBSETS <- chr_d()
+    request$VISUALIZATION <- chr_d()
+    request$COMPONENT <- num_d()
+    request$DIMENSION <- num_d()
+    request$PERPLEXITY <- num_d()
+    request$BATCH_SIZE <- num_d()
+
+    return(request)
   }
   else
   {
+    # a valid normalization is required
+    if (nor %nin% nor_options)
+      return(NULL)
+
+    # clean set-related attributes
+    request$THRESHOLD <- num_d()
+    request$CHARACTERISTIC <- chr_d()
+
     # must be a valid row subset
     if (row %nin% sub_row_groups[[cat]])
-      return(FALSE)
+      return(NULL)
 
     row_num <- categories[[cat]][1]
     if (row != "Total")
@@ -72,75 +109,103 @@ is_valid_request <- function(request)
 
     # must be a valid column subset
     if (col %nin% sub_col_groups[[cat]])
-      return(FALSE)
+      return(NULL)
 
     col_num <- categories[[cat]][2]
     if (col != "Total")
       col_num <- length(get_col_decor_subset(cat, col))
 
-    # avoid non-integral or out-of-range perplexities
+    # avoid out-of-range perplexities
     max_perplexity <- min(100, floor((row_num - 1)/3))
 
     # PHATE
     if (emb == "PHATE")
     {
-      if (nor %nin% nor_options)
-        return(FALSE)
       # must be reduced down to 2 or 3 dimensions for plotting
       if (com != 2 && com != 3)
-        return(FALSE)
+        return(NULL)
       # avoid out-of-range perplexities
       if (!dplyr::between(per, 0, max_perplexity))
-        return(FALSE)
+        return(NULL)
+
+      # clean all irrelevant components
+      request$VISUALIZATION <- chr_d()
+      request$DIMENSION <- num_d()
+      request$BATCH_SIZE <- num_d()
+
+      return(request)
     }
     else # PCA, VAE, UMAP
     {
       if (vis %nin% vis_options)
-        return(FALSE)
+        return(NULL)
 
       # avoid out-of-range components
       if (!dplyr::between(com, 2, col_num - 1))
-        return(FALSE)
+        return(NULL)
 
       if (vis == "tSNE")
       {
         # must go to 2D or 3D and have less columns than first-round reduction
         if ((dim != 2 && dim != 3) || dim >= com)
-          return(FALSE)
+          return(NULL)
 
         # avoid out-of-range perplexity
         if (!dplyr::between(per, 0, max_perplexity))
-          return(FALSE)
+          return(NULL)
+      }
+      else
+      {
+        # no second-level reduction? no DIMENSION parameter needed
+        request$DIMENSION <- num_d()
       }
 
       # first round reduction must be plottable in 2D, at least
       if (com < 2)
-        return(FALSE)
+        return(NULL)
+
+      request$THRESHOLD <- num_d()
+      request$CHARACTERISTIC <- chr_d()
 
       if (emb == "VAE")
       {
-        # prevent normalizations that don't end in [0, 1]
+        # prevent normalizations that don't end in the range [0, 1]
         if (nor %in% nor_options[4:5])
-          return(FALSE)
+          return(NULL)
 
         # avoid out-of-range batch sizes
         if (!dplyr::between(bat, 1, row_num))
-          return(FALSE)
+          return(NULL)
+
+        if (vis != "tSNE")
+          request$PERPLEXITY <- num_d()
+
+        return(request)
       }
-
-      if (nor %nin% nor_options)
-        return(FALSE)
-
-      if (emb == "UMAP")
+      else
       {
-        # avoid non-integral or negative perplexities
-        if (!dplyr::between(per, 0, max_perplexity))
-          return(FALSE)
+        request$BATCH_SIZE <- num_d()
+
+        if (emb == "UMAP")
+        {
+          # avoid non-integral or negative perplexities
+          if (!dplyr::between(per, 0, max_perplexity))
+            return(NULL)
+
+          return(request)
+        }
+        else # emb == "PCA" at this stage
+        {
+          if (vis != "tSNE")
+            request$PERPLEXITY <- num_d()
+
+          return(request)
+        }
       }
     }
   }
 
-  TRUE
+  return(NULL)
 }
 
 # check if we have an integer for an attribute
@@ -150,17 +215,13 @@ att_is_int <- function(x)
   sum(bool_vec) == length(bool_vec)
 }
 
-# makes it easy for admin to sign requests
-aut_n <- function(n)
-{
-  rep("ADMIN", n)
-}
-
 # if the inputs do not correspond to a valid set of requests, return NULL.
 # otherwise, return a set of requests in the appropriate form.
 # com: components for first-round dimensionality reduction
 # dim: dimension for second-round dimensionality reduction
 # thr: all thresholds are rounded to 3 digits past the decimal point
+# note: the first 13 attributes MUST be a primary key; author / timestamps don't differentiate
+# note: if the TIME_COMPLETED field is before the TIME_REQUESTED field, it hasn't been done yet!
 make_requests <- function(
   cat = character(), row = character(), col = character(), sca = character(),
   nor = character(), emb = character(), vis = character(), com = numeric(),
