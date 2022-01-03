@@ -16,18 +16,6 @@ if (!exists("ran_install"))
 project_name <- "exRNA"
 source_sdr("perform_reduction.R")
 
-# a collection of invalid potential inputs
-invalid_candidates <- c(
-  NA
-  # , "~!@#$%^&*()", .Machine$double.xmin, -.Machine$double.xmax, NaN
-)
-
-# used to populate invalid inputs randomly
-inv <- function()
-{
-  sample(invalid_candidates, 1)
-}
-
 # -------------------
 # TEST VALID REQUESTS
 # -------------------
@@ -37,54 +25,54 @@ print(make_requests())
 
 valid1 <- make_requests(
   "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "PCA", "Explore",
-  10, inv(), inv(), inv(), inv()
+  10, -1, -1, -1, pi, "!", aut_d()
 )
 valid2 <- make_requests(
   "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "PCA", "Summarize",
-  10, inv(), inv(), inv(), inv()
+  10, -1, -1, -1, pi, "!", aut_d()
 )
 valid3 <- make_requests(
   "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "PCA", "tSNE",
-  10, 2, 25, inv(), inv()
+  10, 2, 25, -1, pi, "!", aut_d()
 )
 valid4 <- make_requests(
   "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "VAE", "Explore",
-  10, inv(), inv(), 64, inv()
+  10, -1, -1, 64, pi, "!", aut_d()
 )
 valid5 <- make_requests(
   "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "VAE", "Summarize",
-  10, inv(), inv(), 64, inv()
+  10, -1, -1, 64, pi, "!", aut_d()
 )
 valid6 <- make_requests(
   "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "VAE", "tSNE",
-  10, 2, 15, 30, inv()
+  10, 2, 15, 30, pi, "!", aut_d()
 )
 valid7 <- make_requests(
   "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "UMAP", "Explore",
-  10, inv(), 25, inv(), inv()
+  10, -1, 25, -1, pi, "!", aut_d()
 )
 valid8 <- make_requests(
   "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "UMAP", "Summarize",
-  10, inv(), 25, inv(), inv()
+  10, -1, 25, -1, pi, "!", aut_d()
 )
 valid9 <- make_requests(
   "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "UMAP", "tSNE",
-  10, 2, 25, inv(), inv()
+  10, 2, 25, -1, pi, "!", aut_d()
 )
 
 valid10 <- make_requests(
-  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "PHATE", inv(),
-  2, inv(), 25, inv(), inv()
+  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "PHATE", "!",
+  2, -1, 25, -1, pi, "!", aut_d()
 )
 
 valid11 <- make_requests(
-  "miRNA", "Plasma", "SD_Top_100", "Linear", "Quantile", "PHATE", inv(),
-  2, inv(), 25, inv(), inv()
+  "miRNA", "Plasma", "SD_Top_100", "Linear", "Quantile", "PHATE", "!",
+  2, -1, 25, -1, pi, "!", aut_d()
 )
 
 valid12 <- make_requests(
-  "miRNA", inv(), inv(), "Logarithmic", "Global Min-Max", "Sets", inv(),
-  inv(), inv(), inv(), inv(), 0.4
+  "miRNA", "!", "!", "Logarithmic", "Global Min-Max", "Sets", "!",
+  -1, -1, -1, -1, 0.4, "CONDITION", aut_d()
 )
 
 val_req <- rbind(
@@ -98,41 +86,44 @@ sprintf_clean("Number of Valid Requests: Expected 12, Received %s", nrow(val_req
 # TEST INVALID REQUESTS
 # ---------------------
 
-# attributes of wrong length
-invalid1 <- make_requests(inv())
-
-# batch size wrong
-invalid2 <- make_requests(
-  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "VAE", "tSNE",
-  10, 2, 15, "dog", "hi"
+# wrong length
+invalid1 <- make_requests(
+  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "PCA", "Explore",
+  10, -1, -1, -1, pi, "!", character(0)
 )
-
-# perplexity too large
+# wrong type
+invalid2 <- make_requests(
+  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "PCA", "Explore",
+  10, -1, -1, pi, pi, "!", aut_d()
+)
+# batch size too small
 invalid3 <- make_requests(
   "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "VAE", "tSNE",
-  10, 2, 5000, 30, inv()
+  10, 2, 15, -1, num_d(), chr_d(), aut_d()
 )
-
-# Sets with wrong normalization
+# perplexity too large
 invalid4 <- make_requests(
-    "miRNA", inv(), inv(), "Logarithmic", "Quantile", "Sets", inv(),
-    inv(), inv(), inv(), inv(), 0.4
+  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "VAE", "tSNE",
+  10, 2, 5000, 30, num_d(), chr_d(), aut_d()
 )
-
-# VAE with wrong normalization
+# Sets with wrong normalization
 invalid5 <- make_requests(
-  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Quantile", "VAE", "tSNE",
-  10, 2, 15, 64, "hi"
+    "miRNA", chr_d(), chr_d(), "Logarithmic", "Quantile", "Sets", chr_d(),
+    num_d(), num_d(), num_d(), num_d(), 0.4, chr_d(), aut_d()
 )
-
-# PHATE but no perplexity provided
+# VAE with wrong normalization
 invalid6 <- make_requests(
-  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "PHATE", inv(),
-  2, inv(), inv(), inv(), inv()
+  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Quantile", "VAE", "tSNE",
+  10, 2, 15, 64, num_d(), chr_d(), aut_d()
+)
+# PHATE but negative perplexity
+invalid7 <- make_requests(
+  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "PHATE", chr_d(),
+  2, num_d(), -10, num_d(), num_d(), chr_d(), aut_d()
 )
 
 invalid_requests <- list(
-  invalid1, invalid2, invalid3, invalid4, invalid5, invalid6
+  invalid1, invalid2, invalid3, invalid4, invalid5, invalid6, invalid7
 )
 
 for (i in seq_along(invalid_requests))
@@ -142,8 +133,4 @@ for (i in seq_along(invalid_requests))
 # PERFORM VALID REQUESTS
 # ----------------------
 
-# table_name <- paste(test_requests[4, 1:5], collapse = "_")
-# pca_100_plasma <- readRDS(sprintf("inter/%s_%s_%s.rds", table_name, "PCA", 10))
-# subset_labels <- order_total$miRNA[get_row_decor_indices("miRNA", "Plasma"),,drop=FALSE]
-# plotly_2d(pca_100_plasma$x[,1], pca_100_plasma$x[,2], subset_labels$BIOFLUID)
-# plotly_2d(pca_100_plasma$x[,1], pca_100_plasma$x[,2], subset_labels$CONDITION)
+val_res <- perform_reduction(val_req, 0)
