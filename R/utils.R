@@ -9,6 +9,9 @@ if (!exists("ran_install"))
     stop("Could not confirm installation. Please source install.R manually.")
 }
 
+library(dplyr)
+library(shiny)
+
 # ----------------
 # ANALYSIS OPTIONS
 # ----------------
@@ -25,6 +28,66 @@ emb_options <- c("PCA", "VAE", "UMAP", "PHATE", "Sets")
 vis_options <- c("Explore", "Summarize", "tSNE")
 # visualization options as nouns
 vis_nouns <- c("Exploration of ", "Summary of ", "tSNE of ")
+
+# saveRDS but we force the creation of the directory
+mkdir_saveRDS <- function(data, file)
+{
+  dest_dir <- dirname(file)
+  if (!dir.exists(dest_dir))
+    dir.create(dest_dir, recursive=TRUE)
+  saveRDS(data, file)
+}
+
+make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat, thr, cha)
+{
+  sca_ind <- which(sca_options == sca)
+  nor_ind <- which(nor_options == nor)
+
+  if (emb == "PCA")
+  {
+    if (vis == "Explore")
+      return(sprintf("PCA_E/%s/%s_%s_S%s_N%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com))
+    if (vis == "Summarize")
+      return(sprintf("PCA_S/%s/%s_%s_S%s_N%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com))
+    if (vis == "tSNE")
+      return(sprintf("PCA_T/%s/%s_%s_S%s_N%s_%s_%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com, dim, per))
+  }
+
+  if (emb == "VAE")
+  {
+    if (vis == "Explore")
+      return(sprintf("VAE_E/%s/%s_%s_S%s_N%s_%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com, bat))
+    if (vis == "Summarize")
+      return(sprintf("VAE_S/%s/%s_%s_S%s_N%s_%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com, bat))
+    if (vis == "tSNE")
+      return(sprintf("VAE_T/%s/%s_%s_S%s_N%s_%s_%s_%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com, dim, per, bat))
+  }
+
+  if (emb == "UMAP")
+  {
+    if (vis == "Explore")
+      return(sprintf("UMAP_E/%s/%s_%s_S%s_N%s_%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com, per))
+    if (vis == "Summarize")
+      return(sprintf("UMAP_S/%s/%s_%s_S%s_N%s_%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com, per))
+    if (vis == "tSNE")
+      return(sprintf("UMAP_T/%s/%s_%s_S%s_N%s_%s_%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com, dim, per))
+  }
+
+  if (emb == "Sets")
+    return(sprintf("Sets/%s/S%s_%0.3f_%s.rds", cat, sca_ind, thr, cha))
+
+  # PHATE
+  return(sprintf("PHATE/%s/%s_%s_S%s_N%s_%s_%s.rds", cat, row, col, sca_ind, nor_ind, com, per))
+}
 
 # creates the name of a file in AWS
 # For emb and vis (non-Sets) ...
