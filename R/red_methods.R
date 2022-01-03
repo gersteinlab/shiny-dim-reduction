@@ -20,6 +20,9 @@ library(umap)
 library(Rtsne)
 library(Matrix)
 
+# should reduction methods be verbose?
+verbose_red <- FALSE
+
 # ---------------
 # GENERAL METHODS
 # ---------------
@@ -79,7 +82,7 @@ table_to_tsne <- function(table, dim = 2, perp = 0, max_iter = 500, theta = 0.5,
         initial_dims = ncol(table), exaggeration_factor = 1, num_threads = 1,
         stop_lying_iter = 0, mom_switch_iter = 0,
         check_duplicates = FALSE, pca = FALSE, partial_pca = FALSE,
-        is_distance = FALSE, Y_init = NULL,
+        is_distance = FALSE, Y_init = NULL, verbose = verbose_red,
         pca_center = FALSE, pca_scale = FALSE, normalize = FALSE)
 }
 
@@ -90,6 +93,7 @@ table_to_tsne <- function(table, dim = 2, perp = 0, max_iter = 500, theta = 0.5,
 # performs principal component analysis with no scaling on the provided table
 table_to_pca <- function(table, dim = 2)
 {
+  sprintf_clean("Table Dimensions: (%s, %s)", nrow(table), ncol(table))
   pca <- stats::prcomp(table, center = TRUE, rank. = dim)
   pca$rotation <- NULL
   pca$center <- NULL
@@ -178,7 +182,7 @@ my_fit <- function(vae, x_train, batch_size = 2, patience = 10, max_epochs = 100
     batch_size = batch_size,
     epochs = max_epochs,
     validation_split = 0.2,
-    verbose = 2,
+    verbose = ifelse(verbose_red, 2, 0),
     callbacks = list(pat_callback(patience), naan_callback, record_callback)
   )
 }
@@ -260,7 +264,7 @@ table_to_vae <- function(table, dim = 2, batch_size = 2, patience = 10, max_epoc
                          experimental_run_tf_function=FALSE)
 
   # reset loss before measurement
-  loss <<- numeric(0)
+  loss <<- numeric()
 
   history <- my_fit(vae, table, batch_size = batch_size, patience = patience, max_epochs = max_epochs)
   predict <- predict(encoder, table, batch_size = batch_size)
@@ -268,9 +272,9 @@ table_to_vae <- function(table, dim = 2, batch_size = 2, patience = 10, max_epoc
   k_clear_session()
 
   list(
-    "history"=history,
-    "predict"=predict,
-    "loss"=loss
+    "history" = history,
+    "predict" = predict,
+    "loss" = loss
   )
 }
 
@@ -286,10 +290,14 @@ vae_to_summary <- function(vae_result)
   loss <- vae_result$loss
   val_loss <- vae_result$history$metrics$val_loss
   num_losses <- length(loss)
+  num_val_losses <- length(val_loss)
+
+  # ensure you have even divisibility
+  stopifnot(num_losses > 0, num_losses %% num_val_losses == 0)
 
   data.frame(
     "Training Iterations" = rep(1:num_losses, 2),
-    "Loss Value" = c(loss, rep(val_loss, each = num_losses / length(val_loss))),
+    "Loss Value" = c(loss, rep(val_loss, each = num_losses / num_val_losses)),
     "Loss Type" = rep(c("Testing Loss", "Validation Loss"), each = num_losses),
     check.names = FALSE
   )
@@ -307,6 +315,7 @@ vae_to_tsne <- function(vae_result, dim = 2, perp = 0)
 
 table_to_umap <- function(table, dim = 2, perp = 0)
 {
+  sprintf_clean("Table Dimensions: (%s, %s)", nrow(table), ncol(table))
   umap::umap(
     table,
     method = "naive",
@@ -317,7 +326,7 @@ table_to_umap <- function(table, dim = 2, perp = 0)
     min_dist = 0.1,
     input = "data",
     init = "random",
-    verbose = TRUE,
+    verbose = FALSE,
     random_state = 0,
     transform_state = 0
   )
@@ -345,9 +354,10 @@ umap_to_tsne <- function(umap_result, dim = 2)
 # PHATE METHODS
 # -------------
 
-table_to_phate <- function(data, dim = 2, perp = 0) {
+table_to_phate <- function(table, dim = 2, perp = 0) {
+  sprintf_clean("Table Dimensions: (%s, %s)", nrow(table), ncol(table))
   phateR::phate(
-    data,
+    table,
     ndim = dim,
     knn = perp,
     decay = 40,
@@ -361,7 +371,7 @@ table_to_phate <- function(data, dim = 2, perp = 0) {
     mds.dist.method = "euclidean",
     t.max = 100,
     npca = 10,
-    verbose = 1,
+    verbose = verbose_red,
     n.jobs = 1,
     seed = 0)
 }
@@ -386,6 +396,7 @@ table_to_sets <- function(table, threshold) {
   stopifnot(sum(table > 1) + sum(table < 0) == 0)
   stopifnot(between(threshold, 0, 1))
 
+  sprintf_clean("Table Dimensions: (%s, %s)", nrow(table), ncol(table))
   target <- matrix(as.numeric(table >= threshold), nrow=nrow(table), dimnames = dimnames(table))
   target[, colSums(target) > 0, drop = FALSE]
 }
