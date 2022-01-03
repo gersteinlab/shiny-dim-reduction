@@ -93,7 +93,7 @@ table_to_tsne <- function(table, dim = 2, perp = 0, max_iter = 500, theta = 0.5,
 # performs principal component analysis with no scaling on the provided table
 table_to_pca <- function(table, dim = 2)
 {
-  sprintf_clean("Table Dimensions: (%s, %s)", nrow(table), ncol(table))
+  sprintf_clean("PCA Table Dimensions: (%s, %s)", nrow(table), ncol(table))
   pca <- stats::prcomp(table, center = TRUE, rank. = dim)
   pca$rotation <- NULL
   pca$center <- NULL
@@ -197,7 +197,7 @@ table_to_vae <- function(table, dim = 2, batch_size = 2,
   num_samp <- nrow(table)
   input_dim <- ncol(table)
   latent_dim <- dim
-  sprintf_clean("Table Dimensions: (%s, %s)", num_samp, input_dim)
+  sprintf_clean("VAE Table Dimensions: (%s, %s)", num_samp, input_dim)
 
   dims <- get_intermediate(input_dim, latent_dim)
   dim_d1 <- dims[1]
@@ -316,7 +316,7 @@ vae_to_tsne <- function(vae_result, dim = 2, perp = 0)
 
 table_to_umap <- function(table, dim = 2, perp = 0, verbose = verbose_red)
 {
-  sprintf_clean("Table Dimensions: (%s, %s)", nrow(table), ncol(table))
+  sprintf_clean("UMAP Table Dimensions: (%s, %s)", nrow(table), ncol(table))
   umap::umap(
     table,
     method = "naive",
@@ -356,7 +356,7 @@ umap_to_tsne <- function(umap_result, dim = 2)
 # -------------
 
 table_to_phate <- function(table, dim = 2, perp = 0, verbose = verbose_red) {
-  sprintf_clean("Table Dimensions: (%s, %s)", nrow(table), ncol(table))
+  sprintf_clean("PHATE Table Dimensions: (%s, %s)", nrow(table), ncol(table))
   phateR::phate(
     table,
     ndim = dim,
@@ -397,7 +397,7 @@ table_to_sets <- function(table, threshold) {
   stopifnot(sum(table > 1) + sum(table < 0) == 0)
   stopifnot(between(threshold, 0, 1))
 
-  sprintf_clean("Table Dimensions: (%s, %s)", nrow(table), ncol(table))
+  sprintf_clean("Sets Table Dimensions: (%s, %s)", nrow(table), ncol(table))
   target <- matrix(as.numeric(table >= threshold), nrow=nrow(table), dimnames = dimnames(table))
   target[, colSums(target) > 0, drop = FALSE]
 }
