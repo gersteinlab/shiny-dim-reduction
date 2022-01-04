@@ -83,7 +83,7 @@ table_to_tsne <- function(table, dim = 2, perp = 0, max_iter = 500, theta = 0.5,
         stop_lying_iter = 0, mom_switch_iter = 0,
         check_duplicates = FALSE, pca = FALSE, partial_pca = FALSE,
         is_distance = FALSE, Y_init = NULL,
-        pca_center = FALSE, pca_scale = FALSE, normalize = FALSE)
+        pca_center = FALSE, pca_scale = FALSE, normalize = FALSE)$Y
 }
 
 # -----------

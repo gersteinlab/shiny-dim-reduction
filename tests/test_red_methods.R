@@ -47,7 +47,7 @@ all_reductions <- function(table, labels)
 
   # test tsne
   results$tsne <- table_to_tsne(table, 2, 10)
-  results$tsne_p <- plotly_2d(results$tsne$Y[,1], results$tsne$Y[,2], labels)
+  results$tsne_p <- plotly_2d(results$tsne[,1], results$tsne[,2], labels)
 
   # test pca
   results$pca <- table_to_pca(table, 10)
@@ -56,7 +56,7 @@ all_reductions <- function(table, labels)
   results$pca_t <- pca_to_tsne(results$pca, 2, 10)
   results$pca_e_p <- plotly_2d(results$pca_e[,1], results$pca_e[,2], labels)
   results$pca_s_p <- plotly_pca_sum(results$pca_s)
-  results$pca_t_p <- plotly_2d(results$pca_t$Y[,1], results$pca_t$Y[,2], labels)
+  results$pca_t_p <- plotly_2d(results$pca_t[,1], results$pca_t[,2], labels)
 
   # test vae
   results$vae <- table_to_vae(table, 2, 20) # batch size 20
@@ -65,7 +65,7 @@ all_reductions <- function(table, labels)
   results$vae_t <- vae_to_tsne(results$vae, 2, 10)
   results$vae_e_p <- plotly_2d(results$vae_e[,1], results$vae_e[,2], labels)
   results$vae_s_p <- plotly_vae_sum(results$vae_s)
-  results$vae_t_p <- plotly_2d(results$vae_t$Y[,1], results$vae_t$Y[,2], labels)
+  results$vae_t_p <- plotly_2d(results$vae_t[,1], results$vae_t[,2], labels)
 
   # test umap
   results$umap <- table_to_umap(table, 2, 10)
@@ -75,7 +75,7 @@ all_reductions <- function(table, labels)
   results$umap_e_p <- plotly_2d(results$umap_e[,1], results$umap_e[,2], labels)
   results$umap_s_p1 <- plotly_heatmap_variance(knn_label_matrix(results$umap_s, labels))
   results$umap_s_p2 <- plotly_heatmap_dendrogram(knn_label_matrix(results$umap_s, labels))
-  results$umap_t_p <- plotly_2d(results$umap_t$Y[,1], results$umap_t$Y[,2], labels)
+  results$umap_t_p <- plotly_2d(results$umap_t[,1], results$umap_t[,2], labels)
 
   # test phate
   results$phate <- table_to_phate(table, 2, 10)
@@ -124,6 +124,13 @@ test_red <- all_reductions(test_table, test_labels)
 setwd(pro_loc)
 combined_miRNA <- readRDS("combined/combined_miRNA.rds")
 
+# Interpolates the number of truncated features in the range [pc_cap, total_features]
+# given a fraction of the distance.
+calc_feat <- function(pc_cap, fraction, total_features)
+{
+  pc_cap + ceiling(fraction * (total_features - pc_cap))
+}
+
 feature_start <- function(data, fraction)
 {
   variances <- apply(data, 2, var)
@@ -156,6 +163,7 @@ rbp_labels <- order_total$RNA_binding_proteins$CONDITION
 rbp_red <- all_reductions(rbp_table, rbp_labels)
 
 # test <- table_to_vae(rbp_table, 2, 20, verbose = 2)
+# test <- table_to_tsne(rbp_table, 2, 20)
 
 # -----
 # TIMES
