@@ -268,30 +268,6 @@ make_requests <- function(
   requests
 }
 
-# simplifies the generation of Sets requests
-make_set_requests <- function(
-  cat = character(), sca = character(), thr = numeric(), cha = character(), aut = character())
-{
-  n_cat <- length(cat)
-
-  make_requests(
-    cat, chr_d(n_cat), chr_d(n_cat), sca, rep("Global Min-Max", n_cat), rep("Sets", n_cat), chr_d(n_cat),
-    num_d(n_cat), num_d(n_cat), num_d(n_cat), num_d(n_cat), thr, cha, aut)
-}
-
-# simplifies the generation of PHATE requests
-make_phate_requests <- function(
-  cat = character(), row = character(), col = character(), sca = character(),
-  nor = character(), com = numeric(), per = numeric(), aut = character()
-)
-{
-  n_cat <- length(cat)
-
-  make_requests(
-    cat, row, col, sca, nor, rep("PHATE", n_cat), chr_d(n_cat),
-    com, num_d(n_cat), per, num_d(n_cat), num_d(n_cat), chr_d(n_cat), aut)
-}
-
 # -------------------
 # REQUEST FULFILLMENT
 # -------------------
@@ -352,17 +328,6 @@ requests_to_inter <- function(requests)
   }
 
   result
-}
-
-
-# finds the index of a request r or returns -1
-# if that request has never been performed before
-index_request <- function(requests, r)
-{
-  for (i in seq_len(nrow(requests)))
-    if (filename_from_request(requests[i]) == requests_to_final(r))
-      return(i)
-  return(-1)
 }
 
 # readRDS but return NULL if force_inter
@@ -596,3 +561,43 @@ perform_reduction <- function(requests, force = 0)
   requests$TIME_COMPLETED <- times_done
   requests
 }
+
+# --------------
+# MERGE REQUESTS
+# --------------
+
+# removes duplicated requests ... if requests are duplicated,
+# (i) favor completed requests and (ii) keep the request
+# with the most recent TIME_COMPLETED
+# note that order is preserved here
+rem_dup_requests <- function(requests)
+{
+  # the value is (row, TIME_COMPLETED, done) of the request to keep
+  index_for_req <- list()
+  n <- nrow(requests)
+
+  for (i in seq_len(n))
+  {
+    r <- requests[i,]
+    key <- requests_to_final(r)
+    prev_val <- index_for_req[[key]]
+    cur_time <- r$TIME_COMPLETED
+    cur_done <- cur_time > r$TIME_REQUESTED
+
+    # if no other requests exist,
+    # the current request is completed and the previous one is not,
+    # or both requests have the same status and the current one is more recent
+    if (is.null(prev_val) ||
+        (!prev_val[3] && cur_done) ||
+        (prev_val[3] == cur_done && cur_time > prev_val[2]))
+      index_for_req[[key]] <- c(i, cur_time, cur_done)
+  }
+
+  to_be_kept <- rep(TRUE, n)
+
+  for (i in seq_len(n))
+    to_be_kept[i] <- (index_for_req[[requests_to_final(requests[i,])]][1] == i)
+
+  requests[to_be_kept,]
+}
+
