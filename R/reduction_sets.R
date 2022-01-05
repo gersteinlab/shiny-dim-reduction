@@ -82,7 +82,7 @@ for (cat in dog)
     print(sprintf("(%s, %s) for %s", local_lower, local_upper, sca))
 
     diff <- (local_upper - local_lower)/len_inter
-    chord <- round(seq(local_lower, local_upper, diff), 4)
+    chord <- round(seq(local_lower, local_upper, diff), numdigits)
     thresholds[[sca]][[cat]] <- chord
 
     for (ind in 1:(len_inter+1))
