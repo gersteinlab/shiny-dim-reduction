@@ -44,11 +44,11 @@ valid_table <- function(cand_table)
   if (nrow(cand_table) < 4 || ncol(cand_table) < 4)
     return(FALSE)
 
-    for (j in 1:ncol(cand_table))
-      if (!is.numeric(cand_table[,j]))
-        return(FALSE)
+  for (j in 1:ncol(cand_table))
+    if (!is.numeric(cand_table[,j]))
+      return(FALSE)
 
-   TRUE
+  TRUE
 }
 
 # ------------
@@ -399,8 +399,6 @@ set_label_matrix <- function(sets_result, labels){
   # validate that labels is a vector of characters
   stopifnot(is.character(labels))
 
-  # note: this code is very optimized but also very obtuse ...
-  # might be worth clarifying further
   rownames_final <- colnames(sets_result)
   summary <- summary(Matrix(sets_result, sparse = TRUE))
   summary_i <- summary[, 1]
@@ -422,10 +420,8 @@ set_label_matrix <- function(sets_result, labels){
   }
 
   final <- matrix(final, ncol=num_types)
+  numbers <- tabulate(lookup, ncol_final)
 
-  numbers <- rep(0, num_types)
-  for (a in lookup)
-    numbers[a] <- numbers[a] + 1
   for (j in 1:num_types)
     final[,j] <- final[,j] / numbers[j]
 

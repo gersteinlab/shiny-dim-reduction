@@ -172,3 +172,35 @@ rbp_red <- all_reductions(rbp_table, rbp_labels)
 sprintf_clean("Time elapsed: %s (random)", test_red$time)
 sprintf_clean("Time elapsed: %s (mirna)", mirna_red$time)
 sprintf_clean("Time elapsed: %s (rbp)", rbp_red$time)
+
+# ----------------
+# SETS SCRATCHWORK
+# ----------------
+
+tab1 <- function(lookup, ncol_final)
+{
+  label_freqs <- rep(0, ncol_final)
+  for (a in lookup)
+    label_freqs[a] <- label_freqs[a] + 1
+  label_freqs
+}
+
+tab2 <- function(lookup, ncol_final)
+{
+  tabulate(lookup, ncol_final)
+}
+
+# clearly tabulate is faster than for loops
+test1 <- sample(1:100, 10000000, replace = TRUE)
+system.time(tab1(test1, 102))
+system.time(tab2(test1, 102))
+sprintf_clean("Are they the same? %s", all.equal(tab1(test1, 102), tab2(test1, 102)))
+
+# clearly summary(Matrix()) is faster than which()
+sets_mat <- table_to_sets(mirna_table, 0.4)
+sm <- cbind(sets_mat, sets_mat, sets_mat, sets_mat, sets_mat)
+smm <- rbind(sm, sm, sm, sm)
+system.time(d1 <- summary(Matrix(smm, sparse = TRUE)))
+system.time(d2 <- which(smm == 1, arr.ind = TRUE))
+
+
