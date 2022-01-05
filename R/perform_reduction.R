@@ -12,6 +12,28 @@ if (!exists("ran_install"))
 
 source_sdr("red_methods.R")
 source_sdr("preprocess.R")
+source_sdr("storage.R")
+
+get_from_dir("amazon_keys", dir = sprintf("%s/dependencies", app_loc))
+set_working_key(amazon_keys)
+
+# ----------
+# REQUEST ID
+# ----------
+
+# gets n request ids
+get_request_id <- function(n = 1)
+{
+  if (n < 1)
+    return(numeric())
+
+  id <- 1:n
+  if (find_aws_s3("Sessions/cur_id.rds"))
+    id <- id + load_aws_s3("Sessions/cur_id.rds")
+
+  save_aws_s3(id[n], "Sessions/cur_id.rds")
+  id
+}
 
 # -----------------------------
 # REQUEST CREATION / VALIDATION
@@ -586,10 +608,10 @@ rem_dup_requests <- function(requests)
 
     # if no other requests exist,
     # the current request is completed and the previous one is not,
-    # or both requests have the same status and the current one is more recent
+    # or both requests have the same status and the current one is older
     if (is.null(prev_val) ||
         (!prev_val[3] && cur_done) ||
-        (prev_val[3] == cur_done && cur_time > prev_val[2]))
+        (prev_val[3] == cur_done && cur_time < prev_val[2]))
       index_for_req[[key]] <- c(i, cur_time, cur_done)
   }
 

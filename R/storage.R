@@ -77,13 +77,19 @@ find_local <- function(filename)
   file.exists(path_local(filename))
 }
 
+# saveRDS but we force the creation of the directory
+mkdir_saveRDS <- function(data, file)
+{
+  dest_dir <- dirname(file)
+  if (!dir.exists(dest_dir))
+    dir.create(dest_dir, recursive=TRUE)
+  saveRDS(data, file)
+}
+
 # saves data to filename in the root directory
 save_local <- function(data, filename)
 {
-  file <- path_local(filename)
-  if (!dir.exists(dirname(file)))
-    dir.create(dirname(file), recursive=TRUE)
-  saveRDS(data, file)
+  mkdir_saveRDS(path_local(filename))
 }
 
 # loads data from filename in the root directory

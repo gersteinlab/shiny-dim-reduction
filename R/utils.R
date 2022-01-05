@@ -29,15 +29,6 @@ vis_options <- c("Explore", "Summarize", "tSNE")
 # visualization options as nouns
 vis_nouns <- c("Exploration of ", "Summary of ", "tSNE of ")
 
-# saveRDS but we force the creation of the directory
-mkdir_saveRDS <- function(data, file)
-{
-  dest_dir <- dirname(file)
-  if (!dir.exists(dest_dir))
-    dir.create(dest_dir, recursive=TRUE)
-  saveRDS(data, file)
-}
-
 make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat, thr, cha)
 {
   sca_ind <- which(sca_options == sca)
