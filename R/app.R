@@ -10,8 +10,6 @@ set_sdr_from_app(TRUE)
 require("shiny")
 require("dplyr")
 
-source_sdr("text_work.R")
-source_sdr("utils.R")
 source_sdr("plotting.R")
 source_sdr("authentication.R")
 source_sdr("options.R")
