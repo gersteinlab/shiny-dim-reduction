@@ -12,6 +12,7 @@ if (!exists("ran_install"))
     stop("Could not confirm installation. Please source install.R manually.")
 }
 
+source_sdr("ui_functions.R")
 source_sdr("storage.R")
 
 require("shinydashboard")
