@@ -241,7 +241,6 @@ att_is_int <- function(x)
 # otherwise, return a set of requests in the appropriate form.
 # com: components for first-round dimensionality reduction
 # dim: dimension for second-round dimensionality reduction
-# thr: all thresholds are rounded to 3 digits past the decimal point
 # note: the first 13 attributes MUST be a primary key; author / timestamps don't differentiate
 # note: if the TIME_COMPLETED field is before the TIME_REQUESTED field, it hasn't been done yet!
 make_requests <- function(
@@ -273,7 +272,7 @@ make_requests <- function(
   requests <- data.frame(
     "CATEGORIES" = cat, "ROW_SUBSETS" = row, "COL_SUBSETS" = col, "SCALING" = sca,
     "NORMALIZATION" = nor, "EMBEDDING" = emb, "VISUALIZATION" = vis, "COMPONENT" = com,
-    "DIMENSION" = dim, "PERPLEXITY" = per, "BATCH_SIZE" = bat, "THRESHOLD" = round(thr, 3),
+    "DIMENSION" = dim, "PERPLEXITY" = per, "BATCH_SIZE" = bat, "THRESHOLD" = thr,
     "CHARACTERISTIC" = cha, "AUTHOR" = aut,
     "TIME_REQUESTED" = times_requested, "TIME_COMPLETED" = times_requested - 60 * 60 * 24 # minus 1 day
   )
