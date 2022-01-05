@@ -391,7 +391,7 @@ table_to_sets <- function(table, threshold) {
   target[, colSums(target) > 0, drop = FALSE]
 }
 
-# given a binary matrix SETS from calculate_sets, let final[feature][label] be the
+# given a binary matrix SETS from calculate_sets, let final[feature, label] be the
 # fraction of samples with that label where that feature was present in SETS
 set_label_matrix <- function(sets_result, labels){
   # validate that this is a binary matrix WITH FEATURE NAMES
