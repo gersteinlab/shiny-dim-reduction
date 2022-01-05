@@ -27,26 +27,20 @@ verbose_red <- FALSE
 # GENERAL METHODS
 # ---------------
 
-# Parameters for methods:
-
-# table_to_pca(table, dim = 2)
-# - dim is the final number of dimensions
-
-# table_to_vae(table, dim = 2, batch_size = 2, patience = 10, max_epochs = 1000)
-# - dim is the final number of dimensions
-# - batch_size is the number of samples per batch; lower takes more time but higher takes more memory
-# - patience is the number of epochs of nondecreasing loss that must occur before learning ends
-# - max_epochs is the maximum number of epochs that the VAE will run for (might stop earlier)
+# dimensions (dim): the final number of features for a reduction
+# -- note that this differs from the com vs dim distinction in 1st round / 2nd round reductions
+# perplexity (per): the expected number of nearest neighbors for each sample in an embedding
+# verbose: whether updates are displayed as the analysis is run
 
 # determines if a table is valid for dimensionality reduction
-# refuse to have less than 4 rows initially, since 3 points define a plane (2D)
-# refuse to have less than 4 columns initially, since then you can immediately plot on 3D
-# and plot on 2D for second-round reductions.
 valid_table <- function(cand_table)
 {
   if (!all.equal(class(matrix()), class(cand_table)))
     return(FALSE)
 
+  # refuse to have less than 4 rows initially, since 3 points define a plane (2D)
+  # refuse to have less than 4 columns initially, since then you can immediately plot on 3D
+  # and plot on 2D for second-round reductions.
   if (nrow(cand_table) < 4 || ncol(cand_table) < 4)
     return(FALSE)
 
@@ -61,23 +55,19 @@ valid_table <- function(cand_table)
 # tSNE METHODS
 # ------------
 
-# rTSNE with parameters set for speed on an m x n matrix
-# dims (d): the number of final features; 1, 2, or 3
-# perlexity (p): the perplexity (nearest neighbors) for tSNE
-# max_iter (i): how many iterations the algorithm should run for
-# theta (t): tradeoff between exact O(n^2) and Barnes-Hut approximation O(n log n)
-# eta (e): learning rate
-# momentum (u): velocity of convergence
-# verbose (v): whether input is displayed as tSNE is run
-# time complexity from tests: O(m^2 n i (d + p))
-table_to_tsne <- function(table, dim = 2, perp = 0, max_iter = 500, theta = 0.5,
+# t-Distributed Stochastic Neighbor Embedding (tSNE) with parameters prioritizing speed
+# max_iter: how many iterations the algorithm should run for
+# theta: tradeoff between exact O(n^2) and Barnes-Hut approximation O(n log n)
+# eta: learning rate
+# momentum: velocity of convergence
+table_to_tsne <- function(table, dim = 2, per = 0, max_iter = 500, theta = 0.5,
                           eta = 200, momentum = 0.5, verbose = verbose_red)
 {
   # the perplexity can't be too big
-  stopifnot(perp <= floor((nrow(table) - 1)/3))
+  stopifnot(per <= floor((nrow(table) - 1)/3))
   set.seed(0)
 
-  Rtsne(table, dims = dim, perplexity = perp, max_iter = max_iter, theta = theta,
+  Rtsne(table, dims = dim, perplexity = per, max_iter = max_iter, theta = theta,
         eta = eta, momentum = momentum, final_momentum = momentum, verbose = verbose,
         initial_dims = ncol(table), exaggeration_factor = 1, num_threads = 1,
         stop_lying_iter = 0, mom_switch_iter = 0,
@@ -120,16 +110,16 @@ pca_to_summary <- function(pca_result)
 }
 
 # accessor helper function
-pca_to_tsne <- function(pca_result, dim = 2, perp = 0)
+pca_to_tsne <- function(pca_result, dim = 2, per = 0)
 {
-  table_to_tsne(pca_to_explore(pca_result), dim, perp)
+  table_to_tsne(pca_to_explore(pca_result), dim, per)
 }
 
 # -----------
 # VAE METHODS
 # -----------
 
-# must be done immediately after loading Keras!!
+# must be done immediately after loading Keras
 tensorflow::use_condaenv("r-reticulate")
 K <- keras::backend()
 
@@ -187,9 +177,13 @@ my_fit <- function(vae, x_train, batch_size = 2, patience = 10, max_epochs = 100
   )
 }
 
-# runs variational autoencoder
+# Variational Autoencoder
+# batch_size: the number of samples per batch; lower takes more time but higher takes more memory
+# patience: the number of epochs of nondecreasing loss that must occur before learning ends
+# max_epochs: the maximum number of epochs that the VAE will run for (might stop earlier)
+# verbose: 0 is silent, 1 is moderately verbose, 2 is highly verbose
 table_to_vae <- function(table, dim = 2, batch_size = 2,
-                         patience = 10, max_epochs = 1000, verbose = ifelse(verbose_red, 2, 0))
+                         patience = 10, max_epochs = 1000, verbose = verbose_red)
 {
   # require all entries to be within [0, 1]
   stopifnot(sum(table > 1) + sum(table < 0) == 0)
@@ -267,7 +261,7 @@ table_to_vae <- function(table, dim = 2, batch_size = 2,
   # reset loss before measurement
   loss <<- numeric()
 
-  history <- my_fit(vae, table, batch_size, patience, max_epochs, verbose)
+  history <- my_fit(vae, table, batch_size, patience, max_epochs, ifelse(verbose, 2, 0))
   predict <- predict(encoder, table, batch_size)
 
   k_clear_session()
@@ -305,22 +299,23 @@ vae_to_summary <- function(vae_result)
 }
 
 # accessor helper function
-vae_to_tsne <- function(vae_result, dim = 2, perp = 0)
+vae_to_tsne <- function(vae_result, dim = 2, per = 0)
 {
-  table_to_tsne(vae_to_explore(vae_result), dim, perp)
+  table_to_tsne(vae_to_explore(vae_result), dim, per)
 }
 
 # ------------
 # UMAP METHODS
 # ------------
 
-table_to_umap <- function(table, dim = 2, perp = 0, verbose = verbose_red)
+# Uniform Manifold Approximation and Projection
+table_to_umap <- function(table, dim = 2, per = 0, verbose = verbose_red)
 {
   sprintf_clean("UMAP Table Dimensions: (%s, %s)", nrow(table), ncol(table))
   umap::umap(
     table,
     method = "naive",
-    n_neighbors = perp,
+    n_neighbors = per,
     n_components = dim,
     metric = 'euclidean',
     n_epochs = 500,
@@ -355,10 +350,11 @@ umap_to_tsne <- function(umap_result, dim = 2)
 # PHATE METHODS
 # -------------
 
-table_to_phate <- function(table, dim = 2, perp = 0, verbose = verbose_red) {
+# Potential of Heat diffusion for Affinity-based Transition Embedding
+table_to_phate <- function(table, dim = 2, per = 0, verbose = verbose_red) {
   sprintf_clean("PHATE Table Dimensions: (%s, %s)", nrow(table), ncol(table))
   result <- phateR::phate(
-    table, ndim = dim, knn = perp, decay = 40, n.landmark = 2000,
+    table, ndim = dim, knn = per, decay = 40, n.landmark = 2000,
     gamma = 1, t = "auto", mds.solver = "sgd", knn.dist.method = "euclidean",
     init = NULL, mds.method = "metric", mds.dist.method = "euclidean",
     t.max = 100, npca = 10, verbose = verbose, n.jobs = 1, seed = 0)
