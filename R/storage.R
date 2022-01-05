@@ -1,11 +1,3 @@
-# The purpose of this file is to manage Local / AWS.S3 storage.
-# source("storage.R", encoding="UTF-8")
-
-# Goals:
-# find_store: returns whether a file exists
-# save_store: saves a file, creating the directory if it doesn't exist
-# load_store: loads a file, returning NULL if it doesn't exist
-
 if (!exists("ran_install"))
 {
   if (file.exists("install.R"))
@@ -14,163 +6,104 @@ if (!exists("ran_install"))
     stop("Could not confirm installation. Please source install.R manually.")
 }
 
-require(aws.s3)
+sdr_source("parameters.R")
+sdr_source("read_write.R")
 
-# --------------
-# KEY MANAGEMENT
-# --------------
-
-# the expected location of the master key
-master_key_loc <- get_project_loc("sdr_master_key.rds")
-
-# sets the current working AWS access key, which comprises: id, secret, bucket
-set_working_key <- function(key)
+make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat, thr, cha)
 {
-  if (class(key) != "list")
-    stop("Provided keys are not a list.")
+  sca_ind <- which(sca_options == sca)
+  nor_ind <- which(nor_options == nor)
 
-  if (!isTRUE(all.equal(names(key), c("id", "secret", "bucket"))))
-    stop("Incorrect key components provided.")
-
-  Sys.setenv("AWS_ACCESS_KEY_ID" = key$id,
-             "AWS_SECRET_ACCESS_KEY" = key$secret,
-             "AWS_ACCESS_BUCKET" = key$bucket)
-}
-
-# create a master key and save it in the project directory
-save_master_key <- function(id, secret)
-{
-  sdr_master_key <- list("id" = id, "secret" = secret)
-  saveRDS(sdr_master_key, master_key_loc)
-}
-
-# give the current working key MASTER KEY privileges
-sudo_working_key <- function()
-{
-  sdr_master_key <- readRDS(master_key_loc)
-  set_working_key(list(
-    "id" = sdr_master_key$id,
-    "secret" = sdr_master_key$secret,
-    "bucket" = Sys.getenv("AWS_ACCESS_BUCKET")
-  ))
-}
-
-# -------------
-# LOCAL STORAGE
-# -------------
-
-# assigns a root directory for local storage
-assign_root <- function(root)
-{
-  stopifnot(length(root) == 1, is.character(root), dir.exists(root))
-  Sys.setenv("LOCAL_STORAGE_ROOT" = root)
-}
-
-path_local <- function(filename)
-{
-  sprintf("%s/%s", Sys.getenv("LOCAL_STORAGE_ROOT"), filename)
-}
-
-# determines whether a file with the given filename exists
-find_local <- function(filename)
-{
-  file.exists(path_local(filename))
-}
-
-# saveRDS but we force the creation of the directory
-mkdir_saveRDS <- function(data, file)
-{
-  dest_dir <- dirname(file)
-  if (!dir.exists(dest_dir))
-    dir.create(dest_dir, recursive=TRUE)
-  saveRDS(data, file)
-}
-
-# saves data to filename in the root directory
-save_local <- function(data, filename)
-{
-  mkdir_saveRDS(path_local(filename))
-}
-
-# loads data from filename in the root directory
-load_local <- function(filename)
-{
-  if (!find_local(filename))
-    return(NULL)
-  readRDS(path_local(filename))
-}
-
-# --------------
-# AWS.S3 STORAGE
-# --------------
-
-my_amazon_obj <- NULL
-
-# assigns keys for AWS.S3 - must be used first
-
-
-# determines whether a single object with the given filename exists
-find_aws_s3 <- function(filename)
-{
-  length(get_bucket(Sys.getenv("AWS_ACCESS_BUCKET"), prefix=filename)) == 1
-}
-
-# lol <- get_bucket(Sys.getenv("AWS_ACCESS_BUCKET"))
-# bucket_names <- lapply(lol, function(x){
-#   x$Key
-# })
-# bucket_table <- matrix(bucket_names, ncol = 1)
-
-# saves a single object to AWS.s3 - modified from s3save
-save_aws_s3 <- function(data, filename)
-{
-  tmp <- tempfile(fileext = ".rdata")
-  on.exit(unlink(tmp))
-  my_amazon_obj <<- data
-  save(my_amazon_obj, file = tmp, envir = .GlobalEnv)
-  put_object(file = tmp, bucket = Sys.getenv("AWS_ACCESS_BUCKET"), object = filename)
-}
-
-# loads a single object from AWS.s3 - modified from s3load
-load_aws_s3 <- function(filename)
-{
-  if (!find_aws_s3(filename))
-    return(NULL)
-  tmp <- tempfile(fileext = ".rdata")
-  on.exit(unlink(tmp))
-  save_object(bucket = Sys.getenv("AWS_ACCESS_BUCKET"), object = filename, file = tmp)
-  load(tmp, envir = .GlobalEnv)
-  my_amazon_obj
-}
-
-# ------------------
-# STORAGE ASSIGNMENT
-# ------------------
-
-# changes the storage type to local or AWS
-set_storage <- function(use_local)
-{
-  if (use_local)
+  if (emb == "PCA")
   {
-    assign("find_store", find_local, envir=.GlobalEnv)
-    assign("save_store", save_local, envir=.GlobalEnv)
-    assign("load_store", load_local, envir=.GlobalEnv)
+    if (vis == "Explore")
+      return(sprintf("PCA_E/%s/%s_%s_S%s_N%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com))
+    if (vis == "Summarize")
+      return(sprintf("PCA_S/%s/%s_%s_S%s_N%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com))
+    if (vis == "tSNE")
+      return(sprintf("PCA_T/%s/%s_%s_S%s_N%s_%s_%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com, dim, per))
   }
-  else
+
+  if (emb == "VAE")
   {
-    assign("find_store", find_aws_s3, envir=.GlobalEnv)
-    assign("save_store", save_aws_s3, envir=.GlobalEnv)
-    assign("load_store", load_aws_s3, envir=.GlobalEnv)
+    if (vis == "Explore")
+      return(sprintf("VAE_E/%s/%s_%s_S%s_N%s_%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com, bat))
+    if (vis == "Summarize")
+      return(sprintf("VAE_S/%s/%s_%s_S%s_N%s_%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com, bat))
+    if (vis == "tSNE")
+      return(sprintf("VAE_T/%s/%s_%s_S%s_N%s_%s_%s_%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com, dim, per, bat))
   }
+
+  if (emb == "UMAP")
+  {
+    if (vis == "Explore")
+      return(sprintf("UMAP_E/%s/%s_%s_S%s_N%s_%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com, per))
+    if (vis == "Summarize")
+      return(sprintf("UMAP_S/%s/%s_%s_S%s_N%s_%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com, per))
+    if (vis == "tSNE")
+      return(sprintf("UMAP_T/%s/%s_%s_S%s_N%s_%s_%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com, dim, per))
+  }
+
+  if (emb == "Sets")
+    return(sprintf("Sets/%s/S%s_%0.3f_%s.rds", cat, sca_ind, thr, cha))
+
+  # PHATE
+  return(sprintf("PHATE/%s/%s_%s_S%s_N%s_%s_%s.rds", cat, row, col, sca_ind, nor_ind, com, per))
 }
 
-# queries the user for a storage type
-storage_query <- function()
+# creates the name of a file in AWS
+# For emb and vis (non-Sets) ...
+# PCA: 1 (explore) + 1 (summarize) + 5*2 (tSNE) = 12
+# VAE: 1 (explore) + 1 (summarize) + 5*2 (tsNE) = 12
+# UMAP: 5 (explore) + 1 (summarize) + 5*2 (tSNE) = 16
+# PHATE: 5*2 (2D and 3D)
+# combinatorially ... 2 (sca) * 5 (nor) * 3 (fea) * 50 (emb) = 1500 files per folder
+# Note that Sets undergoes neither grouping nor decompression ...
+# For subsets and categories, we expect a leap in file number for AWS ...
+make_aws_name <- function(cat, sub, sca, nor, fea, emb, vis, dim_ind, per_ind)
 {
-  user_local <- "N"
-  if (sdr_running_local)
-    user_local <- readline(prompt = "
-Type 'Y' and press enter to use local storage.
-Type anything else and press enter to use AWS storage. ")
-  set_storage(user_local == "Y")
+  sca_ind <- which(sca_options == sca)
+  nor_ind <- which(nor_options == nor)
+  fea_ind <- which(fea_options == add_perc(fea))
+  emb_ind <- which(emb_options == emb)
+  vis_ind <- which(vis_options == vis)
+
+  if (emb == "PHATE")
+  {
+    vis_ind <- "X"
+  }
+
+  if (emb == "PCA" || emb == "VAE")
+  {
+    if (vis == "Explore" || vis == "Summarize")
+    {
+      per_ind <- "X"
+      dim_ind <- "X"
+    }
+  }
+
+  if (emb == "UMAP")
+  {
+    if (vis == "Explore" || vis == "Summarize")
+    {
+      dim_ind <- "X"
+    }
+    if (vis == "Summarize")
+    {
+      per_ind <- "X"
+    }
+  }
+
+  sprintf("Dim_Red/%s/%s/%s_%s_%s_%s_%s_%s_%s.rds",
+          cat, sub, sca_ind, nor_ind, fea_ind, emb_ind, vis_ind,
+          dim_ind, per_ind)
 }
