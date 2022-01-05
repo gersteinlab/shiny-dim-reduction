@@ -9,7 +9,7 @@ if (!exists("ran_install"))
     stop("Could not confirm installation. Please source install.R manually.")
 }
 
-source_sdr("perform_reduction.R")
+source_sdr("red_requests.R")
 
 # simplifying perplexity for now
 # setwd(dep_loc)
