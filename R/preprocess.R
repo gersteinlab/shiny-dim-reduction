@@ -14,6 +14,7 @@ if (!exists("ran_install"))
 
 source_sdr("utils.R")
 source_sdr("workflows.R")
+source_sdr("storage.R")
 
 library(limma)
 
@@ -113,4 +114,5 @@ do_scal <- function(sca, scaled)
     return(log_scale(scaled))
   return(scaled)
 }
+
 
