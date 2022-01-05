@@ -384,6 +384,14 @@ perform_reduction <- function(requests, force = 0)
   # a true-false vector determining if an analysis should be performed
   i_fin <- !file.exists(final_locs) | rep(force > 0, nrow(requests))
 
+  # a true-false vector determining if TIME_COMPLETED < TIME_REQUESTED
+  i_not_done <- times_done < requests$TIME_REQUESTED
+
+  # if an analysis is complete (!i_fin) but requests is not updated (i_not_done),
+  # simply update the time the analysis was done to the current time.
+  touch_times <- !i_fin & i_not_done
+  times_done[touch_times] <- rep(Sys.time(), sum(touch_times))
+
   # select the category
   for (cat in unique(requests$CATEGORIES[i_fin]))
   {
