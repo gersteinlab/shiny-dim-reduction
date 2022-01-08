@@ -42,37 +42,24 @@ get_from_dir <- function(filename, default = NULL, dir = "dependencies")
   invisible()
 }
 
-# retrieves a subset based on the list of subsets, the subset name, and the category
+# retrieves a row subset, which is a vector of indices
+# row subsets are index-based because metadata is expected
+# to maintain the same row ordering as the numerical data.
 # assumes the existence of an object named 'decorations'
 get_row_decor_subset <- function(cat, row)
 {
   for (dec_group in decorations)
-  {
     if (cat %in% dec_group$CATEGORIES)
-    {
-      ref <- dec_group$ROW_SUBSETS$Reference
-      ind <- dec_group$ROW_SUBSETS[[row]]
-      return(ref[ind])
-    }
-  }
-
-  return(NULL)
-}
-
-# used for order
-get_row_decor_indices <- function(cat, row)
-{
-  for (dec_group in decorations)
-  {
-    if (cat %in% dec_group$CATEGORIES)
-    {
       return(dec_group$ROW_SUBSETS[[row]])
-    }
-  }
 
   return(NULL)
 }
 
+# retrieves a col subset, which is a vector of column names
+# column subsets are name-based because columns can be reordered
+# based on metrics (ex: standard deviation) or excluded in a non-trivial
+# way (example: thresholding for Sets dimensionality reduction).
+# assumes the existence of an object named 'decorations'
 get_col_decor_subset <- function(cat, col)
 {
   for (dec_group in decorations)
@@ -93,7 +80,7 @@ get_col_decor_subset <- function(cat, col)
 get_row_sub <- function(data, cat, sub)
 {
   if (sub != "Total")
-    return(data[rownames(data) %in% get_row_decor_subset(cat, sub),,drop=FALSE])
+    return(data[get_row_decor_subset(cat, sub),,drop=FALSE])
 
   data
 }
