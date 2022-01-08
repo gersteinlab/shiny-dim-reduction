@@ -23,16 +23,13 @@ library(Matrix)
 # should reduction methods be verbose?
 verbose_red <- FALSE
 
-# ---------------
-# GENERAL METHODS
-# ---------------
-
 # dimensions (dim): the final number of features for a reduction
 # -- note that this differs from the com vs dim distinction in 1st round / 2nd round reductions
 # perplexity (per): the expected number of nearest neighbors for each sample in an embedding
 # verbose: whether updates are displayed as the analysis is run
 
 # determines if a table is valid for dimensionality reduction
+# note: anything of the form "combined_miRNA" should satisfy this
 valid_table <- function(cand_table)
 {
   if (!all.equal(class(matrix()), class(cand_table)))
@@ -42,6 +39,14 @@ valid_table <- function(cand_table)
   # refuse to have less than 4 columns initially, since then you can immediately plot on 3D
   # and plot on 2D for second-round reductions.
   if (nrow(cand_table) < 4 || ncol(cand_table) < 4)
+    return(FALSE)
+
+  # row names should be absent
+  if (!is.null(rownames(cand_table)))
+    return(FALSE)
+
+  # column names are required
+  if (length(colnames(cand_table)) != ncol(cand_table))
     return(FALSE)
 
   for (j in 1:ncol(cand_table))
