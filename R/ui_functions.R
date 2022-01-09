@@ -1,5 +1,7 @@
 # The purpose of this file is to store various UI-related functions for the app.
 
+source_sdr("text_work.R")
+
 require("shinycssloaders")
 require("shinyWidgets")
 

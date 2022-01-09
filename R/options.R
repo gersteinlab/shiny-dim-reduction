@@ -12,8 +12,6 @@ if (!exists("ran_install"))
     stop("Could not confirm installation. Please source install.R manually.")
 }
 
-source_sdr("utils.R")
-source_sdr("text_work.R")
 source_sdr("ui_functions.R")
 source_sdr("storage.R")
 

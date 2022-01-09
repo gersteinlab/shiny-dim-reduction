@@ -80,7 +80,7 @@ w_def_readRDS <- function(file, default = NULL)
 # assigning a default value if file.exists(loc) returns false.
 get_from_loc <- function(name, loc, default = NULL)
 {
-  assign_global(var_name, w_def_readRDS(loc, default))
+  assign_global(name, w_def_readRDS(loc, default))
 }
 
 # wrapper for get_from_loc that assumes the file was saved with the variable name

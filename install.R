@@ -218,6 +218,9 @@ source_sdr <- function(file)
 if (!exists("sdr_project_loc"))
   set_project_loc()
 
+require(shiny)
+require(dplyr)
+
 print_clean()
 message("*** SHINY DIMENSIONALITY REDUCTION ***")
 message("DEVELOPER: Justin Chang @ Gerstein Lab")
