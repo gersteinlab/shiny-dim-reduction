@@ -46,27 +46,27 @@ perplexity_list <- empty_named_list(perplexity_types)
 # normalizes a vector or matrix to [0,1]
 norm_min_max <- function(data)
 {
-  max <- base::max(data)
-  min <- base::min(data)
-  if (max == min)
+  data_max <- max(data)
+  data_min <- min(data)
+  if (data_max == data_min)
   {
     data[] <- 0.5
     return(data)
   }
-  (data-min)/(max-min)
+  (data - data_min) / (data_max - data_min)
 }
 
 # normalizes a vector or matrix to have a mean of 0 and a variance of 1
 norm_z_score <- function(data)
 {
-  mean <- base::mean(data)
-  sd <- stats::sd(data)
-  if (sd == 0)
+  data_mean <- mean(data)
+  data_sd <- sd(data)
+  if (data_sd == 0)
   {
     data[] <- 0
     return(data)
   }
-  (data-mean)/sd
+  (data - data_mean) / data_sd
 }
 
 # normalizes each feature with min-max
