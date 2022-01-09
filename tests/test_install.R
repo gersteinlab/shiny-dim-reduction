@@ -10,6 +10,11 @@ source("install.R")
 # TESTS
 # -----
 
+test_assign <- function()
+{
+  assign_global("test_assign_var", 42)
+}
+
 basic_test <- function()
 {
   print_clean("*** Testing Basic Functions ***")
@@ -28,6 +33,12 @@ basic_test <- function()
                 paste(names(empty_named_list("A", "B", "C")), collapse = ", "))
   sprintf_clean("The result of empty_named_list(NULL) is: [%s] [expected: list()]",
                 paste(empty_named_list(NULL), collapse = ", "))
+
+  test_assign()
+  sprintf_clean("The result of test_assign() is: %s [expected: 42]",
+                test_assign_var)
+  rm(test_assign_var, envir = .GlobalEnv)
+
 }
 
 get_source_loc_test <- function()

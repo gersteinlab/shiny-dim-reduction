@@ -66,7 +66,7 @@ sdr_running_local <- (shiny_port == "")
 set_sdr_from_app <- function(x)
 {
   stopifnot(is.logical(x), length(x) == 1)
-  assign("sdr_from_app", x, envir = .GlobalEnv)
+  assign_global("sdr_from_app", x)
 }
 
 # sdr_from_app should be the first thing assigned by app.R
@@ -179,7 +179,7 @@ set_project_loc <- function(loc = getwd())
 {
   if (!sdr_running_local)
   {
-    assign("sdr_project_loc", ".", envir = .GlobalEnv)
+    assign_global("sdr_project_loc", ".")
     return()
   }
 
@@ -188,7 +188,7 @@ set_project_loc <- function(loc = getwd())
 Error: install.R is not contained in this location.
 Please type the location of the project directory and press enter. ")
 
-  assign("sdr_project_loc", loc, envir = .GlobalEnv)
+  assign_global("sdr_project_loc", loc)
 }
 
 # gets the absolute path of a file given its relative path to the project
