@@ -44,15 +44,15 @@ max_dend <- 200
 # -----------------
 
 # Please see converter.R for an explanation of these dependencies.
-get_from_dir("amazon_keys") # note: this SHOULD NOT be necessary if the app is running locally!
-get_from_dir("order_total", empty_named_list(name_cat))
-get_from_dir("pc_cap", 3)
-get_from_dir("thresholds")
-get_from_dir("perplexity_types", 1:5)
-get_from_dir("app_title", "Dimensionality Reduction Tool")
-get_from_dir("app_citations", "No data citations could be found.")
-get_from_dir("user_credentials")
-get_from_dir("custom_color_scales")
+get_dependency("amazon_keys") # note: this SHOULD NOT be necessary if the app is running locally!
+get_dependency("order_total", empty_named_list(name_cat))
+get_dependency("pc_cap", 3)
+get_dependency("thresholds")
+get_dependency("perplexity_types", 1:5)
+get_dependency("app_title", "Dimensionality Reduction Tool")
+get_dependency("app_citations", "No data citations could be found.")
+get_dependency("user_credentials")
+get_dependency("custom_color_scales")
 
 # -----
 # SETUP
@@ -81,8 +81,7 @@ citations <- rep_str(bibliography, "!!!!!!!!!!", app_citations)
 print_instructions <- rem_html_tags(instructions)
 print_citations <- rem_html_tags(citations)
 
-# create categories and subsets
-init_cat()
+# create subsets
 init_sub(name_num_map)
 
 # ----------------
@@ -251,7 +250,7 @@ settings_menu <- menuItem(
 )
 
 table_1_menu <- menuItem(
-  "Table 1 Selection",
+  "Table Selection",
   startExpanded = TRUE,
   icon = icon("table"),
   select_panel("category", "Category", cat_groups),
@@ -264,19 +263,8 @@ table_1_menu <- menuItem(
   )
 )
 
-table_2_menu <- menuItem(
-  "Table 2 Selection",
-  icon = icon("table"),
-  select_panel("table_1", "Select Table 1 Name", NULL),
-  select_panel("t1_opt_sou", "Desired Source(s)", NULL),
-  select_panel("t1_opt_row", "Desired Row Subset(s)", NULL),
-  select_panel("t1_opt_col", "Desired Column Subset(s)", NULL),
-  select_panel("t1_opt_sca", "Desired Scaling(s)", NULL), # log, lin
-  select_panel("t1_opt_nor", "Desired Normalization(s)", NULL) # global/local min-max, quant
-)
-
 analysis_1_menu <- menuItem(
-  "Analysis 1 Selection",
+  "Analysis Selection",
   icon = icon("calculator"),
   select_panel("embedding", "Method of Dimensionality Reduction", emb_options),
   conditionalPanel(
@@ -316,15 +304,8 @@ analysis_1_menu <- menuItem(
   )
 )
 
-analysis_2_menu <- menuItem(
-  "Analysis 2 Selection",
-  icon = icon("calculator"),
-  select_panel("analysis_1", "Select Available Analyses", NULL),
-  select_panel("a1_opt_red", "Desired Reduction(s)", NULL) # pca, pca+tsne, vae, vae+tsne,
-)
-
 filters_1_menu <- menuItem(
-  "Filter Set 1 Selection",
+  "Filter Set Selection",
   icon = icon("filter"),
   conditionalPanel(
     condition = "input.embedding != 'Sets' &&
@@ -369,12 +350,6 @@ filters_1_menu <- menuItem(
   )
 )
 
-filters_2_menu <- menuItem(
-  "Filter Set 2 Selection",
-  icon = icon("filter"),
-  radioButtons("test", "TBD: Add Copies", c("A", "B"))
-)
-
 ui <- function(request){
   dashboardPage(
     skin="blue",
@@ -383,11 +358,8 @@ ui <- function(request){
       width=300,
       sidebarMenu(
         table_1_menu,
-        table_2_menu,
         analysis_1_menu,
-        analysis_2_menu,
         filters_1_menu,
-        filters_2_menu,
         settings_menu
       )
     ),

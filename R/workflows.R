@@ -122,13 +122,13 @@ rapp <- function(){
 # updates and runs the app
 uapp <- function(){
   print_clean("Beginning update ...")
-  update_app(c("options.R",
-               "ui_functions.R",
-               "utils.R",
+  update_app(c("find_replace.R",
                "text_work.R",
-               "find_replace.R",
-               "plotting.R",
+               "ui_functions.R",
+               "read_write.R",
                "storage.R",
+               "options.R",
+               "plotting.R",
                "authentication.R"))
   print_clean("Updates complete ...")
   rapp()
