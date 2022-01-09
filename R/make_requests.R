@@ -37,6 +37,13 @@ chr_d <- function(n = 1)
   rep("-", n)
 }
 
+# selects only metadata features with a limited number of values
+select_chars <- function(order, num_filters = 60){
+  select_if(order, function(x){
+    between(length(unique(x)), 2, num_filters)
+  })
+}
+
 # cleans a request (a requests data.frame with a single row) and returns the cleaned version,
 # returning NULL if the request cannot be properly cleaned.
 # note: should only be called through make_requests, assuming valid types

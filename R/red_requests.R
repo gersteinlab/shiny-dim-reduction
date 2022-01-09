@@ -10,9 +10,9 @@ if (!exists("ran_install"))
     stop("Could not confirm installation. Please source install.R manually.")
 }
 
-source_sdr("make_requests.R")
 source_sdr("sca_nor_fun.R")
 source_sdr("red_methods.R")
+source_sdr("make_requests.R")
 
 # -----------------------------
 # REQUEST FULFILLMENT / STORAGE

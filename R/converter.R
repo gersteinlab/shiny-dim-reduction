@@ -215,3 +215,10 @@ local_bind <- function(data, num = 20)
 {
   chunk_bind_rows(data, num) %>% chunk_bind_rows()
 }
+
+# selects the columns of data with the top num standard deviations
+ind_sd_top <- function(data, num)
+{
+  vals <- apply(data, 2, sd)
+  order(vals)[1:num]
+}

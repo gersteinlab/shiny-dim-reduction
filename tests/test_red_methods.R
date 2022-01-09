@@ -14,12 +14,10 @@ if (!exists("ran_install"))
 
 source_sdr("red_methods.R")
 source_sdr("plotting.R")
-project_name <- "exRNA"
-source_sdr("preprocess.R")
 
-# -----
-# TESTS
-# -----
+# ------
+# TESTER
+# ------
 
 # from a table, generates a list of reductions (and plots),
 # raising an error if the original table is not valid.
@@ -117,47 +115,31 @@ colnames(test_table) <- sprintf("Component %s", 1:20)
 # test random data
 test_red <- all_reductions(test_table, test_labels)
 
-# -----
-# MIRNA
-# -----
+# -----------
+# MIRNA / RBP
+# -----------
 
-setwd(pro_loc)
-combined_miRNA <- readRDS("combined/combined_miRNA.rds")
+source_sdr("sca_nor_fun.R")
+workflow_name <- "exRNA"
+source_sdr("converter.R")
 
-# Interpolates the number of truncated features in the range [pc_cap, total_features]
-# given a fraction of the distance.
-calc_feat <- function(pc_cap, fraction, total_features)
-{
-  pc_cap + ceiling(fraction * (total_features - pc_cap))
-}
-
-feature_start <- function(data, fraction)
-{
-  variances <- apply(data, 2, var)
-  data <- data[,order(variances, decreasing=TRUE),drop=FALSE]
-  num_features <- calc_feat(pc_cap, fraction, ncol(data))
-  data[,1:num_features, drop=FALSE]
-}
-
-scaled_miRNA <- feature_start(combined_miRNA, 0.1)
-
-mirna_table <- norm_min_max(log_scale(scaled_miRNA))
 setwd(dep_loc)
 order_total <- readRDS("order_total.rds")
+
 mirna_labels <- order_total$miRNA$CONDITION
+rbp_labels <- order_total$RNA_binding_proteins$CONDITION
+
+setwd(com_loc)
+
+combined_miRNA <- readRDS("combined_miRNA.rds")
+scaled_miRNA <- combined_miRNA[,ind_sd_top(combined_miRNA, 100),drop=FALSE]
+mirna_table <- norm_min_max(log_scale(scaled_miRNA))
+
+combined_RBP <- readRDS("combined_RNA_binding_proteins.rds")
+rbp_table <- norm_min_max(log_scale(combined_RBP))
 
 # test miRNA data
 mirna_red <- all_reductions(mirna_table, mirna_labels)
-
-# ---
-# RBP
-# ---
-
-# get RNA binding protein data
-setwd(pro_loc)
-combined_RBP <- readRDS("combined/combined_RNA_binding_proteins.rds")
-rbp_table <- norm_min_max(log_scale(combined_RBP))
-rbp_labels <- order_total$RNA_binding_proteins$CONDITION
 
 # test RBP data
 rbp_red <- all_reductions(rbp_table, rbp_labels)
@@ -177,30 +159,30 @@ sprintf_clean("Time elapsed: %s (rbp)", rbp_red$time)
 # SETS SCRATCHWORK
 # ----------------
 
-tab1 <- function(lookup, ncol_final)
-{
-  label_freqs <- rep(0, ncol_final)
-  for (a in lookup)
-    label_freqs[a] <- label_freqs[a] + 1
-  label_freqs
-}
-
-tab2 <- function(lookup, ncol_final)
-{
-  tabulate(lookup, ncol_final)
-}
-
-# clearly tabulate is faster than for loops
-test1 <- sample(1:100, 10000000, replace = TRUE)
-system.time(tab1(test1, 102))
-system.time(tab2(test1, 102))
-sprintf_clean("Are they the same? %s", all.equal(tab1(test1, 102), tab2(test1, 102)))
-
-# clearly summary(Matrix()) is faster than which()
-sets_mat <- table_to_sets(mirna_table, 0.4)
-sm <- cbind(sets_mat, sets_mat, sets_mat, sets_mat, sets_mat)
-smm <- rbind(sm, sm, sm, sm)
-system.time(d1 <- summary(Matrix(smm, sparse = TRUE)))
-system.time(d2 <- which(smm == 1, arr.ind = TRUE))
+# tab1 <- function(lookup, ncol_final)
+# {
+#   label_freqs <- rep(0, ncol_final)
+#   for (a in lookup)
+#     label_freqs[a] <- label_freqs[a] + 1
+#   label_freqs
+# }
+#
+# tab2 <- function(lookup, ncol_final)
+# {
+#   tabulate(lookup, ncol_final)
+# }
+#
+# # clearly tabulate is faster than for loops
+# test1 <- sample(1:100, 10000000, replace = TRUE)
+# system.time(tab1(test1, 102))
+# system.time(tab2(test1, 102))
+# sprintf_clean("Are they the same? %s", all.equal(tab1(test1, 102), tab2(test1, 102)))
+#
+# # clearly summary(Matrix()) is faster than which()
+# sets_mat <- table_to_sets(mirna_table, 0.4)
+# sm <- cbind(sets_mat, sets_mat, sets_mat, sets_mat, sets_mat)
+# smm <- rbind(sm, sm, sm, sm)
+# system.time(d1 <- summary(Matrix(smm, sparse = TRUE)))
+# system.time(d2 <- which(smm == 1, arr.ind = TRUE))
 
 

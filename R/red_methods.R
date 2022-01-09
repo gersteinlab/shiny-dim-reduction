@@ -371,13 +371,6 @@ table_to_phate <- function(table, dim = 2, per = 0, verbose = verbose_red) {
 # Sets METHODS
 # ------------
 
-# selects only metadata features with a limited number of values
-select_chars <- function(order, num_filters = 60){
-  select_if(order, function(x){
-    between(length(unique(x)), 2, num_filters)
-  })
-}
-
 # target[i, j] returns whether data[i, j] >= threshold,
 # removing columns with no values at the threshold or above
 # since all Sets undergo Global Min-Max, all values in table
