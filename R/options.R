@@ -250,11 +250,20 @@ settings_menu <- menuItem(
   check_panel("console", "Console Output", bookmarkable_ids, NULL)
 )
 
+category_sel <- select_panel("category", "Category", cat_groups)
+category_sel$children[[2]]$children[[1]] <- HTML(reg_str(
+  category_sel$children[[2]]$children[[1]],
+  "<option value=\"RNA_binding_proteins\">RNA Binding Proteins</option>",
+  "<optgroup label=\"RNA Binding Proteins\">
+<option value=\"RNA_binding_proteins\">RNA Binding Proteins</option>
+</optgroup>"
+))
+
 table_1_menu <- menuItem(
   "Table Selection",
   startExpanded = TRUE,
   icon = icon("table"),
-  select_panel("category", "Category", cat_groups),
+  category_sel,
   sub_opts,
   select_panel("scale", "Scale", sca_options),
   conditionalPanel(
