@@ -77,7 +77,7 @@ check_panel <- function(id, name, inputs, indices)
 action <- function(id, name, icon_name, color, bk, br)
 {
   actionButton(
-    inputId = id, label = name, icon = icon(icon_name), style=
+    inputId = id, label = name, icon = icon(icon_name), style =
       sprintf("color: %s; background-color: %s; border-color: %s", color, bk, br))
 }
 
@@ -91,9 +91,9 @@ authenticator_modal <- function() {
     wellPanel(
       style="background-color: #E0F0FF; border-color: #00356B",
       textInput("username", "Username",
-                placeholder="Please enter your username ...", value="guest"),
+                placeholder = "Please enter your username ...", value = "guest"),
       textInput("password", "Password (is invisible)",
-                placeholder="", value=""),
+                placeholder = "", value = ""),
       action("attempt_login", "Login", "unlock", "#FFFFFF", "#0064C8", "#00356B"),
       actionButton("toggle_password", "Show/Hide Password")
     ),
@@ -140,7 +140,7 @@ notification <- function(message, time, form)
 # picks a random option for an input picker that accepts only 1 option
 pick_random_input <- function(session, inputId, choices)
 {
-  updatePickerInput(session, inputId, selected=sample(choices, 1))
+  updatePickerInput(session, inputId, selected = sample(choices, 1))
 }
 
 # checks if a value is invalid with respect to a range

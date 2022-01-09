@@ -1,5 +1,10 @@
-# The purpose of this file is to name, initialize, and set roles for reduction parameters,
-# while also enabling the naming, storing, and loading of reduction files.
+# The purpose of this file is to manage Local / AWS.S3 storage.
+# source("storage.R", encoding="UTF-8")
+
+# Goals:
+# find_store: returns whether a file exists
+# save_store: saves a file, creating the directory if it doesn't exist
+# load_store: loads a file, returning NULL if it doesn't exist
 
 if (!exists("ran_install"))
 {
@@ -9,242 +14,223 @@ if (!exists("ran_install"))
     stop("Could not confirm installation. Please source install.R manually.")
 }
 
-source_sdr("read_write.R")
+require(aws.s3)
 
-# ----------------
-# ANALYSIS OPTIONS
-# ----------------
+# --------------
+# KEY MANAGEMENT
+# --------------
 
-# scale options
-sca_options <- c("Logarithmic", "Linear")
-# normalization options
-nor_options <- c("Global Min-Max", "Local Min-Max",
-                 "Global Z-Score", "Local Z-Score",
-                 "Quantile")
-# embedding options
-emb_options <- c("PCA", "VAE", "UMAP", "PHATE", "Sets")
-# visualization options
-vis_options <- c("Explore", "Summarize", "tSNE")
-# visualization options as nouns
-vis_nouns <- c("Exploration of ", "Summary of ", "tSNE of ")
+# the expected location of the master key
+master_key_loc <- get_project_loc("sdr_master_key.rds")
 
-# ----------------
-# CATEGORY LOADING
-# ----------------
-
-# creates category-related data
-# to remove: rm(categories_full, cat_groups, name_cat, num_cat, categories)
-init_cat <- function()
+# sets the current working AWS access key, which comprises: id, secret, bucket
+set_working_key <- function(key)
 {
-  get_dependency("categories_full", stop("Critical dependency missing!"))
+  if (class(key) != "list")
+    stop("Provided keys are not a list.")
 
-  # cat groups
-  assign_global("cat_groups", lapply(categories_full, names))
+  if (!isTRUE(all.equal(names(key), c("id", "secret", "bucket"))))
+    stop("Incorrect key components provided.")
 
-  # name_cat
-  name_cat <- unlist(cat_groups)
-  names(name_cat) <- NULL
-  assign_global("name_cat", name_cat)
-
-  # num_cat
-  assign_global("num_cat", length(name_cat))
-
-  # categories
-  categories <- unlist(categories_full, recursive=FALSE)
-  names(categories) <- name_cat
-  assign_global("categories", categories)
+  Sys.setenv("AWS_ACCESS_KEY_ID" = key$id,
+             "AWS_SECRET_ACCESS_KEY" = key$secret,
+             "AWS_ACCESS_BUCKET" = key$bucket)
 }
 
-# ----------------
-# SUBSET FUNCTIONS
-# ----------------
-
-# creates subset-related data, using a subset_map function that
-# converts a list of vectors into a vector of characters
-# to remove: rm(decorations, sub_row_groups, sub_col_groups)
-init_sub <- function(subset_map)
+# create a master key and save it in the project directory
+save_master_key <- function(id, secret)
 {
-  get_dependency("decorations")
-
-  sub_row_groups <- empty_named_list(name_cat)
-  sub_col_groups <- empty_named_list(name_cat)
-
-  for (cat in name_cat)
-  {
-    sub_row_groups[[cat]] <- list("Total"=rep(0, categories[[cat]][1])) %>% subset_map()
-    sub_col_groups[[cat]] <- list("Total"=rep(0, categories[[cat]][2])) %>% subset_map()
-  }
-
-  for (dec_group in decorations)
-  {
-    mapping_row <- dec_group$ROW_SUBSETS[-1] %>% subset_map()
-    mapping_col <- dec_group$COL_SUBSETS[-1] %>% subset_map()
-
-    for (good_cat in dec_group$CATEGORIES)
-    {
-      sub_row_groups[[good_cat]] <- c(sub_row_groups[[good_cat]], mapping_row)
-      sub_col_groups[[good_cat]] <- c(sub_col_groups[[good_cat]], mapping_col)
-    }
-  }
-
-  assign("sub_row_groups", sub_row_groups, envir = .GlobalEnv)
-  assign("sub_col_groups", sub_col_groups, envir = .GlobalEnv)
-
-  invisible()
+  sdr_master_key <- list("id" = id, "secret" = secret)
+  saveRDS(sdr_master_key, master_key_loc)
 }
 
-# retrieves a row subset, which is a vector of indices
-# row subsets are index-based because metadata is expected
-# to maintain the same row ordering as the numerical data.
-# requires init_sub() to be run first
-get_row_decor_subset <- function(cat, row)
+# give the current working key MASTER KEY privileges
+sudo_working_key <- function()
 {
-  for (dec_group in decorations)
-    if (cat %in% dec_group$CATEGORIES)
-      return(dec_group$ROW_SUBSETS[[row]])
-
-  return(NULL)
+  sdr_master_key <- readRDS(master_key_loc)
+  set_working_key(list(
+    "id" = sdr_master_key$id,
+    "secret" = sdr_master_key$secret,
+    "bucket" = Sys.getenv("AWS_ACCESS_BUCKET")
+  ))
 }
 
-# retrieves a col subset, which is a vector of column names
-# column subsets are name-based because columns can be reordered
-# based on metrics (ex: standard deviation) or excluded in a non-trivial
-# way (example: thresholding for Sets dimensionality reduction).
-# requires init_sub() to be run first
-get_col_decor_subset <- function(cat, col)
-{
-  for (dec_group in decorations)
-  {
-    if (cat %in% dec_group$CATEGORIES)
-    {
-      ref <- dec_group$COL_SUBSETS$Reference
-      ind <- dec_group$COL_SUBSETS[[col]]
-      return(ref[ind])
-    }
-  }
+# -------------
+# LOCAL STORAGE
+# -------------
 
-  return(NULL)
+# saveRDS but we force the creation of the directory
+mkdir_saveRDS <- function(data, file, compress = TRUE)
+{
+  dest_dir <- dirname(file)
+  if (!dir.exists(dest_dir))
+    dir.create(dest_dir, recursive=TRUE)
+  saveRDS(data, file, compress = compress)
 }
 
-# obtains a subset of data's rows
-# requires init_sub() to be run first
-get_row_sub <- function(data, cat, sub)
+# readRDS but returns a default if the file does not exist
+w_def_readRDS <- function(file, default = NULL)
 {
-  if (sub != "Total")
-    return(data[get_row_decor_subset(cat, sub),,drop=FALSE])
-
-  data
+  if (file.exists(file))
+    return(readRDS(file))
+  default
 }
 
-# obtains a subset of data's cols
-# requires init_sub() to be run first
-get_col_sub <- function(data, cat, sub)
+# assigns the given value readRDS(loc) to a variable with the given name,
+# assigning a default value if file.exists(loc) returns false.
+get_from_loc <- function(name, loc, default = NULL)
 {
-  if (sub != "Total")
-    return(data[,colnames(data) %in% get_col_decor_subset(cat, sub),drop=FALSE])
-
-  data
+  assign_global(name, w_def_readRDS(loc, default))
 }
 
-# ---------------
-# ANALYSIS NAMING
-# ---------------
-
-make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat, thr, cha)
+# wrapper for get_from_loc that assumes the file was saved with the variable name
+get_self_loc <- function(name, dir = getwd(), default = NULL)
 {
-  sca_ind <- which(sca_options == sca)
-  nor_ind <- which(nor_options == nor)
-
-  if (emb == "PCA")
-  {
-    if (vis == "Explore")
-      return(sprintf("PCA_E/%s/%s_%s_S%s_N%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com))
-    if (vis == "Summarize")
-      return(sprintf("PCA_S/%s/%s_%s_S%s_N%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com))
-    if (vis == "tSNE")
-      return(sprintf("PCA_T/%s/%s_%s_S%s_N%s_%s_%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com, dim, per))
-  }
-
-  if (emb == "VAE")
-  {
-    if (vis == "Explore")
-      return(sprintf("VAE_E/%s/%s_%s_S%s_N%s_%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com, bat))
-    if (vis == "Summarize")
-      return(sprintf("VAE_S/%s/%s_%s_S%s_N%s_%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com, bat))
-    if (vis == "tSNE")
-      return(sprintf("VAE_T/%s/%s_%s_S%s_N%s_%s_%s_%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com, dim, per, bat))
-  }
-
-  if (emb == "UMAP")
-  {
-    if (vis == "Explore")
-      return(sprintf("UMAP_E/%s/%s_%s_S%s_N%s_%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com, per))
-    if (vis == "Summarize")
-      return(sprintf("UMAP_S/%s/%s_%s_S%s_N%s_%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com, per))
-    if (vis == "tSNE")
-      return(sprintf("UMAP_T/%s/%s_%s_S%s_N%s_%s_%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com, dim, per))
-  }
-
-  if (emb == "Sets")
-    return(sprintf("Sets/%s/S%s_%0.3f_%s.rds", cat, sca_ind, thr, cha))
-
-  # PHATE
-  return(sprintf("PHATE/%s/%s_%s_S%s_N%s_%s_%s.rds", cat, row, col, sca_ind, nor_ind, com, per))
+  get_from_loc(name, sprintf("%s/%s.rds", dir, name), default)
 }
 
-# creates the name of a file in AWS
-# For emb and vis (non-Sets) ...
-# PCA: 1 (explore) + 1 (summarize) + 5*2 (tSNE) = 12
-# VAE: 1 (explore) + 1 (summarize) + 5*2 (tsNE) = 12
-# UMAP: 5 (explore) + 1 (summarize) + 5*2 (tSNE) = 16
-# PHATE: 5*2 (2D and 3D)
-# combinatorially ... 2 (sca) * 5 (nor) * 3 (fea) * 50 (emb) = 1500 files per folder
-# Note that Sets undergoes neither grouping nor decompression ...
-# For subsets and categories, we expect a leap in file number for AWS ...
-make_aws_name <- function(cat, sub, sca, nor, fea, emb, vis, dim_ind, per_ind)
+# wrapper for get_self_loc, only for dependencies
+get_dependency <- function(name, default = NULL)
 {
-  sca_ind <- which(sca_options == sca)
-  nor_ind <- which(nor_options == nor)
-  fea_ind <- which(fea_options == add_perc(fea))
-  emb_ind <- which(emb_options == emb)
-  vis_ind <- which(vis_options == vis)
+  if (sdr_from_app)
+    return(get_self_loc(name, "dependencies", default))
+  get_self_loc(name, dep_loc, default)
+}
 
-  if (emb == "PHATE")
+# performs saveRDS(loc) with the value of a variable with the given name,
+# saving a default value if exists(name) returns false.
+set_from_var <- function(name, loc, default = NULL, compress = TRUE)
+{
+  if (exists(name))
+    default <- get(name)
+  saveRDS(default, loc, compress = compress)
+}
+
+# wrapper for set_from_var that saves the file with the variable name
+set_self_var <- function(name, dir = getwd(), default = NULL, compress = TRUE)
+{
+  set_from_var(name, sprintf("%s/%s.rds", dir, name), default, compress)
+}
+
+# wrapper for set_self_var, only for dependencies
+set_dependency <- function(name, default = NULL, compress = TRUE)
+{
+  if (sdr_from_app)
+    stop("Dependencies cannot be set from within the application.")
+  set_self_var(name, dep_loc, default, compress)
+}
+
+# assigns a root directory for local storage
+assign_root <- function(root)
+{
+  stopifnot(length(root) == 1, is.character(root), dir.exists(root))
+  Sys.setenv("LOCAL_STORAGE_ROOT" = root)
+}
+
+path_local <- function(filename)
+{
+  sprintf("%s/%s", Sys.getenv("LOCAL_STORAGE_ROOT"), filename)
+}
+
+# lists all files with the given prefix (usually a valid directory)
+list_local <- function(prefix)
+{
+  list.files(path_local(prefix))
+}
+
+# determines whether a file with the given filename exists
+find_local <- function(filename)
+{
+  file.exists(path_local(filename))
+}
+# saves data to filename in the root directory
+save_local <- function(data, filename)
+{
+  mkdir_saveRDS(path_local(filename))
+}
+
+# loads data from filename in the root directory
+load_local <- function(filename)
+{
+  if (!find_local(filename))
+    return(NULL)
+  readRDS(path_local(filename))
+}
+
+# --------------
+# AWS.S3 STORAGE
+# --------------
+
+my_amazon_obj <- NULL
+
+# lists the contents of a bucket's prefix
+list_aws_s3 <- function(prefix)
+{
+  get_bucket(Sys.getenv("AWS_ACCESS_BUCKET"), prefix = prefix)
+}
+
+# determines whether a single object with the given filename exists
+find_aws_s3 <- function(prefix)
+{
+  length(list_aws_s3(prefix)) == 1
+}
+
+# lol <- get_bucket(Sys.getenv("AWS_ACCESS_BUCKET"))
+# bucket_names <- lapply(lol, function(x){
+#   x$Key
+# })
+# bucket_table <- matrix(bucket_names, ncol = 1)
+
+# saves a single object to AWS.s3 - modified from s3save
+save_aws_s3 <- function(data, filename)
+{
+  tmp <- tempfile(fileext = ".rdata")
+  on.exit(unlink(tmp))
+  my_amazon_obj <<- data
+  save(my_amazon_obj, file = tmp, envir = .GlobalEnv)
+  put_object(file = tmp, bucket = Sys.getenv("AWS_ACCESS_BUCKET"), object = filename)
+}
+
+# loads a single object from AWS.s3 - modified from s3load
+load_aws_s3 <- function(filename)
+{
+  if (!find_aws_s3(filename))
+    return(NULL)
+  tmp <- tempfile(fileext = ".rdata")
+  on.exit(unlink(tmp))
+  save_object(bucket = Sys.getenv("AWS_ACCESS_BUCKET"), object = filename, file = tmp)
+  load(tmp, envir = .GlobalEnv)
+  my_amazon_obj
+}
+
+# ------------------
+# STORAGE ASSIGNMENT
+# ------------------
+
+# changes the storage type to local or AWS
+set_storage <- function(use_local)
+{
+  if (use_local)
   {
-    vis_ind <- "X"
+    assign("find_store", find_local, envir=.GlobalEnv)
+    assign("save_store", save_local, envir=.GlobalEnv)
+    assign("load_store", load_local, envir=.GlobalEnv)
   }
-
-  if (emb == "PCA" || emb == "VAE")
+  else
   {
-    if (vis == "Explore" || vis == "Summarize")
-    {
-      per_ind <- "X"
-      dim_ind <- "X"
-    }
+    assign("find_store", find_aws_s3, envir=.GlobalEnv)
+    assign("save_store", save_aws_s3, envir=.GlobalEnv)
+    assign("load_store", load_aws_s3, envir=.GlobalEnv)
   }
+}
 
-  if (emb == "UMAP")
-  {
-    if (vis == "Explore" || vis == "Summarize")
-    {
-      dim_ind <- "X"
-    }
-    if (vis == "Summarize")
-    {
-      per_ind <- "X"
-    }
-  }
-
-  sprintf("Dim_Red/%s/%s/%s_%s_%s_%s_%s_%s_%s.rds",
-          cat, sub, sca_ind, nor_ind, fea_ind, emb_ind, vis_ind,
-          dim_ind, per_ind)
+# queries the user for a storage type
+storage_query <- function()
+{
+  user_local <- "N"
+  if (sdr_running_local)
+    user_local <- readline(prompt = "
+Type 'Y' and press enter to use local storage.
+Type anything else and press enter to use AWS storage. ")
+  set_storage(user_local == "Y")
 }
