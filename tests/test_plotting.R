@@ -14,8 +14,6 @@ if (!exists("ran_install"))
 
 source_sdr("plotting.R")
 
-library(dplyr)
-
 # displays a color sequence as a rectangular palette
 display_palette <- function(color_seq, title)
 {
@@ -85,7 +83,7 @@ test_plotly_3d <- function(n = 10)
   plotly_3d(1:(10*n), 1:(10*n), 1:(10*n), types, types, color_seq(10))
 }
 
-get_set_data <- function(row=10000, col=4)
+get_set_data <- function(row = 10000, col = 4)
 {
   test <- seq(0, 1, 0.1)
   data <- matrix(sample(test, row*col, replace=TRUE), nrow=row, ncol=col)
@@ -102,7 +100,7 @@ test_ggplot2_null()
 test_boxplot_beeswarm()
 test_ggplot2_2d()
 test_plotly_2d()
-test_plotly_3d()
+test_plotly_3d() # note: had to use Desktop OpenGL
 
 upset_custom_data <- get_set_data()
 
@@ -125,3 +123,7 @@ upset_custom_data %>% truncate_rows() %>% sort_row_sums() %>%
 
 upset_custom_data %>% truncate_rows(500) %>% sort_row_sums() %>%
   set_f1_f2(c(0, 1), c(0, 4)) %>% plotly_heatmap_dendrogram(inferno)
+
+my_datatable()
+
+my_datatable(data.frame(cbind(upset_custom_data[1:100,], rep(LETTERS[1:10], 10))))
