@@ -16,7 +16,7 @@ if (!exists("ran_install"))
 workflow_root_loc <- get_project_loc("sdr_workflow_root.rds")
 
 # interactive prompt to set the location of the workflow root
-set_workflow_root_loc <- function()
+set_workflow_root <- function()
 {
   while (TRUE)
   {
@@ -29,7 +29,7 @@ Type 'Q' and press enter to quit. ")
 
     if (dir.exists(loc))
     {
-      assign("sdr_workflow_root", loc, envir = .GlobalEnv)
+      assign_global("sdr_workflow_root", loc)
       saveRDS(loc, workflow_root_loc)
       break
     }
@@ -49,24 +49,31 @@ if (file.exists(workflow_root_loc))
 {
   sdr_workflow_root <- readRDS(workflow_root_loc)
   if (!dir.exists(sdr_workflow_root))
-    set_workflow_root_loc()
+    set_workflow_root()
 } else
 {
-  set_workflow_root_loc()
+  set_workflow_root()
 }
 
-# have the user enter the project name
-while (!exists("project_name"))
+# have the user enter the workflow name
+while (!exists("workflow_name"))
 {
-  attempted_name <- readline(prompt = "
-Type the name of the project that you would like to work on and press enter.
+  sprintf_clean("Current Workflow Root: %s", sdr_workflow_root)
+  workflow_names <- list.files(sdr_workflow_root)
+  sprintf_clean("Current Workflows Available: %s", paste(workflow_names, collapse = ", "))
+  sprintf_clean("To change the workflow root, type set_workflow_root().")
+  attempted_name <- readline(
+    prompt = "Type the name of the workflow that you would like to use and press enter.
 To change projects, restart this session. Type 'Q' and press enter to quit. ")
+
+  if (attempted_name == "set_workflow_root()")
+    set_workflow_root()
 
   if (attempted_name == "Q")
     stop("Quitting ... project not selected.")
 
-  if (attempted_name %in% list.files(sdr_workflow_root))
-    assign("project_name", attempted_name, envir = .GlobalEnv)
+  if (attempted_name %in% workflow_names)
+    assign_global("workflow_name", attempted_name)
 }
 
 # creates a directory carefully
@@ -80,15 +87,21 @@ safe_dir <- function(path)
 # roo (root)
 # -- raw (raw)
 # -- pro (processing)
+# -- -- com (combined)
+# -- -- int (inter)
 # -- ref (reference)
 # -- app (app)
 # -- -- dep (dependencies)
-roo_loc <- sprintf("%s/%s", sdr_workflow_root, project_name)
+roo_loc <- sprintf("%s/%s", sdr_workflow_root, workflow_name)
 safe_dir(roo_loc)
 raw_loc <- sprintf("%s/raw", roo_loc)
 safe_dir(raw_loc)
 pro_loc <- sprintf("%s/processing", roo_loc)
 safe_dir(pro_loc)
+com_loc <- sprintf("%s/combined", pro_loc)
+safe_dir(com_loc)
+int_loc <- sprintf("%s/inter", pro_loc)
+safe_dir(int_loc)
 ref_loc <- sprintf("%s/reference", roo_loc)
 safe_dir(ref_loc)
 app_loc <- sprintf("%s/app", roo_loc)
