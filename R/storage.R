@@ -6,8 +6,8 @@ if (!exists("ran_install"))
     stop("Could not confirm installation. Please source install.R manually.")
 }
 
-sdr_source("parameters.R")
-sdr_source("read_write.R")
+source_sdr("parameters.R")
+source_sdr("read_write.R")
 
 make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat, thr, cha)
 {

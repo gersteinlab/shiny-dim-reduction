@@ -33,15 +33,6 @@ vis_nouns <- c("Exploration of ", "Summary of ", "tSNE of ")
 # DEPENDENCY LOADING
 # ------------------
 
-# attempts to retrieve the file with the given name and assign it to itself
-get_from_dir <- function(filename, default = NULL, dir = "dependencies")
-{
-  if (sprintf("%s.rds", filename) %in% list.files(dir))
-    default <- readRDS(sprintf("%s/%s.rds", dir, filename))
-  assign(filename, default, envir = .GlobalEnv)
-  invisible()
-}
-
 # retrieves a row subset, which is a vector of indices
 # row subsets are index-based because metadata is expected
 # to maintain the same row ordering as the numerical data.

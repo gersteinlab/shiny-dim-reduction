@@ -89,23 +89,6 @@ read_tsv_text <- function(filename)
   strsplit(readLines(filename), split='\t', fixed=TRUE)
 }
 
-# attempts to save an object with the given name to the current directory
-self_save <- function(filenames, compress=TRUE)
-{
-  for (filename in filenames)
-    if (exists(filename))
-      saveRDS(get(filename), sprintf("%s.rds", filename), compress=compress)
-  return(invisible())
-}
-
-# attempts to load an object from the current directory to itself
-self_load <- function(filenames)
-{
-  for (filename in filenames)
-    get_from_dir(filename, NULL, dir=getwd())
-  return(invisible())
-}
-
 # converts a matrix to a numeric matrix,
 # removing columns with no valid entries
 convert_to_num <- function(data){

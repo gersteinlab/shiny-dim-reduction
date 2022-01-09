@@ -353,8 +353,8 @@ requests_to_inter <- function(requests)
 # readRDS but return NULL if force_inter
 inter_readRDS <- function(force, int_loc)
 {
-  if (force != 2 && file.exists(int_loc))
-    return(readRDS(int_loc))
+  if (force != 2)
+    return(w_def_readRDS(int_loc))
   return(NULL)
 }
 

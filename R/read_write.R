@@ -59,6 +59,67 @@ sudo_working_key <- function()
 # LOCAL STORAGE
 # -------------
 
+# saveRDS but we force the creation of the directory
+mkdir_saveRDS <- function(data, file, compress = TRUE)
+{
+  dest_dir <- dirname(file)
+  if (!dir.exists(dest_dir))
+    dir.create(dest_dir, recursive=TRUE)
+  saveRDS(data, file, compress = compress)
+}
+
+# readRDS but returns a default if the file does not exist
+w_def_readRDS <- function(file, default = NULL)
+{
+  if (file.exists(file))
+    return(readRDS(file))
+  default
+}
+
+# assigns the given value readRDS(loc) to a variable with the given name,
+# assigning a default value if file.exists(loc) returns false.
+get_from_loc <- function(name, loc, default = NULL)
+{
+  assign_global(var_name, w_def_readRDS(loc, default))
+}
+
+# wrapper for get_from_loc that assumes the file was saved with the variable name
+get_self_loc <- function(name, dir = getwd(), default = NULL)
+{
+  get_from_loc(name, sprintf("%s/%s.rds", dir, name), default)
+}
+
+# wrapper for get_self_loc, only for dependencies
+get_dependency <- function(name, default = NULL)
+{
+  if (sdr_from_app)
+    return(get_self_loc(name, "dependencies", default))
+  get_self_loc(name, dep_loc, default)
+}
+
+# performs saveRDS(loc) with the value of a variable with the given name,
+# saving a default value if exists(name) returns false.
+set_from_var <- function(name, loc, default = NULL, compress = TRUE)
+{
+  if (exists(name))
+    default <- get(name)
+  saveRDS(default, loc, compress = compress)
+}
+
+# wrapper for set_from_var that saves the file with the variable name
+set_self_var <- function(name, dir = getwd(), default = NULL, compress = TRUE)
+{
+  set_from_var(name, sprintf("%s/%s.rds", dir, name), default, compress)
+}
+
+# wrapper for set_self_var, only for dependencies
+set_dependency <- function(name, default = NULL, compress = TRUE)
+{
+  if (sdr_from_app)
+    stop("Dependencies cannot be set from within the application.")
+  set_self_var(name, dep_loc, default, compress)
+}
+
 # assigns a root directory for local storage
 assign_root <- function(root)
 {
@@ -71,21 +132,17 @@ path_local <- function(filename)
   sprintf("%s/%s", Sys.getenv("LOCAL_STORAGE_ROOT"), filename)
 }
 
+# lists all files with the given prefix (usually a valid directory)
+list_local <- function(prefix)
+{
+  list.files(path_local(prefix))
+}
+
 # determines whether a file with the given filename exists
 find_local <- function(filename)
 {
   file.exists(path_local(filename))
 }
-
-# saveRDS but we force the creation of the directory
-mkdir_saveRDS <- function(data, file)
-{
-  dest_dir <- dirname(file)
-  if (!dir.exists(dest_dir))
-    dir.create(dest_dir, recursive=TRUE)
-  saveRDS(data, file)
-}
-
 # saves data to filename in the root directory
 save_local <- function(data, filename)
 {
@@ -106,13 +163,16 @@ load_local <- function(filename)
 
 my_amazon_obj <- NULL
 
-# assigns keys for AWS.S3 - must be used first
-
+# lists the contents of a bucket's prefix
+list_aws_s3 <- function(prefix)
+{
+  get_bucket(Sys.getenv("AWS_ACCESS_BUCKET"), prefix = prefix)
+}
 
 # determines whether a single object with the given filename exists
-find_aws_s3 <- function(filename)
+find_aws_s3 <- function(prefix)
 {
-  length(get_bucket(Sys.getenv("AWS_ACCESS_BUCKET"), prefix=filename)) == 1
+  length(list_aws_s3(prefix)) == 1
 }
 
 # lol <- get_bucket(Sys.getenv("AWS_ACCESS_BUCKET"))

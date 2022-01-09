@@ -50,6 +50,12 @@ empty_named_list <- function(...)
   target
 }
 
+# assigns the given value to a global variable with the given name
+assign_global <- function(name, value)
+{
+  assign(name, value, envir = .GlobalEnv)
+}
+
 # --------------
 # LOCAL / ONLINE
 # --------------
