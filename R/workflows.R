@@ -96,9 +96,9 @@ safe_dir(app_loc)
 dep_loc <- sprintf("%s/dependencies", app_loc)
 safe_dir(dep_loc)
 
-# ---------
-# FUNCTIONS
-# ---------
+# --------------------
+# DEPLOYMENT FUNCTIONS
+# --------------------
 
 # update the selected files in the app
 update_app <- function(filenames) {
@@ -111,8 +111,6 @@ update_app <- function(filenames) {
     file.copy(get_project_loc(sprintf("R/%s", file)),
               sprintf("%s/src", app_loc), overwrite = TRUE)
 }
-
-library(shiny)
 
 # runs the app
 rapp <- function(){
