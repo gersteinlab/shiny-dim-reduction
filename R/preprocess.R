@@ -23,10 +23,7 @@ library(limma)
 setwd(app_loc)
 
 # open from dependencies
-get_from_dir("categories_full")
-get_from_dir("decorations")
-
-get_from_dir("order_total")
+get_from_dir("order_total", empty_named_list(name_cat))
 get_from_dir("perplexity_types")
 get_from_dir("pc_cap")
 

@@ -28,64 +28,12 @@ vis_options <- c("Explore", "Summarize", "tSNE")
 # visualization options as nouns
 vis_nouns <- c("Exploration of ", "Summary of ", "tSNE of ")
 
-# ------------------
-# DEPENDENCY LOADING
-# ------------------
-
-# retrieves a row subset, which is a vector of indices
-# row subsets are index-based because metadata is expected
-# to maintain the same row ordering as the numerical data.
-# assumes the existence of an object named 'decorations'
-get_row_decor_subset <- function(cat, row)
-{
-  for (dec_group in decorations)
-    if (cat %in% dec_group$CATEGORIES)
-      return(dec_group$ROW_SUBSETS[[row]])
-
-  return(NULL)
-}
-
-# retrieves a col subset, which is a vector of column names
-# column subsets are name-based because columns can be reordered
-# based on metrics (ex: standard deviation) or excluded in a non-trivial
-# way (example: thresholding for Sets dimensionality reduction).
-# assumes the existence of an object named 'decorations'
-get_col_decor_subset <- function(cat, col)
-{
-  for (dec_group in decorations)
-  {
-    if (cat %in% dec_group$CATEGORIES)
-    {
-      ref <- dec_group$COL_SUBSETS$Reference
-      ind <- dec_group$COL_SUBSETS[[col]]
-      return(ref[ind])
-    }
-  }
-
-  return(NULL)
-}
-
-# obtains a subset of data's rows
-# assumes the existence of an object named 'decorations'
-get_row_sub <- function(data, cat, sub)
-{
-  if (sub != "Total")
-    return(data[get_row_decor_subset(cat, sub),,drop=FALSE])
-
-  data
-}
-
-# obtains a subset of data's cols
-# assumes the existence of an object named 'decorations'
-get_col_sub <- function(data, cat, sub)
-{
-  if (sub != "Total")
-    return(data[,colnames(data) %in% get_col_decor_subset(cat, sub),drop=FALSE])
-
-  data
-}
+# ----------------
+# CATEGORY LOADING
+# ----------------
 
 # creates category-related data; requires categories_full
+# to remove: rm(categories_full, cat_groups, name_cat, num_cat, categories)
 get_dependency("categories_full", stop("Critical dependency missing!"))
 
 # cat groups
@@ -104,12 +52,17 @@ categories <- unlist(categories_full, recursive=FALSE)
 names(categories) <- name_cat
 assign_global("categories", categories)
 
+# ----------------
+# SUBSET FUNCTIONS
+# ----------------
+
 # creates subset-related data, using a subset_map function that
 # converts a list of vectors into a vector of characters
-# assumes the existence of objects named 'decorations' and 'categories'
-# to remove: rm(sub_groups)
+# to remove: rm(decorations, sub_row_groups, sub_col_groups)
 init_sub <- function(subset_map)
 {
+  get_dependency("decorations")
+
   sub_row_groups <- empty_named_list(name_cat)
   sub_col_groups <- empty_named_list(name_cat)
 
@@ -136,6 +89,63 @@ init_sub <- function(subset_map)
 
   invisible()
 }
+
+# retrieves a row subset, which is a vector of indices
+# row subsets are index-based because metadata is expected
+# to maintain the same row ordering as the numerical data.
+# requires init_sub() to be run first
+get_row_decor_subset <- function(cat, row)
+{
+  for (dec_group in decorations)
+    if (cat %in% dec_group$CATEGORIES)
+      return(dec_group$ROW_SUBSETS[[row]])
+
+  return(NULL)
+}
+
+# retrieves a col subset, which is a vector of column names
+# column subsets are name-based because columns can be reordered
+# based on metrics (ex: standard deviation) or excluded in a non-trivial
+# way (example: thresholding for Sets dimensionality reduction).
+# requires init_sub() to be run first
+get_col_decor_subset <- function(cat, col)
+{
+  for (dec_group in decorations)
+  {
+    if (cat %in% dec_group$CATEGORIES)
+    {
+      ref <- dec_group$COL_SUBSETS$Reference
+      ind <- dec_group$COL_SUBSETS[[col]]
+      return(ref[ind])
+    }
+  }
+
+  return(NULL)
+}
+
+# obtains a subset of data's rows
+# requires init_sub() to be run first
+get_row_sub <- function(data, cat, sub)
+{
+  if (sub != "Total")
+    return(data[get_row_decor_subset(cat, sub),,drop=FALSE])
+
+  data
+}
+
+# obtains a subset of data's cols
+# requires init_sub() to be run first
+get_col_sub <- function(data, cat, sub)
+{
+  if (sub != "Total")
+    return(data[,colnames(data) %in% get_col_decor_subset(cat, sub),drop=FALSE])
+
+  data
+}
+
+# ---------------
+# ANALYSIS NAMING
+# ---------------
 
 make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat, thr, cha)
 {

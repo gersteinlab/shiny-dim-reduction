@@ -44,10 +44,8 @@ max_dend <- 200
 # -----------------
 
 # Please see converter.R for an explanation of these dependencies.
-get_from_dir("categories_full")
-get_from_dir("amazon_keys")
+get_from_dir("amazon_keys") # note: this SHOULD NOT be necessary if the app is running locally!
 get_from_dir("order_total", empty_named_list(name_cat))
-get_from_dir("decorations")
 get_from_dir("pc_cap", 3)
 get_from_dir("thresholds")
 get_from_dir("perplexity_types", 1:5)
