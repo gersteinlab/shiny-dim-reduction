@@ -424,8 +424,8 @@ set_label_matrix <- function(sets_result, labels){
     final[index] <- final[index] + 1
   }
 
-  final <- matrix(final, ncol=num_types)
-  numbers <- tabulate(lookup, ncol_final)
+  final <- matrix(final, ncol = num_types)
+  numbers <- tabulate(lookup, num_types)
 
   for (j in 1:num_types)
     final[,j] <- final[,j] / numbers[j]

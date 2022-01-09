@@ -14,7 +14,7 @@ if (!exists("ran_install"))
 
 # optional but default for now; avoids prompt
 project_name <- "exRNA"
-source_sdr("perform_reduction.R")
+source_sdr("red_requests.R")
 
 # -------------------
 # TEST VALID REQUESTS

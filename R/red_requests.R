@@ -13,7 +13,7 @@ if (!exists("ran_install"))
 source_sdr("red_methods.R")
 source_sdr("preprocess.R")
 
-get_from_dir("amazon_keys", dir = sprintf("%s/dependencies", app_loc))
+get_dependency("amazon_keys")
 set_working_key(amazon_keys)
 
 # ----------

@@ -114,7 +114,6 @@ sdr_pkg_names$data <- c(
   , "reticulate"
   , "tensorflow"
   , "keras"
-  , "dbscan"
   , "umap"
   , "phateR"
   , "limma"
@@ -164,7 +163,10 @@ If you are prompted by Bioconductor to install further packages, type 'n' and pr
       stop("An essential package is missing and cannot be installed since an old version is attached.")
     install.packages(setdiff(sdr_pkg_names$missing_data, "limma"), type = "binary", character.only = TRUE)
     if ("limma" %in% sdr_pkg_names$missing_data)
+    {
+      library(BiocManager)
       BiocManager::install("limma")
+    }
   }
 
   rm(confirm_data)

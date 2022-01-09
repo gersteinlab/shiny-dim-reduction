@@ -32,7 +32,6 @@ This project applies dimensionality reduction methods to tabular data through wo
 * Potential of Heat diffusion for Affinity-based Transition Embedding (PHATE)
 * t-Distributed Stochastic Neighbor Embedding (tSNE)
 * Set Thresholding and Intersection with UpSetR
-* Hierarchical Density-based Spatial Clustering of Applications with Noise (HDBSCAN)  
 
 There are three ways to use this project:
 
