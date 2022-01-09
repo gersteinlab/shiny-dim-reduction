@@ -56,15 +56,15 @@ local_z_score <- function(data)
 # performs normalization
 do_norm <- function(nor, scaled)
 {
-  if (nor == nor_options[1])
+  if (nor == "Global Min-Max")
     return(norm_min_max(scaled))
-  if (nor == nor_options[2])
+  if (nor == "Local Min-Max")
     return(local_min_max(scaled))
-  if (nor == nor_options[3])
+  if (nor ==  "Global Z-Score")
     return(norm_z_score(scaled))
-  if (nor == nor_options[4])
+  if (nor == "Local Z-Score")
     return(local_z_score(scaled))
-  if (nor == nor_options[5])
+  if (nor == "Quantile")
     return(t(limma::normalizeQuantiles(t(scaled))))
 }
 
