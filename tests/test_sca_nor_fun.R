@@ -1,5 +1,8 @@
-# This file stores all functions and constants that should be preserved
-# across all files, from data validation to processing to the tool.
+# This file tests sca_nor_fun.R.
+
+# -----
+# SETUP
+# -----
 
 if (!exists("ran_install"))
 {
@@ -8,3 +11,9 @@ if (!exists("ran_install"))
   else
     stop("Could not confirm installation. Please source install.R manually.")
 }
+
+source_sdr("sca_nor_fun.R")
+
+# -----
+# TESTS
+# -----
