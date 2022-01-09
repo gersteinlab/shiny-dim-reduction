@@ -19,12 +19,11 @@ source_sdr("sca_nor_fun.R")
 # --------------
 # USER VARIABLES
 # --------------
-setwd(app_loc)
 
 # open from dependencies
-get_from_dir("order_total", empty_named_list(name_cat))
-get_from_dir("perplexity_types")
-get_from_dir("pc_cap")
+get_dependency("order_total", empty_named_list(name_cat))
+get_dependency("perplexity_types")
+get_dependency("pc_cap")
 
 # create categories and subsets
 init_cat()

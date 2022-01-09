@@ -32,25 +32,28 @@ vis_nouns <- c("Exploration of ", "Summary of ", "tSNE of ")
 # CATEGORY LOADING
 # ----------------
 
-# creates category-related data; requires categories_full
+# creates category-related data
 # to remove: rm(categories_full, cat_groups, name_cat, num_cat, categories)
-get_dependency("categories_full", stop("Critical dependency missing!"))
+init_cat <- function()
+{
+  get_dependency("categories_full", stop("Critical dependency missing!"))
 
-# cat groups
-assign_global("cat_groups", lapply(categories_full, names))
+  # cat groups
+  assign_global("cat_groups", lapply(categories_full, names))
 
-# name_cat
-name_cat <- unlist(cat_groups)
-names(name_cat) <- NULL
-assign_global("name_cat", name_cat)
+  # name_cat
+  name_cat <- unlist(cat_groups)
+  names(name_cat) <- NULL
+  assign_global("name_cat", name_cat)
 
-# num_cat
-assign_global("num_cat", length(name_cat))
+  # num_cat
+  assign_global("num_cat", length(name_cat))
 
-# categories
-categories <- unlist(categories_full, recursive=FALSE)
-names(categories) <- name_cat
-assign_global("categories", categories)
+  # categories
+  categories <- unlist(categories_full, recursive=FALSE)
+  names(categories) <- name_cat
+  assign_global("categories", categories)
+}
 
 # ----------------
 # SUBSET FUNCTIONS

@@ -1,4 +1,5 @@
 # The purpose of this file is to store functions related to scaling and normalization.
+# Note: all functions take a matrix as input and return a matrix as output.
 
 if (!exists("ran_install"))
 {

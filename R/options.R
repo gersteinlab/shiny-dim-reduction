@@ -81,7 +81,8 @@ citations <- rep_str(bibliography, "!!!!!!!!!!", app_citations)
 print_instructions <- rem_html_tags(instructions)
 print_citations <- rem_html_tags(citations)
 
-# create subsets
+# create categories and subsets
+init_cat()
 init_sub(name_num_map)
 
 # ----------------

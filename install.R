@@ -40,7 +40,7 @@ len_n_list <- function(n)
   vector(mode="list", length=n)
 }
 
-# creates an empty list
+# creates an empty list, has faster performance than expanding list
 # note: empty_named_list(c("A", "B")) = empty_named_list("A", "B")
 empty_named_list <- function(...)
 {
