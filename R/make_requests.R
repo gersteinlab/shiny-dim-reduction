@@ -320,6 +320,10 @@ set_working_key(amazon_keys)
 # gets n request ids
 get_request_id <- function(n = 1)
 {
+  # if AWS is not available, IDs cannot be generated
+  if (!key_is_connected())
+    return(-1)
+
   if (n < 1)
     return(numeric())
 

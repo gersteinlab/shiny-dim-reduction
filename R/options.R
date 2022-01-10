@@ -109,8 +109,18 @@ name_num_map <- function(list_num)
 # convert perplexity types to character
 perplexity_types <- as.character(perplexity_types)
 
-# assign keys and create bibliography
-storage_query()
+# queries the user for a storage type
+user_local <- "N"
+if (sdr_running_local)
+  user_local <- readline(prompt = "
+Type 'Y' and press enter to use local storage.
+Type anything else and press enter to use AWS storage. ")
+set_storage(
+  user_local == "Y",
+  ifelse(sdr_from_app, "../reference", ref_loc),
+  get_dependency("amazon_keys"))
+
+# create bibliography
 citations <- rep_str(bibliography, "!!!!!!!!!!", app_citations)
 
 # creates a print version of the instructions / citations

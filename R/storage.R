@@ -21,12 +21,18 @@ require(aws.s3)
 # KEY MANAGEMENT
 # --------------
 
-# disconnects from aws storage
+# disconnects from AWS
 disconnect_key <- function()
 {
   Sys.setenv("AWS_ACCESS_KEY_ID" = "",
              "AWS_SECRET_ACCESS_KEY" = "",
              "AWS_ACCESS_BUCKET" = "")
+}
+
+# determines if R is connected to AWS
+key_is_connected <- function()
+{
+  bucket_exists(Sys.getenv("AWS_ACCESS_BUCKET"))
 }
 
 # the expected location of the master key
@@ -60,7 +66,7 @@ set_working_key <- function(key = make_key())
              "AWS_ACCESS_BUCKET" = key$bucket)
 
   # if the provided keys don't allow bucket access
-  if (!bucket_exists(Sys.getenv("AWS_ACCESS_BUCKET")))
+  if (!key_is_connected())
   {
     disconnect_key()
     stop("The provided keys do not correspond to a working bucket.")
@@ -166,12 +172,24 @@ disconnect_ref <- function()
   Sys.setenv("LOCAL_STORAGE_REF" = "")
 }
 
+# determines whether R is connected to ref
+ref_is_connected <- function()
+{
+  file.exists(Sys.getenv("LOCAL_STORAGE_REF"))
+}
+
 # sets the reference location used for local paths
 set_working_ref <- function(loc)
 {
   disconnect_ref()
-  stopifnot(length(loc) == 1, is.character(loc), dir.exists(loc))
+  stopifnot(length(loc) == 1, is.character(loc))
   Sys.setenv("LOCAL_STORAGE_REF" = loc)
+
+  if (!ref_is_connected())
+  {
+    disconnect_ref()
+    stop("The provided reference location does not exist.")
+  }
 }
 
 # gives the local storage path for a prefix (usually in reference)
@@ -272,18 +290,4 @@ set_storage <- function(use_local, ref = NULL, key = NULL)
     assign_global("save_store", save_aws_s3)
     assign_global("load_store", load_aws_s3)
   }
-}
-
-# queries the user for a storage type
-storage_query <- function()
-{
-  user_local <- "N"
-  if (sdr_running_local)
-    user_local <- readline(prompt = "
-Type 'Y' and press enter to use local storage.
-Type anything else and press enter to use AWS storage. ")
-  set_storage(
-    user_local == "Y",
-    ifelse(sdr_from_app, "../reference", ref_loc),
-    get_dependency("amazon_keys"))
 }
