@@ -22,8 +22,6 @@ require("shinyjs")
 # BROWSER PARAMETERS
 # ------------------
 
-# Only select characteristics with <= num_filters distinct values.
-num_filters <- 60
 # The height of a graph by default. Depends on browser interpretation.
 graph_height <- 520
 # the default barplot/(barplot+matrix) ratio on an upset plot
@@ -44,7 +42,6 @@ max_dend <- 200
 # -----------------
 
 # Please see converter.R for an explanation of these dependencies.
-get_dependency("amazon_keys") # note: this SHOULD NOT be necessary if the app is running locally!
 get_dependency("order_total", empty_named_list(name_cat))
 get_dependency("pc_cap", 3)
 get_dependency("thresholds")
@@ -53,6 +50,46 @@ get_dependency("app_title", "Dimensionality Reduction Tool")
 get_dependency("app_citations", "No data citations could be found.")
 get_dependency("user_credentials")
 get_dependency("custom_color_scales")
+
+# OBSELETE
+make_aws_name <- function(cat, sub, sca, nor, fea, emb, vis, dim_ind, per_ind)
+{
+  sca_ind <- which(sca_options == sca)
+  nor_ind <- which(nor_options == nor)
+  fea_ind <- which(fea_options == add_perc(fea))
+  emb_ind <- which(emb_options == emb)
+  vis_ind <- which(vis_options == vis)
+
+  if (emb == "PHATE")
+  {
+    vis_ind <- "X"
+  }
+
+  if (emb == "PCA" || emb == "VAE")
+  {
+    if (vis == "Explore" || vis == "Summarize")
+    {
+      per_ind <- "X"
+      dim_ind <- "X"
+    }
+  }
+
+  if (emb == "UMAP")
+  {
+    if (vis == "Explore" || vis == "Summarize")
+    {
+      dim_ind <- "X"
+    }
+    if (vis == "Summarize")
+    {
+      per_ind <- "X"
+    }
+  }
+
+  sprintf("Dim_Red/%s/%s/%s_%s_%s_%s_%s_%s_%s.rds",
+          cat, sub, sca_ind, nor_ind, fea_ind, emb_ind, vis_ind,
+          dim_ind, per_ind)
+}
 
 # -----
 # SETUP
@@ -73,7 +110,6 @@ name_num_map <- function(list_num)
 perplexity_types <- as.character(perplexity_types)
 
 # assign keys and create bibliography
-set_working_key(amazon_keys)
 storage_query()
 citations <- rep_str(bibliography, "!!!!!!!!!!", app_citations)
 

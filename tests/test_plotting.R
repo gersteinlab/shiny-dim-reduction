@@ -79,7 +79,7 @@ test_plotly_2d <- function(n = 10)
 test_plotly_3d <- function(n = 10)
 {
   types <- rep(LETTERS[1:10], n)
-  print_clean("Functions tested: plotly_2d")
+  print_clean("Functions tested: plotly_3d")
   plotly_3d(1:(10*n), 1:(10*n), 1:(10*n), types, types, color_seq(10))
 }
 

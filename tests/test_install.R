@@ -1,4 +1,4 @@
-# This file tests install.R.
+# This file tests install.R. Note: must be run from a clean session.
 
 # -----
 # SETUP
