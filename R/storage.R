@@ -2,6 +2,7 @@
 # source("storage.R", encoding="UTF-8")
 
 # Goals:
+# list_store: list all files with a prefix
 # find_store: returns whether a file exists
 # save_store: saves a file, creating the directory if it doesn't exist
 # load_store: loads a file, returning NULL if it doesn't exist
@@ -20,44 +21,79 @@ require(aws.s3)
 # KEY MANAGEMENT
 # --------------
 
+# disconnects from aws storage
+disconnect_key <- function()
+{
+  Sys.setenv("AWS_ACCESS_KEY_ID" = "",
+             "AWS_SECRET_ACCESS_KEY" = "",
+             "AWS_ACCESS_BUCKET" = "")
+}
+
 # the expected location of the master key
 master_key_loc <- get_project_loc("sdr_master_key.rds")
 
-# sets the current working AWS access key, which comprises: id, secret, bucket
-set_working_key <- function(key)
+# makes a list that qualifies as a key from an ID, a secret, and a bucket
+make_key <- function(id = "", secret = "", bucket = "")
 {
-  if (class(key) != "list")
-    stop("Provided keys are not a list.")
+  stopifnot(is.character(id), is.character(secret), is.character(bucket),
+            length(id) == 1, length(secret) == 1, length(bucket) == 1)
 
-  if (!isTRUE(all.equal(names(key), c("id", "secret", "bucket"))))
-    stop("Incorrect key components provided.")
+  list(
+    "id" = id,
+    "secret" = secret,
+    "bucket" = bucket
+  )
+}
+
+# sets the current working AWS access key, which comprises: id, secret, bucket
+set_working_key <- function(key = make_key())
+{
+  disconnect_key()
+
+  stopifnot(
+    class(key) == "list",
+    isTRUE(all.equal(names(key), c("id", "secret", "bucket")))
+  )
 
   Sys.setenv("AWS_ACCESS_KEY_ID" = key$id,
              "AWS_SECRET_ACCESS_KEY" = key$secret,
              "AWS_ACCESS_BUCKET" = key$bucket)
+
+  # if the provided keys don't allow bucket access
+  if (!bucket_exists(Sys.getenv("AWS_ACCESS_BUCKET")))
+  {
+    disconnect_key()
+    stop("The provided keys do not correspond to a working bucket.")
+  }
 }
 
 # create a master key and save it in the project directory
 save_master_key <- function(id, secret)
 {
+  stopifnot(is.character(id), is.character(secret),
+            length(id) == 1, length(secret) == 1)
   sdr_master_key <- list("id" = id, "secret" = secret)
   saveRDS(sdr_master_key, master_key_loc)
 }
 
-# give the current working key MASTER KEY privileges
-sudo_working_key <- function()
+# turns a key into a master key
+sudo_key <- function(key)
 {
+  # to avoid master key privileges: don't include the master key file in apps!
+  stopifnot(file.exists(master_key_loc))
   sdr_master_key <- readRDS(master_key_loc)
-  set_working_key(list(
-    "id" = sdr_master_key$id,
-    "secret" = sdr_master_key$secret,
-    "bucket" = Sys.getenv("AWS_ACCESS_BUCKET")
-  ))
+  make_key(sdr_master_key$id, sdr_master_key$secret, key$bucket)
 }
 
-# -------------
-# LOCAL STORAGE
-# -------------
+# wrapper for sudo_key that also assigns the key
+sudo_working_key <- function(key)
+{
+  set_working_key(sudo_key(key))
+}
+
+# ----------------
+# LOCAL MANAGEMENT
+# ----------------
 
 # saveRDS but we force the creation of the directory
 mkdir_saveRDS <- function(data, file, compress = TRUE)
@@ -120,20 +156,32 @@ set_dependency <- function(name, default = NULL, compress = TRUE)
   set_self_var(name, dep_loc, default, compress)
 }
 
-# assigns a root directory for local storage
-assign_root <- function(root)
+# -------------
+# LOCAL STORAGE
+# -------------
+
+# disconnects from ref storage
+disconnect_ref <- function()
 {
-  stopifnot(length(root) == 1, is.character(root), dir.exists(root))
-  Sys.setenv("LOCAL_STORAGE_ROOT" = root)
+  Sys.setenv("LOCAL_STORAGE_REF" = "")
 }
 
-path_local <- function(filename)
+# sets the reference location used for local paths
+set_working_ref <- function(loc)
 {
-  sprintf("%s/%s", Sys.getenv("LOCAL_STORAGE_ROOT"), filename)
+  disconnect_ref()
+  stopifnot(length(loc) == 1, is.character(loc), dir.exists(loc))
+  Sys.setenv("LOCAL_STORAGE_REF" = loc)
+}
+
+# gives the local storage path for a prefix (usually in reference)
+path_local <- function(prefix)
+{
+  sprintf("%s/%s", Sys.getenv("LOCAL_STORAGE_REF"), prefix)
 }
 
 # lists all files with the given prefix (usually a valid directory)
-list_local <- function(prefix)
+list_local <- function(prefix = "")
 {
   list.files(path_local(prefix))
 }
@@ -141,20 +189,20 @@ list_local <- function(prefix)
 # determines whether a file with the given filename exists
 find_local <- function(filename)
 {
+  stopifnot(length(filename) == 1)
   file.exists(path_local(filename))
 }
+
 # saves data to filename in the root directory
 save_local <- function(data, filename)
 {
-  mkdir_saveRDS(path_local(filename))
+  mkdir_saveRDS(data, path_local(filename))
 }
 
 # loads data from filename in the root directory
 load_local <- function(filename)
 {
-  if (!find_local(filename))
-    return(NULL)
-  readRDS(path_local(filename))
+  w_def_readRDS(path_local(filename), NULL)
 }
 
 # --------------
@@ -166,20 +214,18 @@ my_amazon_obj <- NULL
 # lists the contents of a bucket's prefix
 list_aws_s3 <- function(prefix)
 {
-  get_bucket(Sys.getenv("AWS_ACCESS_BUCKET"), prefix = prefix)
+  as.character(sapply(
+    get_bucket(Sys.getenv("AWS_ACCESS_BUCKET"), prefix = prefix, max = Inf),
+    function(x){
+      x$Key
+    }))
 }
 
 # determines whether a single object with the given filename exists
-find_aws_s3 <- function(prefix)
+find_aws_s3 <- function(filename)
 {
-  length(list_aws_s3(prefix)) == 1
+  object_exists(filename, Sys.getenv("AWS_ACCESS_BUCKET"))
 }
-
-# lol <- get_bucket(Sys.getenv("AWS_ACCESS_BUCKET"))
-# bucket_names <- lapply(lol, function(x){
-#   x$Key
-# })
-# bucket_table <- matrix(bucket_names, ncol = 1)
 
 # saves a single object to AWS.s3 - modified from s3save
 save_aws_s3 <- function(data, filename)
@@ -208,19 +254,23 @@ load_aws_s3 <- function(filename)
 # ------------------
 
 # changes the storage type to local or AWS
-set_storage <- function(use_local)
+set_storage <- function(use_local, ref = NULL, key = NULL)
 {
   if (use_local)
   {
-    assign("find_store", find_local, envir=.GlobalEnv)
-    assign("save_store", save_local, envir=.GlobalEnv)
-    assign("load_store", load_local, envir=.GlobalEnv)
+    set_working_ref(ref)
+    assign_global("list_store", list_local)
+    assign_global("find_store", find_local)
+    assign_global("save_store", save_local)
+    assign_global("load_store", load_local)
   }
   else
   {
-    assign("find_store", find_aws_s3, envir=.GlobalEnv)
-    assign("save_store", save_aws_s3, envir=.GlobalEnv)
-    assign("load_store", load_aws_s3, envir=.GlobalEnv)
+    set_working_key(key)
+    assign_global("list_store", list_aws_s3)
+    assign_global("find_store", find_aws_s3)
+    assign_global("save_store", save_aws_s3)
+    assign_global("load_store", load_aws_s3)
   }
 }
 
@@ -232,5 +282,8 @@ storage_query <- function()
     user_local <- readline(prompt = "
 Type 'Y' and press enter to use local storage.
 Type anything else and press enter to use AWS storage. ")
-  set_storage(user_local == "Y")
+  set_storage(
+    user_local == "Y",
+    ifelse(sdr_from_app, "../reference", ref_loc),
+    get_dependency("amazon_keys"))
 }
