@@ -13,6 +13,16 @@ if (!exists("ran_install"))
 source_sdr("sca_nor_fun.R")
 source_sdr("red_methods.R")
 source_sdr("make_requests.R")
+source_sdr("workflows.R")
+
+# create categories and subsets
+init_cat()
+init_sub(names)
+
+get_dependency("order_total", empty_named_list(name_cat))
+
+get_dependency("amazon_keys")
+set_working_key(amazon_keys)
 
 # -----------------------------
 # REQUEST FULFILLMENT / STORAGE
@@ -44,21 +54,6 @@ make_inter_name <- function(cat, row, col, sca, nor, emb, com, per, bat)
   }
 
   chr_d()
-}
-
-# converts requests into the locations of their final files
-requests_to_final <- function(requests)
-{
-  result <- character()
-
-  for (i in seq_len(nrow(requests)))
-  {
-    args <- as.list(requests[i,])
-    names(args) <- NULL
-    result <- c(result, do.call(make_sdr_name, args[1:13]))
-  }
-
-  result
 }
 
 # converts a request into the locations of their intermediate files

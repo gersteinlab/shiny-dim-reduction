@@ -1,14 +1,7 @@
 # The purpose of this file is to store functions for validating,
 # creating, and combining reduction requests.
 
-source_sdr("workflows.R")
 source_sdr("preprocess.R")
-
-# create categories and subsets
-init_cat()
-init_sub(names)
-
-get_dependency("order_total", empty_named_list(name_cat))
 
 # -----------------------------
 # REQUEST VALIDATION / CREATION
@@ -271,6 +264,21 @@ make_requests <- function(
   requests
 }
 
+# converts requests into the locations of their final files
+requests_to_final <- function(requests)
+{
+  result <- character()
+
+  for (i in seq_len(nrow(requests)))
+  {
+    args <- as.list(requests[i,])
+    names(args) <- NULL
+    result <- c(result, do.call(make_sdr_name, args[1:13]))
+  }
+
+  result
+}
+
 # ---------------
 # REQUEST MERGING
 # ---------------
@@ -313,9 +321,6 @@ rem_dup_requests <- function(requests)
 # ----------
 # REQUEST ID
 # ----------
-
-get_dependency("amazon_keys")
-set_working_key(amazon_keys)
 
 # gets n request ids
 get_request_id <- function(n = 1)

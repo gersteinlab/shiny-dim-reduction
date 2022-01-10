@@ -42,10 +42,16 @@ pc <- function(name = "1")
   sprintf("Component %s", name)
 }
 
-# Useful for finding subset IDs
-id_subset <- function(category)
+# Useful for finding row subset IDs
+id_row <- function(category)
 {
-  sprintf("subsetby_%s", category)
+  sprintf("rowby_%s", category)
+}
+
+# useful for finding col subset IDs
+id_col <- function(category)
+{
+  sprintf("colby_%s", category)
 }
 
 # Useful for finding color IDs

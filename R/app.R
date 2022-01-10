@@ -330,12 +330,13 @@ Seconds elapsed: %s", my_timer(start)), "message")
   not_rev <- reactive("Uninverted Colors" %in% iplot$sMenu)
 
   cati <- reactive(iplot$category)
-  subi <- reactive(parse_opt(iplot[[id_subset(cati())]]))
-  feat <- reactive(rem_perc(iplot$features))
+  rowi <- reactive(parse_opt(iplot[[id_row(cati())]]))
+  coli <- reactive(parse_opt(iplot[[id_col(cati())]]))
 
   per_ind <- reactive(
     which(perplexity_types == iplot$perplexity)
   )
+  peri <- reactive(iplot$perplexity)
   sca_ind <- reactive(
     which(sca_options == iplot$scale)
   )
@@ -358,18 +359,25 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
   # calculate which samples to keep after considering all metadata filters
   order <- reactive(order_total[[cati()]])
+  row_order <- reactive({
+    if (rowi() == "Total")
+      return(order())
+
+    row_inds <- get_row_decor_subset(cati(), rowi())
+    order()[row_inds,,drop = FALSE]
+  })
   keep <- reactive({
-    keep <- rep(TRUE, nrow(order()))
+    keep <- rep(TRUE, nrow(row_order()))
 
     for (char in selected_chars[[cati()]])
     {
-      cur_filter <- order()[[char]] %in% parse_opt(iplot[[id_select(cati(), char)]])
+      cur_filter <- row_order()[[char]] %in% parse_opt(iplot[[id_select(cati(), char)]])
       keep <- keep & cur_filter
     }
 
     keep
   })
-  metadata <- reactive(order()[keep(),,drop=FALSE])
+  metadata <- reactive(row_order()[keep(),,drop=FALSE])
 
   colors <- reactive(metadata()[, colorby()])
   shapes <- reactive(metadata()[, shapeby()])
@@ -379,9 +387,9 @@ Seconds elapsed: %s", my_timer(start)), "message")
   # the number of features before dimensionality reduction
   num_feat <- reactive({
     ifelse(
-      subi() == "Total",
+      coli() == "Total",
       categories[[cati()]],
-      length(get_decor_subset(cati(), subi()))
+      length(get_decor_subset(cati(), coli()))
     )
   })
 
@@ -394,7 +402,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     {
       return(sprintf(
         "%s-Grouped Features on %s.%s (%s Features, %s Characteristics)",
-        filterby(), cati(), subi(), nrow(num_data()), ncol(num_data())
+        filterby(), cati(), coli(), nrow(num_data()), ncol(num_data())
       ))
     }
 
@@ -411,7 +419,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     sprintf("%s%s on %s.%s (%s Samples, %s Features%s)",
             ifelse(iplot$embedding == "PHATE", "",
                    vis_to_noun(iplot$visualize)),
-            iplot$embedding, cati(), subi(), sum(keep()), num_feat(), nei)
+            iplot$embedding, cati(), coli(), sum(keep()), num_feat(), nei)
   })
 
   title_embed <- reactive({
@@ -438,7 +446,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
       num <- 5
 
     if (iplot$embedding == "UMAP" && iplot$visualize == "Summarize")
-        num <- 6
+      num <- 6
 
     color_seq(num, iplot$palette, !not_rev())
   })
@@ -468,48 +476,55 @@ Seconds elapsed: %s", my_timer(start)), "message")
     if (iplot$embedding == "VAE" && which(nor_options == iplot$normalize) > 2)
       return(NULL)
 
-    if (iplot$embedding == "Sets")
-    {
-      addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(),
-                      sca_ind(), filterby(), cati())
+    # if (iplot$embedding == "Sets")
+    # {
+    #   addr <- make_sdr_name(
+    #     cati(), rowi(), coli(), iplot$scale, iplot$normalize, iplot$embedding, iplot$visualize,
+    #     2, num_d(), per_ind(), num_d(), num_d(), chr_d())
+    #
+    #   addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(),
+    #                   sca_ind(), filterby(), cati())
+    #
+    #   data <- load_store(addr)
+    #   if (is.null(data))
+    #     return(NULL)
+    #   data <- data[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), coli())
+    #
+    #   num_data(data)
+    #
+    #   data <- truncate_rows(data, upse_feat()) %>%
+    #     set_f1_f2(iplot$set_f1, iplot$set_f2) %>% num_nan_binary()
+    #
+    #   if (ncol(data) == 1)
+    #     return(venn1_custom(data, legend()))
+    #
+    #   if (!legend())
+    #     colnames(data) <- 1:ncol(data)
+    #
+    #   return(upset_custom(data, nintersect(), bar_frac(), !legend(), text_scale()))
+    # }
+    #
+    # if (iplot$embedding == "PHATE")
+    # {
+    #   data <- load_store(make_sdr_name(
+    #     cati(), rowi(), coli(), iplot$scale, iplot$normalize, iplot$embedding, iplot$visualize,
+    #     2, num_d(), per_ind(), num_d(), num_d(), chr_d()))
+    #     data <- data[keep(),,drop=FALSE]
+    #     num_data(data)
+    #
+    #     return(ggplot2_2d(
+    #       data[,1], data[,2], colors(), shapes(), paint(), NULL,
+    #       legend(), title_embed(), pc("1"), pc("2")))
+    # }
 
-      data <- load_store(addr)
-      if (is.null(data))
-        return(NULL)
-      data <- data[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), subi())
-
-      num_data(data)
-
-      data <- truncate_rows(data, upse_feat()) %>%
-        set_f1_f2(iplot$set_f1, iplot$set_f2) %>% num_nan_binary()
-
-      if (ncol(data) == 1)
-        return(venn1_custom(data, legend()))
-
-      if (!legend())
-        colnames(data) <- 1:ncol(data)
-
-      return(upset_custom(data, nintersect(), bar_frac(), !legend(), text_scale()))
-    }
-
-
-    addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize,
-                          feat(), iplot$embedding, iplot$visualize, 2, per_ind())
+    addr <- make_sdr_name(
+      cati(), rowi(), coli(), iplot$scale, iplot$normalize, iplot$embedding, iplot$visualize,
+      10, 2, peri(), num_d(), num_d(), chr_d())
 
     data <- load_store(addr)
 
     if (is.null(data))
       return(NULL)
-
-    if (iplot$embedding == "PHATE")
-    {
-      data <- data[keep(),,drop=FALSE]
-      num_data(data)
-
-      return(ggplot2_2d(
-        data[,1], data[,2], colors(), shapes(), paint(), NULL,
-        legend(), title_embed(), pc("1"), pc("2")))
-    }
 
     if (iplot$visualize == "Summarize")
     {
@@ -721,14 +736,12 @@ Seconds elapsed: %s", my_timer(start)), "message")
     sprintf("<h3><b>Title:</b> %s</h3>", title_text()) %>% HTML()
   })
 
-  # output$description_out <- renderPrint({
-  #   print("Features of the Selected set:")
-  #   print(sprintf("Original Data: %s", cati()))
-  #   print(sprintf("Rows Included: All"))
-  #   print(sprintf("Columns Included: %s", subi()))
-  #   print(sprintf("Scaling: %s", iplot$scaling))
-  #   print(sprintf("Normalization: %s", iplot$normalization))
-  # })
+  output$requests_out <- renderDT({
+    if (!authenticated())
+      return(my_datatable(NULL))
+
+    my_datatable(app_requests)
+  })
   output$ggplot2_out <- renderPlot({prep_plot(ggplot2_data())})
   output$plotly2_out <- renderPlotly({prep_plot(plotly2_data())})
   output$plotly3_out <- renderPlotly({prep_plot(plotly3_data())})
@@ -783,9 +796,9 @@ Seconds elapsed: %s", my_timer(start)), "message")
   # DIRECT UI OUTPUTS
   # -----------------
 
-  # output$descriptionUI <- renderUI({
-  #   verbatimTextOutput("description_out") %>% my_spin()
-  # })
+  output$requestsUI <- renderUI({
+    DTOutput("requests_out", width=width(), height=height()) %>% my_spin()
+  })
 
   output$ggplot2UI <- renderUI({
     plotOutput("ggplot2_out", width=width(), height=height()) %>% my_spin()

@@ -45,53 +45,10 @@ max_dend <- 200
 
 # Please see converter.R for an explanation of these dependencies.
 get_dependency("order_total", empty_named_list(name_cat))
-get_dependency("pc_cap", 3)
-get_dependency("thresholds")
-get_dependency("perplexity_types", 1:5)
 get_dependency("app_title", "Dimensionality Reduction Tool")
 get_dependency("app_citations", "No data citations could be found.")
 get_dependency("user_credentials")
 get_dependency("custom_color_scales")
-
-# OBSELETE
-make_aws_name <- function(cat, sub, sca, nor, fea, emb, vis, dim_ind, per_ind)
-{
-  sca_ind <- which(sca_options == sca)
-  nor_ind <- which(nor_options == nor)
-  fea_ind <- which(fea_options == add_perc(fea))
-  emb_ind <- which(emb_options == emb)
-  vis_ind <- which(vis_options == vis)
-
-  if (emb == "PHATE")
-  {
-    vis_ind <- "X"
-  }
-
-  if (emb == "PCA" || emb == "VAE")
-  {
-    if (vis == "Explore" || vis == "Summarize")
-    {
-      per_ind <- "X"
-      dim_ind <- "X"
-    }
-  }
-
-  if (emb == "UMAP")
-  {
-    if (vis == "Explore" || vis == "Summarize")
-    {
-      dim_ind <- "X"
-    }
-    if (vis == "Summarize")
-    {
-      per_ind <- "X"
-    }
-  }
-
-  sprintf("Dim_Red/%s/%s/%s_%s_%s_%s_%s_%s_%s.rds",
-          cat, sub, sca_ind, nor_ind, fea_ind, emb_ind, vis_ind,
-          dim_ind, per_ind)
-}
 
 # -----
 # SETUP
@@ -107,9 +64,6 @@ name_num_map <- function(list_num)
 {
   mapply(get_opt, names(list_num), lapply(list_num, length), USE.NAMES = FALSE)
 }
-
-# convert perplexity types to character
-perplexity_types <- as.character(perplexity_types)
 
 # queries the user for a storage type
 user_local <- "N"
@@ -133,18 +87,17 @@ print_citations <- rem_html_tags(citations)
 init_cat()
 init_sub(name_num_map)
 
+# open requests
+app_requests <- load_store("requests.rds")
+
 # ----------------
 # FIX DEPENDENCIES
 # ----------------
 
-fea_options <- c("100%", "10%", "1%")
-
 # gets the very first file associated with a category, counts the number of rows,
 # and creates an empty metadata table for that category
 get_empty_cat_meta <- function(cat){
-  addr <- make_aws_name(
-    cat, "Total", sca_options[1], nor_options[1],
-    rem_perc(fea_options[1]), emb_options[1], vis_options[1], 2, 1)
+  addr <- requests_to_final(app_requests[which(app_requests$CATEGORIES == cat)[1],])
   if (!find_store(addr))
     return(data.frame("Unknown" = "Unknown"))
   data.frame("Unknown" = rep("Unknown", nrow(load_store(addr))))
@@ -154,21 +107,6 @@ get_empty_cat_meta <- function(cat){
 for (cat in name_cat)
   if (is.null(order_total[[cat]]))
     order_total[[cat]] <- get_empty_cat_meta(cat)
-
-# assigns thresholds (if NULL, return a useful placeholder)
-assign_thre <- function(thre)
-{
-  if (is.null(thre))
-    return((0:10/10) %>% format(nsmall=4))
-  return(thre %>% format(nsmall=4))
-}
-
-# thresholds
-thre_seqs <- rep(list(empty_named_list(name_cat)), 2)
-names(thre_seqs) <- sca_options
-for (sca in sca_options)
-  for (cat in name_cat)
-    thre_seqs[[sca]][[cat]] <- assign_thre(thresholds[[sca]][[cat]])
 
 # ------------------------------
 # GENERATE OPTIONS AND BOOKMARKS
@@ -180,7 +118,8 @@ thre_ids <- NULL
 selected_chars <- empty_named_list(name_cat)
 
 # empty lists for option boxes, to be presented to the user
-sub_opts <- vector(mode = "list", length = num_cat)
+row_sub_opts <- vector(mode = "list", length = num_cat)
+col_sub_opts <- vector(mode = "list", length = num_cat)
 color_opts <- vector(mode = "list", length = num_cat)
 shape_opts <- vector(mode = "list", length = num_cat)
 label_opts <- vector(mode = "list", length = num_cat)
@@ -196,10 +135,15 @@ for (cn in 1:num_cat)
   cols_unique_gen <- apply(order_gen, 2, function(i) length(unique(i)))
   order_names <- colnames(order_gen)
 
-  # subsets
-  subsets <- sub_col_groups[[cat]]
-  sub_opts[[cn]] <- cat_select_panel(
-    cat, id_subset(cat), sprintf("Feature Subset (%s)", cat), subsets, 1)
+  # row subsets
+  row_subsets <- sub_row_groups[[cat]]
+  row_sub_opts[[cn]] <- cat_select_panel(
+    cat, id_row(cat), sprintf("Sample Subset (%s)", cat), row_subsets, 1)
+
+  # col subsets
+  col_subsets <- sub_col_groups[[cat]]
+  col_sub_opts[[cn]] <- cat_select_panel(
+    cat, id_col(cat), sprintf("Feature Subset (%s)", cat), col_subsets, 1)
 
   # characteristics
   chars <- order_names[between(cols_unique_gen, 2, num_filters)]
@@ -247,7 +191,8 @@ select_opts <- select_opts[1:length(select_ids)]
 
 picker_input_ids <- c(
   default_picker_input_ids,
-  id_subset(name_cat),
+  id_row(name_cat),
+  id_col(name_cat),
   id_color(name_cat),
   id_shape(name_cat),
   id_label(name_cat),
@@ -283,6 +228,9 @@ output_conditions <- c(
   "shape_opts_cond",
   "label_opts_cond")
 
+perplexity_types <- unique(app_requests$PERPLEXITY)
+pc_cap <- max(app_requests$COMPONENT)
+
 # ---------------
 # ASSEMBLE THE UI
 # ---------------
@@ -312,13 +260,10 @@ table_1_menu <- menuItem(
   startExpanded = TRUE,
   icon = icon("table"),
   category_sel,
-  sub_opts,
+  row_sub_opts,
+  col_sub_opts,
   select_panel("scale", "Scale", sca_options),
-  conditionalPanel(
-    condition = "input.embedding != 'Sets'",
-    select_panel("normalize", "Normalization", nor_options),
-    select_panel("features", "Percentage of Features Used", fea_options)
-  )
+  select_panel("normalize", "Normalization", nor_options)
 )
 
 analysis_1_menu <- menuItem(
@@ -335,6 +280,18 @@ analysis_1_menu <- menuItem(
       condition = "output.perplexity_cond",
       select_panel("perplexity", "Perplexity", perplexity_types,
                    ceiling(length(perplexity_types)/2))
+    )
+  ),
+  conditionalPanel(
+    condition = "output.pc_sliders_cond",
+    pc_slider(1, pc_cap),
+    conditionalPanel(
+      condition = "output.pc_slider2_cond",
+      pc_slider(2, pc_cap)
+    ),
+    conditionalPanel(
+      condition = "output.pc_slider3_cond",
+      pc_slider(3, pc_cap)
     )
   ),
   expand_cond_panel(
@@ -382,18 +339,6 @@ filters_1_menu <- menuItem(
     )
   ),
   conditionalPanel(
-    condition = "output.pc_sliders_cond",
-    pc_slider(1, pc_cap),
-    conditionalPanel(
-      condition = "output.pc_slider2_cond",
-      pc_slider(2, pc_cap)
-    ),
-    conditionalPanel(
-      condition = "output.pc_slider3_cond",
-      pc_slider(3, pc_cap)
-    )
-  ),
-  conditionalPanel(
     condition = "output.nintersect_cond",
     numericInput("nintersect", "Number of Columns",
                  value=def_set_col_num, min=3, max=max_set_col_num),
@@ -438,7 +383,7 @@ ui <- function(request){
       tabBox(
         width="100%",
         id = 'plotPanels',
-        # tabPanel("Description", uiOutput("descriptionUI")),
+        tabPanel("Requests", uiOutput("requestsUI")),
         tabPanel("Static 2D", uiOutput("ggplot2UI")),
         tabPanel("Interactive 2D", uiOutput("plotly2UI")),
         tabPanel("Interactive 3D", uiOutput("plotly3UI")),
