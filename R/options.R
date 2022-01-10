@@ -22,6 +22,8 @@ require("shinyjs")
 # BROWSER PARAMETERS
 # ------------------
 
+# Only select characteristics with <= num_filters distinct values.
+num_filters <- 60
 # The height of a graph by default. Depends on browser interpretation.
 graph_height <- 520
 # the default barplot/(barplot+matrix) ratio on an upset plot
