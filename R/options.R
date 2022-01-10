@@ -174,12 +174,12 @@ for (cn in 1:num_cat)
     select_opts[[length(select_ids)]] <- select_check_panel(order_gen[[char]], cat, char)
   }
 
-  # thresholds
-  for (sca in sca_options)
-  {
-    thre_ids <- c(thre_ids, id_thre(cat, sca))
-    thre_opts[[length(thre_ids)]] <- thre_select_panel(thre_seqs[[sca]][[cat]], cat, sca)
-  }
+  # # thresholds
+  # for (sca in sca_options)
+  # {
+  #   thre_ids <- c(thre_ids, id_thre(cat, sca))
+  #   thre_opts[[length(thre_ids)]] <- thre_select_panel(thre_seqs[[sca]][[cat]], cat, sca)
+  # }
 }
 
 # truncate select_opts
@@ -228,8 +228,9 @@ output_conditions <- c(
   "shape_opts_cond",
   "label_opts_cond")
 
-perplexity_types <- unique(app_requests$PERPLEXITY)
+perplexity_types <- setdiff(unique(app_requests$PERPLEXITY), num_d())
 pc_cap <- max(app_requests$COMPONENT)
+batch_sizes <- setdiff(unique(app_requests$BATCH_SIZE), num_d())
 
 # ---------------
 # ASSEMBLE THE UI
@@ -280,23 +281,27 @@ analysis_1_menu <- menuItem(
       condition = "output.perplexity_cond",
       select_panel("perplexity", "Perplexity", perplexity_types,
                    ceiling(length(perplexity_types)/2))
-    )
-  ),
-  conditionalPanel(
-    condition = "output.pc_sliders_cond",
-    pc_slider(1, pc_cap),
-    conditionalPanel(
-      condition = "output.pc_slider2_cond",
-      pc_slider(2, pc_cap)
     ),
     conditionalPanel(
-      condition = "output.pc_slider3_cond",
-      pc_slider(3, pc_cap)
+      condition = "output.pc_sliders_cond",
+      pc_slider(1, pc_cap),
+      conditionalPanel(
+        condition = "output.pc_slider2_cond",
+        pc_slider(2, pc_cap)
+      ),
+      conditionalPanel(
+        condition = "output.pc_slider3_cond",
+        pc_slider(3, pc_cap)
+      )
+    ),
+    conditionalPanel(
+      condition = "input.embedding == 'VAE'",
+      select_panel("batch_size", "Batch Size", batch_sizes)
     )
   ),
   expand_cond_panel(
     condition = "input.embedding == 'Sets'",
-    thre_opts,
+    # thre_opts,
     list(
       numericRangeInput("set_f1", "Fraction of Samples", c(0.5,1)),
       numericRangeInput("set_f2", "Number of Characteristics", c(1,num_filters)),

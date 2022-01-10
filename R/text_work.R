@@ -129,6 +129,7 @@ default_picker_input_ids <- c(
   "embedding",
   "visualize",
   "perplexity",
+  "batch_size",
   "palette",
   "console"
 )

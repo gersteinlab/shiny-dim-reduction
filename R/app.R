@@ -337,6 +337,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     which(perplexity_types == iplot$perplexity)
   )
   peri <- reactive(iplot$perplexity)
+  bati <- reactive(iplot$batch_size)
   sca_ind <- reactive(
     which(sca_options == iplot$scale)
   )
@@ -388,7 +389,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
   num_feat <- reactive({
     ifelse(
       coli() == "Total",
-      categories[[cati()]],
+      categories[[cati()]][2],
       length(get_decor_subset(cati(), coli()))
     )
   })
@@ -519,7 +520,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
     addr <- make_sdr_name(
       cati(), rowi(), coli(), iplot$scale, iplot$normalize, iplot$embedding, iplot$visualize,
-      10, 2, peri(), num_d(), num_d(), chr_d())
+      10, 2, peri(), bati(), num_d(), chr_d())
 
     data <- load_store(addr)
 
