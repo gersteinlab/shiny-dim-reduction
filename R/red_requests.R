@@ -154,8 +154,9 @@ perform_reduction <- function(requests, force = 0)
             r <- requests[i,]
             f_loc <- final_locs[i]
 
-            sprintf_clean("F%s/%s Sets: %s", n_cur, n_fin, rel_fin_locs[i])
             n_cur <- n_cur + 1
+            sprintf_clean("F%s/%s Sets: %s", n_cur, n_fin, rel_fin_locs[i])
+
             set_label_matrix(
               set_result, short_order[[r$CHARACTERISTIC]]) %>% mkdir_saveRDS(f_loc)
             times_done[i] <- Sys.time()
@@ -200,8 +201,9 @@ perform_reduction <- function(requests, force = 0)
                 {
                   r <- requests[i,]
                   f_loc <-  final_locs[i]
-                  sprintf_clean("F%s/%s PCA: %s", n_cur, n_fin, rel_fin_locs[i])
+
                   n_cur <- n_cur + 1
+                  sprintf_clean("F%s/%s PCA: %s", n_cur, n_fin, rel_fin_locs[i])
 
                   if (r$VISUALIZATION == "Explore")
                     pca_to_explore(pca_result) %>% mkdir_saveRDS(f_loc)
@@ -240,8 +242,9 @@ perform_reduction <- function(requests, force = 0)
                   {
                     r <- requests[i,]
                     f_loc <-  final_locs[i]
-                    sprintf_clean("F%s/%s VAE: %s", n_cur, n_fin, rel_fin_locs[i])
+
                     n_cur <- n_cur + 1
+                    sprintf_clean("F%s/%s VAE: %s", n_cur, n_fin, rel_fin_locs[i])
 
                     if (r$VISUALIZATION == "Explore")
                       vae_to_explore(vae_result) %>% mkdir_saveRDS(f_loc)
@@ -281,8 +284,9 @@ perform_reduction <- function(requests, force = 0)
                   {
                     r <- requests[i,]
                     f_loc <-  final_locs[i]
-                    sprintf_clean("F%s/%s UMAP: %s", n_cur, n_fin, rel_fin_locs[i])
+
                     n_cur <- n_cur + 1
+                    sprintf_clean("F%s/%s UMAP: %s", n_cur, n_fin, rel_fin_locs[i])
 
                     if (r$VISUALIZATION == "Explore")
                       umap_to_explore(umap_result) %>% mkdir_saveRDS(f_loc)
@@ -305,8 +309,9 @@ perform_reduction <- function(requests, force = 0)
               {
                 r <- requests[i,]
                 f_loc <-  final_locs[i]
-                sprintf_clean("F%s/%s PHATE: %s", n_cur, n_fin, rel_fin_locs[i])
+
                 n_cur <- n_cur + 1
+                sprintf_clean("F%s/%s PHATE: %s", n_cur, n_fin, rel_fin_locs[i])
 
                 table_to_phate(col_table, com, r$PERPLEXITY) %>% mkdir_saveRDS(f_loc)
                 times_done[i] <- Sys.time()
