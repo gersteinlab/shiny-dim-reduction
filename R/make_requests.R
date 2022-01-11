@@ -30,11 +30,24 @@ chr_d <- function(n = 1)
   rep("-", n)
 }
 
-# selects only metadata features with a limited number of values
-select_chars <- function(order, num_filters = 60){
-  select_if(order, function(x){
-    between(length(unique(x)), 2, num_filters)
-  })
+# Only select characteristics with <= num_filters distinct values.
+num_filters <- 60
+
+# counts the number of characteristics per column of order_cat
+order_char_counts <- function(order_cat)
+{
+  apply(order_cat, 2, function(x){length(unique(x))})
+}
+
+# gets the safe colnames for order_cat (number of unique values between 2 and num_filters)
+get_safe_chars <- function(order_cat)
+{
+  colnames(order_cat)[between(order_char_counts(order_cat), 2, num_filters)]
+}
+
+# selects only metadata features with safe values
+select_chars <- function(order_cat){
+  order_cat[, get_safe_chars(order_cat), drop = FALSE]
 }
 
 # cleans a request (a requests data.frame with a single row) and returns the cleaned version,

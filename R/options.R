@@ -22,8 +22,6 @@ require("shinyjs")
 # BROWSER PARAMETERS
 # ------------------
 
-# Only select characteristics with <= num_filters distinct values.
-num_filters <- 60
 # The height of a graph by default. Depends on browser interpretation.
 graph_height <- 520
 # the default barplot/(barplot+matrix) ratio on an upset plot
@@ -54,15 +52,19 @@ get_dependency("custom_color_scales")
 # SETUP
 # -----
 
+# visualization options as nouns
+vis_nouns <- c("Exploration of ", "Summary of ", "tSNE of ")
+
 vis_to_noun <- function(vis)
 {
   rep_str(vis, vis_options, vis_nouns)
 }
 
-# given a list of numeric vectors, returns get_opt(name, length) for each vector
-name_num_map <- function(list_num)
+# given a list of vectors called list_vec, returns
+# get_opt(v, length(list_vec[[v]])) for v in names(list_vec)
+name_len_opts <- function(list_vec)
 {
-  mapply(get_opt, names(list_num), lapply(list_num, length), USE.NAMES = FALSE)
+  mapply(get_opt, names(list_vec), lapply(list_vec, length), USE.NAMES = FALSE)
 }
 
 # queries the user for a storage type
@@ -85,7 +87,7 @@ print_citations <- rem_html_tags(citations)
 
 # create categories and subsets
 init_cat()
-init_sub(name_num_map)
+init_sub(name_len_opts)
 
 # open requests
 app_requests <- load_store("requests.rds")
@@ -132,8 +134,6 @@ for (cn in 1:num_cat)
 {
   cat <- name_cat[cn]
   order_gen <- order_total[[cat]]
-  cols_unique_gen <- apply(order_gen, 2, function(i) length(unique(i)))
-  order_names <- colnames(order_gen)
 
   # row subsets
   row_subsets <- sub_row_groups[[cat]]
@@ -146,7 +146,7 @@ for (cn in 1:num_cat)
     cat, id_col(cat), sprintf("Feature Subset (%s)", cat), col_subsets, 1)
 
   # characteristics
-  chars <- order_names[between(cols_unique_gen, 2, num_filters)]
+  chars <- get_safe_chars(order_gen)
   if (length(chars) < 1)
     chars <- "Unknown"
   selected_chars[[cat]] <- chars

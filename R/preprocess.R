@@ -25,12 +25,13 @@ nor_options <- c("Global Min-Max", "Local Min-Max",
 emb_options <- c("PCA", "VAE", "UMAP", "PHATE", "Sets")
 # visualization options
 vis_options <- c("Explore", "Summarize", "tSNE")
-# visualization options as nouns
-vis_nouns <- c("Exploration of ", "Summary of ", "tSNE of ")
 
-# ----------------
-# CATEGORY LOADING
-# ----------------
+# -----------------
+# CAT / SUB LOADING
+# -----------------
+
+# Note: The following functions can be run any time from the application. They must be run
+# after workflows.R if used for dimensionality reduction in order to find dependencies.
 
 # creates category-related data
 # to remove: rm(categories_full, cat_groups, name_cat, num_cat, categories)
@@ -51,16 +52,16 @@ init_cat <- function()
   categories <- unlist(categories_full, recursive=FALSE)
   names(categories) <- name_cat
   assign_global("categories", categories)
+
+  invisible()
 }
 
-# ----------------
-# SUBSET FUNCTIONS
-# ----------------
-
-# creates subset-related data, using a subset_map function that
-# converts a list of vectors into a vector of characters
+# creates subset-related data using a map_fun function.
+# map_fun takes as input a list of vectors where each vector represents
+# the indices of a row or column subset. It returns a vector of characters.
+# When using init_sub, map_fun must be provided (usually names or name_len_opts)
 # to remove: rm(decorations, sub_row_groups, sub_col_groups)
-init_sub <- function(subset_map)
+init_sub <- function(map_fun)
 {
   get_dependency("decorations")
 
@@ -69,14 +70,14 @@ init_sub <- function(subset_map)
 
   for (cat in name_cat)
   {
-    sub_row_groups[[cat]] <- list("Total"=rep(0, categories[[cat]][1])) %>% subset_map()
-    sub_col_groups[[cat]] <- list("Total"=rep(0, categories[[cat]][2])) %>% subset_map()
+    sub_row_groups[[cat]] <- list("Total"=rep(0, categories[[cat]][1])) %>% map_fun()
+    sub_col_groups[[cat]] <- list("Total"=rep(0, categories[[cat]][2])) %>% map_fun()
   }
 
   for (dec_group in decorations)
   {
-    mapping_row <- dec_group$ROW_SUBSETS[-1] %>% subset_map()
-    mapping_col <- dec_group$COL_SUBSETS[-1] %>% subset_map()
+    mapping_row <- dec_group$ROW_SUBSETS %>% map_fun()
+    mapping_col <- dec_group$COL_SUBSETS[-1] %>% map_fun()
 
     for (good_cat in dec_group$CATEGORIES)
     {
@@ -85,11 +86,15 @@ init_sub <- function(subset_map)
     }
   }
 
-  assign("sub_row_groups", sub_row_groups, envir = .GlobalEnv)
-  assign("sub_col_groups", sub_col_groups, envir = .GlobalEnv)
+  assign_global("sub_row_groups", sub_row_groups)
+  assign_global("sub_col_groups", sub_col_groups)
 
   invisible()
 }
+
+# ----------------
+# SUBSET FUNCTIONS
+# ----------------
 
 # retrieves a row subset, which is a vector of indices
 # row subsets are index-based because metadata is expected
