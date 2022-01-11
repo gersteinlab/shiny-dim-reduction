@@ -97,12 +97,17 @@ perform_reduction <- function(requests, force = 0)
   # used to make intermediate files easily
   inter_locs <- sprintf("%s/inter/%s", pro_loc, requests_to_inter(requests))
   # used to make final files easily
-  final_locs <- sprintf("%s/%s", ref_loc, requests_to_final(requests))
+  rel_fin_locs <- requests_to_final(requests)
+  final_locs <- sprintf("%s/%s", ref_loc, rel_fin_locs)
   # used to easily edit completion timestamps
   times_done <- requests$TIME_COMPLETED
 
   # a true-false vector determining if an analysis should be performed
   i_fin <- !file.exists(final_locs) | rep(force > 0, nrow(requests))
+
+  # used to show progress
+  n_fin <- sum(i_fin)
+  n_cur <- 0
 
   # a true-false vector determining if TIME_COMPLETED < TIME_REQUESTED
   i_not_done <- times_done < requests$TIME_REQUESTED
@@ -149,8 +154,10 @@ perform_reduction <- function(requests, force = 0)
             r <- requests[i,]
             f_loc <- final_locs[i]
 
-            sprintf_clean("Generating Sets FINAL: %s", f_loc)
-            set_label_matrix(set_result, short_order[[r$CHARACTERISTIC]]) %>% mkdir_saveRDS(f_loc)
+            sprintf_clean("F%s/%s Sets: %s", n_cur, n_fin, rel_fin_locs[i])
+            n_cur <- n_cur + 1
+            set_label_matrix(
+              set_result, short_order[[r$CHARACTERISTIC]]) %>% mkdir_saveRDS(f_loc)
             times_done[i] <- Sys.time()
           }
         }
@@ -193,7 +200,8 @@ perform_reduction <- function(requests, force = 0)
                 {
                   r <- requests[i,]
                   f_loc <-  final_locs[i]
-                  sprintf_clean("Generating PCA FINAL: %s", f_loc)
+                  sprintf_clean("F%s/%s PCA: %s", n_cur, n_fin, rel_fin_locs[i])
+                  n_cur <- n_cur + 1
 
                   if (r$VISUALIZATION == "Explore")
                     pca_to_explore(pca_result) %>% mkdir_saveRDS(f_loc)
@@ -232,7 +240,8 @@ perform_reduction <- function(requests, force = 0)
                   {
                     r <- requests[i,]
                     f_loc <-  final_locs[i]
-                    sprintf_clean("Generating VAE FINAL: %s", f_loc)
+                    sprintf_clean("F%s/%s VAE: %s", n_cur, n_fin, rel_fin_locs[i])
+                    n_cur <- n_cur + 1
 
                     if (r$VISUALIZATION == "Explore")
                       vae_to_explore(vae_result) %>% mkdir_saveRDS(f_loc)
@@ -272,7 +281,8 @@ perform_reduction <- function(requests, force = 0)
                   {
                     r <- requests[i,]
                     f_loc <-  final_locs[i]
-                    sprintf_clean("Generating UMAP FINAL: %s", f_loc)
+                    sprintf_clean("F%s/%s UMAP: %s", n_cur, n_fin, rel_fin_locs[i])
+                    n_cur <- n_cur + 1
 
                     if (r$VISUALIZATION == "Explore")
                       umap_to_explore(umap_result) %>% mkdir_saveRDS(f_loc)
@@ -295,7 +305,8 @@ perform_reduction <- function(requests, force = 0)
               {
                 r <- requests[i,]
                 f_loc <-  final_locs[i]
-                sprintf_clean("Generating PHATE FINAL: %s", f_loc)
+                sprintf_clean("F%s/%s PHATE: %s", n_cur, n_fin, rel_fin_locs[i])
+                n_cur <- n_cur + 1
 
                 table_to_phate(col_table, com, r$PERPLEXITY) %>% mkdir_saveRDS(f_loc)
                 times_done[i] <- Sys.time()
