@@ -77,7 +77,7 @@ all_reductions <- function(table, labels)
 
   # test phate
   results$phate <- table_to_phate(table, 2, 10)
-  results$phate_p <- plotly_2d(results$phate$embedding[,1], results$phate$embedding[,2], labels)
+  results$phate_p <- plotly_2d(results$phate[,1], results$phate[,2], labels)
 
   # test sets
   results$sets <- table_to_sets(table, 0.4)
@@ -114,6 +114,16 @@ colnames(test_table) <- sprintf("Component %s", 1:20)
 
 # test random data
 test_red <- all_reductions(test_table, test_labels)
+
+# -----------
+# DUPLICATION
+# -----------
+
+dup_table <- matrix(c(rep(0, 6000), runif(2000, min = 0, max = 1)),
+                    nrow = 400, ncol = 20, byrow = TRUE)
+dup_labels <- as.character(rep(1:8, each = 50))
+colnames(dup_table) <- sprintf("Component %s", 1:20)
+dup_red <- all_reductions(dup_table, dup_labels)
 
 # -----------
 # MIRNA / RBP

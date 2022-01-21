@@ -314,6 +314,8 @@ vae_to_tsne <- function(vae_result, dim = 2, per = 0)
 # ------------
 
 # Uniform Manifold Approximation and Projection
+# note: UMAP perturbs duplicates to a degree - they will be close to each other
+# but the duplicates will not have zero distance from each other!
 table_to_umap <- function(table, dim = 2, per = 0, verbose = verbose_red)
 {
   sprintf_clean("UMAP Table Dimensions: (%s, %s)", nrow(table), ncol(table))
@@ -355,16 +357,39 @@ umap_to_tsne <- function(umap_result, dim = 2)
 # PHATE METHODS
 # -------------
 
+# wrapper to make a matrix of normalized distribution samples
+rnorm_mat <- function(row_n, col_n)
+{
+  matrix(rnorm(row_n * col_n), nrow = row_n, ncol = col_n)
+}
+
+# perturbs a matrix by delta
+perturb_mat <- function(mat, delta = 0.000000001)
+{
+  mat + delta * rnorm_mat(nrow(mat), ncol(mat))
+}
+
+# perturbs the duplicate rows of a matrix
+perturb_duplicates <- function(mat, weight = 0.000000001)
+{
+  stopifnot(is.matrix(mat))
+  dup_indices <- which(duplicated(mat))
+  mat[dup_indices,] <- perturb_mat(mat[dup_indices,], weight * (max(mat) - min(mat)))
+  mat
+}
+
 # Potential of Heat diffusion for Affinity-based Transition Embedding
+# note: PHATE by default does not work well with duplicate rows. The expression
+# results$phate$embedding[result$phate$to_dup_indices,] restores the duplicates.
+# note: returns the embedding and does not preserve other parts for storage reasons.
 table_to_phate <- function(table, dim = 2, per = 0, verbose = verbose_red) {
   sprintf_clean("PHATE Table Dimensions: (%s, %s)", nrow(table), ncol(table))
   result <- phateR::phate(
-    table, ndim = dim, knn = per, decay = 40, n.landmark = 2000,
+    perturb_duplicates(table), ndim = dim, knn = per, decay = 40, n.landmark = 2000,
     gamma = 1, t = "auto", mds.solver = "sgd", knn.dist.method = "euclidean",
     init = NULL, mds.method = "metric", mds.dist.method = "euclidean",
     t.max = 100, npca = 10, verbose = verbose, n.jobs = 1, seed = 0)
-  result$params$data <- NULL # saves a lot of storage space
-  result
+  result$embedding
 }
 
 # ------------
