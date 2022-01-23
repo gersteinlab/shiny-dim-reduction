@@ -225,6 +225,25 @@ att_is_int <- function(x)
   sum(bool_vec) == length(bool_vec)
 }
 
+# converts requests into the locations of their final files
+# note: a set of requests is invalid if the following occurs:
+#   rel_fin_locs <- requests_to_final(requests)
+#   sum(duplicated(rel_fin_locs)) > 0
+requests_to_final <- function(requests)
+{
+  n <- nrow(requests)
+  result <- character(n)
+
+  for (i in seq_len(n))
+  {
+    args <- as.list(requests[i,])
+    names(args) <- NULL
+    result[i] <- do.call(make_sdr_name, args[1:13])
+  }
+
+  result
+}
+
 # if the inputs do not correspond to a valid set of requests, return NULL.
 # otherwise, return a set of requests in the appropriate form.
 # com: components for first-round dimensionality reduction
@@ -274,61 +293,159 @@ make_requests <- function(
     requests[i,] <- clean_req
   }
 
+  # quit if two requests have duplicate final locations
+  if (sum(duplicated(requests_to_final(requests))) > 0)
+    return(NULL)
+
   requests
 }
 
-# converts requests into the locations of their final files
-requests_to_final <- function(requests)
+# ---------------
+# SYNTACTIC SUGAR
+# ---------------
+
+# pca, vae, umap
+make_pvu_requests <- function(
+  cat = character(), row = character(), col = character(), sca = character(),
+  nor = character(), emb = character(), vis = character(), com = numeric(),
+  dim = numeric(), per = numeric(), bat = numeric(), aut = character()
+)
 {
-  result <- character()
+  n_cat <- length(cat)
 
-  for (i in seq_len(nrow(requests)))
-  {
-    args <- as.list(requests[i,])
-    names(args) <- NULL
-    result <- c(result, do.call(make_sdr_name, args[1:13]))
-  }
+  make_requests(
+    cat, row, col, sca, nor, emb, vis,
+    com, dim, per, bat, num_d(n_cat), chr_d(n_cat), aut)
+}
 
-  result
+# simplifies the generation of PHATE requests
+make_phate_requests <- function(
+  cat = character(), row = character(), col = character(), sca = character(),
+  nor = character(), com = numeric(), per = numeric(), aut = character()
+)
+{
+  n_cat <- length(cat)
+
+  make_requests(
+    cat, row, col, sca, nor, rep("PHATE", n_cat), chr_d(n_cat),
+    com, num_d(n_cat), per, num_d(n_cat), num_d(n_cat), chr_d(n_cat), aut)
+}
+
+# simplifies the generation of Sets requests
+make_sets_requests <- function(
+  cat = character(), sca = character(), thr = numeric(), cha = character(), aut = character())
+{
+  n_cat <- length(cat)
+
+  make_requests(
+    cat, chr_d(n_cat), chr_d(n_cat), sca, rep("Global Min-Max", n_cat), rep("Sets", n_cat), chr_d(n_cat),
+    num_d(n_cat), num_d(n_cat), num_d(n_cat), num_d(n_cat), thr, cha, aut)
 }
 
 # ---------------
 # REQUEST MERGING
 # ---------------
 
-# removes duplicated requests ... if requests are duplicated,
-# (i) favor completed requests and (ii) keep the request
-# with the most recent TIME_COMPLETED
-# note that order is preserved here
-rem_dup_requests <- function(requests)
+# merges two sets of requests under the assumption that they are both valid individually.
+# The biggest issue is if a row in requests1 and a row in requests2 both have the same final
+# location - then we must choose which one to keep. First, try to pick a completed analysis.
+# If it's a tie, pick the one completed more recently. If it's a tie, pick the one in requests1.
+# Then rbind, preserving the same order as rbind(requests1, requests2).
+# note: chain together with r1 %>% rbind_requests(r2) %>% rbind_requests(r3) %>% ...
+rbind_req2 <- function(requests1, requests2)
 {
-  # the value is (row, TIME_COMPLETED, done) of the request to keep
-  index_for_req <- list()
-  n <- nrow(requests)
+  n1 <- nrow(requests1)
+  n2 <- nrow(requests2)
+  r1_locs <- requests_to_final(requests1)
+  r2_locs <- requests_to_final(requests2)
+  r1_com_times <- requests1$TIME_COMPLETED
+  r1_req_times <- requests1$TIME_REQUESTED
 
-  for (i in seq_len(n))
+  req_dict <- hash::hash()
+
+  # key based on final location, value is (row, TIME_COMPLETED, done)
+  for (r1_i in which(r1_locs %in% r2_locs))
   {
-    r <- requests[i,]
-    key <- requests_to_final(r)
-    prev_val <- index_for_req[[key]]
-    cur_time <- r$TIME_COMPLETED
-    cur_done <- cur_time > r$TIME_REQUESTED
-
-    # if no other requests exist,
-    # the current request is completed and the previous one is not,
-    # or both requests have the same status and the current one is older
-    if (is.null(prev_val) ||
-        (!prev_val[3] && cur_done) ||
-        (prev_val[3] == cur_done && cur_time < prev_val[2]))
-      index_for_req[[key]] <- c(i, cur_time, cur_done)
+    r1_com_time <- r1_com_times[r1_i]
+    req_dict[[r1_locs[i]]] <- c(r1_i, r1_com_time, (r1_com_time > r1_req_times[r1_i]))
   }
 
-  to_be_kept <- rep(TRUE, n)
+  # now go through all intersecting indices
+  r2_com_times <- requests2$TIME_COMPLETED
+  r2_req_times <- requests2$TIME_REQUESTED
+  r1_keep <- rep(TRUE, n1)
+  r2_keep <- rep(TRUE, n2)
 
-  for (i in seq_len(n))
-    to_be_kept[i] <- (index_for_req[[requests_to_final(requests[i,])]][1] == i)
+  for (r2_i in which(r2_locs %in% r1_locs))
+  {
+    r1_val <- req_dict[[r2_locs[r2_i]]]
+    r1_i <- r1_val[1]
+    r1_com_time <- r1_val[2]
+    r1_done <- r1_val[3]
+    r2_com_time <- r2_com_times[r2_i]
+    r2_done <- (r2_com_time > r2_req_times[r2_i])
 
-  requests[to_be_kept,]
+    if (r1_done)
+    {
+      if (r2_done)
+      {
+        if (r1_com_time < r2_com_time)
+        {
+          r1_keep[r1_i] <- FALSE
+        }
+        else
+        {
+          r2_keep[r2_i] <- FALSE
+        }
+      }
+      else
+      {
+        r2_keep[r2_i] <- FALSE
+      }
+    }
+    else
+    {
+      if (r2_done)
+      {
+        r1_keep[r1_i] <- FALSE
+      }
+      else
+      {
+        if (r1_com_time < r2_com_time)
+        {
+          r1_keep[r1_i] <- FALSE
+        }
+        else
+        {
+          r2_keep[r2_i] <- FALSE
+        }
+      }
+    }
+  }
+
+  rbind(requests1[r1_keep,], requests2[r2_keep,])
+}
+
+# vectorization of rbind_req
+rbind_req <- function(...)
+{
+  list_of_requests <- list(...)
+  n <- length(list_of_requests)
+  if (n < 1)
+    return(NULL)
+
+  result <- NULL
+
+  for (requests in list_of_requests)
+  {
+    if (is.null(result))
+      result <- requests
+    else
+      result <- rbind_req2(result, requests)
+  }
+
+  rownames(result) <- NULL
+  result
 }
 
 # ----------

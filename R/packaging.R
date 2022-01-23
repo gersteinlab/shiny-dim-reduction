@@ -19,48 +19,6 @@ perplexity_types <- c(10, 50)
 
 setwd(pro_loc)
 
-# -------------
-# EMB FUNCTIONS
-# -------------
-
-# pca, vae, umap
-make_pvu_requests <- function(
-  cat = character(), row = character(), col = character(), sca = character(),
-  nor = character(), emb = character(), vis = character(), com = numeric(),
-  dim = numeric(), per = numeric(), bat = numeric(), aut = character()
-)
-{
-  n_cat <- length(cat)
-
-  make_requests(
-    cat, row, col, sca, nor, emb, vis,
-    com, dim, per, bat, num_d(n_cat), chr_d(n_cat), aut)
-}
-
-# simplifies the generation of PHATE requests
-make_phate_requests <- function(
-  cat = character(), row = character(), col = character(), sca = character(),
-  nor = character(), com = numeric(), per = numeric(), aut = character()
-)
-{
-  n_cat <- length(cat)
-
-  make_requests(
-    cat, row, col, sca, nor, rep("PHATE", n_cat), chr_d(n_cat),
-    com, num_d(n_cat), per, num_d(n_cat), num_d(n_cat), chr_d(n_cat), aut)
-}
-
-# simplifies the generation of Sets requests
-make_sets_requests <- function(
-  cat = character(), sca = character(), thr = numeric(), cha = character(), aut = character())
-{
-  n_cat <- length(cat)
-
-  make_requests(
-    cat, chr_d(n_cat), chr_d(n_cat), sca, rep("Global Min-Max", n_cat), rep("Sets", n_cat), chr_d(n_cat),
-    num_d(n_cat), num_d(n_cat), num_d(n_cat), num_d(n_cat), thr, cha, aut)
-}
-
 # searches for a threshold to num_digits precision
 # such that table_to_sets(data, thre) approximates target
 binary_search <- function(data, target, num_digits)
@@ -81,12 +39,12 @@ binary_search <- function(data, target, num_digits)
   round((lower+upper)/2,num_digits)
 }
 
+# temporarily reduce number of normalizations
+temp_nor <- nor_options[1:2]
+
 # -----------------
 # GENERATE REQUESTS
 # -----------------
-
-# temporarily reduce number of normalizations
-temp_nor <- nor_options[1:2]
 
 start <- my_timer()
 pca_requests_new <- make_requests()
@@ -97,7 +55,7 @@ for (cat in name_cat)
   # used to patch missing entries
   temp_row <- setdiff(sub_row_groups[[cat]], "Total")
   if (length(temp_row) > 0)
-  temp_row <- temp_row[1]
+    temp_row <- temp_row[1]
 
   for (row in temp_row)
   {
@@ -412,13 +370,46 @@ sub2 <- sets_requests$CATEGORIES != "miRNA"
 # done_sets2 <- perform_reduction(sets_requests[sub2,])
 # saveRDS(done_sets2, "done_sets_2.rds")
 
-app_requests <- rbind(
+system.time(app_requests <- rbind_req(
   readRDS("done_pca_1.rds"),
+  readRDS("done_pca_2.rds"),
   readRDS("done_vae_1.rds"),
   readRDS("done_vae_2.rds"),
-  readRDS("done_vae_3.rds"))
+  readRDS("done_vae_3.rds"),
+  readRDS("done_vae_4.rds"),
+  readRDS("done_vae_5.rds"),
+  readRDS("done_vae_6.rds"),
+  readRDS("done_vae_7.rds"),
+  readRDS("done_vae_8.rds"),
+  readRDS("done_vae_9.rds"),
+  readRDS("done_vae_10.rds"),
+  readRDS("done_vae_11.rds"),
+  readRDS("done_umap_1.rds"),
+  readRDS("done_umap_2.rds"),
+  readRDS("done_umap_3.rds"),
+  readRDS("done_umap_4.rds"),
+  readRDS("done_umap_5.rds"),
+  readRDS("done_umap_6.rds"),
+  readRDS("done_umap_7.rds"),
+  readRDS("done_umap_8.rds"),
+  readRDS("done_phate_1.rds"),
+  readRDS("done_phate_2.rds"),
+  readRDS("done_phate_3.rds"),
+  readRDS("done_phate_4.rds"),
+  readRDS("done_phate_5.rds"),
+  readRDS("done_phate_6.rds"),
+  readRDS("done_sets_1.rds"),
+  readRDS("done_sets_2.rds")
+))
+rownames(app_requests) <- NULL
+app_requests$REQUEST_ID <- get_request_id(nrow(app_requests))
+
 setwd(ref_loc)
-saveRDS(app_requests, "requests.rds")
+saveRDS(app_requests, "app_requests.rds")
+
+system.time(test_req1 <- rem_dup_requests(app_requests))
+system.time(test_req2 <- rem_dup_requests2(app_requests))
+all.equal(test_req1, test_req2)
 
 # subset <- master_requests$EMBEDDING == "PCA"
 # subset_req <- perform_reduction(master_requests[subset,], 0)
