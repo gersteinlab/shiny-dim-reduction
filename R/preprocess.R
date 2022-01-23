@@ -25,6 +25,8 @@ nor_options <- c("Global Min-Max", "Local Min-Max",
 emb_options <- c("PCA", "VAE", "UMAP", "PHATE", "Sets")
 # visualization options
 vis_options <- c("Explore", "Summarize", "tSNE")
+# number of digits of precision for non-integer numbers
+num_digits <- 4
 
 # -----------------
 # CAT / SUB LOADING
@@ -198,7 +200,7 @@ make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat,
   }
 
   if (emb == "Sets")
-    return(sprintf("Sets/%s/S%s_%0.3f_%s.rds", cat, sca_ind, thr, cha))
+    return(sprintf(sprintf("Sets/%%s/S%%s_%%0.%sf_%%s.rds", num_digits), cat, sca_ind, thr, cha))
 
   # PHATE
   sprintf("PHATE/%s/%s_%s_S%s_N%s_%s_%s.rds", cat, row, col, sca_ind, nor_ind, com, per)
