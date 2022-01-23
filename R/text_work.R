@@ -350,7 +350,8 @@ Plots support 12 color scales. The custom color scales are
 'is perceptually uniform in hue and brightness, and increases in brightness linearly'.
 </li>
 <li><u>Graph Height:</u>
-The height of the plotting graphic.
+The height of the plotting graphic. If a data table's UI does not appear responsive, try
+increasing this value.
 </li>
 <li><u>Notification Time:</u>
 The time it takes for notifications to fade away. Set to a nonpositive value to hide

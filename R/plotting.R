@@ -369,11 +369,27 @@ plotly_heatmap_dendrogram <- function(binary, colors = NULL,
 empty_df <- data.frame(matrix(nrow=0, ncol=1))
 colnames(empty_df) <- "Unknown"
 
+can_be_numeric <- function(vec)
+{
+  sum(is.na(suppressWarnings(as.character(vec)))) == sum(is.na(suppressWarnings(as.numeric(vec))))
+}
+
 # Creates a datatable from a data frame
 my_datatable <- function(df = empty_df)
 {
   if (class(df) != "data.frame" || ncol(df) < 1)
     df <- empty_df
+
+  for (col in colnames(df))
+  {
+    if (!can_be_numeric(df[[col]]))
+    {
+      if (length(unique(df[[col]])) <= num_filters)
+        df[[col]] <- as.factor(df[[col]])
+      else
+        df[[col]] <- as.character(df[[col]])
+    }
+  }
 
   datatable(
     df, editable = FALSE, escape = TRUE, filter = "top", selection = "none",

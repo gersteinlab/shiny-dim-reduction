@@ -90,7 +90,7 @@ init_cat()
 init_sub(name_len_opts)
 
 # open requests
-app_requests <- load_store("requests.rds")
+app_requests <- load_store("app_requests.rds")
 
 # ----------------
 # FIX DEPENDENCIES
@@ -388,11 +388,11 @@ ui <- function(request){
       tabBox(
         width="100%",
         id = 'plotPanels',
-        tabPanel("Requests", uiOutput("requestsUI")),
         tabPanel("Static 2D", uiOutput("ggplot2UI")),
         tabPanel("Interactive 2D", uiOutput("plotly2UI")),
         tabPanel("Interactive 3D", uiOutput("plotly3UI")),
         tabPanel("Boxplot", uiOutput("beeswarmUI")),
+        tabPanel("Requests", uiOutput("requestsUI")),
         tabPanel("Numeric Data", uiOutput("num_dataUI")),
         tabPanel("Metadata", uiOutput("metadataUI"))
       ),
