@@ -363,10 +363,10 @@ rnorm_mat <- function(row_n, col_n)
   matrix(rnorm(row_n * col_n), nrow = row_n, ncol = col_n)
 }
 
-# perturbs a matrix by delta
-perturb_mat <- function(mat, delta = 0.000000001)
+# perturbs a matrix by a weighted normal distribution
+perturb_mat <- function(mat, weight = 0.000000001)
 {
-  mat + delta * rnorm_mat(nrow(mat), ncol(mat))
+  mat + weight * rnorm_mat(nrow(mat), ncol(mat))
 }
 
 # perturbs the duplicate rows of a matrix
@@ -374,7 +374,8 @@ perturb_duplicates <- function(mat, weight = 0.000000001)
 {
   stopifnot(is.matrix(mat))
   dup_indices <- which(duplicated(mat))
-  mat[dup_indices,] <- perturb_mat(mat[dup_indices,], weight * (max(mat) - min(mat)))
+  if (length(dup_indices) > 0)
+    mat[dup_indices,] <- perturb_mat(mat[dup_indices,,drop = FALSE], weight)
   mat
 }
 

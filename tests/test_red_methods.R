@@ -125,6 +125,15 @@ dup_labels <- as.character(rep(1:8, each = 50))
 colnames(dup_table) <- sprintf("Component %s", 1:20)
 dup_red <- all_reductions(dup_table, dup_labels)
 
+# ----------
+# ALL ZEROES
+# ----------
+
+zero_table <- matrix(0, nrow = 400, ncol = 20)
+zero_labels <- as.character(rep(1:8, each = 50))
+colnames(zero_table) <- sprintf("Component %s", 1:20)
+zero_red <- all_reductions(zero_table, zero_labels)
+
 # -----------
 # MIRNA / RBP
 # -----------
