@@ -97,7 +97,7 @@ perform_reduction <- function(requests, force = 0)
   # used to make intermediate files easily
   inter_locs <- sprintf("%s/inter/%s", pro_loc, requests_to_inter(requests))
   # used to make final files easily
-  rel_fin_locs <- requests_to_final(requests)
+  rel_fin_locs <- requests$FILE_LOCATION
   final_locs <- sprintf("%s/%s", ref_loc, rel_fin_locs)
   # used to easily edit completion timestamps
   times_done <- requests$TIME_COMPLETED

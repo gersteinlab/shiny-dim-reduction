@@ -250,6 +250,8 @@ requests_to_final <- function(requests)
 # dim: dimension for second-round dimensionality reduction
 # note: the first 13 attributes MUST be a primary key; author / timestamps don't differentiate
 # note: if the TIME_COMPLETED field is before the TIME_REQUESTED field, it hasn't been done yet!
+# note: a set of requests is valid ONLY IF it has a FILE_LOCATION field. This is because regular
+# computation of the FILE_LOCATION field makes merging new requests difficult.
 make_requests <- function(
   cat = character(), row = character(), col = character(), sca = character(),
   nor = character(), emb = character(), vis = character(), com = numeric(),
@@ -293,8 +295,10 @@ make_requests <- function(
     requests[i,] <- clean_req
   }
 
+  requests$FILE_LOCATION <- requests_to_final(requests)
+
   # quit if two requests have duplicate final locations
-  if (sum(duplicated(requests_to_final(requests))) > 0)
+  if (sum(duplicated(requests$FILE_LOCATION)) > 0)
     return(NULL)
 
   requests
