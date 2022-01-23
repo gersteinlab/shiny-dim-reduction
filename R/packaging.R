@@ -370,6 +370,23 @@ sub2 <- sets_requests$CATEGORIES != "miRNA"
 # done_sets2 <- perform_reduction(sets_requests[sub2,])
 # saveRDS(done_sets2, "done_sets_2.rds")
 
+# fix: add FILE_LOCATION as a column to all previous requests
+for (a_name in c("done_pca_1.rds", "done_pca_2.rds", "done_vae_1.rds",
+                 "done_vae_2.rds", "done_vae_3.rds", "done_vae_4.rds",
+                 "done_vae_5.rds", "done_vae_6.rds", "done_vae_7.rds",
+                 "done_vae_8.rds", "done_vae_9.rds", "done_vae_10.rds",
+                 "done_vae_11.rds", "done_umap_1.rds", "done_umap_2.rds",
+                 "done_umap_3.rds", "done_umap_4.rds", "done_umap_5.rds",
+                 "done_umap_6.rds", "done_umap_7.rds", "done_umap_8.rds",
+                 "done_phate_1.rds", "done_phate_2.rds", "done_phate_3.rds",
+                 "done_phate_4.rds", "done_phate_5.rds", "done_phate_6.rds",
+                 "done_sets_1.rds", "done_sets_2.rds"))
+{
+  temp_requests <- readRDS(a_name)
+  temp_requests$FILE_LOCATION <- requests_to_final(temp_requests)
+  saveRDS(temp_requests, a_name)
+}
+
 system.time(app_requests <- rbind_req(
   readRDS("done_pca_1.rds"),
   readRDS("done_pca_2.rds"),

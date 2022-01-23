@@ -360,8 +360,8 @@ rbind_req2 <- function(requests1, requests2)
 {
   n1 <- nrow(requests1)
   n2 <- nrow(requests2)
-  r1_locs <- requests_to_final(requests1)
-  r2_locs <- requests_to_final(requests2)
+  r1_locs <- requests1$FILE_LOCATION
+  r2_locs <- requests2$FILE_LOCATION
   r1_com_times <- requests1$TIME_COMPLETED
   r1_req_times <- requests1$TIME_REQUESTED
 
