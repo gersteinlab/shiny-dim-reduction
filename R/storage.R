@@ -7,6 +7,8 @@
 # save_store: saves a file, creating the directory if it doesn't exist
 # load_store: loads a file, returning NULL if it doesn't exist
 
+# TBD: worth validating if a filename is not a character of length 1?
+
 if (!exists("ran_install"))
 {
   if (file.exists("install.R"))
@@ -16,86 +18,6 @@ if (!exists("ran_install"))
 }
 
 require(aws.s3)
-
-# --------------
-# KEY MANAGEMENT
-# --------------
-
-# disconnects from AWS
-disconnect_key <- function()
-{
-  Sys.setenv("AWS_ACCESS_KEY_ID" = "",
-             "AWS_SECRET_ACCESS_KEY" = "",
-             "AWS_ACCESS_BUCKET" = "")
-}
-
-# determines if R is connected to AWS
-key_is_connected <- function()
-{
-  bucket_exists(Sys.getenv("AWS_ACCESS_BUCKET"))
-}
-
-# the expected location of the master key
-master_key_loc <- get_project_loc("sdr_master_key.rds")
-
-# makes a list that qualifies as a key from an ID, a secret, and a bucket
-make_key <- function(id = "", secret = "", bucket = "")
-{
-  stopifnot(is.character(id), is.character(secret), is.character(bucket),
-            length(id) == 1, length(secret) == 1, length(bucket) == 1)
-
-  list(
-    "id" = id,
-    "secret" = secret,
-    "bucket" = bucket
-  )
-}
-
-# sets the current working AWS access key, which comprises: id, secret, bucket
-set_working_key <- function(key = make_key())
-{
-  disconnect_key()
-
-  stopifnot(
-    class(key) == "list",
-    isTRUE(all.equal(names(key), c("id", "secret", "bucket")))
-  )
-
-  Sys.setenv("AWS_ACCESS_KEY_ID" = key$id,
-             "AWS_SECRET_ACCESS_KEY" = key$secret,
-             "AWS_ACCESS_BUCKET" = key$bucket)
-
-  # if the provided keys don't allow bucket access
-  if (!key_is_connected())
-  {
-    disconnect_key()
-    stop("The provided keys do not correspond to a working bucket.")
-  }
-}
-
-# create a master key and save it in the project directory
-save_master_key <- function(id, secret)
-{
-  stopifnot(is.character(id), is.character(secret),
-            length(id) == 1, length(secret) == 1)
-  sdr_master_key <- list("id" = id, "secret" = secret)
-  saveRDS(sdr_master_key, master_key_loc)
-}
-
-# turns a key into a master key
-sudo_key <- function(key)
-{
-  # to avoid master key privileges: don't include the master key file in apps!
-  stopifnot(file.exists(master_key_loc))
-  sdr_master_key <- readRDS(master_key_loc)
-  make_key(sdr_master_key$id, sdr_master_key$secret, key$bucket)
-}
-
-# wrapper for sudo_key that also assigns the key
-sudo_working_key <- function(key)
-{
-  set_working_key(sudo_key(key))
-}
 
 # ----------------
 # LOCAL MANAGEMENT
@@ -207,7 +129,6 @@ list_local <- function(prefix = "")
 # determines whether a file with the given filename exists
 find_local <- function(filename)
 {
-  stopifnot(length(filename) == 1)
   file.exists(path_local(filename))
 }
 
@@ -221,6 +142,86 @@ save_local <- function(data, filename)
 load_local <- function(filename)
 {
   w_def_readRDS(path_local(filename), NULL)
+}
+
+# --------------
+# KEY MANAGEMENT
+# --------------
+
+# disconnects from AWS
+disconnect_key <- function()
+{
+  Sys.setenv("AWS_ACCESS_KEY_ID" = "",
+             "AWS_SECRET_ACCESS_KEY" = "",
+             "AWS_ACCESS_BUCKET" = "")
+}
+
+# determines if R is connected to AWS
+key_is_connected <- function()
+{
+  bucket_exists(Sys.getenv("AWS_ACCESS_BUCKET"))
+}
+
+# the expected location of the master key
+master_key_loc <- get_project_loc("sdr_master_key.rds")
+
+# makes a list that qualifies as a key from an ID, a secret, and a bucket
+make_key <- function(id = "", secret = "", bucket = "")
+{
+  stopifnot(is.character(id), is.character(secret), is.character(bucket),
+            length(id) == 1, length(secret) == 1, length(bucket) == 1)
+
+  list(
+    "id" = id,
+    "secret" = secret,
+    "bucket" = bucket
+  )
+}
+
+# sets the current working AWS access key, which comprises: id, secret, bucket
+set_working_key <- function(key = make_key())
+{
+  disconnect_key()
+
+  stopifnot(
+    class(key) == "list",
+    isTRUE(all.equal(names(key), c("id", "secret", "bucket")))
+  )
+
+  Sys.setenv("AWS_ACCESS_KEY_ID" = key$id,
+             "AWS_SECRET_ACCESS_KEY" = key$secret,
+             "AWS_ACCESS_BUCKET" = key$bucket)
+
+  # if the provided keys don't allow bucket access
+  if (!key_is_connected())
+  {
+    disconnect_key()
+    stop("The provided keys do not correspond to a working bucket.")
+  }
+}
+
+# create a master key and save it in the project directory
+save_master_key <- function(id, secret)
+{
+  stopifnot(is.character(id), is.character(secret),
+            length(id) == 1, length(secret) == 1)
+  sdr_master_key <- list("id" = id, "secret" = secret)
+  saveRDS(sdr_master_key, master_key_loc)
+}
+
+# turns a key into a master key
+sudo_key <- function(key)
+{
+  # to avoid master key privileges: don't include the master key file in apps!
+  stopifnot(file.exists(master_key_loc))
+  sdr_master_key <- readRDS(master_key_loc)
+  make_key(sdr_master_key$id, sdr_master_key$secret, key$bucket)
+}
+
+# wrapper for sudo_key that also assigns the key
+sudo_working_key <- function(key)
+{
+  set_working_key(sudo_key(key))
 }
 
 # --------------
