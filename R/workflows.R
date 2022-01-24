@@ -138,6 +138,7 @@ uapp <- function(){
                "ui_functions.R",
                "storage.R",
                "preprocess.R",
+               "make_requests.R",
                "options.R",
                "plotting.R",
                "authentication.R"))

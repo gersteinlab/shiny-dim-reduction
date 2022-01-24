@@ -13,7 +13,7 @@ if (!exists("ran_install"))
 }
 
 source_sdr("ui_functions.R")
-source_sdr("preprocess.R")
+source_sdr("make_requests.R")
 
 require("shinydashboard")
 require("shinyjs")
@@ -175,11 +175,14 @@ for (cn in 1:num_cat)
   }
 
   # # thresholds
-  # for (sca in sca_options)
-  # {
-  #   thre_ids <- c(thre_ids, id_thre(cat, sca))
-  #   thre_opts[[length(thre_ids)]] <- thre_select_panel(thre_seqs[[sca]][[cat]], cat, sca)
-  # }
+  for (sca in sca_options)
+  {
+    thre_ids <- c(thre_ids, id_thre(cat, sca))
+    requests_subset <- (app_requests$CATEGORIES == cat) & (app_requests$SCALING == sca) &
+      (app_requests$EMBEDDING) == "Sets"
+    thre_opts[[length(thre_ids)]] <- thre_select_panel(
+      unique(app_requests$THRESHOLD[requests_subset]), cat, sca)
+  }
 }
 
 # truncate select_opts
@@ -263,8 +266,8 @@ table_1_menu <- menuItem(
   category_sel,
   row_sub_opts,
   col_sub_opts,
-  select_panel("scale", "Scale", sca_options),
-  select_panel("normalize", "Normalization", nor_options)
+  select_panel("scaling", "Scaling", sca_options),
+  select_panel("normalization", "Normalization", nor_options)
 )
 
 analysis_1_menu <- menuItem(
@@ -301,7 +304,7 @@ analysis_1_menu <- menuItem(
   ),
   expand_cond_panel(
     condition = "input.embedding == 'Sets'",
-    # thre_opts,
+    thre_opts,
     list(
       numericRangeInput("set_f1", "Fraction of Samples", c(0.5,1)),
       numericRangeInput("set_f2", "Number of Characteristics", c(1,num_filters)),

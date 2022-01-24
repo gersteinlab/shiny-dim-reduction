@@ -123,8 +123,8 @@ session_data_template <- list(
 default_picker_input_ids <- c(
   "sMenu",
   "category",
-  "scale",
-  "normalize",
+  "scaling",
+  "normalization",
   "features",
   "embedding",
   "visualize",

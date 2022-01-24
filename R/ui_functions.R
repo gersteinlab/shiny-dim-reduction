@@ -123,7 +123,7 @@ select_check_panel <- function(choices, cat, char)
 thre_select_panel <- function(choices, cat, sca)
 {
   conditionalPanel(
-    condition = sprintf("input.category == '%s' && input.scale == '%s'", cat, sca),
+    condition = sprintf("input.category == '%s' && input.scaling == '%s'", cat, sca),
     select_panel(id_thre(cat, sca), "Threshold", choices, ceiling(length(choices)/2))
   )
 }

@@ -175,9 +175,8 @@ server <- function(input, output, session) {
 
   observeEvent(input$randomize, {
     pick_random_input(session, "category", name_cat)
-    pick_random_input(session, "scale", sca_options)
-    pick_random_input(session, "normalize", nor_options[1:2])
-    pick_random_input(session, "features", fea_options)
+    pick_random_input(session, "scaling", sca_options)
+    pick_random_input(session, "normalization", nor_options[1:2])
     pick_random_input(session, "embedding", emb_options)
     pick_random_input(session, "visualize", vis_options)
     pick_random_input(session, "perplexity", perplexity_types)
@@ -332,18 +331,9 @@ Seconds elapsed: %s", my_timer(start)), "message")
   cati <- reactive(iplot$category)
   rowi <- reactive(parse_opt(iplot[[id_row(cati())]]))
   coli <- reactive(parse_opt(iplot[[id_col(cati())]]))
-
-  per_ind <- reactive(
-    which(perplexity_types == iplot$perplexity)
-  )
   peri <- reactive(iplot$perplexity)
   bati <- reactive(iplot$batch_size)
-  sca_ind <- reactive(
-    which(sca_options == iplot$scale)
-  )
-  thre_ind <- reactive(
-    which(thre_seqs[[iplot$scale]][[cati()]] == iplot[[id_thre(cati(), iplot$scale)]])
-  )
+  thre <- reactive(as.numeric(iplot[[id_thre(cati(), iplot$scaling)]]))
 
   colorby <- reactive(iplot[[id_color(cati())]])
   shapeby <- reactive({
@@ -474,52 +464,46 @@ Seconds elapsed: %s", my_timer(start)), "message")
   # ---------------
 
   ggplot2_data <- reactive({
-    if (iplot$embedding == "VAE" && which(nor_options == iplot$normalize) > 2)
+    if (iplot$embedding == "VAE" && which(nor_options == iplot$normalization) > 2)
       return(NULL)
 
-    # if (iplot$embedding == "Sets")
-    # {
-    #   addr <- make_sdr_name(
-    #     cati(), rowi(), coli(), iplot$scale, iplot$normalize, iplot$embedding, iplot$visualize,
-    #     2, num_d(), per_ind(), num_d(), num_d(), chr_d())
-    #
-    #   addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(),
-    #                   sca_ind(), filterby(), cati())
-    #
-    #   data <- load_store(addr)
-    #   if (is.null(data))
-    #     return(NULL)
-    #   data <- data[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), coli())
-    #
-    #   num_data(data)
-    #
-    #   data <- truncate_rows(data, upse_feat()) %>%
-    #     set_f1_f2(iplot$set_f1, iplot$set_f2) %>% num_nan_binary()
-    #
-    #   if (ncol(data) == 1)
-    #     return(venn1_custom(data, legend()))
-    #
-    #   if (!legend())
-    #     colnames(data) <- 1:ncol(data)
-    #
-    #   return(upset_custom(data, nintersect(), bar_frac(), !legend(), text_scale()))
-    # }
-    #
-    # if (iplot$embedding == "PHATE")
-    # {
-    #   data <- load_store(make_sdr_name(
-    #     cati(), rowi(), coli(), iplot$scale, iplot$normalize, iplot$embedding, iplot$visualize,
-    #     2, num_d(), per_ind(), num_d(), num_d(), chr_d()))
-    #     data <- data[keep(),,drop=FALSE]
-    #     num_data(data)
-    #
-    #     return(ggplot2_2d(
-    #       data[,1], data[,2], colors(), shapes(), paint(), NULL,
-    #       legend(), title_embed(), pc("1"), pc("2")))
-    # }
+    if (iplot$embedding == "Sets")
+    {
+      addr <- make_sets_name(cati(), iplot$scaling, thre(), filterby())
+      data <- load_store(addr)
+      if (is.null(data))
+        return(NULL)
+      data <- data[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), coli())
+
+      num_data(data)
+
+      data <- truncate_rows(data, upse_feat()) %>%
+        set_f1_f2(iplot$set_f1, iplot$set_f2) %>% num_nan_binary()
+
+      if (ncol(data) == 1)
+        return(venn1_custom(data, legend()))
+
+      if (!legend())
+        colnames(data) <- seq_len(ncol(data))
+
+      return(upset_custom(data, nintersect(), bar_frac(), !legend(), text_scale()))
+    }
+
+    if (iplot$embedding == "PHATE")
+    {
+      addr <- make_phate_name(cati(), rowi(), coli(), iplot$scaling, iplot$normalization, 2, peri())
+      data <- load_store(addr)
+      data <- data[keep(),,drop=FALSE]
+
+      num_data(data)
+
+      return(ggplot2_2d(
+        data[,1], data[,2], colors(), shapes(), paint(), NULL,
+        legend(), title_embed(), pc("1"), pc("2")))
+    }
 
     addr <- make_sdr_name(
-      cati(), rowi(), coli(), iplot$scale, iplot$normalize, iplot$embedding, iplot$visualize,
+      cati(), rowi(), coli(), iplot$scaling, iplot$normalization, iplot$embedding, iplot$visualize,
       10, 2, peri(), bati(), num_d(), chr_d())
 
     data <- load_store(addr)
@@ -560,7 +544,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
   })
 
   plotly2_data <- reactive({
-    if (iplot$embedding == "VAE" && which(nor_options == iplot$normalize) > 2)
+    if (iplot$embedding == "VAE" && which(nor_options == iplot$normalization) > 2)
       return(NULL)
 
     if (iplot$embedding == "Sets")
@@ -583,16 +567,10 @@ Seconds elapsed: %s", my_timer(start)), "message")
       return(plotly_heatmap_variance(data, paint(), title_embed(), legend(), boost()))
     }
 
-    addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize,
-                          feat(), iplot$embedding, iplot$visualize, 2, per_ind())
-
-    data <- load_store(addr)
-
-    if (is.null(data))
-      return(NULL)
-
     if (iplot$embedding == "PHATE")
     {
+      addr <- make_phate_name(cati(), rowi(), coli(), iplot$scaling, iplot$normalization, 2, peri())
+      data <- load_store(addr)
       data <- data[keep(),,drop=FALSE]
 
       num_data(data)
@@ -601,6 +579,14 @@ Seconds elapsed: %s", my_timer(start)), "message")
         data[,1], data[,2], colors(), labels(), paint(),
         FALSE, legend(), title_embed(), pc("1"), pc("2")))
     }
+
+    addr <- make_aws_name(cati(), subi(), iplot$scaling, iplot$normalization,
+                          feat(), iplot$embedding, iplot$visualize, 2, per_ind())
+
+    data <- load_store(addr)
+
+    if (is.null(data))
+      return(NULL)
 
     if (iplot$visualize == "Summarize")
     {
@@ -635,7 +621,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
   })
 
   plotly3_data <- reactive({
-    if (iplot$embedding == "VAE" && which(nor_options == iplot$normalize) > 2)
+    if (iplot$embedding == "VAE" && which(nor_options == iplot$normalization) > 2)
       return(NULL)
 
     if (iplot$embedding == "Sets")
@@ -657,23 +643,26 @@ Seconds elapsed: %s", my_timer(start)), "message")
       return(plotly_heatmap_dendrogram(data, paint(), title_embed(), legend(), boost()))
     }
 
-    addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize,
-                          feat(), iplot$embedding, iplot$visualize, 3, per_ind())
-
-    data <- load_store(addr)
-
-    if (is.null(data))
-      return(NULL)
-
     if (iplot$embedding == "PHATE")
     {
+      addr <- make_phate_name(cati(), rowi(), coli(), iplot$scaling, iplot$normalization, 3, peri())
+      data <- load_store(addr)
       data <- data[keep(),,drop=FALSE]
+
       num_data(data)
 
       return(plotly_3d(
         data[,1], data[,2], data[,3], colors(), labels(), paint(),
         legend(), title_embed(), pc("1"), pc("2"), pc("3")))
     }
+
+    addr <- make_aws_name(cati(), subi(), iplot$scaling, iplot$normalization,
+                          feat(), iplot$embedding, iplot$visualize, 3, per_ind())
+
+    data <- load_store(addr)
+
+    if (is.null(data))
+      return(NULL)
 
     if (iplot$visualize == "Summarize")
     {
@@ -716,7 +705,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     if (iplot$visualize != 'Explore')
       return(NULL)
 
-    addr <- make_aws_name(cati(), subi(), iplot$scale, iplot$normalize,
+    addr <- make_aws_name(cati(), subi(), iplot$scaling, iplot$normalization,
                           feat(), iplot$embedding, iplot$visualize, 2, per_ind())
 
     data <- load_store(addr)[keep(),iplot$pc1]
