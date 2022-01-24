@@ -155,13 +155,25 @@ get_col_sub <- function(data, cat, sub)
 # ANALYSIS NAMING
 # ---------------
 
+make_sets_name <- function(cat, sca, thr, cha)
+{
+  sprintf(sprintf("Sets/%%s/S%%s_%%0.%sf_%%s.rds",
+                  num_digits), cat, which(sca_options == sca), thr, cha)
+}
+
+make_phate_name <- function(cat, row, col, sca, nor, com, per)
+{
+  sprintf("PHATE/%s/%s_%s_S%s_N%s_%s_%s.rds",
+          cat, row, col, which(sca_options == sca), which(nor_options == nor), com, per)
+}
+
 make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat, thr, cha)
 {
-  sca_ind <- which(sca_options == sca)
-  nor_ind <- which(nor_options == nor)
-
   if (emb == "PCA")
   {
+    sca_ind <- which(sca_options == sca)
+    nor_ind <- which(nor_options == nor)
+
     if (vis == "Explore")
       return(sprintf("PCA_E/%s/%s_%s_S%s_N%s_%s.rds",
                      cat, row, col, sca_ind, nor_ind, com))
@@ -175,6 +187,9 @@ make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat,
 
   if (emb == "VAE")
   {
+    sca_ind <- which(sca_options == sca)
+    nor_ind <- which(nor_options == nor)
+
     if (vis == "Explore")
       return(sprintf("VAE_E/%s/%s_%s_S%s_N%s_%s_%s.rds",
                      cat, row, col, sca_ind, nor_ind, com, bat))
@@ -188,6 +203,9 @@ make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat,
 
   if (emb == "UMAP")
   {
+    sca_ind <- which(sca_options == sca)
+    nor_ind <- which(nor_options == nor)
+
     if (vis == "Explore")
       return(sprintf("UMAP_E/%s/%s_%s_S%s_N%s_%s_%s.rds",
                      cat, row, col, sca_ind, nor_ind, com, per))
@@ -200,8 +218,8 @@ make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat,
   }
 
   if (emb == "Sets")
-    return(sprintf(sprintf("Sets/%%s/S%%s_%%0.%sf_%%s.rds", num_digits), cat, sca_ind, thr, cha))
+    return(make_sets_name(cat, sca, thr, cha))
 
   # PHATE
-  sprintf("PHATE/%s/%s_%s_S%s_N%s_%s_%s.rds", cat, row, col, sca_ind, nor_ind, com, per)
+  make_phate_name(cat, row, col, sca, nor, com, per)
 }
