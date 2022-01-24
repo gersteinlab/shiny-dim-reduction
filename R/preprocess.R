@@ -167,13 +167,13 @@ make_phate_name <- function(cat, row, col, sca, nor, com, per)
           cat, row, col, which(sca_options == sca), which(nor_options == nor), com, per)
 }
 
-make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat, thr, cha)
+make_pvu_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat)
 {
+  sca_ind <- which(sca_options == sca)
+  nor_ind <- which(nor_options == nor)
+
   if (emb == "PCA")
   {
-    sca_ind <- which(sca_options == sca)
-    nor_ind <- which(nor_options == nor)
-
     if (vis == "Explore")
       return(sprintf("PCA_E/%s/%s_%s_S%s_N%s_%s.rds",
                      cat, row, col, sca_ind, nor_ind, com))
@@ -187,9 +187,6 @@ make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat,
 
   if (emb == "VAE")
   {
-    sca_ind <- which(sca_options == sca)
-    nor_ind <- which(nor_options == nor)
-
     if (vis == "Explore")
       return(sprintf("VAE_E/%s/%s_%s_S%s_N%s_%s_%s.rds",
                      cat, row, col, sca_ind, nor_ind, com, bat))
@@ -201,25 +198,26 @@ make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat,
                      cat, row, col, sca_ind, nor_ind, com, dim, per, bat))
   }
 
-  if (emb == "UMAP")
-  {
-    sca_ind <- which(sca_options == sca)
-    nor_ind <- which(nor_options == nor)
+  # UMAP
+  if (vis == "Explore")
+    return(sprintf("UMAP_E/%s/%s_%s_S%s_N%s_%s_%s.rds",
+                   cat, row, col, sca_ind, nor_ind, com, per))
+  if (vis == "Summarize")
+    return(sprintf("UMAP_S/%s/%s_%s_S%s_N%s_%s_%s.rds",
+                   cat, row, col, sca_ind, nor_ind, com, per))
+  if (vis == "tSNE")
+    return(sprintf("UMAP_T/%s/%s_%s_S%s_N%s_%s_%s_%s.rds",
+                   cat, row, col, sca_ind, nor_ind, com, dim, per))
+}
 
-    if (vis == "Explore")
-      return(sprintf("UMAP_E/%s/%s_%s_S%s_N%s_%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com, per))
-    if (vis == "Summarize")
-      return(sprintf("UMAP_S/%s/%s_%s_S%s_N%s_%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com, per))
-    if (vis == "tSNE")
-      return(sprintf("UMAP_T/%s/%s_%s_S%s_N%s_%s_%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com, dim, per))
-  }
-
+make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat, thr, cha)
+{
   if (emb == "Sets")
     return(make_sets_name(cat, sca, thr, cha))
 
-  # PHATE
-  make_phate_name(cat, row, col, sca, nor, com, per)
+  if (emb == "PHATE")
+    return(make_phate_name(cat, row, col, sca, nor, com, per))
+
+  # PCA, VAE, UMAP
+  make_pvu_name(cat, row, col, sca, nor, emb, vis, com, dim, per, bat)
 }
