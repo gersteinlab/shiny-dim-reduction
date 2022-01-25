@@ -12,7 +12,7 @@ source_sdr("authentication.R")
 source_sdr("options.R")
 
 # is the user authenticated by default?
-auth_default <- TRUE
+auth_default <- FALSE
 
 # should plots respond to user inputs by default?
 run_default <- TRUE
@@ -69,15 +69,47 @@ server <- function(input, output, session) {
   observeEvent(input$request_analysis, {
     showModal(modalDialog(
       title = HTML("<b>Request Custom Analysis</b>"), easyClose = TRUE,
-      select_panel("t1_opt_sou", "Desired Source(s)", name_cat),
-      select_panel("t1_opt_row", "Desired Row Subset(s)", NULL),
-      select_panel("t1_opt_col", "Desired Column Subset(s)", NULL),
-      select_panel("t1_opt_sca", "Desired Scaling(s)", sca_options), # log, lin
-      select_panel("t1_opt_nor", "Desired Normalization(s)", nor_options),
-      select_panel("embedding", "Desired Embedding(s)", emb_options),
-      select_panel("embedding", "Desired Visualization(s)", vis_options)
+      select_panel("req_emb", "Desired Embedding", emb_options),
+      hr(style = "border-top: 1px solid #000000;"),
+      select_panel("req_cat", "Desired Category", name_cat),
+      conditionalPanel(
+        condition = "input.req_emb != 'Sets'",
+        select_panel("req_row", "Desired Sample Subset", NULL),
+        select_panel("req_col", "Desired Feature Subset", NULL),
+        select_panel("req_nor", "Desired Normalization", nor_options)
+      ),
+      select_panel("req_sca", "Desired Scaling", sca_options),
+      conditionalPanel(
+        condition = "input.req_emb == 'PCA' || input.req_emb == 'VAE' || input.req_emb == 'UMAP'",
+        select_panel("req_vis", "Desired Visualization", vis_options)
+      ),
+      numericInput("req_com", "Desired Component", 10, min = 3, step = 1),
+      conditionalPanel(
+        condition = "(input.req_emb == 'PCA' || input.req_emb == 'VAE' || input.req_emb == 'UMAP') &&
+        input.req_vis == 'tSNE'",
+        numericInput("req_dim", "Desired Dimension", 2, min = 2, max = 3, step = 1)
+      ),
+      conditionalPanel(
+        condition = "input.req_emb == 'PHATE' || input.req_vis == 'tSNE' ||
+          (input.req_emb == 'UMAP' && input.req_vis != 'Summarize')",
+        numericInput("req_per", "Desired Perplexity", 10, min = 0, max = 100, step = 1)
+      ),
+      conditionalPanel(
+        condition = "input.req_emb == 'VAE'",
+        numericInput("req_bat", "Desired Batch Size", 64, min = 1, step = 1)
+      ),
+      conditionalPanel(
+        condition = "input.req_emb == 'Sets'",
+        numericInput("req_thr", "Desired Threshold", 0.5, min = 0, max = 1, step = 0.1^num_digits),
+        select_panel("req_cha", "Desired Characteristic", NULL)
+      ),
+      hr(style = "border-top: 1px solid #000000;"),
+      textInput("req_aut", "Author Name"),
+      sprintf("<b>Current Time:</b> %s", Sys.time())
     ))
   })
+
+
 
   observeEvent(input$instructions, {
     showModal(modalDialog(
@@ -222,7 +254,7 @@ server <- function(input, output, session) {
   # prep a (possibly NULL) plot for rendering and send notifications
   prep_plot <- function(target)
   {
-    if (!isolate(authenticated()))
+    if (!authenticated())
       return(ggplot2_null())
 
     num <- isolate(num_plots())
@@ -502,9 +534,9 @@ Seconds elapsed: %s", my_timer(start)), "message")
         legend(), title_embed(), pc("1"), pc("2")))
     }
 
-    addr <- make_sdr_name(
+    addr <- make_pvu_name(
       cati(), rowi(), coli(), iplot$scaling, iplot$normalization, iplot$embedding, iplot$visualize,
-      10, 2, peri(), bati(), num_d(), chr_d())
+      pc_cap, 2, peri(), bati())
 
     data <- load_store(addr)
 
@@ -549,15 +581,11 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
     if (iplot$embedding == "Sets")
     {
-      addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(),
-                      sca_ind(), filterby(), cati())
-
+      addr <- make_sets_name(cati(), iplot$scaling, thre(), filterby())
       data <- load_store(addr)
-
       if (is.null(data))
         return(NULL)
-
-      data <- data[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), subi())
+      data <- data[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), coli())
 
       num_data(data)
 
@@ -580,8 +608,9 @@ Seconds elapsed: %s", my_timer(start)), "message")
         FALSE, legend(), title_embed(), pc("1"), pc("2")))
     }
 
-    addr <- make_aws_name(cati(), subi(), iplot$scaling, iplot$normalization,
-                          feat(), iplot$embedding, iplot$visualize, 2, per_ind())
+    addr <- make_pvu_name(
+      cati(), rowi(), coli(), iplot$scaling, iplot$normalization, iplot$embedding, iplot$visualize,
+      pc_cap, 2, peri(), bati())
 
     data <- load_store(addr)
 
@@ -626,15 +655,11 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
     if (iplot$embedding == "Sets")
     {
-      addr <- sprintf("Sets/Sets-%s_%s_%s_%s.rds", thre_ind(),
-                      sca_ind(), filterby(), cati())
-
+      addr <- make_sets_name(cati(), iplot$scaling, thre(), filterby())
       data <- load_store(addr)
-
       if (is.null(data))
         return(NULL)
-
-      data <- data[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), subi())
+      data <- data[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), coli())
 
       num_data(data)
 
@@ -656,8 +681,9 @@ Seconds elapsed: %s", my_timer(start)), "message")
         legend(), title_embed(), pc("1"), pc("2"), pc("3")))
     }
 
-    addr <- make_aws_name(cati(), subi(), iplot$scaling, iplot$normalization,
-                          feat(), iplot$embedding, iplot$visualize, 3, per_ind())
+    addr <- make_pvu_name(
+      cati(), rowi(), coli(), iplot$scaling, iplot$normalization, iplot$embedding, iplot$visualize,
+      pc_cap, 3, peri(), bati())
 
     data <- load_store(addr)
 
@@ -702,11 +728,9 @@ Seconds elapsed: %s", my_timer(start)), "message")
     if (!(iplot$embedding %in% c('PCA', 'VAE', 'UMAP')))
       return(NULL)
 
-    if (iplot$visualize != 'Explore')
-      return(NULL)
-
-    addr <- make_aws_name(cati(), subi(), iplot$scaling, iplot$normalization,
-                          feat(), iplot$embedding, iplot$visualize, 2, per_ind())
+    addr <- make_pvu_name(
+      cati(), rowi(), coli(), iplot$scaling, iplot$normalization, iplot$embedding, "Explore",
+      pc_cap, 3, peri(), bati())
 
     data <- load_store(addr)[keep(),iplot$pc1]
     data <- cbind.data.frame(colors(), data)

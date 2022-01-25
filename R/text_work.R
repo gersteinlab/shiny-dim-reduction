@@ -125,7 +125,6 @@ default_picker_input_ids <- c(
   "category",
   "scaling",
   "normalization",
-  "features",
   "embedding",
   "visualize",
   "perplexity",
