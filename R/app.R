@@ -12,7 +12,7 @@ source_sdr("authentication.R")
 source_sdr("options.R")
 
 # is the user authenticated by default?
-auth_default <- FALSE
+auth_default <- TRUE
 
 # should plots respond to user inputs by default?
 run_default <- TRUE
@@ -811,7 +811,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
   # -----------------
 
   output$requestsUI <- renderUI({
-    DTOutput("requests_out", width=width(), height=height()) %>% my_spin()
+    DTOutput("requests_out") %>% my_spin()
   })
 
   output$ggplot2UI <- renderUI({
@@ -831,11 +831,11 @@ Seconds elapsed: %s", my_timer(start)), "message")
   })
 
   output$num_dataUI <- renderUI({
-    DTOutput("num_data_table", width=width(), height=height()) %>% my_spin()
+    DTOutput("num_data_table") %>% my_spin()
   })
 
   output$metadataUI <- renderUI({
-    DTOutput("metadata_table", width=width(), height=height()) %>% my_spin()
+    DTOutput("metadata_table") %>% my_spin()
   })
 
   # -----------
