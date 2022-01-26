@@ -24,7 +24,7 @@ pagetitle: Shiny Dimensionality Reduction
 
 ## Overview
 
-This project applies dimensionality reduction methods to tabular data through workflows and generates R Shiny apps for interactive, precomputed visualization of the results. Supported analyses include:
+This shiny dimensionality reduction (SDR) project applies dimensionality reduction methods to tabular data through workflows and generates R Shiny apps for interactive, precomputed visualization of the results. Supported analyses include:
 
 * Principal Component Analysis (PCA)
 * Variational Autoencoders (VAE)
