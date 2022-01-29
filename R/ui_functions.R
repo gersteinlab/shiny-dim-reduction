@@ -45,7 +45,7 @@ expand_cond_panel <- function(condition, ...)
 # Creates a selectizeInput panel with only one option allowed.
 select_panel <- function(id, name, options, chosen = 1)
 {
-  pickerInput(
+  result <- pickerInput(
     inputId = id, label = name, choices = options,
     selected = options[min(chosen, length(options))], multiple = FALSE,
     options = list(
@@ -53,6 +53,27 @@ select_panel <- function(id, name, options, chosen = 1)
       `live-search-placeholder` = "Search for a phrase ..."
     )
   )
+
+  if (is.list(options))
+  {
+    for (cg in names(options))
+    {
+      opt <- options[[cg]]
+
+      if (length(opt) < 2)
+      {
+        result$children[[2]]$children[[1]] <- HTML(reg_str(
+          result$children[[2]]$children[[1]],
+          sprintf("<option value=\"%s\">%s</option>", opt, cg),
+          sprintf("<optgroup label=\"%s\">
+<option value=\"%s\">%s</option>
+</optgroup>", cg, opt, opt)
+        ))
+      }
+    }
+  }
+
+  result
 }
 
 # Creates a group of checked boxes with the given id, name, and inputs
