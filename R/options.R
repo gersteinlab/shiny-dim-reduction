@@ -47,6 +47,7 @@ get_dependency("app_title", "Dimensionality Reduction Tool")
 get_dependency("app_citations", "No data citations could be found.")
 get_dependency("user_credentials")
 get_dependency("custom_color_scales")
+get_dependency("amazon_keys")
 
 # -----
 # SETUP
@@ -73,10 +74,11 @@ if (sdr_running_local)
   user_local <- readline(prompt = "
 Type 'Y' and press enter to use local storage.
 Type anything else and press enter to use AWS storage. ")
+
 set_storage(
   user_local == "Y",
   ifelse(sdr_from_app, "../reference", ref_loc),
-  get_dependency("amazon_keys"))
+  amazon_keys)
 
 # create bibliography
 citations <- rep_str(bibliography, "!!!!!!!!!!", app_citations)
@@ -91,7 +93,6 @@ init_sub(name_len_opts)
 
 # open requests
 app_requests <- load_store("app_requests.rds")
-
 # ----------------
 # FIX DEPENDENCIES
 # ----------------
@@ -398,8 +399,8 @@ ui <- function(request){
         action("instructions", "Instructions", "book", "#FFF", "#9400D3", "#00356B"),
         action("citations", "Citations", "book", "#FFF", "#9400D3", "#00356B"),
         downloadButton('downloadInstructions', 'Instructions'),
-        downloadButton('downloadCitations', 'Citations')# ,
-        # action("request_analysis", "Request", "user-edit", "#FFF", "#29AB87", "#00356B")
+        downloadButton('downloadCitations', 'Citations') ,
+        action("request_analysis", "Request", "user-edit", "#FFF", "#29AB87", "#00356B")
       ),
       verbatimTextOutput("console_out")
     )

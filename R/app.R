@@ -69,6 +69,7 @@ server <- function(input, output, session) {
   observeEvent(input$request_analysis, {
     showModal(modalDialog(
       title = HTML("<b>Request Custom Analysis</b>"), easyClose = TRUE,
+      HTML("<h5>This feature is currently under development.</h5>"),
       select_panel("req_emb", "Desired Embedding", emb_options),
       hr(style = "border-top: 1px solid #000000;"),
       select_panel("req_cat", "Desired Category", name_cat),
@@ -105,11 +106,14 @@ server <- function(input, output, session) {
       ),
       hr(style = "border-top: 1px solid #000000;"),
       textInput("req_aut", "Author Name"),
-      sprintf("<b>Current Time:</b> %s", Sys.time())
+      HTML(sprintf("<b>Current Time:</b> %s", Sys.time()))
     ))
   })
 
-
+  observeEvent(input$req_cat, {
+    updatePickerInput(session, "req_row", choices = sub_row_groups[[input$req_cat]])
+    updatePickerInput(session, "req_col", choices = sub_col_groups[[input$req_cat]])
+  })
 
   observeEvent(input$instructions, {
     showModal(modalDialog(
@@ -412,7 +416,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     ifelse(
       coli() == "Total",
       categories[[cati()]][2],
-      length(get_decor_subset(cati(), coli()))
+      length(get_col_decor_subset(cati(), coli()))
     )
   })
 

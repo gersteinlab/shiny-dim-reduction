@@ -231,7 +231,7 @@ sudo_working_key <- function(key)
 my_amazon_obj <- NULL
 
 # lists the contents of a bucket's prefix
-list_aws_s3 <- function(prefix)
+list_aws_s3 <- function(prefix = NULL)
 {
   as.character(sapply(
     get_bucket(Sys.getenv("AWS_ACCESS_BUCKET"), prefix = prefix, max = Inf),

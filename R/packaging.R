@@ -424,8 +424,28 @@ app_requests$REQUEST_ID <- get_request_id(nrow(app_requests))
 setwd(ref_loc)
 saveRDS(app_requests, "app_requests.rds")
 
-# syncs a set of requests from reference to AWS
-sync_requests <- function(requests)
-{
 
+# syncs a set of requests from reference to AWS
+sudo_working_key(amazon_keys)
+app_requests <- readRDS("app_requests.rds")
+existing_files <- list_aws_s3()
+request_files <- app_requests$FILE_LOCATION
+files_to_be_uploaded <- setdiff(request_files, existing_files)
+
+n <- length(files_to_be_uploaded)
+
+my_range <- seq_len(n)
+my_range <- 39401:n
+my_range <- 62021:n
+
+for (i in my_range)
+{
+  if (i %% 100 == 0 || i == n)
+  {
+    sprintf_clean("Synced %s out of %s", i, n)
+  }
+  single_file <- files_to_be_uploaded[i]
+  data <- load_local(single_file)
+  save_aws_s3(data, single_file)
 }
+
