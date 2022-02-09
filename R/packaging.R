@@ -1,6 +1,9 @@
 # The goal of this script is to convert vis data to packaged data.
 # The purpose of this file is to generate the base set of requests.
 
+# record: all data uploaded for the first time on v6, Feb 5, 2022.
+# updating Ran's data: Feb X, 2022.
+
 if (!exists("ran_install"))
 {
   if (file.exists("install.R"))
@@ -19,8 +22,8 @@ perplexity_types <- c(10, 50)
 
 setwd(pro_loc)
 
-# searches for a threshold to num_digits precision
-# such that table_to_sets(data, thre) approximates target
+# searches for a threshold to num_digits precision such that
+# ncol(table_to_sets(data, thre)) approximates target
 binary_search <- function(data, target, num_digits)
 {
   precision <- 0.1^num_digits
@@ -42,22 +45,15 @@ binary_search <- function(data, target, num_digits)
 # temporarily reduce number of normalizations
 temp_nor <- nor_options[1:2]
 
-# -----------------
-# GENERATE REQUESTS
-# -----------------
+# ------------
+# PCA REQUESTS
+# ------------
 
-start <- my_timer()
-pca_requests_new <- make_requests()
+pca_requests <- make_requests()
 
-# PCA
 for (cat in name_cat)
 {
-  # used to patch missing entries
-  temp_row <- setdiff(sub_row_groups[[cat]], "Total")
-  if (length(temp_row) > 0)
-    temp_row <- temp_row[1]
-
-  for (row in temp_row)
+  for (row in sub_row_groups[[cat]])
   {
     for (col in sub_col_groups[[cat]])
     {
@@ -68,12 +64,12 @@ for (cat in name_cat)
           # explore
           pca_e <- make_pvu_requests(cat, row, col, sca, nor, "PCA", "Explore",
                                      10, num_d(), num_d(), num_d(), aut_d())
-          pca_requests_new <- rbind(pca_requests_new, pca_e)
+          pca_requests <- rbind(pca_requests, pca_e)
 
           # summarize
           pca_s <- make_pvu_requests(cat, row, col, sca, nor, "PCA", "Summarize",
                                      10, num_d(), num_d(), num_d(), aut_d())
-          pca_requests_new <- rbind(pca_requests_new, pca_s)
+          pca_requests <- rbind(pca_requests, pca_s)
 
           # tsne
           for (per in perplexity_types)
@@ -82,7 +78,7 @@ for (cat in name_cat)
             {
               pca_t <- make_pvu_requests(cat, row, col, sca, nor, "PCA", "tSNE",
                                          10, dim, per, num_d(), aut_d())
-              pca_requests_new <- rbind(pca_requests_new, pca_t)
+              pca_requests <- rbind(pca_requests, pca_t)
             }
           }
         }
@@ -91,32 +87,17 @@ for (cat in name_cat)
   }
 }
 
-pca_end <- my_timer(start)
-# saveRDS(pca_requests, "pca_requests.rds")
-pca_requests <- readRDS("pca_requests.rds")
-# saveRDS(pca_requests_new, "pca_requests_new.rds")
-pca_requests_new <- readRDS("pca_requests_new.rds")
-# done_pca1 <- perform_reduction(pca_requests)
-# saveRDS(done_pca1, "done_pca_1.rds")
-# done_pca2 <- perform_reduction(pca_requests_new)
-# saveRDS(done_pca2, "done_pca_2.rds")
+saveRDS(pca_requests, "pca_requests.rds")
 
-# Note: Due to incorrect row subset generation, we are missing some PCA samples!
-# View(pca_requests[pca_requests$CATEGORIES == "miRNA" &
-#   pca_requests$ROW_SUBSETS == "Unknown",])
+# ------------
+# VAE REQUESTS
+# ------------
 
-start <- my_timer()
-vae_requests_new <- make_requests()
+vae_requests <- make_requests()
 
-# VAE
 for (cat in name_cat)
 {
-  # used to patch missing entries
-  temp_row <- setdiff(sub_row_groups[[cat]], "Total")
-  if (length(temp_row) > 0)
-    temp_row <- temp_row[1]
-
-  for (row in temp_row)
+  for (row in sub_row_groups[[cat]])
   {
     for (col in sub_col_groups[[cat]])
     {
@@ -127,12 +108,12 @@ for (cat in name_cat)
           # explore
           vae_e <- make_pvu_requests(cat, row, col, sca, nor, "VAE", "Explore",
                                      10, num_d(), num_d(), 64, aut_d())
-          vae_requests_new <- rbind(vae_requests_new, vae_e)
+          vae_requests <- rbind(vae_requests, vae_e)
 
           # summarize
           vae_s <- make_pvu_requests(cat, row, col, sca, nor, "VAE", "Summarize",
                                      10, num_d(), num_d(), 64, aut_d())
-          vae_requests_new <- rbind(vae_requests_new, vae_s)
+          vae_requests <- rbind(vae_requests, vae_s)
 
           # tsne
           for (per in perplexity_types)
@@ -141,7 +122,7 @@ for (cat in name_cat)
             {
               vae_t <- make_pvu_requests(cat, row, col, sca, nor, "VAE", "tSNE",
                                          10, dim, per, 64, aut_d())
-              vae_requests_new <- rbind(vae_requests_new, vae_t)
+              vae_requests <- rbind(vae_requests, vae_t)
             }
           }
         }
@@ -150,56 +131,18 @@ for (cat in name_cat)
   }
 }
 
-vae_end <- my_timer(start)
+saveRDS(vae_requests, "vae_requests.rds")
 
-# saveRDS(vae_requests, "vae_requests.rds")
-vae_requests <- readRDS("vae_requests.rds")
-# saveRDS(vae_requests_new, "vae_requests_new.rds")
-vae_requests_new <- readRDS("vae_requests_new.rds")
-# done_vae1 <- perform_reduction(vae_requests[vae_requests$CATEGORIES == "miRNA",])
-# saveRDS(done_vae1, "done_vae_1.rds")
-# done_vae2 <- perform_reduction(vae_requests[vae_requests$CATEGORIES == "piRNA",])
-# saveRDS(done_vae2, "done_vae_2.rds")
-# done_vae3 <- perform_reduction(vae_requests[vae_requests$CATEGORIES == "ex_miRNA",])
-# saveRDS(done_vae3, "done_vae_3.rds")
-# sub4 <- vae_requests$CATEGORIES %in% c(
-#   "tRNA", "circRNA", "RNA_binding_proteins")
-# done_vae4 <- perform_reduction(vae_requests[sub4,])
-# saveRDS(done_vae4, "done_vae_4.rds")
-# sub5 <- vae_requests$CATEGORIES %in% c(
-#   "cumulative_ex_ribosomes", "specific_ex_ribosomes")
-# done_vae5 <- perform_reduction(vae_requests[sub5,])
-# saveRDS(done_vae5, "done_vae_5.rds")
-# sub6 <- vae_requests$CATEGORIES == "rRNA_Species"
-# done_vae6 <- perform_reduction(vae_requests[sub6,])
-# saveRDS(done_vae6, "done_vae_6.rds")
-# sub7 <- vae_requests$CATEGORIES == "Gene_Species"
-# done_vae7 <- perform_reduction(vae_requests[sub7,])
-# saveRDS(done_vae7, "done_vae_7.rds")
-# sub8 <- vae_requests$CATEGORIES %in% c("Gene_Transpose", "rRNA_Transpose")
-# done_vae8 <- perform_reduction(vae_requests[sub8,])
-# saveRDS(done_vae8, "done_vae_8.rds")
-# sub9 <- vae_requests$CATEGORIES == "cumulative_ex_genomes"
-# done_vae9 <- perform_reduction(vae_requests[sub9,])
-# saveRDS(done_vae9, "done_vae_9.rds")
-# sub10 <- vae_requests$CATEGORIES == "specific_ex_genomes"
-# done_vae10 <- perform_reduction(vae_requests[sub10,])
-# saveRDS(done_vae10, "done_vae_10.rds")
-# done_vae11 <- perform_reduction(vae_requests_new)
-# saveRDS(done_vae11, "done_vae_11.rds")
+# -------------
+# UMAP REQUESTS
+# -------------
 
-start <- my_timer()
-new_umap_requests <- make_requests()
+umap_requests <- make_requests()
 
 # UMAP - add missing requests from row!
 for (cat in name_cat)
 {
-  # used to patch missing entries
-  temp_row <- setdiff(sub_row_groups[[cat]], "Total")
-  if (length(temp_row) > 0)
-    temp_row <- temp_row[1]
-
-  for (row in temp_row)
+  for (row in sub_row_groups[[cat]])
   {
     for (col in sub_col_groups[[cat]])
     {
@@ -212,19 +155,19 @@ for (cat in name_cat)
             # explore
             umap_e <- make_pvu_requests(cat, row, col, sca, nor, "UMAP", "Explore",
                                         10, num_d(), per, num_d(), aut_d())
-            new_umap_requests <- rbind(new_umap_requests, umap_e)
+            umap_requests <- rbind(umap_requests, umap_e)
 
             # summarize
             umap_s <- make_pvu_requests(cat, row, col, sca, nor, "UMAP", "Summarize",
                                         10, num_d(), per, num_d(), aut_d())
-            new_umap_requests <- rbind(new_umap_requests, umap_s)
+            umap_requests <- rbind(umap_requests, umap_s)
 
             # tsne
             for (dim in c(2,3))
             {
               umap_t <- make_pvu_requests(cat, row, col, sca, nor, "UMAP", "tSNE",
                                           10, dim, per, num_d(), aut_d())
-              new_umap_requests <- rbind(new_umap_requests, umap_t)
+              umap_requests <- rbind(umap_requests, umap_t)
             }
           }
         }
@@ -233,37 +176,12 @@ for (cat in name_cat)
   }
 }
 
-umap_end <- my_timer(start)
-# saveRDS(new_umap_requests, "umap_requests_new.rds")
-# saveRDS(umap_requests, "umap_requests.rds")
-umap_requests <- readRDS("umap_requests.rds")
-sub1 <- umap_requests$COL_SUBSETS != "Total" & umap_requests$ROW_SUBSETS != "Total"
-# done_umap1 <- perform_reduction(umap_requests[sub1,])
-# saveRDS(done_umap1, "done_umap_1.rds")
-sub2 <- !sub1 & umap_requests$CATEGORIES %in% c("miRNA", "tRNA", "circRNA", "ex_miRNA")
-# done_umap2 <- perform_reduction(umap_requests[sub2,])
-# saveRDS(done_umap2, "done_umap_2.rds")
-sub3 <- !sub1 & umap_requests$CATEGORIES == "piRNA"
-# done_umap3 <- perform_reduction(umap_requests[sub3,])
-# saveRDS(done_umap3, "done_umap_3.rds")
-sub4 <- !sub1 & umap_requests$CATEGORIES == "cumulative_ex_genomes"
-# done_umap4 <- perform_reduction(umap_requests[sub4,])
-# saveRDS(done_umap4, "done_umap_4.rds")
-sub5 <- !sub1 & umap_requests$CATEGORIES == "specific_ex_genomes"
-# done_umap5 <- perform_reduction(umap_requests[sub5,])
-# saveRDS(done_umap5, "done_umap_5.rds")
-sub6 <- !sub1 & umap_requests$CATEGORIES %in% c(
-  "rRNA_Transpose", "Gene_Transpose", "RNA_binding_proteins")
-# done_umap6 <- perform_reduction(umap_requests[sub6,])
-# saveRDS(done_umap6, "done_umap_6.rds")
-sub7 <- !sub1 & umap_requests$CATEGORIES %in% c(
-  "cumulative_ex_ribosomes", "specific_ex_ribosomes", "rRNA_Species", "Gene_Species")
-# done_umap7 <- perform_reduction(umap_requests[sub7,])
-# saveRDS(done_umap7, "done_umap_7.rds")
-# done_umap8 <- perform_reduction(new_umap_requests)
-# saveRDS(done_umap8, "done_umap_8.rds")
+saveRDS(umap_requests, "umap_requests.rds")
 
-# PHATE
+# --------------
+# PHATE REQUESTS
+# --------------
+
 phate_requests <- make_requests()
 
 for (cat in name_cat)
@@ -290,33 +208,13 @@ for (cat in name_cat)
   }
 }
 
-# saveRDS(phate_requests, "phate_requests.rds")
-phate_requests <- readRDS("phate_requests.rds")
-sub1 <- phate_requests$CATEGORIES == "miRNA"
-sub2 <- phate_requests$CATEGORIES == "piRNA"
-sub3 <- phate_requests$CATEGORIES == "tRNA"
-sub4 <- phate_requests$CATEGORIES %in% c("RNA_binding_proteins", "rRNA_Transpose", "Gene_Transpose")
-sub5 <- phate_requests$CATEGORIES %in% c(
-  "circRNA", "ex_miRNA", "cumulative_ex_genomes", "specific_ex_genomes"
-)
-sub6 <- phate_requests$CATEGORIES %in% c(
-  "cumulative_ex_ribosomes", "specific_ex_ribosomes", "rRNA_Species", "Gene_Species"
-)
-# done_phate1 <- perform_reduction(phate_requests[sub1,])
-# saveRDS(done_phate1, "done_phate_1.rds")
-# done_phate2 <- perform_reduction(phate_requests[sub2,])
-# saveRDS(done_phate2, "done_phate_2.rds")
-# done_phate3 <- perform_reduction(phate_requests[sub3,])
-# saveRDS(done_phate3, "done_phate_3.rds")
-# done_phate4 <- perform_reduction(phate_requests[sub4,])
-# saveRDS(done_phate4, "done_phate_4.rds")
-# done_phate5 <- perform_reduction(phate_requests[sub5,])
-# saveRDS(done_phate5, "done_phate_5.rds")
-# done_phate6 <- perform_reduction(phate_requests[sub6,])
-# saveRDS(done_phate6, "done_phate_6.rds")
+saveRDS(phate_requests, "phate_requests.rds")
 
-# Sets
-# idea for summary: number of features at each cutoff? x-axis = cutoff, y-axis = # features
+# -------------
+# SETS REQUESTS
+# -------------
+
+# idea for summary: line graph, number of above-threshold features vs threshold (0 to 1)
 setwd(pro_loc)
 
 lower <- 8 # 2^3
@@ -361,31 +259,41 @@ for (cat in name_cat)
 
 end <- my_timer(start)
 
-# saveRDS(set_requests, "sets_requests.rds")
+saveRDS(set_requests, "sets_requests.rds")
+
+# -----------------
+# PERFORM REDUCTION
+# -----------------
+
+pca_requests <- readRDS("pca_requests.rds")
+vae_requests <- readRDS("vae_requests.rds")
+umap_requests <- readRDS("umap_requests.rds")
+phate_requests <- readRDS("phate_requests.rds")
 sets_requests <- readRDS("sets_requests.rds")
-sub1 <- sets_requests$CATEGORIES == "miRNA"
-# done_sets1 <- perform_reduction(sets_requests[sub1,])
-# saveRDS(done_sets1, "done_sets_1.rds")
-sub2 <- sets_requests$CATEGORIES != "miRNA"
-# done_sets2 <- perform_reduction(sets_requests[sub2,])
-# saveRDS(done_sets2, "done_sets_2.rds")
+
+# small_test <- pca_requests[61:70,]
+# small_t0 <- perform_reduction(small_test, 0)
+# small_t1 <- perform_reduction(small_test, 1)
+# small_t2 <- perform_reduction(small_test, 2)
+# nrow(pca_requests) + nrow(vae_requests) + nrow(umap_requests) +
+#   nrow(phate_requests) + nrow(sets_requests)
 
 # fix: add FILE_LOCATION as a column to all previous requests
-for (a_name in c("done_pca_1.rds", "done_pca_2.rds", "done_vae_1.rds",
-                 "done_vae_2.rds", "done_vae_3.rds", "done_vae_4.rds",
-                 "done_vae_5.rds", "done_vae_6.rds", "done_vae_7.rds",
-                 "done_vae_8.rds", "done_vae_9.rds", "done_vae_10.rds",
-                 "done_vae_11.rds", "done_umap_1.rds", "done_umap_2.rds",
-                 "done_umap_3.rds", "done_umap_4.rds", "done_umap_5.rds",
-                 "done_umap_6.rds", "done_umap_7.rds", "done_umap_8.rds",
-                 "done_phate_1.rds", "done_phate_2.rds", "done_phate_3.rds",
-                 "done_phate_4.rds", "done_phate_5.rds", "done_phate_6.rds",
-                 "done_sets_1.rds", "done_sets_2.rds"))
-{
-  temp_requests <- readRDS(a_name)
-  temp_requests$FILE_LOCATION <- requests_to_final(temp_requests)
-  saveRDS(temp_requests, a_name)
-}
+# for (a_name in c("done_pca_1.rds", "done_pca_2.rds", "done_vae_1.rds",
+#                  "done_vae_2.rds", "done_vae_3.rds", "done_vae_4.rds",
+#                  "done_vae_5.rds", "done_vae_6.rds", "done_vae_7.rds",
+#                  "done_vae_8.rds", "done_vae_9.rds", "done_vae_10.rds",
+#                  "done_vae_11.rds", "done_umap_1.rds", "done_umap_2.rds",
+#                  "done_umap_3.rds", "done_umap_4.rds", "done_umap_5.rds",
+#                  "done_umap_6.rds", "done_umap_7.rds", "done_umap_8.rds",
+#                  "done_phate_1.rds", "done_phate_2.rds", "done_phate_3.rds",
+#                  "done_phate_4.rds", "done_phate_5.rds", "done_phate_6.rds",
+#                  "done_sets_1.rds", "done_sets_2.rds"))
+# {
+#   temp_requests <- readRDS(a_name)
+#   temp_requests$FILE_LOCATION <- requests_to_final(temp_requests)
+#   saveRDS(temp_requests, a_name)
+# }
 
 system.time(app_requests <- rbind_req(
   readRDS("done_pca_1.rds"),
@@ -423,7 +331,6 @@ app_requests$REQUEST_ID <- get_request_id(nrow(app_requests))
 
 setwd(ref_loc)
 saveRDS(app_requests, "app_requests.rds")
-
 
 # syncs a set of requests from reference to AWS
 sudo_working_key(amazon_keys)
