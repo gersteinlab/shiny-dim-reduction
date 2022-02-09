@@ -22,3 +22,8 @@ git push origin v4.0.0
 # Official release version of Shiny Dimensionality Reduction v5 on Dec 8, 2021.
 git tag -a v5.0.0 -m "sdr_5" 500bccb96ede29875fda199460ef6eb62682387a
 git push origin v5.0.0
+
+# SDR v6
+# Official release version of Shiny Dimensionality Reduction v6 on Feb 5, 2022.
+git tag -a v6.0.0 -m "sdr_6" 90859c05ac426b6d0d4d365470dbdd36070d1318
+git push origin v6.0.0

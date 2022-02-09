@@ -79,6 +79,16 @@ inter_readRDS <- function(force, int_loc)
   return(NULL)
 }
 
+# n_cur: number of analyses currently begun (including the one that just started)
+# n_fin: total number of analyses to be done
+# start_time: time the analysis started (from Sys.time())
+# filename: the name of the analysis file
+red_update_msg <- function(n_cur, n_fin, start_time, filename)
+{
+  cur_eta <- ceiling((n_fin - n_cur + 1) / n_cur * (Sys.time() - start_time) * 1.5)
+  sprintf_clean("Begin F%s/%s, ETA %s: %s", n_cur, n_fin, cur_eta, filename)
+}
+
 # performs reduction on a group of valid requests,
 # parsing requests in a non-sequential order to maximize speed.
 # force = 0: if a final-level file already exists, do nothing
@@ -105,10 +115,6 @@ perform_reduction <- function(requests, force = 0)
   # a true-false vector determining if an analysis should be performed
   i_fin <- !file.exists(final_locs) | rep(force > 0, nrow(requests))
 
-  # used to show progress
-  n_fin <- sum(i_fin)
-  n_cur <- 0
-
   # a true-false vector determining if TIME_COMPLETED < TIME_REQUESTED
   i_not_done <- times_done < requests$TIME_REQUESTED
 
@@ -116,6 +122,11 @@ perform_reduction <- function(requests, force = 0)
   # simply update the time the analysis was done to the current time.
   touch_times <- !i_fin & i_not_done
   times_done[touch_times] <- rep(Sys.time(), sum(touch_times))
+
+  # used to show progress
+  n_fin <- sum(i_fin)
+  n_cur <- 0
+  start_time <- Sys.time()
 
   # select the category
   for (cat in unique(requests$CATEGORIES[i_fin]))
@@ -155,7 +166,7 @@ perform_reduction <- function(requests, force = 0)
             f_loc <- final_locs[i]
 
             n_cur <- n_cur + 1
-            sprintf_clean("F%s/%s Sets: %s", n_cur, n_fin, rel_fin_locs[i])
+            red_update_msg(n_cur, n_fin, start_time, rel_fin_locs[i])
 
             set_label_matrix(
               set_result, short_order[[r$CHARACTERISTIC]]) %>% mkdir_saveRDS(f_loc)
@@ -203,7 +214,7 @@ perform_reduction <- function(requests, force = 0)
                   f_loc <-  final_locs[i]
 
                   n_cur <- n_cur + 1
-                  sprintf_clean("F%s/%s PCA: %s", n_cur, n_fin, rel_fin_locs[i])
+                  red_update_msg(n_cur, n_fin, start_time, rel_fin_locs[i])
 
                   if (r$VISUALIZATION == "Explore")
                     pca_to_explore(pca_result) %>% mkdir_saveRDS(f_loc)
@@ -244,7 +255,7 @@ perform_reduction <- function(requests, force = 0)
                     f_loc <-  final_locs[i]
 
                     n_cur <- n_cur + 1
-                    sprintf_clean("F%s/%s VAE: %s", n_cur, n_fin, rel_fin_locs[i])
+                    red_update_msg(n_cur, n_fin, start_time, rel_fin_locs[i])
 
                     if (r$VISUALIZATION == "Explore")
                       vae_to_explore(vae_result) %>% mkdir_saveRDS(f_loc)
@@ -286,7 +297,7 @@ perform_reduction <- function(requests, force = 0)
                     f_loc <-  final_locs[i]
 
                     n_cur <- n_cur + 1
-                    sprintf_clean("F%s/%s UMAP: %s", n_cur, n_fin, rel_fin_locs[i])
+                    red_update_msg(n_cur, n_fin, start_time, rel_fin_locs[i])
 
                     if (r$VISUALIZATION == "Explore")
                       umap_to_explore(umap_result) %>% mkdir_saveRDS(f_loc)
@@ -311,7 +322,7 @@ perform_reduction <- function(requests, force = 0)
                 f_loc <-  final_locs[i]
 
                 n_cur <- n_cur + 1
-                sprintf_clean("F%s/%s PHATE: %s", n_cur, n_fin, rel_fin_locs[i])
+                red_update_msg(n_cur, n_fin, start_time, rel_fin_locs[i])
 
                 table_to_phate(col_table, com, r$PERPLEXITY) %>% mkdir_saveRDS(f_loc)
                 times_done[i] <- Sys.time()
