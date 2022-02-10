@@ -85,8 +85,7 @@ inter_readRDS <- function(force, int_loc)
 # filename: the name of the analysis file
 red_update_msg <- function(n_cur, n_fin, start_time, filename)
 {
-  cur_eta <- ceiling((n_fin - n_cur + 1) / n_cur * (Sys.time() - start_time) * 1.5)
-  sprintf_clean("Begin F%s/%s, ETA %s: %s", n_cur, n_fin, cur_eta, filename)
+  sprintf_clean("Begin %s/%s, T=%s: %s", n_cur, n_fin, ceiling(Sys.time() - start_time), filename)
 }
 
 # performs reduction on a group of valid requests,
