@@ -41,6 +41,12 @@ valid_table <- function(cand_table)
   if (nrow(cand_table) < 4 || ncol(cand_table) < 4)
     return(FALSE)
 
+  if (sum(is.na(cand_table)) > 0) # NAs not allowed
+    return(FALSE)
+
+  if (sum(is.nan(cand_table)) > 0) # NaNs not allowed
+    return(FALSE)
+
   # row names should be absent
   if (!is.null(rownames(cand_table)))
     return(FALSE)
