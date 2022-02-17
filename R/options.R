@@ -402,6 +402,7 @@ ui <- function(request){
         downloadButton('downloadCitations', 'Citations') ,
         action("request_analysis", "Request", "user-edit", "#FFF", "#29AB87", "#00356B")
       ),
+      verbatimTextOutput("current_address"),
       verbatimTextOutput("console_out")
     )
   )

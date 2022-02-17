@@ -237,6 +237,10 @@ server <- function(input, output, session) {
     }
   })
 
+  output$current_address <- renderPrint({
+    print_clean(sprintf("Current Analysis: [%s]", curr_adr()))
+  })
+
   # -------------------
   # NOTIFICATION SYSTEM
   # -------------------
@@ -370,6 +374,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
   peri <- reactive(iplot$perplexity)
   bati <- reactive(iplot$batch_size)
   thre <- reactive(as.numeric(iplot[[id_thre(cati(), iplot$scaling)]]))
+  curr_adr <- reactiveVal("")
 
   colorby <- reactive(iplot[[id_color(cati())]])
   shapeby <- reactive({
@@ -506,6 +511,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     if (iplot$embedding == "Sets")
     {
       addr <- make_sets_name(cati(), iplot$scaling, thre(), filterby())
+      curr_adr(addr)
       data <- load_store(addr)
       if (is.null(data))
         return(NULL)
@@ -528,6 +534,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     if (iplot$embedding == "PHATE")
     {
       addr <- make_phate_name(cati(), rowi(), coli(), iplot$scaling, iplot$normalization, 2, peri())
+      curr_adr(addr)
       data <- load_store(addr)
       data <- data[keep(),,drop=FALSE]
 
@@ -541,6 +548,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     addr <- make_pvu_name(
       cati(), rowi(), coli(), iplot$scaling, iplot$normalization, iplot$embedding, iplot$visualize,
       pc_cap, 2, peri(), bati())
+    curr_adr(addr)
 
     data <- load_store(addr)
 
@@ -586,6 +594,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     if (iplot$embedding == "Sets")
     {
       addr <- make_sets_name(cati(), iplot$scaling, thre(), filterby())
+      curr_adr(addr)
       data <- load_store(addr)
       if (is.null(data))
         return(NULL)
@@ -602,6 +611,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     if (iplot$embedding == "PHATE")
     {
       addr <- make_phate_name(cati(), rowi(), coli(), iplot$scaling, iplot$normalization, 2, peri())
+      curr_adr(addr)
       data <- load_store(addr)
       data <- data[keep(),,drop=FALSE]
 
@@ -615,6 +625,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     addr <- make_pvu_name(
       cati(), rowi(), coli(), iplot$scaling, iplot$normalization, iplot$embedding, iplot$visualize,
       pc_cap, 2, peri(), bati())
+    curr_adr(addr)
 
     data <- load_store(addr)
 
@@ -660,6 +671,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     if (iplot$embedding == "Sets")
     {
       addr <- make_sets_name(cati(), iplot$scaling, thre(), filterby())
+      curr_adr(addr)
       data <- load_store(addr)
       if (is.null(data))
         return(NULL)
@@ -675,6 +687,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     if (iplot$embedding == "PHATE")
     {
       addr <- make_phate_name(cati(), rowi(), coli(), iplot$scaling, iplot$normalization, 3, peri())
+      curr_adr(addr)
       data <- load_store(addr)
       data <- data[keep(),,drop=FALSE]
 
@@ -688,6 +701,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     addr <- make_pvu_name(
       cati(), rowi(), coli(), iplot$scaling, iplot$normalization, iplot$embedding, iplot$visualize,
       pc_cap, 3, peri(), bati())
+    curr_adr(addr)
 
     data <- load_store(addr)
 
@@ -735,6 +749,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     addr <- make_pvu_name(
       cati(), rowi(), coli(), iplot$scaling, iplot$normalization, iplot$embedding, "Explore",
       pc_cap, 3, peri(), bati())
+    curr_adr(addr)
 
     data <- load_store(addr)[keep(),iplot$pc1]
     data <- cbind.data.frame(colors(), data)
