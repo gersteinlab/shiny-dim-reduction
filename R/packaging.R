@@ -44,6 +44,7 @@ binary_search <- function(data, target, num_digits)
 
 # temporarily reduce number of normalizations
 temp_nor <- nor_options[1:2]
+# name_cat <- "miRNA"
 
 # ------------
 # PCA REQUESTS
@@ -86,6 +87,7 @@ for (cat in name_cat)
     }
   }
 }
+rm(pca_e, pca_s, pca_t)
 
 saveRDS(pca_requests, "pca_requests.rds")
 
@@ -130,6 +132,7 @@ for (cat in name_cat)
     }
   }
 }
+rm(vae_e, vae_s, vae_t)
 
 saveRDS(vae_requests, "vae_requests.rds")
 
@@ -175,6 +178,7 @@ for (cat in name_cat)
     }
   }
 }
+rm(umap_e, umap_s, umap_t)
 
 saveRDS(umap_requests, "umap_requests.rds")
 
@@ -207,6 +211,7 @@ for (cat in name_cat)
     }
   }
 }
+rm(phate_r)
 
 saveRDS(phate_requests, "phate_requests.rds")
 
@@ -256,20 +261,59 @@ for (cat in name_cat)
     }
   }
 }
+rm(sets_r, diff, thresholds, local_lower, local_upper)
 
-end <- my_timer(start)
-
-saveRDS(set_requests, "sets_requests.rds")
+saveRDS(sets_requests, "sets_requests.rds")
 
 # -----------------
 # PERFORM REDUCTION
 # -----------------
+
+# saveRDS(pca_requests, "mirna_ran_pca_requests.rds")
+# saveRDS(vae_requests, "mirna_ran_vae_requests.rds")
+# saveRDS(umap_requests, "mirna_ran_umap_requests.rds")
+# saveRDS(phate_requests, "mirna_ran_phate_requests.rds")
+# saveRDS(sets_requests, "mirna_ran_sets_requests.rds")
+pca_requests_ran <- readRDS("mirna_ran_pca_requests.rds")
+vae_requests_ran <- readRDS("mirna_ran_vae_requests.rds")
+umap_requests_ran <- readRDS("mirna_ran_umap_requests.rds")
+phate_requests_ran <- readRDS("mirna_ran_phate_requests.rds")
+sets_requests_ran <- readRDS("mirna_ran_sets_requests.rds")
+
+# done_ran_umap <- perform_reduction(umap_requests_ran, force = 2)
+# saveRDS(done_ran_umap, "done_ran_umap.rds")
+# done_ran_pca <- perform_reduction(pca_requests_ran, force = 2)
+# saveRDS(done_ran_pca, "done_ran_pca.rds")
+# done_ran_sets <- perform_reduction(sets_requests_ran, force = 2)
+# saveRDS(done_ran_sets, "done_ran_sets.rds")
+# done_ran_phate <- perform_reduction(phate_requests_ran, force = 2)
+# saveRDS(done_ran_phate, "done_ran_phate.rds")
+# done_ran_vae <- perform_reduction(vae_requests_ran, force = 2)
+# saveRDS(done_ran_vae, "done_ran_vae.rds")
+
+done_ran_pca <- readRDS("done_ran_pca.rds")
+done_ran_vae <- readRDS("done_ran_vae.rds")
+done_ran_umap <- readRDS("done_ran_umap.rds")
+done_ran_phate <- readRDS("done_ran_phate.rds")
+done_ran_sets <- readRDS("done_ran_sets.rds")
 
 pca_requests <- readRDS("pca_requests.rds")
 vae_requests <- readRDS("vae_requests.rds")
 umap_requests <- readRDS("umap_requests.rds")
 phate_requests <- readRDS("phate_requests.rds")
 sets_requests <- readRDS("sets_requests.rds")
+
+system.time(ran_mirna_new <- rbind_req(
+  done_ran_pca,
+  done_ran_vae,
+  done_ran_umap,
+  done_ran_phate,
+  done_ran_sets
+))
+
+ran_mirna_new$REQUEST_ID <- get_request_id(nrow(ran_mirna_new))
+# saveRDS(app_requests[app_requests$CATEGORIES == "miRNA",], "ran_mirna_new.rds")
+ran_mirna_new <- readRDS("ran_mirna_new.rds")
 
 # small_test <- pca_requests[61:70,]
 # small_t0 <- perform_reduction(small_test, 0)
@@ -295,55 +339,67 @@ sets_requests <- readRDS("sets_requests.rds")
 #   saveRDS(temp_requests, a_name)
 # }
 
-system.time(app_requests <- rbind_req(
-  readRDS("done_pca_1.rds"),
-  readRDS("done_pca_2.rds"),
-  readRDS("done_vae_1.rds"),
-  readRDS("done_vae_2.rds"),
-  readRDS("done_vae_3.rds"),
-  readRDS("done_vae_4.rds"),
-  readRDS("done_vae_5.rds"),
-  readRDS("done_vae_6.rds"),
-  readRDS("done_vae_7.rds"),
-  readRDS("done_vae_8.rds"),
-  readRDS("done_vae_9.rds"),
-  readRDS("done_vae_10.rds"),
-  readRDS("done_vae_11.rds"),
-  readRDS("done_umap_1.rds"),
-  readRDS("done_umap_2.rds"),
-  readRDS("done_umap_3.rds"),
-  readRDS("done_umap_4.rds"),
-  readRDS("done_umap_5.rds"),
-  readRDS("done_umap_6.rds"),
-  readRDS("done_umap_7.rds"),
-  readRDS("done_umap_8.rds"),
-  readRDS("done_phate_1.rds"),
-  readRDS("done_phate_2.rds"),
-  readRDS("done_phate_3.rds"),
-  readRDS("done_phate_4.rds"),
-  readRDS("done_phate_5.rds"),
-  readRDS("done_phate_6.rds"),
-  readRDS("done_sets_1.rds"),
-  readRDS("done_sets_2.rds")
-))
+# system.time(app_requests <- rbind_req(
+#   readRDS("done_pca_1.rds"),
+#   readRDS("done_pca_2.rds"),
+#   readRDS("done_vae_1.rds"),
+#   readRDS("done_vae_2.rds"),
+#   readRDS("done_vae_3.rds"),
+#   readRDS("done_vae_4.rds"),
+#   readRDS("done_vae_5.rds"),
+#   readRDS("done_vae_6.rds"),
+#   readRDS("done_vae_7.rds"),
+#   readRDS("done_vae_8.rds"),
+#   readRDS("done_vae_9.rds"),
+#   readRDS("done_vae_10.rds"),
+#   readRDS("done_vae_11.rds"),
+#   readRDS("done_umap_1.rds"),
+#   readRDS("done_umap_2.rds"),
+#   readRDS("done_umap_3.rds"),
+#   readRDS("done_umap_4.rds"),
+#   readRDS("done_umap_5.rds"),
+#   readRDS("done_umap_6.rds"),
+#   readRDS("done_umap_7.rds"),
+#   readRDS("done_umap_8.rds"),
+#   readRDS("done_phate_1.rds"),
+#   readRDS("done_phate_2.rds"),
+#   readRDS("done_phate_3.rds"),
+#   readRDS("done_phate_4.rds"),
+#   readRDS("done_phate_5.rds"),
+#   readRDS("done_phate_6.rds"),
+#   readRDS("done_sets_1.rds"),
+#   readRDS("done_sets_2.rds")
+# ))
+#
+# app_requests$REQUEST_ID <- get_request_id(nrow(app_requests))
+# saveRDS(app_requests, "app_requests.rds")
 
-app_requests$REQUEST_ID <- get_request_id(nrow(app_requests))
+app_requests_1_23 <- readRDS("app_requests_1_23.rds")
+
+app_requests_2_16 <- app_requests_1_23
+app_requests_2_16 <- app_requests_2_16[app_requests_2_16$CATEGORIES != "miRNA",]
+app_requests_2_16 <- rbind_req(app_requests_2_16, ran_mirna_new)
+
+saveRDS(app_requests_2_16, "app_requests_2_16.rds")
 
 setwd(ref_loc)
-saveRDS(app_requests, "app_requests.rds")
+saveRDS(app_requests_2_16, "app_requests.rds")
 
 # syncs a set of requests from reference to AWS
 sudo_working_key(amazon_keys)
+setwd(ref_loc)
 app_requests <- readRDS("app_requests.rds")
 existing_files <- list_aws_s3()
 request_files <- app_requests$FILE_LOCATION
-files_to_be_uploaded <- setdiff(request_files, existing_files)
+# files_to_be_uploaded <- setdiff(request_files, existing_files)
+files_to_be_uploaded <- tail(app_requests$FILE_LOCATION, nrow(ran_mirna_new))
 
 n <- length(files_to_be_uploaded)
 
 my_range <- seq_len(n)
-my_range <- 39401:n
-my_range <- 62021:n
+set_working_ref(ref_loc)
+# my_range <- 39401:n
+# my_range <- 62021:n
 
 for (i in my_range)
 {
@@ -353,6 +409,9 @@ for (i in my_range)
   }
   single_file <- files_to_be_uploaded[i]
   data <- load_local(single_file)
+  if (is.null(data))
+    stop(sprintf("Cannot load data entry %s to sync!", i))
   save_aws_s3(data, single_file)
 }
 
+save_aws_s3(app_requests, "app_requests.rds")
