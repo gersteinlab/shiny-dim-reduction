@@ -241,6 +241,14 @@ server <- function(input, output, session) {
     print_clean(sprintf("Current Analysis: [%s]", curr_adr()))
   })
 
+  output$last_updated_get_id <- renderUI({
+    div(
+      style = "margin: 10px",
+      h4(HTML(sprintf("  <b>Last Updated:</b> %s", format(newest_request$TIME_COMPLETED, "%b %d, %Y")))),
+      h4(HTML(sprintf("  <b>Newest Analysis ID:</b> %s", newest_request$REQUEST_ID)))
+    )
+  })
+
   # -------------------
   # NOTIFICATION SYSTEM
   # -------------------

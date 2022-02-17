@@ -93,6 +93,9 @@ init_sub(name_len_opts)
 
 # open requests
 app_requests <- load_store("app_requests.rds")
+newest_request_i <- which.max(app_requests$TIME_COMPLETED)
+newest_request <- app_requests[newest_request_i,]
+
 # ----------------
 # FIX DEPENDENCIES
 # ----------------
@@ -365,7 +368,8 @@ ui <- function(request){
         table_1_menu,
         analysis_1_menu,
         filters_1_menu,
-        settings_menu
+        settings_menu,
+        uiOutput("last_updated_get_id")
       )
     ),
     dashboardBody(
@@ -389,7 +393,7 @@ ui <- function(request){
         tabPanel("Interactive 2D", uiOutput("plotly2UI")),
         tabPanel("Interactive 3D", uiOutput("plotly3UI")),
         tabPanel("Boxplot", uiOutput("beeswarmUI")),
-        tabPanel("Requests", uiOutput("requestsUI")),
+        tabPanel("Approved Requests", uiOutput("requestsUI")),
         tabPanel("Numeric Data", uiOutput("num_dataUI")),
         tabPanel("Metadata", uiOutput("metadataUI"))
       ),
