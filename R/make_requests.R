@@ -379,7 +379,7 @@ rbind_req2 <- function(requests1, requests2)
   for (r1_i in which(r1_locs %in% r2_locs))
   {
     r1_com_time <- r1_com_times[r1_i]
-    req_dict[[r1_locs[i]]] <- c(r1_i, r1_com_time, (r1_com_time > r1_req_times[r1_i]))
+    req_dict[[r1_locs[r1_i]]] <- c(r1_i, r1_com_time, (r1_com_time > r1_req_times[r1_i]))
   }
 
   # now go through all intersecting indices
