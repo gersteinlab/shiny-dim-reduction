@@ -56,6 +56,10 @@ assign_global <- function(name, value)
   assign(name, value, envir = .GlobalEnv)
 }
 
+# an empty data frame used for various purposes
+empty_df <- data.frame(matrix(nrow=0, ncol=1))
+colnames(empty_df) <- "Unknown"
+
 # --------------
 # LOCAL / ONLINE
 # --------------

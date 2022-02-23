@@ -29,7 +29,7 @@ of each category is the number of features prior to dimensionality reduction.
 All categories must be unique, even if in different groups.")
   print_clean("")
 
-  print_clean("DEPENDENCY 02 (REQUIRED): amazon_keys.rds")
+  print_clean("DEPENDENCY 02 (OPTIONAL): amazon_keys.rds")
   print_clean("A vector for AWS - access ID, access secret, and bucket.")
   print_clean("")
 
@@ -44,34 +44,20 @@ vector of applicable categories, (ii) the row subsets, and (iii) the column subs
 Each subset contains (a) a reference character vector and (b) indices that constitute subsets.")
   print_clean("")
 
-  print_clean("DEPENDENCY 05 (OPTIONAL): pc_cap.rds")
-  print_clean("The number of principal components displayed, at least 3.")
-  print_clean("")
-
-  print_clean("DEPENDENCY 06 (OPTIONAL): thresholds.rds")
-  print_clean("A list (sca_options) of lists (name_cat), with each entry
-being a vector of eleven numbers as thresholds for Sets.")
-  print_clean("")
-
-  print_clean("DEPENDENCY 07 (OPTIONAL): perplexity_types.rds")
-  print_clean("A vector of five numbers denoting the options for the number of
-nearest neighbors employed by tSNE, UMAP, or PHATE.")
-  print_clean("")
-
-  print_clean("DEPENDENCY 08 (OPTIONAL): app_title.rds")
+  print_clean("DEPENDENCY 05 (OPTIONAL): app_title.rds")
   print_clean("The title of the application.")
   print_clean("")
 
-  print_clean("DEPENDENCY 09 (OPTIONAL): app_citations.rds")
+  print_clean("DEPENDENCY 06 (OPTIONAL): app_citations.rds")
   print_clean("The data-related citations for this application.")
   print_clean("")
 
-  print_clean("DEPENDENCY 10 (OPTIONAL): user_credentials.rds")
+  print_clean("DEPENDENCY 07 (OPTIONAL): user_credentials.rds")
   print_clean("A list of user credentials, where usernames are
 names(user_credentials) and passwords are unlist(user_credentials).")
   print_clean("")
 
-  print_clean("DEPENDENCY 11 (OPTIONAL): custom_color_scales.rds")
+  print_clean("DEPENDENCY 08 (OPTIONAL): custom_color_scales.rds")
   print_clean("A list of custom color scales, where each scale is a list such that
 the labels are names(scale) and the colors are unlist(scale).")
   print_clean("")
@@ -220,4 +206,26 @@ ind_sd_top <- function(data, num)
 {
   vals <- apply(data, 2, sd)
   order(vals)[1:num]
+}
+
+# given a list representing a table, remove the preamble
+# (such as the exRNA data access policy) and make a data frame
+# the preamble is identified by not having at least min_size entries
+rem_preamble <- function(tsv_list, min_size)
+{
+  selected_rows <- sapply(tsv_list, length) > min_size
+  shortened <- tsv_list[selected_rows]
+  do.call(rbind, shortened) %>% r1_to_cols() %>% data.frame()
+}
+
+# removes duplicate rows from a matrix
+rem_dupe_rows <- function(data)
+{
+  data[!duplicated(data),,drop=FALSE]
+}
+
+# orders the rows of a matrix by the entries in a column
+order_by_col <- function(data, column)
+{
+  data[order(data[,column]),,drop=FALSE]
 }

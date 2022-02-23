@@ -366,9 +366,6 @@ plotly_heatmap_dendrogram <- function(binary, colors = NULL,
 # DATATABLES
 # ----------
 
-empty_df <- data.frame(matrix(nrow=0, ncol=1))
-colnames(empty_df) <- "Unknown"
-
 can_be_numeric <- function(vec)
 {
   sum(is.na(suppressWarnings(as.character(vec)))) == sum(is.na(suppressWarnings(as.numeric(vec))))
