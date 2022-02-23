@@ -1,7 +1,6 @@
 # The goal of this script is to store functions related
 # to converting from raw data to combined data and metadata.
-# Actual converter.R files should source this file.
-# source("converter.R", encoding="UTF-8")
+# Actual converter files should source this file.
 
 if (!exists("ran_install"))
 {

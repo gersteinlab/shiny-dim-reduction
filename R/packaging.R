@@ -312,7 +312,7 @@ system.time(ran_mirna_new <- rbind_req(
 ))
 
 ran_mirna_new$REQUEST_ID <- get_request_id(nrow(ran_mirna_new))
-# saveRDS(app_requests[app_requests$CATEGORIES == "miRNA",], "ran_mirna_new.rds")
+# saveRDS(ran_mirna_new, "ran_mirna_new.rds")
 ran_mirna_new <- readRDS("ran_mirna_new.rds")
 
 # small_test <- pca_requests[61:70,]
@@ -392,7 +392,8 @@ app_requests <- readRDS("app_requests.rds")
 existing_files <- list_aws_s3()
 request_files <- app_requests$FILE_LOCATION
 # files_to_be_uploaded <- setdiff(request_files, existing_files)
-files_to_be_uploaded <- tail(app_requests$FILE_LOCATION, nrow(ran_mirna_new))
+files_to_be_uploaded <- app_requests$FILE_LOCATION[
+  app_requests$CATEGORIES == "miRNA" & app_requests$EMBEDDING == "Sets"]
 
 n <- length(files_to_be_uploaded)
 

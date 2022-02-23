@@ -21,13 +21,26 @@ get_opt <- function(opt, num)
 }
 
 # Suppose we have a vector of strings of the form "A (B)",
-# where A and B are strings that do not contain '(' or ')'.
-# Returns a vector containing for each string c("A", "B")
+# where A is any string and B is a number. Then
+# return a vector containing for each string c("A", "B").
 sep_opt <- function(str)
 {
   if (!is.character(str))
     return(NULL)
-  unlist(strsplit(str, "( \\(|\\))"))
+
+  n <- length(str)
+  rev_str <- stri_reverse(str) # reverse the string to use stri_split_fixed
+  result <- unlist(stri_split_fixed(rev_str,"( ", n = 2)) # split into two parts
+
+  for (i in seq_len(n))
+  {
+    b <- result[2*i - 1]
+    a <- result[2*i]
+    result[2*i - 1] <- stri_reverse(a)
+    result[2*i] <- stri_reverse(substring(b, 2))
+  }
+
+  result
 }
 
 # removes all parts of the form <tag> from a text

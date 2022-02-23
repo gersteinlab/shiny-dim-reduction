@@ -12,7 +12,7 @@ get_opts <- function(v)
 }
 
 # From sep_opt, return all As if ind = 1 or all Bs if ind = 2.
-parse_opt <- function(str, ind=1)
+parse_opt <- function(str, ind = 1)
 {
   result <- sep_opt(str)
   result[(seq(result) + ind) %% 2 == 0]
