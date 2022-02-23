@@ -81,15 +81,7 @@ valid_metadata <- function(cand_df)
   if (sum(is.na(cand_df)) > 0) # NAs not allowed
     return(FALSE)
 
-  if (sum(is.nan(cand_df)) > 0) # NaNs not allowed
-    return(FALSE)
-
-  # row names should be absent
-  if (!is.null(rownames(cand_df)))
-    return(FALSE)
-
-  # column names are required
-  if (length(colnames(cand_df)) != col_n)
+  if (sum(is.nan(as.matrix(cand_df))) > 0) # NaNs not allowed
     return(FALSE)
 
   TRUE

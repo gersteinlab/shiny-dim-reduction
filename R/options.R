@@ -93,6 +93,10 @@ init_sub(name_len_opts)
 
 # open requests
 app_requests <- load_store("app_requests.rds")
+app_requests <- app_requests[order(app_requests$TIME_COMPLETED, decreasing = TRUE),
+                             c("REQUEST_ID", colnames(app_requests[1:17]))]
+rownames(app_requests) <- NULL
+
 newest_request_i <- which.max(app_requests$TIME_COMPLETED)
 newest_request <- app_requests[newest_request_i,]
 
