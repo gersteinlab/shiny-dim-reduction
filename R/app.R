@@ -17,6 +17,9 @@ auth_default <- TRUE
 # should plots respond to user inputs by default?
 run_default <- TRUE
 
+# should internal file addresses be logged?
+log_addrs <- FALSE
+
 server <- function(input, output, session) {
   # --------------
   # AUTHENTICATION
@@ -26,6 +29,10 @@ server <- function(input, output, session) {
     showModal(authenticator_modal())
   shinyjs::runjs(no_autofill) # prevent google from autocompleting passwords
   addClass("password", "my-hidden-text") # hide password text to start
+
+  # hide address log if needed
+  if (!log_addrs)
+    shinyjs::hide("current_address")
 
   # handle login attempts
   observeEvent(input$attempt_login, {
