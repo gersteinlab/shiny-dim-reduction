@@ -48,17 +48,17 @@ get_from_loc <- function(name, loc, default = NULL)
 }
 
 # wrapper for get_from_loc that assumes the file was saved with the variable name
-get_self_loc <- function(name, dir = getwd(), default = NULL)
+get_self_rds <- function(name, dir = getwd(), default = NULL)
 {
   get_from_loc(name, sprintf("%s/%s.rds", dir, name), default)
 }
 
-# wrapper for get_self_loc, only for dependencies
+# wrapper for get_self_rds, only for dependencies
 get_dependency <- function(name, default = NULL)
 {
   if (sdr_from_app)
     return(get_self_loc(name, "dependencies", default))
-  get_self_loc(name, dep_loc, default)
+  get_self_rds(name, dep_loc, default)
 }
 
 # performs saveRDS(loc) with the value of a variable with the given name,
@@ -71,17 +71,17 @@ set_from_var <- function(name, loc, default = NULL, compress = TRUE)
 }
 
 # wrapper for set_from_var that saves the file with the variable name
-set_self_var <- function(name, dir = getwd(), default = NULL, compress = TRUE)
+set_self_rds <- function(name, dir = getwd(), default = NULL, compress = TRUE)
 {
   set_from_var(name, sprintf("%s/%s.rds", dir, name), default, compress)
 }
 
-# wrapper for set_self_var, only for dependencies
+# wrapper for set_self_rds, only for dependencies
 set_dependency <- function(name, default = NULL, compress = TRUE)
 {
   if (sdr_from_app)
     stop("Dependencies cannot be set from within the application.")
-  set_self_var(name, dep_loc, default, compress)
+  set_self_rds(name, dep_loc, default, compress)
 }
 
 # -------------
