@@ -168,10 +168,11 @@ chunk_bind_rows <- function(data, num_chunks=1, bind_fun = dplyr::bind_rows)
     return(bind_fun(data))
 
   chunk_size <- ceiling(len/num_chunks)
+  chunk_seq <- seq_len(num_chunks)
 
-  result <- my_empty_list(1:num_chunks)
+  result <- empty_named_list(chunk_seq)
 
-  for (i in 1:num_chunks)
+  for (i in chunk_seq)
   {
     min_ind <- (i-1)*chunk_size+1
     max_ind <- min(len, i*chunk_size)
@@ -215,3 +216,140 @@ order_by_col <- function(data, column)
 {
   data[order(data[,column]),,drop=FALSE]
 }
+
+# given a vector of file locations, open the files as .tsv and rbind their contents
+tsv_files_to_matrix <- function(locs)
+{
+  result <- empty_named_list(locs)
+
+  for (i in seq_along(locs))
+    result[[i]] <- do.call(rbind, read_tsv_text(locs[i]))
+
+  result
+}
+
+# takes output of tsv_files_to_matrix and assembles it into a metadata df,
+# assuming the first row can act as colnames
+simple_mat_to_df <- function(result)
+{
+  result %>% r1_to_cols() %>% data.frame()
+}
+
+# takes output of tsv_files_to_matrix and assembles it into a metadata df,
+# assuming duplicates and transpose with 1st initial col being future colnames
+transpose_to_df <- function(result){
+  if (is.null(result))
+    return(empty_df)
+
+  result[,1] <- make.unique(result[,1])
+
+  result %>% t() %>% r1_to_cols() %>% data.frame()
+}
+
+# given a list of results from tsv_files_to_matrix, rbind into combined df
+transpose_to_df_multi <- function(res_list)
+{
+  lapply(res_list, transpose_to_df) %>% dplyr::bind_rows()
+}
+
+# gives the interval that each number lies in
+# ex: get_intervals(3:27, 5)
+get_intervals <- function(x, interval_size){
+  num <- floor(as.numeric(x)/interval_size) * interval_size
+  sprintf("%s to %s", num, num+interval_size)
+}
+
+# given a list of data frames, give the indices of all
+# data frames not containing a column named "Unknown"
+get_known_df_indices <- function(df_list)
+{
+  good_indices <- numeric()
+
+  for (i in seq_along(df_list))
+  {
+    if (!("Unknown" %in% colnames(df_list[[i]])))
+      good_indices <- c(good_indices, i)
+  }
+
+  good_indices
+}
+
+# given sample_names and a metadata df where metadata[[col]] is supposed
+# to match sample_names, add "Unknown" blanks and reorder metadata so that
+# all.equal(metadata[[col]], sample_names) now holds true
+match_metadata_to_samples <- function(sample_names, ord, col = "FASTQ_IDENTIFIER")
+{
+  missed <- setdiff(sample_names, ord[[col]])
+  seq_missed <- seq_along(missed)
+  original_len <- nrow(ord)
+  ord[original_len + seq_missed,] <- "Unknown"
+  ord[original_len + seq_missed,] <- missed
+  result <- ord[match(sample_names, ord[[col]]),]
+  rownames(result) <- NULL
+  result
+}
+
+# remove columns where the ratio of NAs to total entries exceeds frac
+remove_excess_na_cols <- function(data, frac){
+  cutoff <- frac*nrow(data)
+  col_n <- ncol(data)
+  keep_indices <- rep(TRUE, col_n)
+
+  for (j in seq_len(col_n))
+    keep_indices[j] <- (sum(is.na(data[[j]])) <= cutoff)
+
+  data[,keep_indices,drop=FALSE]
+}
+
+# ------------
+# EXPERIMENTAL
+# ------------
+
+# the following functions work with rRNA / Gene files downloaded
+# from the exRNA Atlas:
+
+# converts a list of levels / names into a sparse table
+populate_taxa <- function(data)
+{
+  result <- data.frame(matrix(0, nrow=nrow(data), ncol=num_taxa))
+  for (i in seq_len(nrow(data)))
+    result[i, taxonomic_ordering == data[i, 1]] <- data[i, 3]
+  result
+}
+
+# a super-optimized function for populating the tree to species only
+species_only <- function(data)
+{
+  working <- rep(0, num_spe-1)
+
+  for (i in seq_len(nrow(data)))
+  {
+    if (data[i, num_spe] != 0)
+    {
+      data[i, 1:(num_spe-1)] <- working
+    }
+    else
+    {
+      for (j in (num_spe-1):1)
+      {
+        if (data[i,j] != 0)
+        {
+          working[j] <- data[i,j]
+          break
+        }
+        else
+        {
+          working[j] <- 0
+        }
+      }
+    }
+  }
+
+  data[data[,num_spe] != 0,1:num_spe]
+}
+
+truncate_data <- function(data)
+{
+  data[data$level != "no rank",c(2,3,5,6)]
+}
+
