@@ -57,7 +57,7 @@ get_self_rds <- function(name, dir = getwd(), default = NULL)
 get_dependency <- function(name, default = NULL)
 {
   if (sdr_from_app)
-    return(get_self_loc(name, "dependencies", default))
+    return(get_self_rds(name, "dependencies", default))
   get_self_rds(name, dep_loc, default)
 }
 
