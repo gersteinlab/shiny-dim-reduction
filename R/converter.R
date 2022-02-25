@@ -353,3 +353,11 @@ truncate_data <- function(data)
   data[data$level != "no rank",c(2,3,5,6)]
 }
 
+ran_df_to_combined <- function(df)
+{
+  df$FASTQ_IDENTIFIER <- NULL
+  rownames(df) <- NULL
+  result <- convert_to_num(df)
+  sprintf_clean("Was a valid table made? %s", valid_table(result))
+  result
+}
