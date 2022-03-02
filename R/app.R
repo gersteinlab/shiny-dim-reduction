@@ -383,7 +383,14 @@ Seconds elapsed: %s", my_timer(start)), "message")
   boost <- reactive("Boost Graphics" %in% iplot$sMenu)
   not_rev <- reactive("Uninverted Colors" %in% iplot$sMenu)
 
-  cati <- reactive(iplot$category)
+  cati <- reactive({
+    if (grepl("Transpose", iplot$category, fixed = TRUE))
+      notif("The matrix for this category was transposed. The current
+              samples represent original features and the current
+              features represent original samples.", "warning")
+
+    iplot$category
+  })
   rowi <- reactive(parse_opt(iplot[[id_row(cati())]]))
   coli <- reactive(parse_opt(iplot[[id_col(cati())]]))
   peri <- reactive(iplot$perplexity)
@@ -448,8 +455,8 @@ Seconds elapsed: %s", my_timer(start)), "message")
     if (iplot$embedding == "Sets")
     {
       return(sprintf(
-        "%s-Grouped Features on %s.%s (%s Features, %s Characteristics)",
-        filterby(), cati(), coli(), nrow(num_data()), ncol(num_data())
+        "%s-Grouped Features on %s [%s (%s), %s (%s)]",
+        filterby(), cati(), rowi(), nrow(num_data()), coli(), ncol(num_data())
       ))
     }
 
@@ -458,15 +465,9 @@ Seconds elapsed: %s", my_timer(start)), "message")
          iplot$visualize == "tSNE") && (iplot$visualize != "Summarize"),
       sprintf(", %s Neighbors", iplot$perplexity), "")
 
-    if (grepl("Transpose", cati(), fixed = TRUE))
-      notif("This matrix has been transposed. Therefore, the current
-            samples represent original features and the current
-            features represent original samples.", "warning")
-
-    sprintf("%s%s on %s.%s (%s Samples, %s Features%s)",
-            ifelse(iplot$embedding == "PHATE", "",
-                   vis_to_noun(iplot$visualize)),
-            iplot$embedding, cati(), coli(), sum(keep()), num_feat(), nei)
+    sprintf("%s%s on %s [%s (%s), %s (%s)]%s",
+            ifelse(iplot$embedding == "PHATE", "", vis_to_noun(iplot$visualize)), # "Exploration of "
+            iplot$embedding, cati(), rowi(), sum(keep()), coli(), num_feat(), nei)
   })
 
   title_embed <- reactive({
