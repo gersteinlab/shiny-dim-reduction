@@ -100,6 +100,10 @@ rownames(app_requests) <- NULL
 newest_request_i <- which.max(app_requests$TIME_COMPLETED)
 newest_request <- app_requests[newest_request_i,]
 
+default_user_requests <- make_requests()
+if (find_aws_s3("Sessions/user_requests.rds"))
+  default_user_requests <- load_aws_s3("Sessions/user_requests.rds")
+
 # ----------------
 # FIX DEPENDENCIES
 # ----------------
@@ -387,6 +391,8 @@ ui <- function(request){
         downloadButton("download_num_data", "Numeric Data"),
         downloadButton("download_metadata", "Metadata"),
         action("randomize", "Randomize", "connectdevelop",
+               "#FFF", "#29AB87", "#00356B"),
+        action("refresh", "Refresh", "redo",
                "#FFF", "#29AB87", "#00356B")
       ),
       htmlOutput("title_out"),
@@ -398,6 +404,7 @@ ui <- function(request){
         tabPanel("Interactive 3D", uiOutput("plotly3UI")),
         tabPanel("Boxplot", uiOutput("beeswarmUI")),
         tabPanel("Approved Requests", uiOutput("requestsUI")),
+        tabPanel("Pending Requests", uiOutput("pendingRequestsUI")),
         tabPanel("Numeric Data", uiOutput("num_dataUI")),
         tabPanel("Metadata", uiOutput("metadataUI"))
       ),

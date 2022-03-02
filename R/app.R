@@ -74,9 +74,14 @@ server <- function(input, output, session) {
   # DYNAMIC UI LOGIC
   # ----------------
   observeEvent(input$request_analysis, {
+    if (user_local == "Y")
+    {
+      notif("Cannot make custom requests while offline.", "error")
+      return()
+    }
+
     showModal(modalDialog(
       title = HTML("<b>Request Custom Analysis</b>"), easyClose = TRUE,
-      HTML("<h5>This feature is currently under development.</h5>"),
       select_panel("req_emb", "Desired Embedding", emb_options),
       hr(style = "border-top: 1px solid #000000;"),
       select_panel("req_cat", "Desired Category", name_cat),
@@ -111,15 +116,48 @@ server <- function(input, output, session) {
         numericInput("req_thr", "Desired Threshold", 0.5, min = 0, max = 1, step = 0.1^num_digits),
         select_panel("req_cha", "Desired Characteristic", NULL)
       ),
-      hr(style = "border-top: 1px solid #000000;"),
       textInput("req_aut", "Author Name"),
-      HTML(sprintf("<b>Current Time:</b> %s", Sys.time()))
+      footer = tagList(
+        action("submit_request", "Submit", "cloud", "#FFF", "#0064C8", "#00356B"),
+        modalButton("Dismiss")
+      )
     ))
   })
 
   observeEvent(input$req_cat, {
     updatePickerInput(session, "req_row", choices = sub_row_groups[[input$req_cat]])
     updatePickerInput(session, "req_col", choices = sub_col_groups[[input$req_cat]])
+    updatePickerInput(session, "req_cha", choices = names(order_total[[input$req_cat]]))
+  })
+
+  observeEvent(input$submit_request, {
+    test <- make_requests(
+      cat = input$req_cat, row = parse_opt(input$req_row),
+      col = parse_opt(input$req_col), sca = input$req_sca,
+      nor = input$req_nor, emb = input$req_emb, vis = input$req_vis, com = input$req_com,
+      dim = input$req_dim, per = input$req_per, bat = input$req_bat, thr = input$req_thr,
+      cha = input$req_cha, aut = input$req_aut
+    )
+
+    if (length(test) > 0) # valid request!
+    {
+      user_requests <- make_requests()
+      if (find_aws_s3("Sessions/user_requests.rds"))
+        user_requests <- load_aws_s3("Sessions/user_requests.rds")
+
+      if (test$FILE_LOCATION %nin% user_requests$FILE_LOCATION &&
+          test$FILE_LOCATION %nin% app_requests$FILE_LOCATION)
+      {
+        user_requests <- rbind_req(user_requests, test)
+        save_aws_s3(user_requests, "Sessions/user_requests.rds")
+        notif("Your request has been submitted!", "message")
+      }
+      else
+        notif("Cannot make duplicate requests - please reach out to the ERCC
+              if you believe this message is in error.", "warning")
+    }
+    else
+      notif("Failed to make request - check your inputs!", "error")
   })
 
   observeEvent(input$instructions, {
@@ -214,6 +252,25 @@ server <- function(input, output, session) {
     shinyjs::show("start")
     running(FALSE)
     shinyjs::hide("stop")
+  })
+
+  user_requests <- reactiveVal(default_user_requests)
+  observeEvent(input$plotPanels, {
+    if (input$plotPanels == "Approved Requests" || input$plotPanels == "Pending Requests")
+    {
+      shinyjs::show("refresh")
+      shinyjs::hide("randomize")
+    }
+    else
+    {
+      shinyjs::show("randomize")
+      shinyjs::hide("refresh")
+    }
+  })
+
+  observeEvent(input$refresh, {
+    if (find_aws_s3("Sessions/user_requests.rds") && !(user_local == "Y"))
+      user_requests(load_aws_s3("Sessions/user_requests.rds"))
   })
 
   observeEvent(input$randomize, {
@@ -790,6 +847,12 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
     my_datatable(app_requests)
   })
+  output$user_requests_out <- renderDT({
+    if (!authenticated())
+      return(my_datatable(NULL))
+
+    my_datatable(user_requests())
+  })
   output$ggplot2_out <- renderPlot({prep_plot(ggplot2_data())})
   output$plotly2_out <- renderPlotly({prep_plot(plotly2_data())})
   output$plotly3_out <- renderPlotly({prep_plot(plotly3_data())})
@@ -846,6 +909,10 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
   output$requestsUI <- renderUI({
     DTOutput("requests_out") %>% my_spin()
+  })
+
+  output$pendingRequestsUI <- renderUI({
+    DTOutput("user_requests_out") %>% my_spin()
   })
 
   output$ggplot2UI <- renderUI({

@@ -165,6 +165,9 @@ rbp_red <- all_reductions(rbp_table, rbp_labels)
 
 # test <- table_to_vae(rbp_table, 2, 20, verbose = 2)
 # test <- table_to_tsne(rbp_table, 2, 20)
+# test <- table_to_umap(rbp_table, 2, 20)
+# rbp_sum <- umap_to_summary(test)
+# hmm <- knn_label_matrix(rbp_sum, rbp_labels)
 
 # -----
 # TIMES

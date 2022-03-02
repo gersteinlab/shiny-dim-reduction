@@ -118,7 +118,7 @@ clean_request <- function(request)
     request$CHARACTERISTIC <- chr_d()
 
     # must be a valid row subset
-    if (row %nin% sub_row_groups[[cat]])
+    if (row %nin% sub_row_groups[[cat]] && row %nin% parse_opt(sub_row_groups[[cat]]))
       return(NULL)
 
     row_num <- categories[[cat]][1]
@@ -126,7 +126,7 @@ clean_request <- function(request)
       row_num <- length(get_row_decor_subset(cat, row))
 
     # must be a valid column subset
-    if (col %nin% sub_col_groups[[cat]])
+    if (col %nin% sub_col_groups[[cat]] && col %nin% parse_opt(sub_col_groups[[cat]]))
       return(NULL)
 
     col_num <- categories[[cat]][2]
