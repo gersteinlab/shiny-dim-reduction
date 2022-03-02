@@ -27,7 +27,7 @@ require("DT")
 # adds a transparency of alpha = 0.5 to a color
 make_transparent <- function(color)
 {
-  sprintf("%s44", substr(color, start=1, stop=7))
+  sprintf("%s44", substr(color, start = 1, stop = 7))
 }
 
 # bulldog blue
@@ -55,15 +55,15 @@ color_seq <- function(n_colors, color_type = "Rainbow", reverse = FALSE)
     return(single_color_seq)
 
   if (color_type == "Grayscale")
-    return(grey.colors(n_colors, rev=reverse))
+    return(grey.colors(n_colors, rev = reverse))
   if (color_type == "Heat")
-    return(heat.colors(n_colors, rev=reverse))
+    return(heat.colors(n_colors, rev = reverse))
   if (color_type == "Terrain")
-    return(terrain.colors(n_colors, rev=reverse))
+    return(terrain.colors(n_colors, rev = reverse))
   if (color_type == "Topography")
-    return(topo.colors(n_colors, rev=reverse))
+    return(topo.colors(n_colors, rev = reverse))
   if (color_type == "CM")
-    return(cm.colors(n_colors, rev=reverse))
+    return(cm.colors(n_colors, rev = reverse))
   if (color_type == "Viridis")
     return(viridis::viridis(n_colors, direction = ifelse(reverse, -1, 1)))
   if (color_type == "Magma")
@@ -76,10 +76,16 @@ color_seq <- function(n_colors, color_type = "Rainbow", reverse = FALSE)
     return(cividis(n_colors, direction = ifelse(reverse, -1, 1)))
 
   # rainbow, the default (also returned to cover for custom color scales)
+  c_seq <- hcl(seq_len(n_colors) * (360/(n_colors+1))-15, 160, 60)
   if (reverse)
-    return(hcl(n_colors:1 * (360/(n_colors+1))-15, 160, 60))
-  else
-    return(hcl(1:n_colors * (360/(n_colors+1))-15, 160, 60))
+    return(rev(c_seq))
+  c_seq
+}
+
+# get remainder of a but put it in the range 1:b
+mod_from_one <- function(a, b)
+{
+  (a - 1) %% b + 1
 }
 
 # my personal favorite ordering of the 25 default R plot shapes
@@ -87,8 +93,7 @@ ggplot2_shapes_unique <- c(15:25,0:2,5:6,3:4,8,7,9:14)
 # Generates a shape sequence of length n for ggplot2.
 ggplot2_shape_seq <- function(n)
 {
-  my_seq <- 0:(n-1) %% length(ggplot2_shapes_unique)
-  ggplot2_shapes_unique[my_seq+1]
+  ggplot2_shapes_unique[mod_from_one(seq_len(n), length(ggplot2_shapes_unique))]
 }
 
 # Displays a default graph, which is accepted by ggplot2 and plotly.
@@ -440,15 +445,6 @@ plotly_vae_sum <- function(data, lines = TRUE, reverse = FALSE, legend = TRUE, t
   )
 }
 
-ggplot2_umap_sum <- function(data, paint, legend = TRUE, title = "")
-{
-  ggplot2_2d(
-    data[,1], data[,2], data[,3], data[,3],
-    paint, "lin", legend,
-    title, "Number of Components", "Number of Noisy Samples"
-  )
-}
-
 # makes a matrix that summarizes nearest neighbors for heatmap use
 knn_label_matrix <- function(knn_indices, labels)
 {
@@ -483,12 +479,37 @@ knn_label_matrix <- function(knn_indices, labels)
   heatmat
 }
 
-plotly_umap_sum <- function(data, paint, lines = TRUE, legend = TRUE, title = "")
+first_over_total <- function(row){row[1] / sum(row)}
+
+ggplot2_umap_sum <- function(label_mat, color_seq = NULL, title = "")
 {
-  plotly_2d(
-    data[,1], data[,2],
-    data[,3], sprintf("%s: %s", "Embedding", data[,3]),
-    paint, lines, legend,
-    title, "Number of Components", "Number of Noisy Samples"
+  if (length(color_seq) < 1)
+    color_seq <- color_seq(nrow(label_mat))
+
+  res <- data.frame("Sample_Group" = rownames(label_mat),
+                    "Self_Neighbors" = apply(label_mat, 1, first_over_total))
+  ggplot(res, aes(y = Self_Neighbors, x = Sample_Group, fill = Sample_Group)) +
+    geom_bar(stat="identity") + coord_flip() +
+    scale_fill_manual(values = color_seq) + ggtitle(title) + theme(
+      plot.title=element_text(size=22,face="bold"),
+      axis.title.x=element_text(size=16, margin = margin(t = 10)),
+      axis.title.y=element_text(size=16, margin = margin(r = 10)),
+      axis.text=element_text(size=12),
+      legend.title=element_text(size=16),
+      legend.text=element_text(size=10),
+      legend.position="none",
+      plot.margin = margin(1, 0.5, 0.5, 0.5, "cm"),
+      panel.background = element_blank(),
+      panel.grid.major = element_line(size = 0.1, linetype = 'solid', colour = "gray"))
+}
+
+plotly_umap_sum <- function(label_mat, paint, title = "", legend = TRUE, three = TRUE, boost = FALSE)
+{
+  if (three)
+    return(plotly_heatmap_dendrogram(
+      label_mat, paint, title = title, legend = legend, dend = boost
+    ))
+  plotly_heatmap_variance(
+    label_mat, paint, title = title, legend = legend, smooth = boost
   )
 }

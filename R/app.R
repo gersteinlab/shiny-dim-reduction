@@ -493,9 +493,6 @@ Seconds elapsed: %s", my_timer(start)), "message")
     if (iplot$embedding == "Sets")
       num <- 5
 
-    if (iplot$embedding == "UMAP" && iplot$visualize == "Summarize")
-      num <- 6
-
     color_seq(num, iplot$palette, !not_rev())
   })
 
@@ -582,7 +579,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
         return(ggplot2_vae_sum(data, !not_rev(), legend(), title_embed()))
 
       if (iplot$embedding == "UMAP")
-        return(ggplot2_umap_sum(data, paint(), legend(), title_embed()))
+        return(ggplot2_umap_sum(knn_label_matrix(data, colors()), paint(), title_embed()))
     }
 
     data <- data[keep(),,drop=FALSE]
@@ -659,7 +656,8 @@ Seconds elapsed: %s", my_timer(start)), "message")
         return(plotly_vae_sum(data, FALSE, !not_rev(), legend(), title_embed()))
 
       if (iplot$embedding == "UMAP")
-        return(plotly_umap_sum(data, paint(), FALSE, legend(), title_embed()))
+        return(plotly_umap_sum(knn_label_matrix(data, colors()), paint(),
+                               title_embed(), legend(), FALSE, boost()))
     }
 
     data <- data[keep(),,drop=FALSE]
@@ -735,7 +733,8 @@ Seconds elapsed: %s", my_timer(start)), "message")
         return(plotly_vae_sum(data, TRUE, !not_rev(), legend(), title_embed()))
 
       if (iplot$embedding == "UMAP")
-        return(plotly_umap_sum(data, paint(), TRUE, legend(), title_embed()))
+        return(plotly_umap_sum(knn_label_matrix(data, colors()), paint(),
+                               title_embed(), legend(), TRUE, boost()))
     }
 
     data <- data[keep(),,drop=FALSE]
