@@ -14,6 +14,7 @@ source_sdr("workflows.R")
 source_sdr("find_replace.R")
 source_sdr("storage.R")
 source_sdr("authentication.R")
+source_sdr("validation.R")
 
 # ------------
 # DEPENDENCIES
@@ -77,9 +78,9 @@ read_tsv_text <- function(filename)
 # converts a matrix to a numeric matrix,
 # removing columns with no valid entries
 convert_to_num <- function(data){
-  data <- apply(data, 1:2, as.numeric)
-  data[is.na(data)] <- 0
-  data[is.nan(data)] <- 0
+  data[] <- lapply(data, as.numeric)
+  data <- as.matrix(data)
+  data[is.na(data) | is.nan(data)] <- 0
   data[,colSums(data) > 0]
 }
 
@@ -299,6 +300,49 @@ remove_excess_na_cols <- function(data, frac){
     keep_indices[j] <- (sum(is.na(data[[j]])) <= cutoff)
 
   data[,keep_indices,drop=FALSE]
+}
+
+# example input for make_categories_full
+exrna_raw_categories_full <- list(
+  "Extracellular RNA" = c(
+    "miRNA",
+    "piRNA",
+    "tRNA",
+    "circRNA",
+    "ex_miRNA"
+  ),
+  "Exogenous RNA" = c(
+    "cumulative_ex_genomes",
+    "specific_ex_genomes",
+    "cumulative_ex_ribosomes",
+    "specific_ex_ribosomes"
+  ),
+  "Taxonomy" = c(
+    "rRNA_Species",
+    "Gene_Species",
+    "rRNA_Transpose",
+    "Gene_Transpose"
+  ),
+  "RNA Binding Proteins" = c(
+    "RNA_binding_proteins"
+  )
+)
+
+# makes a list of lists used for total dimensions
+make_categories_full <- function(raw_categories_full)
+{
+  groups <- names(raw_categories_full)
+  answer <- empty_named_list(groups)
+
+  for (grp in groups)
+  {
+    categories <- raw_categories_full[[grp]]
+    answer[[grp]] <- empty_named_list(categories)
+    for (cat in categories)
+      answer[[grp]][[cat]] <- dim(readRDS(sprintf("%s/combined_%s.rds", com_loc, cat)))
+  }
+
+  answer
 }
 
 # ------------
