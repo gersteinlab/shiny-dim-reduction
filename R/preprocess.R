@@ -123,6 +123,9 @@ get_col_decor_subset <- function(cat, col)
     if (cat %in% dec_group$CATEGORIES)
     {
       ref <- dec_group$COL_SUBSETS$Reference
+      # ensure that the number of features according to the decoration agrees
+      # with the number of features according to categories
+      stopifnot(length(ref) == categories[[cat]][2])
       ind <- dec_group$COL_SUBSETS[[col]]
       return(ref[ind])
     }

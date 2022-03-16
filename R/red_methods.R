@@ -9,6 +9,9 @@ if (!exists("ran_install"))
     stop("Could not confirm installation. Please source install.R manually.")
 }
 
+# necessary for validation
+source_sdr("validation.R")
+
 # depends on Anaconda
 library(reticulate)
 library(tensorflow)

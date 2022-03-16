@@ -45,6 +45,9 @@ binary_search <- function(data, target, num_digits)
 # temporarily reduce number of normalizations
 temp_nor <- nor_options[1:2]
 # name_cat <- "miRNA"
+# name_cat <- "tRNA"
+# name_cat <- "piRNA"
+name_cat <- "ex_miRNA"
 
 # ------------
 # PCA REQUESTS
@@ -269,11 +272,14 @@ saveRDS(sets_requests, "sets_requests.rds")
 # PERFORM REDUCTION
 # -----------------
 
+# !!! MIRNA
+
 # saveRDS(pca_requests, "mirna_ran_pca_requests.rds")
 # saveRDS(vae_requests, "mirna_ran_vae_requests.rds")
 # saveRDS(umap_requests, "mirna_ran_umap_requests.rds")
 # saveRDS(phate_requests, "mirna_ran_phate_requests.rds")
 # saveRDS(sets_requests, "mirna_ran_sets_requests.rds")
+
 pca_requests_ran <- readRDS("mirna_ran_pca_requests.rds")
 vae_requests_ran <- readRDS("mirna_ran_vae_requests.rds")
 umap_requests_ran <- readRDS("mirna_ran_umap_requests.rds")
@@ -296,6 +302,153 @@ done_ran_vae <- readRDS("done_ran_vae.rds")
 done_ran_umap <- readRDS("done_ran_umap.rds")
 done_ran_phate <- readRDS("done_ran_phate.rds")
 done_ran_sets <- readRDS("done_ran_sets.rds")
+
+# !!! TRNA
+
+# saveRDS(pca_requests, "trna_ran_pca_requests.rds")
+# saveRDS(vae_requests, "trna_ran_vae_requests.rds")
+# saveRDS(umap_requests, "trna_ran_umap_requests.rds")
+# saveRDS(phate_requests, "trna_ran_phate_requests.rds")
+# saveRDS(sets_requests, "trna_ran_sets_requests.rds")
+
+trna_pca_ran <- readRDS("trna_ran_pca_requests.rds")
+trna_vae_ran <- readRDS("trna_ran_vae_requests.rds")
+trna_umap_ran <- readRDS("trna_ran_umap_requests.rds")
+trna_phate_ran <- readRDS("trna_ran_phate_requests.rds")
+trna_sets_ran <- readRDS("trna_ran_sets_requests.rds")
+
+# done_trna_pca <- perform_reduction(trna_pca_ran, force = 2)
+# saveRDS(done_trna_pca, "done_trna_pca.rds")
+# done_trna_vae <- perform_reduction(trna_vae_ran, force = 2)
+# saveRDS(done_trna_vae, "done_trna_vae.rds")
+# done_trna_umap <- perform_reduction(trna_umap_ran, force = 2)
+# saveRDS(done_trna_umap, "done_trna_umap.rds")
+# done_trna_phate <- perform_reduction(trna_phate_ran, force = 2)
+# saveRDS(done_trna_phate, "done_trna_phate.rds")
+# done_trna_sets <- perform_reduction(trna_sets_ran, force = 2)
+# saveRDS(done_trna_sets, "done_trna_sets.rds")
+
+# !!! PIRNA
+
+# saveRDS(pca_requests, "pirna_ran_pca_requests.rds")
+# saveRDS(vae_requests, "pirna_ran_vae_requests.rds")
+# saveRDS(umap_requests, "pirna_ran_umap_requests.rds")
+# saveRDS(phate_requests, "pirna_ran_phate_requests.rds")
+# saveRDS(sets_requests, "pirna_ran_sets_requests.rds")
+
+pirna_pca_ran <- readRDS("pirna_ran_pca_requests.rds")
+pirna_vae_ran <- readRDS("pirna_ran_vae_requests.rds")
+pirna_umap_ran <- readRDS("pirna_ran_umap_requests.rds")
+pirna_phate_ran <- readRDS("pirna_ran_phate_requests.rds")
+pirna_sets_ran <- readRDS("pirna_ran_sets_requests.rds")
+
+# done_pirna_pca <- perform_reduction(pirna_pca_ran, force = 2)
+# saveRDS(done_pirna_pca, "done_pirna_pca.rds")
+s1_i <- pirna_vae_ran$SCALING == sca_options[1]
+n1_i <- pirna_vae_ran$NORMALIZATION == nor_options[1]
+s1n1_i <- s1_i & n1_i
+# NOTE: we break up piRNA into many parts because it's hard
+# Note: if force = 0, we actually did it already but it failed to save due to lack of RAM
+# done_pirna_vae_s1n1 <- perform_reduction(pirna_vae_ran[s1n1_i,], force = 0)
+# saveRDS(done_pirna_vae_s1n1, "done_pirna_vae1.rds")
+is_difficult <- pirna_vae_ran$COL_SUBSETS == "Total"
+# done_pirna_vae_p2 <- perform_reduction(pirna_vae_ran[!s1n1_i & !is_difficult, ], force = 2)
+# saveRDS(done_pirna_vae_p2, "done_pirna_vae2.rds")
+# done_pirna_vae_p3 <- perform_reduction(pirna_vae_ran[!s1n1_i & s1_i & is_difficult, ], force = 0)
+# saveRDS(done_pirna_vae_p3, "done_pirna_vae3.rds")
+is_very_difficult <- pirna_vae_ran$ROW_SUBSETS == "Total"
+all_but_most_difficult <- !s1_i & is_difficult & !is_very_difficult
+most_difficult <- !s1_i & is_difficult & is_very_difficult
+abmd1 <- all_but_most_difficult & pirna_vae_ran$NORMALIZATION == "Local Min-Max"
+abmd2 <- all_but_most_difficult & pirna_vae_ran$NORMALIZATION == "Global Min-Max"
+
+# done_pirna_vae_p4_1 <- perform_reduction(pirna_vae_ran[abmd1, ], force = 2)
+# saveRDS(done_pirna_vae_p4_1, "done_pirna_vae4_1.rds")
+# done_pirna_vae_p4_2 <- perform_reduction(pirna_vae_ran[abmd2, ], force = 2)
+# saveRDS(done_pirna_vae_p4_2, "done_pirna_vae4_2.rds")
+# done_pirna_vae_p5 <- perform_reduction(pirna_vae_ran[most_difficult, ], force = 2)
+# saveRDS(done_pirna_vae_p5, "done_pirna_vae5.rds")
+# done_pirna_umap <- perform_reduction(pirna_umap_ran, force = 2)
+# saveRDS(done_pirna_umap, "done_pirna_umap.rds")
+# done_pirna_phate <- perform_reduction(pirna_phate_ran, force = 2)
+# saveRDS(done_pirna_phate, "done_pirna_phate.rds")
+# done_pirna_sets <- perform_reduction(pirna_sets_ran, force = 2)
+# saveRDS(done_pirna_sets, "done_pirna_sets.rds")
+
+# VAE amount done:
+# 102 in Explore
+# 102 in Summary
+# 396 in tSNE
+# which(pirna_vae_ran$FILE_LOCATION == "VAE_E/piRNA/ANACC1S6lJ1C_SD_Top_100_S1_N2_10_64.rds")
+# [1] 919
+
+# S1 N1: 240 in tSNE, 63 in Explore, 63 in Summary
+# s1n1_locs <- pirna_vae_ran$FILE_LOCATION[s1n1_i]
+# setwd(ref_loc)
+# for (loc in s1n1_locs)
+# {
+#   loc_info <- file.info(loc)
+#   modify_time <- loc_info$mtime
+#   if (format(modify_time, "%m") != "03")
+#     print(loc)
+# }
+# s1n2_diff_locs <- pirna_vae_ran$FILE_LOCATION[!s1n1_i & s1_i & is_difficult]
+# for (loc in s1n2_diff_locs)
+# {
+#   loc_info <- file.info(loc)
+#   modify_time <- loc_info$mtime
+#   if (format(modify_time, "%m") != "03")
+#     print(loc)
+# }
+
+# !!! EX_MIRNA
+
+# saveRDS(pca_requests, "ex_mirna_ran_pca_requests.rds")
+# saveRDS(vae_requests, "ex_mirna_ran_vae_requests.rds")
+# saveRDS(umap_requests, "ex_mirna_ran_umap_requests.rds")
+# saveRDS(phate_requests, "ex_mirna_ran_phate_requests.rds")
+# saveRDS(sets_requests, "ex_mirna_ran_sets_requests.rds")
+
+ex_mirna_pca_ran <- readRDS("ex_mirna_ran_pca_requests.rds")
+ex_mirna_vae_ran <- readRDS("ex_mirna_ran_vae_requests.rds")
+ex_mirna_umap_ran <- readRDS("ex_mirna_ran_umap_requests.rds")
+ex_mirna_phate_ran <- readRDS("ex_mirna_ran_phate_requests.rds")
+ex_mirna_sets_ran <- readRDS("ex_mirna_ran_sets_requests.rds")
+
+s2_i <- ex_mirna_pca_ran$SCALING == sca_options[2]
+n2_i <- ex_mirna_pca_ran$NORMALIZATION == nor_options[2]
+s2n2_i <- s2_i & n2_i
+# done_ex_mirna_pca1 <- perform_reduction(ex_mirna_pca_ran[!s2n2_i,], force = 0)
+# saveRDS(done_ex_mirna_pca1, "done_ex_mirna_pca1.rds")
+# done_ex_mirna_pca2 <- perform_reduction(ex_mirna_pca_ran[s2n2_i,], force = 2)
+# saveRDS(done_ex_mirna_pca2, "done_ex_mirna_pca2.rds")
+not_hard <- ex_mirna_vae_ran$ROW_SUBSETS != "Total" & ex_mirna_vae_ran$COL_SUBSETS != "Total"
+very_hard <- ex_mirna_vae_ran$ROW_SUBSETS == "Total" & ex_mirna_vae_ran$COL_SUBSETS == "Total"
+# done_ex_mirna_vae1 <- perform_reduction(ex_mirna_vae_ran[not_hard,], force = 2)
+# saveRDS(done_ex_mirna_vae1, "done_ex_mirna_vae1.rds")
+hard1 <- !not_hard & (ex_mirna_vae_ran$COL_SUBSETS != "Total")
+hard2 <- !not_hard & !very_hard & (ex_mirna_vae_ran$COL_SUBSETS == "Total")
+hard3 <- !not_hard & very_hard & (ex_mirna_vae_ran$COL_SUBSETS == "Total")
+s1_vae <- ex_mirna_vae_ran$SCALING == sca_options[1]
+n1_vae <- ex_mirna_vae_ran$NORMALIZATION == nor_options[1]
+# done_ex_mirna_vae2 <- perform_reduction(ex_mirna_vae_ran[hard1,], force = 2)
+# saveRDS(done_ex_mirna_vae2, "done_ex_mirna_vae2.rds")
+# done_ex_mirna_vae3 <- perform_reduction(ex_mirna_vae_ran[hard2 & s1_vae & n1_vae,], force = 2)
+# saveRDS(done_ex_mirna_vae3, "done_ex_mirna_vae3.rds")
+# done_ex_mirna_vae4 <- perform_reduction(ex_mirna_vae_ran[hard2 & !s1_vae & n1_vae,], force = 2)
+# saveRDS(done_ex_mirna_vae4, "done_ex_mirna_vae4.rds")
+# done_ex_mirna_vae5 <- perform_reduction(ex_mirna_vae_ran[hard2 & s1_vae & !n1_vae,], force = 2)
+# saveRDS(done_ex_mirna_vae5, "done_ex_mirna_vae5.rds")
+# done_ex_mirna_vae6 <- perform_reduction(ex_mirna_vae_ran[hard2 & !s1_vae & !n1_vae,], force = 2)
+# saveRDS(done_ex_mirna_vae6, "done_ex_mirna_vae6.rds")
+# done_ex_mirna_vae7 <- perform_reduction(ex_mirna_vae_ran[hard3,], force = 2)
+# saveRDS(done_ex_mirna_vae7, "done_ex_mirna_vae7.rds")
+# done_ex_mirna_umap <- perform_reduction(ex_mirna_umap_ran, force = 2)
+# saveRDS(done_ex_mirna_umap, "done_ex_mirna_umap.rds")
+# done_ex_mirna_phate <- perform_reduction(ex_mirna_phate_ran, force = 2)
+# saveRDS(done_ex_mirna_phate, "done_ex_mirna_phate.rds")
+# done_ex_mirna_sets <- perform_reduction(ex_mirna_sets_ran, force = 2)
+# saveRDS(done_ex_mirna_sets, "done_ex_mirna_sets.rds")
 
 pca_requests <- readRDS("pca_requests.rds")
 vae_requests <- readRDS("vae_requests.rds")
@@ -374,16 +527,62 @@ ran_mirna_new <- readRDS("ran_mirna_new.rds")
 # app_requests$REQUEST_ID <- get_request_id(nrow(app_requests))
 # saveRDS(app_requests, "app_requests.rds")
 
-app_requests_1_23 <- readRDS("app_requests_1_23.rds")
+# app_requests_1_23 <- readRDS("app_requests_1_23.rds")
+#
+# app_requests_2_16 <- app_requests_1_23
+# app_requests_2_16 <- app_requests_2_16[app_requests_2_16$CATEGORIES != "miRNA",]
+# app_requests_2_16 <- rbind_req(app_requests_2_16, ran_mirna_new)
+# saveRDS(app_requests_2_16, "app_requests_2_16.rds")
 
-app_requests_2_16 <- app_requests_1_23
-app_requests_2_16 <- app_requests_2_16[app_requests_2_16$CATEGORIES != "miRNA",]
-app_requests_2_16 <- rbind_req(app_requests_2_16, ran_mirna_new)
+app_requests_2_16 <- readRDS("app_requests_2_16.rds")
 
-saveRDS(app_requests_2_16, "app_requests_2_16.rds")
+app_requests_3_10 <- app_requests_2_16
+app_requests_3_10 <- app_requests_3_10[!(app_requests_3_10$CATEGORIES %in% c("piRNA", "tRNA")),]
+tp_requests <- rbind_req(
+  readRDS("done_trna_pca.rds"),
+  readRDS("done_trna_vae.rds"),
+  readRDS("done_trna_umap.rds"),
+  readRDS("done_trna_phate.rds"),
+  readRDS("done_trna_sets.rds"),
+  readRDS("done_pirna_pca.rds"),
+  readRDS("done_pirna_vae1.rds"),
+  readRDS("done_pirna_vae2.rds"),
+  readRDS("done_pirna_vae3.rds"),
+  readRDS("done_pirna_vae4_1.rds"),
+  readRDS("done_pirna_vae4_2.rds"),
+  readRDS("done_pirna_vae5.rds"),
+  readRDS("done_pirna_umap.rds"),
+  readRDS("done_pirna_phate.rds"),
+  readRDS("done_pirna_sets.rds")
+)
+tp_requests$REQUEST_ID <- get_request_id(nrow(tp_requests))
+app_requests_3_10 <- rbind_req(app_requests_3_10, tp_requests)
+
+# setwd(pro_loc)
+# saveRDS(app_requests_3_10, "app_requests_3_10.rds")
+app_requests_3_10 <- readRDS("app_requests_3_10.rds")
+app_requests_3_13 <- app_requests_3_10
+app_requests_3_13 <- app_requests_3_13[app_requests_3_13$CATEGORIES != "ex_miRNA",]
+m_requests <- rbind_req(
+  readRDS("done_ex_mirna_pca1.rds"),
+  readRDS("done_ex_mirna_pca2.rds"),
+  readRDS("done_ex_mirna_vae1.rds"),
+  readRDS("done_ex_mirna_vae2.rds"),
+  readRDS("done_ex_mirna_vae3.rds"),
+  readRDS("done_ex_mirna_vae4.rds"),
+  readRDS("done_ex_mirna_vae5.rds"),
+  readRDS("done_ex_mirna_vae6.rds"),
+  readRDS("done_ex_mirna_vae7.rds"),
+  readRDS("done_ex_mirna_umap.rds"),
+  readRDS("done_ex_mirna_phate.rds"),
+  readRDS("done_ex_mirna_sets.rds")
+)
+m_requests$REQUEST_ID <- get_request_id(nrow(m_requests))
+app_requests_3_13 <- rbind_req(app_requests_3_13, m_requests)
+saveRDS(app_requests_3_13, "app_requests_3_13.rds")
 
 setwd(ref_loc)
-saveRDS(app_requests_2_16, "app_requests.rds")
+saveRDS(app_requests_3_13, "app_requests.rds")
 
 # syncs a set of requests from reference to AWS
 sudo_working_key(amazon_keys)
@@ -392,8 +591,10 @@ app_requests <- readRDS("app_requests.rds")
 existing_files <- list_aws_s3()
 request_files <- app_requests$FILE_LOCATION
 # files_to_be_uploaded <- setdiff(request_files, existing_files)
+# files_to_be_uploaded <- app_requests$FILE_LOCATION[
+#   app_requests$CATEGORIES == "miRNA" & app_requests$EMBEDDING == "Sets"]
 files_to_be_uploaded <- app_requests$FILE_LOCATION[
-  app_requests$CATEGORIES == "miRNA" & app_requests$EMBEDDING == "Sets"]
+  app_requests$CATEGORIES == "ex_miRNA"]
 
 n <- length(files_to_be_uploaded)
 
