@@ -617,3 +617,12 @@ for (i in my_range)
 }
 
 save_aws_s3(app_requests, "app_requests.rds")
+
+
+
+lol <- list.files(ref_loc, recursive = TRUE)
+setwd(ref_loc)
+app_requests <- readRDS("app_requests.rds")
+unknown_files <- setdiff(lol, app_requests$FILE_LOCATION)
+extra_files <- setdiff(unknown_files, "app_requests.rds")
+# unlink(extra_files)
