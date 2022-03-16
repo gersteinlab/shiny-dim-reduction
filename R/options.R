@@ -75,8 +75,10 @@ if (sdr_running_local)
 Type 'Y' and press enter to use local storage.
 Type anything else and press enter to use AWS storage. ")
 
+use_local_storage <- user_local == "Y"
+
 set_storage(
-  user_local == "Y",
+  use_local_storage,
   ifelse(sdr_from_app, "../reference", ref_loc),
   amazon_keys)
 
@@ -101,7 +103,7 @@ newest_request_i <- which.max(app_requests$TIME_COMPLETED)
 newest_request <- app_requests[newest_request_i,]
 
 default_user_requests <- make_requests()
-if (find_aws_s3("Sessions/user_requests.rds"))
+if (!use_local_storage && find_aws_s3("Sessions/user_requests.rds"))
   default_user_requests <- load_aws_s3("Sessions/user_requests.rds")
 
 # ----------------

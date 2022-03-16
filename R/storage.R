@@ -163,7 +163,9 @@ key_is_connected <- function()
 }
 
 # the expected location of the master key
-master_key_loc <- get_project_loc("sdr_master_key.rds")
+master_key_loc <- NULL
+if (!sdr_from_app)
+  master_key_loc <- get_project_loc("sdr_master_key.rds")
 
 # makes a list that qualifies as a key from an ID, a secret, and a bucket
 make_key <- function(id = "", secret = "", bucket = "")
