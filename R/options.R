@@ -41,18 +41,12 @@ use_local_storage <- query_storage(app_ref_loc, amazon_keys)
 
 # open requests
 app_requests <- make_requests()
-colnames_ids_first <- c("REQUEST_ID", colnames(app_requests))
 if (find_store("app_requests.rds"))
   app_requests <- load_store("app_requests.rds")
 
-# make an ordered version of app_requests for user viewing
-recent_reqs_first <- order(app_requests$TIME_COMPLETED, decreasing = TRUE)
-ordered_app_requests <- app_requests[recent_reqs_first, colnames_ids_first, drop = FALSE]
-rownames(ordered_app_requests) <- NULL
-
 # get newest request
-newest_request_i <- which.max(ordered_app_requests$TIME_COMPLETED)
-newest_request <- ordered_app_requests[newest_request_i,]
+newest_request_i <- which.max(app_requests$TIME_COMPLETED)
+newest_request <- app_requests[newest_request_i,]
 
 # create default user requests
 default_user_requests <- make_requests()

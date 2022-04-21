@@ -481,3 +481,27 @@ get_request_id <- function(n = 1)
   save_aws_s3(id[n], "Sessions/cur_id.rds")
   id
 }
+
+# ----------------
+# PRESENT REQUESTS
+# ----------------
+
+colnames_ids_first <- c("REQUEST_ID", colnames(make_requests()))
+
+# prettifies a request table for use by the library DT
+present_requests <- function(requests)
+{
+  recent_reqs_first <- order(requests$TIME_COMPLETED, decreasing = TRUE)
+  res <- requests[recent_reqs_first,, drop = FALSE]
+  if ("REQUEST_ID" %in% colnames(res))
+    res <- res[,colnames_ids_first, drop = FALSE]
+  rownames(res) <- NULL
+
+  # only specify time completed down to the day; if it's not completed, show NA
+  res$TIME_REQUESTED <- as.Date(res$TIME_REQUESTED, format = "%Y-%m-%d")
+  res$TIME_COMPLETED <- as.Date(res$TIME_COMPLETED, format = "%Y-%m-%d")
+  for (i in seq_len(nrow(res)))
+    if (res$TIME_COMPLETED[i] < res$TIME_REQUESTED[i])
+      res$TIME_COMPLETED[i] <- NA
+  res
+}

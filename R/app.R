@@ -76,7 +76,7 @@ server <- function(input, output, session) {
   # DYNAMIC UI LOGIC
   # ----------------
   observeEvent(input$request_analysis, {
-    if (user_local == "Y")
+    if (use_local_storage)
     {
       notif("Cannot make custom requests while offline.", "error")
       return()
@@ -271,8 +271,14 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$refresh, {
-    if (find_aws_s3("Sessions/user_requests.rds") && !(user_local == "Y"))
-      user_requests(load_aws_s3("Sessions/user_requests.rds"))
+    if (!use_local_storage)
+    {
+      if (find_aws_s3("Sessions/user_requests.rds"))
+        user_requests(load_aws_s3("Sessions/user_requests.rds"))
+
+      if (find_aws_s3("app_requests.rds"))
+        user_requests(load_aws_s3("app_requests.rds"))
+    }
   })
 
   observeEvent(input$randomize, {
@@ -852,13 +858,13 @@ Seconds elapsed: %s", my_timer(start)), "message")
     if (!authenticated())
       return(my_datatable())
 
-    my_datatable(ordered_app_requests)
+    my_datatable(present_requests(app_requests))
   }, server = table_server_render)
   output$user_requests_out <- renderDT({
     if (!authenticated())
       return(my_datatable())
 
-    my_datatable(user_requests())
+    my_datatable(present_requests(user_requests()))
   }, server = table_server_render)
   output$ggplot2_out <- renderPlot({prep_plot(ggplot2_data())})
   output$plotly2_out <- renderPlotly({prep_plot(plotly2_data())})
