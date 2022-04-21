@@ -11,6 +11,7 @@
 # Should work out of the box (replace with your app directory):
 # library(shiny)
 # shiny::runApp("C:/Users/Justin Chang/Desktop/exrna_app_3_16/app")
+# shiny::runApp("C:/Users/Justin Chang/Desktop/exrna_app_3_25/app")
 
 # Key FLAGS for Goal 3:
 # - sdr_from_app: whether you are sourcing this file from an application [set first by app.R]
@@ -101,6 +102,7 @@ sdr_pkg_names$base <- c(
   , "stringi"
   , "aws.s3"
   , "bcrypt"
+  , "hash"
 
   , "shinydashboard"
   , "shinyjs"

@@ -84,6 +84,15 @@ safe_dir <- function(path)
   invisible()
 }
 
+# ALTERNATE DESIGN PHILOSOPHY:
+# roo (root, ex: exRNA)
+# -- com (combined)
+# -- int (intermediate)
+# -- ref (reference)
+# -- req (requests)
+# -- app (app)
+# -- -- dep (dependencies)
+
 # roo (root)
 # -- raw (raw)
 # -- pro (processing)
