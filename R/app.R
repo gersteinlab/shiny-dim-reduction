@@ -521,8 +521,13 @@ Seconds elapsed: %s", my_timer(start)), "message")
          iplot$visualize == "tSNE") && (iplot$visualize != "Summarize"),
       sprintf(", %s Neighbors", iplot$perplexity), "")
 
-    sprintf("%s%s on %s [%s (%s), %s (%s)]%s",
-            ifelse(iplot$embedding == "PHATE", "", vis_to_noun(iplot$visualize)), # "Exploration of "
+    # make a noun for the visualization
+    vis_as_noun <- ""
+    if (iplot$embedding != "PHATE")
+      vis_as_noun <- rep_str(iplot$visualize, vis_options,
+                             c("Exploration of ", "Summary of ", "tSNE of "))
+
+    sprintf("%s%s on %s [%s (%s), %s (%s)]%s", vis_as_noun,
             iplot$embedding, cati(), rowi(), sum(keep()), coli(), num_feat(), nei)
   })
 
@@ -844,7 +849,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
     if (!authenticated())
       return(my_datatable(NULL))
 
-    my_datatable(app_requests)
+    my_datatable(ordered_app_requests)
   })
   output$user_requests_out <- renderDT({
     if (!authenticated())

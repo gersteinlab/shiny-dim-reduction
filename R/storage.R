@@ -1,13 +1,10 @@
 # The purpose of this file is to manage Local / AWS.S3 storage.
-# source("storage.R", encoding="UTF-8")
 
 # Goals:
 # list_store: list all files with a prefix
 # find_store: returns whether a file exists
 # save_store: saves a file, creating the directory if it doesn't exist
 # load_store: loads a file, returning NULL if it doesn't exist
-
-# TBD: worth validating if a filename is not a character of length 1?
 
 if (!exists("ran_install"))
 {
@@ -28,7 +25,7 @@ mkdir_saveRDS <- function(data, file, compress = TRUE)
 {
   dest_dir <- dirname(file)
   if (!dir.exists(dest_dir))
-    dir.create(dest_dir, recursive=TRUE)
+    dir.create(dest_dir, recursive = TRUE)
   saveRDS(data, file, compress = compress)
 }
 
@@ -88,10 +85,16 @@ set_dependency <- function(name, default = NULL, compress = TRUE)
 # LOCAL STORAGE
 # -------------
 
+# sets the reference location used for local paths, does not check validity
+set_working_ref <- function(loc)
+{
+  Sys.setenv("LOCAL_STORAGE_REF" = loc) # the old ref is disconnected automatically
+}
+
 # disconnects from ref storage
 disconnect_ref <- function()
 {
-  Sys.setenv("LOCAL_STORAGE_REF" = "")
+  set_working_ref("this_is_not_a_file")
 }
 
 # determines whether R is connected to ref
@@ -100,18 +103,10 @@ ref_is_connected <- function()
   file.exists(Sys.getenv("LOCAL_STORAGE_REF"))
 }
 
-# sets the reference location used for local paths
-set_working_ref <- function(loc)
+# checks if a reference is valid
+is_valid_ref <- function(loc)
 {
-  disconnect_ref()
-  stopifnot(length(loc) == 1, is.character(loc))
-  Sys.setenv("LOCAL_STORAGE_REF" = loc)
-
-  if (!ref_is_connected())
-  {
-    disconnect_ref()
-    stop("The provided reference location does not exist.")
-  }
+  length(loc) == 1 && is.character(loc) && file.exists(loc)
 }
 
 # gives the local storage path for a prefix (usually in reference)
@@ -180,16 +175,17 @@ make_key <- function(id = "", secret = "", bucket = "")
   )
 }
 
+# checks if a key is valid
+is_valid_key <- function(key)
+{
+  (class(key) == "list") && isTRUE(all.equal(names(key), c("id", "secret", "bucket")))
+}
+
 # sets the current working AWS access key, which comprises: id, secret, bucket
 set_working_key <- function(key = make_key())
 {
+  stopifnot(is_valid_key(key))
   disconnect_key()
-
-  stopifnot(
-    class(key) == "list",
-    isTRUE(all.equal(names(key), c("id", "secret", "bucket")))
-  )
-
   Sys.setenv("AWS_ACCESS_KEY_ID" = key$id,
              "AWS_SECRET_ACCESS_KEY" = key$secret,
              "AWS_ACCESS_BUCKET" = key$bucket)
@@ -237,9 +233,8 @@ list_aws_s3 <- function(prefix = NULL)
 {
   as.character(sapply(
     get_bucket(Sys.getenv("AWS_ACCESS_BUCKET"), prefix = prefix, max = Inf),
-    function(x){
-      x$Key
-    }))
+    function(x){x$Key}
+  ))
 }
 
 # determines whether a single object with the given filename exists
@@ -274,23 +269,59 @@ load_aws_s3 <- function(filename)
 # STORAGE ASSIGNMENT
 # ------------------
 
-# changes the storage type to local or AWS
-set_storage <- function(use_local, ref = NULL, key = NULL)
+set_storage_local <- function(ref)
 {
-  if (use_local)
+  set_working_ref(ref)
+  assign_global("list_store", list_local)
+  assign_global("find_store", find_local)
+  assign_global("save_store", save_local)
+  assign_global("load_store", load_local)
+}
+
+set_storage_aws <- function(key)
+{
+  set_working_key(key)
+  assign_global("list_store", list_aws_s3)
+  assign_global("find_store", find_aws_s3)
+  assign_global("save_store", save_aws_s3)
+  assign_global("load_store", load_aws_s3)
+}
+
+query_storage <- function(ref = NULL, key = NULL)
+{
+  if (sdr_running_local && is_valid_ref(ref)) # can use local storage
   {
-    set_working_ref(ref)
-    assign_global("list_store", list_local)
-    assign_global("find_store", find_local)
-    assign_global("save_store", save_local)
-    assign_global("load_store", load_local)
+    if (is_valid_key(key)) # can use AWS storage
+    {
+      if ("Y" == readline(prompt = "
+Type 'Y' and press enter to use local storage.
+Type anything else and press enter to use AWS storage. "))
+      {
+        set_storage_local(ref)
+        return(TRUE)
+      }
+      else
+      {
+        set_storage_aws(key)
+        return(FALSE)
+      }
+    }
+    else # cannot use AWS storage
+    {
+      set_storage_local(ref)
+      return(TRUE)
+    }
   }
-  else
+  else # cannot use local storage
   {
-    set_working_key(key)
-    assign_global("list_store", list_aws_s3)
-    assign_global("find_store", find_aws_s3)
-    assign_global("save_store", save_aws_s3)
-    assign_global("load_store", load_aws_s3)
+    if (is_valid_key(key)) # can use AWS storage
+    {
+      set_storage_aws(key)
+      return(FALSE)
+    }
+    else # cannot use AWS storage
+    {
+      stop("Neither local storage nor AWS storage are available.")
+    }
   }
 }

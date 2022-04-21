@@ -19,6 +19,76 @@ require("shinydashboard")
 require("shinyjs")
 
 # ------------------
+# CONNECT TO STORAGE
+# ------------------
+
+# given a list of vectors called list_vec, returns
+# get_opt(v, length(list_vec[[v]])) for v in names(list_vec)
+name_len_opts <- function(list_vec)
+{
+  mapply(get_opt, names(list_vec), lapply(list_vec, length), USE.NAMES = FALSE)
+}
+
+# create categories and subsets; does get_dependency(categories_full, decorations)
+# note: must be done before requests because name_cat is needed to clean requests
+init_cat()
+init_sub(name_len_opts)
+
+# set the storage as local or AWS; queries the user if an option is available
+get_dependency("amazon_keys")
+app_ref_loc <- "../reference"
+use_local_storage <- query_storage(app_ref_loc, amazon_keys)
+
+# open requests
+app_requests <- make_requests()
+colnames_ids_first <- c("REQUEST_ID", colnames(app_requests))
+if (find_store("app_requests.rds"))
+  app_requests <- load_store("app_requests.rds")
+
+# make an ordered version of app_requests for user viewing
+recent_reqs_first <- order(app_requests$TIME_COMPLETED, decreasing = TRUE)
+ordered_app_requests <- app_requests[recent_reqs_first, colnames_ids_first, drop = FALSE]
+rownames(ordered_app_requests) <- NULL
+
+# get newest request
+newest_request_i <- which.max(ordered_app_requests$TIME_COMPLETED)
+newest_request <- ordered_app_requests[newest_request_i,]
+
+# create default user requests
+default_user_requests <- make_requests()
+if (!use_local_storage && find_aws_s3("Sessions/user_requests.rds"))
+  default_user_requests <- load_aws_s3("Sessions/user_requests.rds")
+
+# ----------------
+# FIX DEPENDENCIES
+# ----------------
+
+# get all remaining dependencies
+get_dependency("order_total", empty_named_list(name_cat))
+get_dependency("app_title", "Dimensionality Reduction Tool")
+get_dependency("app_citations", "No data citations could be found.")
+get_dependency("user_credentials")
+get_dependency("custom_color_scales")
+
+# create bibliography
+citations <- rep_str(bibliography, "!!!!!!!!!!", app_citations)
+
+# creates a print version of the instructions / citations
+print_instructions <- rem_html_tags(instructions)
+print_citations <- rem_html_tags(citations)
+
+# given an integer n, create an n x 1 data frame with empty metadata
+len_n_empty_metadata <- function(n)
+{
+  data.frame("Unknown" = rep("Unknown", n))
+}
+
+# fills in order_total in the event of missing metadata tables
+for (cat in name_cat)
+  if (is.null(order_total[[cat]]))
+    order_total[[cat]] <- len_n_empty_metadata(categories[[cat]][1])
+
+# ------------------
 # BROWSER PARAMETERS
 # ------------------
 
@@ -36,93 +106,6 @@ max_upse <- 5000
 max_heat <- 20000
 # the initial number of columns on a dendrogram
 max_dend <- 200
-
-# -----------------
-# LOAD DEPENDENCIES
-# -----------------
-
-# Please see converter.R for an explanation of these dependencies.
-get_dependency("order_total", empty_named_list(name_cat))
-get_dependency("app_title", "Dimensionality Reduction Tool")
-get_dependency("app_citations", "No data citations could be found.")
-get_dependency("user_credentials")
-get_dependency("custom_color_scales")
-get_dependency("amazon_keys")
-
-# -----
-# SETUP
-# -----
-
-# visualization options as nouns
-vis_nouns <- c("Exploration of ", "Summary of ", "tSNE of ")
-
-vis_to_noun <- function(vis)
-{
-  rep_str(vis, vis_options, vis_nouns)
-}
-
-# given a list of vectors called list_vec, returns
-# get_opt(v, length(list_vec[[v]])) for v in names(list_vec)
-name_len_opts <- function(list_vec)
-{
-  mapply(get_opt, names(list_vec), lapply(list_vec, length), USE.NAMES = FALSE)
-}
-
-# queries the user for a storage type
-user_local <- "N"
-if (sdr_running_local)
-  user_local <- readline(prompt = "
-Type 'Y' and press enter to use local storage.
-Type anything else and press enter to use AWS storage. ")
-
-use_local_storage <- user_local == "Y"
-
-set_storage(
-  use_local_storage,
-  ifelse(sdr_from_app, "../reference", ref_loc),
-  amazon_keys)
-
-# create bibliography
-citations <- rep_str(bibliography, "!!!!!!!!!!", app_citations)
-
-# creates a print version of the instructions / citations
-print_instructions <- rem_html_tags(instructions)
-print_citations <- rem_html_tags(citations)
-
-# create categories and subsets
-init_cat()
-init_sub(name_len_opts)
-
-# open requests
-app_requests <- load_store("app_requests.rds")
-app_requests <- app_requests[order(app_requests$TIME_COMPLETED, decreasing = TRUE),
-                             c("REQUEST_ID", colnames(app_requests[1:17]))]
-rownames(app_requests) <- NULL
-
-newest_request_i <- which.max(app_requests$TIME_COMPLETED)
-newest_request <- app_requests[newest_request_i,]
-
-default_user_requests <- make_requests()
-if (!use_local_storage && find_aws_s3("Sessions/user_requests.rds"))
-  default_user_requests <- load_aws_s3("Sessions/user_requests.rds")
-
-# ----------------
-# FIX DEPENDENCIES
-# ----------------
-
-# gets the very first file associated with a category, counts the number of rows,
-# and creates an empty metadata table for that category
-get_empty_cat_meta <- function(cat){
-  addr <- requests_to_final(app_requests[which(app_requests$CATEGORIES == cat)[1],])
-  if (!find_store(addr))
-    return(data.frame("Unknown" = "Unknown"))
-  data.frame("Unknown" = rep("Unknown", nrow(load_store(addr))))
-}
-
-# fills in order_total in the event of missing portions
-for (cat in name_cat)
-  if (is.null(order_total[[cat]]))
-    order_total[[cat]] <- get_empty_cat_meta(cat)
 
 # ------------------------------
 # GENERATE OPTIONS AND BOOKMARKS
@@ -144,7 +127,7 @@ select_opts <- vector(mode = "list", length = num_filters*num_cat) # initially o
 thre_opts <- vector(mode = "list", length = 2*num_cat)
 
 # create the option boxes
-for (cn in 1:num_cat)
+for (cn in seq_len(num_cat))
 {
   cat <- name_cat[cn]
   order_gen <- order_total[[cat]]
