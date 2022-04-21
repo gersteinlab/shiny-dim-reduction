@@ -19,6 +19,9 @@ run_default <- TRUE
 # should internal file addresses be logged?
 log_addrs <- FALSE
 
+# should server-side rendering be used for tables?
+table_server_render <- TRUE
+
 server <- function(input, output, session) {
   # --------------
   # AUTHENTICATION
@@ -847,16 +850,16 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
   output$requests_out <- renderDT({
     if (!authenticated())
-      return(my_datatable(NULL))
+      return(my_datatable())
 
     my_datatable(ordered_app_requests)
-  })
+  }, server = table_server_render)
   output$user_requests_out <- renderDT({
     if (!authenticated())
-      return(my_datatable(NULL))
+      return(my_datatable())
 
     my_datatable(user_requests())
-  })
+  }, server = table_server_render)
   output$ggplot2_out <- renderPlot({prep_plot(ggplot2_data())})
   output$plotly2_out <- renderPlotly({prep_plot(plotly2_data())})
   output$plotly3_out <- renderPlotly({prep_plot(plotly3_data())})
@@ -864,10 +867,10 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
   output$num_data_table <- renderDT({
     if (!authenticated())
-      return(my_datatable(NULL))
+      return(my_datatable())
 
     my_datatable(data.frame(num_data()))
-  })
+  }, server = table_server_render)
 
   output$download_num_data <- downloadHandler(
     filename = function() {
@@ -883,10 +886,10 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
   output$metadata_table <- renderDT({
     if (!authenticated())
-      return(my_datatable(NULL))
+      return(my_datatable())
 
     my_datatable(data.frame(metadata()))
-  })
+  }, server = table_server_render)
 
   output$download_metadata <- downloadHandler(
     filename = function() {
@@ -902,10 +905,14 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
   output$legend_out <- renderDT({
     if (!authenticated() || legend())
-      return(NULL)
+    {
+      shinyjs::hide("legend_out")
+      return(my_datatable())
+    }
 
+    shinyjs::show("legend_out")
     my_datatable(generate_legend_table(colors()))
-  })
+  }, server = table_server_render)
 
   # -----------------
   # DIRECT UI OUTPUTS

@@ -171,7 +171,7 @@ for (cn in seq_len(num_cat))
     select_opts[[length(select_ids)]] <- select_check_panel(order_gen[[char]], cat, char)
   }
 
-  # # thresholds
+  # thresholds
   for (sca in sca_options)
   {
     thre_ids <- c(thre_ids, id_thre(cat, sca))
