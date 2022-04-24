@@ -40,16 +40,20 @@ double_color_seq <- function(reverse = FALSE)
   c("#C90016", single_color_seq)
 }
 
-# lists all color palette options accepted by color_seq
+# lists all color palette options
 color_palettes <- list(
-  "Custom"=c("Custom", "Grayscale"),
+  "Custom"=c("Custom", "Grayscale", "None"),
   "Base"=c("Rainbow", "Heat", "Terrain", "Topography", "CM"),
   "Viridis"=c("Viridis", "Magma", "Plasma", "Inferno", "Cividis")
 )
 
 # Generates a color sequence of length n_colors with the given type
+# note: all palettes except for "Custom" are accepted
 color_seq <- function(n_colors, color_type = "Rainbow", reverse = FALSE)
 {
+  if (color_type == "None")
+    return(rep("#000000", n_colors))
+
   # returns single color seq if only one color needed
   if (n_colors < 2)
     return(single_color_seq)
@@ -74,12 +78,14 @@ color_seq <- function(n_colors, color_type = "Rainbow", reverse = FALSE)
     return(inferno(n_colors, direction = ifelse(reverse, -1, 1)))
   if (color_type == "Cividis")
     return(cividis(n_colors, direction = ifelse(reverse, -1, 1)))
-
-  # rainbow, the default (also returned to cover for custom color scales)
-  c_seq <- hcl(seq_len(n_colors) * (360/(n_colors+1))-15, 160, 60)
-  if (reverse)
-    return(rev(c_seq))
-  c_seq
+  if (color_type == "Rainbow")
+  {
+    c_seq <- hcl(seq_len(n_colors) * (360/(n_colors+1))-15, 160, 60)
+    if (reverse)
+      return(rev(c_seq))
+    return(c_seq)
+  }
+  stop("color_seq could not generate the provided palette type.")
 }
 
 # get remainder of a but put it in the range 1:b

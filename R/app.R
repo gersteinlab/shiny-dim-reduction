@@ -547,17 +547,36 @@ Seconds elapsed: %s", my_timer(start)), "message")
   })
 
   paint <- reactive({
-    # for custom color schemes
-    if (iplot$palette == "Custom" && iplot$visualize != "Summarize" &&
-        length(custom_color_scales) > 0 && colorby() %in% names(custom_color_scales))
+    if (iplot$palette == "Custom") # requesting a custom color palette
     {
-      new <- custom_color_scales[[colorby()]] %>% unlist()
+      if (iplot$visualize != "Summarize" && length(custom_color_scales) > 0)
+      {
+        # for scatterplots, see if colorby() has a corresponding palette available
+        if (iplot$embedding != "Sets" && colorby() %in% names(custom_color_scales))
+        {
+          new <- custom_color_scales[[colorby()]] %>% unlist()
 
-      if (check_custom_colors(colors(), names(new)))
-        return(new)
+          if (check_custom_colors(colors(), names(new)))
+            return(new)
+        }
+
+        # for sets, see if filterby() has a corresponding palette available
+        if (iplot$embedding == "Sets" && filterby() %in% names(custom_color_scales))
+        {
+          new <- custom_color_scales[[filterby()]] %>% unlist()
+
+          if (check_custom_colors(colors(), names(new)))
+            return(new)
+        }
+      }
+
+      # if no custom palette works, do rainbow for scatterplots and inferno for sets
+      if (iplot$embedding == "Sets")
+        return(color_seq(5, "Inferno", not_rev()))
+      return(color_seq(length(unique(colors())), "Rainbow", !not_rev()))
     }
 
-    # otherwise pick a built-in palette
+    # if a builtin palette is requested, just call color_seq
     num <- length(unique(colors()))
 
     if (iplot$embedding == "Sets")
