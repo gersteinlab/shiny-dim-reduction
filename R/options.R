@@ -356,7 +356,13 @@ ui <- function(request){
         analysis_1_menu,
         filters_1_menu,
         settings_menu,
-        uiOutput("last_updated_get_id")
+        div(
+          style = "margin: 10px",
+          h4(HTML(sprintf("  <b>Last Updated:</b> %s",
+                          format(newest_request$TIME_COMPLETED, "%b %d, %Y")))),
+          h4(HTML(sprintf("  <b>Newest Analysis ID:</b> %s",
+                          newest_request$REQUEST_ID)))
+        )
       )
     ),
     dashboardBody(

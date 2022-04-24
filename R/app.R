@@ -36,6 +36,9 @@ server <- function(input, output, session) {
   if (!log_addrs)
     shinyjs::hide("current_address")
 
+  # by default, the legend should not be shown
+  shinyjs::hide("legend_out")
+
   # handle login attempts
   observeEvent(input$attempt_login, {
     notification("Attempting authentication ...", 3, "default")
@@ -311,14 +314,6 @@ server <- function(input, output, session) {
 
   output$current_address <- renderPrint({
     print_clean(sprintf("Current Analysis: [%s]", curr_adr()))
-  })
-
-  output$last_updated_get_id <- renderUI({
-    div(
-      style = "margin: 10px",
-      h4(HTML(sprintf("  <b>Last Updated:</b> %s", format(newest_request$TIME_COMPLETED, "%b %d, %Y")))),
-      h4(HTML(sprintf("  <b>Newest Analysis ID:</b> %s", newest_request$REQUEST_ID)))
-    )
   })
 
   # -------------------
@@ -928,14 +923,17 @@ Seconds elapsed: %s", my_timer(start)), "message")
     }
   )
 
-  output$legend_out <- renderDT({
-    if (!authenticated() || legend())
-    {
+  observe({
+    if (legend())
       shinyjs::hide("legend_out")
-      return(my_datatable())
-    }
+    else
+      shinyjs::show("legend_out")
+  })
 
-    shinyjs::show("legend_out")
+  output$legend_out <- renderDT({
+    if (!authenticated())
+      return(my_datatable())
+
     my_datatable(generate_legend_table(colors()))
   }, server = table_server_render)
 

@@ -201,10 +201,7 @@ generate_legend_table <- function(vec)
   if (length(unique_vals) < 1)
     return(NULL)
 
-  table <- cbind.data.frame(1:length(unique_vals), unique_vals)
-  colnames(table) <- c("Number", "Value")
-
-  table
+  data.frame("Number" = seq_along(unique_vals), "Value" = unique_vals)
 }
 
 # generates a box from shinydashboard but with certain features
