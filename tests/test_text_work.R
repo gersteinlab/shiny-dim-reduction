@@ -1,5 +1,4 @@
-# This file tests preprocess.R by inspecting reduction parameters, generating analysis names,
-# and testing whether reading / writing to those file names actually works.
+# This file tests text_work.R.
 
 # -----
 # SETUP
@@ -13,4 +12,4 @@ if (!exists("ran_install"))
     stop("Could not confirm installation. Please source install.R manually.")
 }
 
-source_sdr("preprocess.R")
+source_sdr("text_work.R")

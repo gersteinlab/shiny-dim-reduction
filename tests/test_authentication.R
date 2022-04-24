@@ -35,9 +35,9 @@ auth_test <- function()
   print(my_auth(username, "234567", user_credentials))
   print_clean("Did authentication succeed for incorrect username / password?")
   print(my_auth("Joel", "234567", user_credentials))
-  print_clean("What happens when NULL / NULL / NULL are the inputs?")
-  print(my_auth(NULL, NULL, NULL))
-  print_clean("What happens when credentials are absent?")
+  print_clean("Did authentication succeed for username = NULL, password = NULL?")
+  print(my_auth(NULL, NULL, user_credentials))
+  print_clean("Did authentication succeed for credentials = NULL?")
   print(my_auth(username, password, NULL))
 }
 

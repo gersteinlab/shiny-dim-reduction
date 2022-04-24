@@ -198,17 +198,21 @@ After these steps, the portable folder should have the following structure:
 
 ## Running Tests
 
-The tests folder contains tests used to ascertain the functionality of various source files.
+The tests folder contains scripts for testing various components of the project. Please feel free to share ideas for increasing test coverage.
 
-Tests ought to be run in the following order to optimize debugging:
+We suggest running the tests in the following order:
 
-* test_install.R
-* test_authentication.R
-* test_find_replace.R
-* test_plotting.R
-* test_red_methods.R
-* test_workflows.R
-* test_utils.R
-* test_storage.R
-* test_packaging.R
-* test_converter.R
+1. test_install.R
+2. test_plotting.R
+3. test_authentication.R
+4. test_find_replace.R
+5. test_text_work.R
+6. test_ui_functions.R
+7. test_storage.R
+8. test_preprocess.R
+9. test_make_requests.R
+10. test_workflows.R
+11. test_sca_nor_fun.R
+12. test_validation.R
+13. test_red_methods.R
+14. test_red_requests.R

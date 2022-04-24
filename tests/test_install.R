@@ -31,8 +31,6 @@ basic_test <- function()
                 paste(names(empty_named_list(c("A", "B", "C"))), collapse = ", "))
   sprintf_clean("The names of empty_named_list(\"A\", \"B\", \"C\") are: %s",
                 paste(names(empty_named_list("A", "B", "C")), collapse = ", "))
-  sprintf_clean("The result of empty_named_list(NULL) is: [%s] [expected: list()]",
-                paste(empty_named_list(NULL), collapse = ", "))
 
   test_assign()
   sprintf_clean("The result of test_assign() is: %s [expected: 42]",
@@ -45,11 +43,22 @@ get_source_loc_test <- function()
 {
   print_clean("*** Functions Tested: get_source_loc ***")
   print_clean("Setting sdr_from_app to TRUE")
-  set_sdr_from_app(TRUE)
+  assign_global("sdr_from_app", TRUE)
   sprintf_clean("get_source_loc(\"find_replace.R\"): %s", get_source_loc("find_replace.R"))
   print_clean("Setting sdr_from_app to FALSE")
-  set_sdr_from_app(FALSE)
+  assign_global("sdr_from_app", FALSE)
   sprintf_clean("get_source_loc(\"find_replace.R\"): %s", get_source_loc("find_replace.R"))
+}
+
+attempt_install_test <- function()
+{
+  print_clean("*** INSTALLATION TEST ***")
+
+  print_clean("Removing VennDiagram (make sure it's not attached!) ... ")
+  remove.packages("VennDiagram")
+
+  print_clean("Does installation work?")
+  source("install.R")
 }
 
 # -------
@@ -58,3 +67,9 @@ get_source_loc_test <- function()
 basic_test()
 print_clean()
 get_source_loc_test()
+attempt_install_test()
+
+# manually test if installation can be done on a server
+# remove.packages("VennDiagram")
+# Sys.setenv('SHINY_PORT' = 100)
+# source("install.R")
