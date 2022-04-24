@@ -193,6 +193,8 @@ default_exclude_vector <- c(
   "instructions",
   "citations",
   "randomize",
+  "refresh",
+  "request_analysis",
 
   table_exclude_vector(
     "num_data_table",

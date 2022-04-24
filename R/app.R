@@ -989,16 +989,16 @@ Seconds elapsed: %s", my_timer(start)), "message")
       session_data[["pickerInput"]][[id]] <- input[[id]]
 
     for (id in numeric_input_ids)
-      session_data[["pickerInput"]][[id]] <- input[[id]]
+      session_data[["numericInput"]][[id]] <- input[[id]]
 
     for (id in numeric_range_input_ids)
-      session_data[["pickerInput"]][[id]] <- input[[id]]
+      session_data[["numericRangeInput"]][[id]] <- input[[id]]
 
     for (id in slider_input_ids)
-      session_data[["pickerInput"]][[id]] <- input[[id]]
+      session_data[["sliderInput"]][[id]] <- input[[id]]
 
     for (id in tabset_panel_ids)
-      session_data[["pickerInput"]][[id]] <- input[[id]]
+      session_data[["tabsetPanel"]][[id]] <- input[[id]]
 
     # get the vector of all session IDs
     num_sessions <- 0

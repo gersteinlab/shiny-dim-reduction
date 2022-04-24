@@ -177,7 +177,7 @@ for (cn in seq_len(num_cat))
 }
 
 # truncate select_opts
-select_opts <- select_opts[1:length(select_ids)]
+select_opts <- select_opts[seq_along(select_ids)]
 
 # -----------
 # BOOKMARKING
@@ -197,6 +197,7 @@ picker_input_ids <- c(
 
 bookmarkable_ids <- c(
   picker_input_ids,
+  sprintf("%s_open", picker_input_ids),
   numeric_input_ids,
   numeric_range_input_ids,
   slider_input_ids,
