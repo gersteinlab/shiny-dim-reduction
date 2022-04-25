@@ -1,4 +1,4 @@
-# The goal of this app is to perform dimensionality reduction.
+# The goal of this app is to display dimensionality reduction results.
 
 # In the project, app.R is located in the R folder so execution stops immediately
 if (!file.exists("install.R"))
@@ -62,9 +62,130 @@ server <- function(input, output, session) {
     }
   })
 
-  # ----------------
-  # DYNAMIC UI LOGIC
-  # ----------------
+  # -------------------
+  # NOTIFICATION SYSTEM
+  # -------------------
+
+  # backbone of notification system with user-specified duration
+  notif <- function(message, form)
+  {
+    notification(message, isolate(iplot$notif_time), form)
+  }
+
+  # warning for invalid numeric inputs
+  range_invalid_notif <- function(name, min, max)
+  {
+    notif(sprintf("Warning: %s is not in [%s, %s].", name, min, max), "warning")
+  }
+
+  # the number of plots that have entered the queue for generation
+  num_plots <- reactiveVal(1)
+  # prep a (possibly NULL) plot for rendering and send notifications
+  prep_plot <- function(target)
+  {
+    if (!authenticated())
+      return(ggplot2_null())
+
+    num <- isolate(num_plots())
+    notif(sprintf("Generating Plot #%s:<br>
+Please suspend plotting or wait for plotting to
+finish before attempting a new configuration.", num), "default")
+    num_plots(num+1)
+
+    start <- my_timer()
+
+    if (is.null(target))
+    {
+      notif("Plot generation failed.<br>
+Possible reasons:<br>
+(1) invalid configuration<br>
+(2) empty dataset", "error")
+      return(ggplot2_null())
+    }
+
+    notif(sprintf("Plot generation was successful.<br>
+Seconds elapsed: %s", my_timer(start)), "message")
+
+    target
+  }
+
+  # ---------------------
+  # COMPLEX UI CONDITIONS
+  # ---------------------
+  output$visualize_cond <- reactive({
+    input$embedding %in% c("PCA", "VAE", "UMAP")
+  })
+
+  output$perplexity_cond <- reactive({
+    input$embedding == "PHATE" || input$visualize == "tSNE" || (
+      input$embedding == "UMAP" && input$visualize != "Summarize")
+  })
+
+  output$set_feat_upse_cond <- reactive({
+    input$plotPanels == "Static 2D"
+  })
+
+  output$set_feat_heat_cond <- reactive({
+    input$plotPanels == "Interactive 2D"
+  })
+
+  output$set_feat_dend_cond <- reactive({
+    input$plotPanels == "Interactive 3D"
+  })
+
+  output$nintersect_cond <- reactive({
+    input$plotPanels == "Static 2D" && input$embedding == "Sets"
+  })
+
+  output$pc_sliders_cond <- reactive({
+    input$visualize == "Explore" && (input$embedding %in% c("PCA", "VAE", "UMAP"))
+  })
+
+  output$pc_slider2_cond <- reactive({
+    input$plotPanels %in% c("Static 2D", "Interactive 2D", "Interactive 3D")
+  })
+
+  output$pc_slider3_cond <- reactive({
+    input$plotPanels == "Interactive 3D"
+  })
+
+  output$shape_opts_cond <- reactive({
+    input$plotPanels == "Static 2D" && sep_colors()
+  })
+
+  output$label_opts_cond <- reactive({
+    input$plotPanels %in% c("Interactive 2D", "Interactive 3D") && sep_colors()
+  })
+
+  for (cond in output_conditions)
+    outputOptions(output, cond, suspendWhenHidden = FALSE)
+
+  # ---------------------
+  # HANDLE BUTTON PRESSES
+  # ---------------------
+  running <- reactiveVal(run_default)
+
+  observeEvent(input$start, {
+    shinyjs::hide("start")
+    shinyjs::show("stop")
+    running(TRUE)
+  })
+
+  observeEvent(input$stop, {
+    shinyjs::hide("stop")
+    shinyjs::show("start")
+    running(FALSE)
+  })
+
+  # a copy of all reactives that can stop running
+  iplot <- reactiveValues()
+
+  observe({
+    if (running())
+      for (id in bookmarkable_ids)
+        iplot[[id]] <- input[[id]]
+  })
+
   observeEvent(input$request_analysis, {
     if (use_local_storage)
     {
@@ -162,86 +283,6 @@ server <- function(input, output, session) {
       title = HTML("<b>Citations</b>"), easyClose = TRUE, HTML(citations)))
   })
 
-  output$downloadInstructions <- downloadHandler(
-    filename = "instructions.txt",
-    content = function(file){
-      writeLines(print_instructions, file)
-    }
-  )
-
-  output$downloadCitations <- downloadHandler(
-    filename = "citations.txt",
-    content = function(file){
-      writeLines(print_citations, file)
-    }
-  )
-
-  # logical conditions too complicated to hard-code
-  output$visualize_cond <- reactive({
-    input$embedding %in% c("PCA", "VAE", "UMAP")
-  })
-
-  output$perplexity_cond <- reactive({
-    input$embedding == "PHATE" || input$visualize == "tSNE" || (
-      input$embedding == "UMAP" && input$visualize != "Summarize")
-  })
-
-  output$set_feat_upse_cond <- reactive({
-    input$plotPanels == "Static 2D"
-  })
-
-  output$set_feat_heat_cond <- reactive({
-    input$plotPanels == "Interactive 2D"
-  })
-
-  output$set_feat_dend_cond <- reactive({
-    input$plotPanels == "Interactive 3D"
-  })
-
-  output$nintersect_cond <- reactive({
-    input$plotPanels == "Static 2D" && input$embedding == "Sets"
-  })
-
-  output$pc_sliders_cond <- reactive({
-    input$visualize == "Explore" && (input$embedding %in% c("PCA", "VAE", "UMAP"))
-  })
-
-  output$pc_slider2_cond <- reactive({
-    input$plotPanels %in% c("Static 2D", "Interactive 2D", "Interactive 3D")
-  })
-
-  output$pc_slider3_cond <- reactive({
-    input$plotPanels == "Interactive 3D"
-  })
-
-  output$shape_opts_cond <- reactive({
-    input$plotPanels == "Static 2D" && sep_colors()
-  })
-
-  output$label_opts_cond <- reactive({
-    input$plotPanels %in% c("Interactive 2D", "Interactive 3D") && sep_colors()
-  })
-
-  for (cond in output_conditions)
-    outputOptions(output, cond, suspendWhenHidden = FALSE)
-
-  # ---------------------
-  # TOGGLE INPUT UPDATING
-  # ---------------------
-  running <- reactiveVal(run_default)
-
-  observeEvent(input$start, {
-    shinyjs::hide("start")
-    shinyjs::show("stop")
-    running(TRUE)
-  })
-
-  observeEvent(input$stop, {
-    shinyjs::hide("stop")
-    shinyjs::show("start")
-    running(FALSE)
-  })
-
   user_requests <- reactiveVal(default_user_requests)
 
   observeEvent(input$refresh, {
@@ -254,73 +295,6 @@ server <- function(input, output, session) {
         user_requests(load_aws_s3("app_requests.rds"))
     }
   })
-
-  # a copy of all reactives that can stop running
-  iplot <- reactiveValues()
-
-  observe({
-    if (running())
-      for (id in bookmarkable_ids)
-        iplot[[id]] <- input[[id]]
-  })
-
-  # console output
-  output$console_out <- renderPrint({
-    if ("address" %in% iplot$console)
-      sprintf_clean("address=%s", format_print_simple(curr_adr()))
-
-    for (id in intersect(iplot$console, names(input)))
-    {
-      sprintf_clean("%s=%s", id, format_print_simple(input[[id]]))
-    }
-  })
-
-  # -------------------
-  # NOTIFICATION SYSTEM
-  # -------------------
-
-  # backbone of notification system with user-specified duration
-  notif <- function(message, form)
-  {
-    notification(message, isolate(iplot$notif_time), form)
-  }
-
-  # warning for invalid numeric inputs
-  range_invalid_notif <- function(name, min, max)
-  {
-    notif(sprintf("Warning: %s is not in [%s, %s].", name, min, max), "warning")
-  }
-
-  # the number of plots that have entered the queue for generation
-  num_plots <- reactiveVal(1)
-  # prep a (possibly NULL) plot for rendering and send notifications
-  prep_plot <- function(target)
-  {
-    if (!authenticated())
-      return(ggplot2_null())
-
-    num <- isolate(num_plots())
-    notif(sprintf("Generating Plot #%s:<br>
-Please suspend plotting or wait for plotting to
-finish before attempting a new configuration.", num), "default")
-    num_plots(num+1)
-
-    start <- my_timer()
-
-    if (is.null(target))
-    {
-      notif("Plot generation failed.<br>
-Possible reasons:<br>
-(1) invalid configuration<br>
-(2) empty dataset", "error")
-      return(ggplot2_null())
-    }
-
-    notif(sprintf("Plot generation was successful.<br>
-Seconds elapsed: %s", my_timer(start)), "message")
-
-    target
-  }
 
   # ----------------
   # INPUT PROCESSING
@@ -816,6 +790,48 @@ Seconds elapsed: %s", my_timer(start)), "message")
     boxplot_beeswarm(data, paint(), title_embed(), legend())
   })
 
+  # -----------------
+  # DOWNLOAD HANDLERS
+  # -----------------
+
+  output$downloadInstructions <- downloadHandler(
+    filename = "instructions.txt",
+    content = function(file){
+      writeLines(print_instructions, file)
+    }
+  )
+
+  output$downloadCitations <- downloadHandler(
+    filename = "citations.txt",
+    content = function(file){
+      writeLines(print_citations, file)
+    }
+  )
+
+  output$download_num_data <- downloadHandler(
+    filename = function() {
+      sprintf("num_data_%s.csv", rep_str(title_text(), " ", "_"))
+    },
+    content = function(file) {
+      if (!authenticated())
+        return(NULL)
+
+      write.csv(num_data(), file)
+    }
+  )
+
+  output$download_metadata <- downloadHandler(
+    filename = function() {
+      sprintf("metadata_%s.csv", rep_str(title_text(), " ", "_"))
+    },
+    content = function(file) {
+      if (!authenticated())
+        return(NULL)
+
+      write.csv(metadata(), file)
+    }
+  )
+
   # -------------------
   # INDIRECT UI OUTPUTS
   # -------------------
@@ -833,12 +849,14 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
     my_datatable(present_requests(app_requests))
   }, server = table_server_render)
+
   output$user_requests_out <- renderDT({
     if (!authenticated())
       return(my_datatable())
 
     my_datatable(present_requests(user_requests()))
   }, server = table_server_render)
+
   output$ggplot2_out <- renderPlot({prep_plot(ggplot2_data())})
   output$plotly2_out <- renderPlotly({prep_plot(plotly2_data())})
   output$plotly3_out <- renderPlotly({prep_plot(plotly3_data())})
@@ -851,18 +869,6 @@ Seconds elapsed: %s", my_timer(start)), "message")
     my_datatable(data.frame(num_data()))
   }, server = table_server_render)
 
-  output$download_num_data <- downloadHandler(
-    filename = function() {
-      sprintf("num_data_%s.csv", rep_str(title_text(), " ", "_"))
-    },
-    content = function(file) {
-      if (!authenticated())
-        return(NULL)
-
-      write.csv(num_data(), file)
-    }
-  )
-
   output$metadata_table <- renderDT({
     if (!authenticated())
       return(my_datatable())
@@ -870,24 +876,30 @@ Seconds elapsed: %s", my_timer(start)), "message")
     my_datatable(data.frame(metadata()))
   }, server = table_server_render)
 
-  output$download_metadata <- downloadHandler(
-    filename = function() {
-      sprintf("metadata_%s.csv", rep_str(title_text(), " ", "_"))
-    },
-    content = function(file) {
-      if (!authenticated())
-        return(NULL)
-
-      write.csv(metadata(), file)
-    }
-  )
-
   output$legend_out <- renderDT({
     if (!authenticated())
       return(my_datatable())
 
     my_datatable(generate_legend_table(colors()))
   }, server = table_server_render)
+
+  output$console_out <- renderPrint({
+    if ("address" %in% iplot$console)
+      sprintf_clean("address=%s", format_print_simple(curr_adr()))
+    if ("num_data" %in% iplot$console)
+      sprintf_clean("dim(num_data)=%s", format_print_simple(dim(num_data())))
+    if ("metadata" %in% iplot$console)
+      sprintf_clean("dim(metadata)=%s", format_print_simple(dim(metadata())))
+    if ("app_requests" %in% iplot$console)
+      sprintf_clean("dim(app_requests)=%s", format_print_simple(dim(app_requests)))
+    if ("user_requests" %in% iplot$console)
+      sprintf_clean("dim(user_requests)=%s", format_print_simple(dim(user_requests())))
+
+    for (id in intersect(setdiff(iplot$console, "console"), names(input)))
+    {
+      sprintf_clean("%s=%s", id, format_print_simple(input[[id]]))
+    }
+  })
 
   # -----------------
   # DIRECT UI OUTPUTS

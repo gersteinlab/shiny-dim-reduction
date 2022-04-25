@@ -202,7 +202,11 @@ picker_input_ids <- c(
 )
 
 console_ids <- c(
-  "file_address",
+  "address",
+  "num_data",
+  "metadata",
+  "app_requests",
+  "user_requests",
   default_picker_input_ids,
   numeric_input_ids,
   numeric_range_input_ids,
