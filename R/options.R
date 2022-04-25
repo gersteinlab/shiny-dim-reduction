@@ -100,6 +100,12 @@ max_upse <- 5000
 max_heat <- 20000
 # the initial number of columns on a dendrogram
 max_dend <- 200
+# is the user authenticated by default?
+auth_default <- TRUE
+# should plots respond to user inputs by default?
+run_default <- TRUE
+# should server-side rendering be used for tables?
+table_server_render <- TRUE
 
 # ------------------------------
 # GENERATE OPTIONS AND BOOKMARKS
@@ -195,6 +201,15 @@ picker_input_ids <- c(
   thre_ids
 )
 
+console_ids <- c(
+  "file_address",
+  default_picker_input_ids,
+  numeric_input_ids,
+  numeric_range_input_ids,
+  slider_input_ids,
+  tabset_panel_ids
+)
+
 bookmarkable_ids <- c(
   picker_input_ids,
   sprintf("%s_open", picker_input_ids),
@@ -239,7 +254,7 @@ settings_menu <- menuItem(
   numericInput("width", "Graph Width", value=NULL, min=1, max=4000),
   numericInput("height", "Graph Height", value=graph_height, min=1, max=4000),
   numericInput("notif_time", "Notification Time", value=6),
-  check_panel("console", "Console Output", bookmarkable_ids, NULL)
+  check_panel("console", "Console Output", console_ids, NULL)
 )
 
 category_sel <- select_panel("category", "Category", cat_groups)
@@ -373,13 +388,11 @@ ui <- function(request){
         title = "Controls",
         action("start", "Start Plotting", "chart-bar", "#FFF", "#0064C8", "#00356B"),
         action("stop", "Stop Plotting", "ban", "#FFF", "#C90016", "#00356B"),
+        action("request_analysis", "Request", "user-edit", "#FFF", "#29AB87", "#00356B"),
+        action("refresh", "Refresh", "redo", "#FFF", "#29AB87", "#00356B"),
         bookmarkButton(),
         downloadButton("download_num_data", "Numeric Data"),
-        downloadButton("download_metadata", "Metadata"),
-        action("randomize", "Randomize", "connectdevelop",
-               "#FFF", "#29AB87", "#00356B"),
-        action("refresh", "Refresh", "redo",
-               "#FFF", "#29AB87", "#00356B")
+        downloadButton("download_metadata", "Metadata")
       ),
       htmlOutput("title_out"),
       tabBox(
@@ -394,16 +407,14 @@ ui <- function(request){
         tabPanel("Numeric Data", uiOutput("num_dataUI")),
         tabPanel("Metadata", uiOutput("metadataUI"))
       ),
-      DTOutput("legend_out", width="100%") %>% my_spin(),
+      uiOutput("legendUI"),
       button_toolbox(
         title = "Documentation",
         action("instructions", "Instructions", "book", "#FFF", "#9400D3", "#00356B"),
         action("citations", "Citations", "book", "#FFF", "#9400D3", "#00356B"),
         downloadButton('downloadInstructions', 'Instructions'),
-        downloadButton('downloadCitations', 'Citations') ,
-        action("request_analysis", "Request", "user-edit", "#FFF", "#29AB87", "#00356B")
+        downloadButton('downloadCitations', 'Citations')
       ),
-      verbatimTextOutput("current_address"),
       verbatimTextOutput("console_out")
     )
   )

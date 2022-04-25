@@ -10,34 +10,21 @@ source_sdr("plotting.R")
 source_sdr("authentication.R")
 source_sdr("options.R")
 
-# is the user authenticated by default?
-auth_default <- TRUE
-
-# should plots respond to user inputs by default?
-run_default <- TRUE
-
-# should internal file addresses be logged?
-log_addrs <- FALSE
-
-# should server-side rendering be used for tables?
-table_server_render <- TRUE
-
 server <- function(input, output, session) {
+  if (run_default)
+    shinyjs::hide("start")
+  else
+    shinyjs::hide("stop")
+
+  if (!auth_default)
+    showModal(authenticator_modal())
+
   # --------------
   # AUTHENTICATION
   # --------------
   authenticated <- reactiveVal(auth_default)
-  if (!auth_default)
-    showModal(authenticator_modal())
   shinyjs::runjs(no_autofill) # prevent google from autocompleting passwords
   addClass("password", "my-hidden-text") # hide password text to start
-
-  # hide address log if needed
-  if (!log_addrs)
-    shinyjs::hide("current_address")
-
-  # by default, the legend should not be shown
-  shinyjs::hide("legend_out")
 
   # handle login attempts
   observeEvent(input$attempt_login, {
@@ -242,36 +229,20 @@ server <- function(input, output, session) {
   # TOGGLE INPUT UPDATING
   # ---------------------
   running <- reactiveVal(run_default)
-  if (run_default)
-    shinyjs::hide("start")
-  else
-    shinyjs::hide("stop")
 
   observeEvent(input$start, {
+    shinyjs::hide("start")
     shinyjs::show("stop")
     running(TRUE)
-    shinyjs::hide("start")
   })
 
   observeEvent(input$stop, {
+    shinyjs::hide("stop")
     shinyjs::show("start")
     running(FALSE)
-    shinyjs::hide("stop")
   })
 
   user_requests <- reactiveVal(default_user_requests)
-  observeEvent(input$plotPanels, {
-    if (input$plotPanels == "Approved Requests" || input$plotPanels == "Pending Requests")
-    {
-      shinyjs::show("refresh")
-      shinyjs::hide("randomize")
-    }
-    else
-    {
-      shinyjs::show("randomize")
-      shinyjs::hide("refresh")
-    }
-  })
 
   observeEvent(input$refresh, {
     if (!use_local_storage)
@@ -282,15 +253,6 @@ server <- function(input, output, session) {
       if (find_aws_s3("app_requests.rds"))
         user_requests(load_aws_s3("app_requests.rds"))
     }
-  })
-
-  observeEvent(input$randomize, {
-    pick_random_input(session, "category", name_cat)
-    pick_random_input(session, "scaling", sca_options)
-    pick_random_input(session, "normalization", nor_options[1:2])
-    pick_random_input(session, "embedding", emb_options)
-    pick_random_input(session, "visualize", vis_options)
-    pick_random_input(session, "perplexity", perplexity_types)
   })
 
   # a copy of all reactives that can stop running
@@ -304,16 +266,13 @@ server <- function(input, output, session) {
 
   # console output
   output$console_out <- renderPrint({
-    for (id in iplot$console)
-    {
-      print_clean(sprintf("Value of %s:", id))
-      print(input[[id]])
-      print_clean("")
-    }
-  })
+    if ("address" %in% iplot$console)
+      sprintf_clean("address=%s", format_print_simple(curr_adr()))
 
-  output$current_address <- renderPrint({
-    print_clean(sprintf("Current Analysis: [%s]", curr_adr()))
+    for (id in intersect(iplot$console, names(input)))
+    {
+      sprintf_clean("%s=%s", id, format_print_simple(input[[id]]))
+    }
   })
 
   # -------------------
@@ -923,13 +882,6 @@ Seconds elapsed: %s", my_timer(start)), "message")
     }
   )
 
-  observe({
-    if (legend())
-      shinyjs::hide("legend_out")
-    else
-      shinyjs::show("legend_out")
-  })
-
   output$legend_out <- renderDT({
     if (!authenticated())
       return(my_datatable())
@@ -963,6 +915,13 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
   output$beeswarmUI <- renderUI({
     plotOutput("beeswarm_out", width=width(), height=height()) %>% my_spin()
+  })
+
+  output$legendUI <- renderUI({
+    if (legend() || !(iplot$plotPanels %in% c(
+      "Static 2D", "Interactive 2D", "Interactive 3D", "Boxplot")))
+      return(NULL)
+    DTOutput("legend_out") %>% my_spin()
   })
 
   output$num_dataUI <- renderUI({

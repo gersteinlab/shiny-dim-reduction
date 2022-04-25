@@ -43,6 +43,16 @@ sep_opt <- function(str)
   result
 }
 
+# Formats a numeric or character vector for printing
+format_print_simple <- function(vec)
+{
+  if (is.character(vec))
+    vec <- sprintf("\"%s\"", vec)
+  if (length(vec) > 1)
+    return(sprintf("[%s]", paste(vec, collapse = ", ")))
+  vec
+}
+
 # removes all parts of the form <tag> from a text
 rem_html_tags <- function(html)
 {
