@@ -243,6 +243,8 @@ Seconds elapsed: %s", my_timer(start)), "message")
     updatePickerInput(session, "req_cha", choices = names(order_total[[input$req_cat]]))
   })
 
+  user_requests <- reactiveVal(default_user_requests)
+
   observeEvent(input$submit_request, {
     test <- make_requests(
       cat = input$req_cat, row = parse_opt(input$req_row),
@@ -254,15 +256,16 @@ Seconds elapsed: %s", my_timer(start)), "message")
 
     if (length(test) > 0) # valid request!
     {
-      user_requests <- make_requests()
+      u_requests <- make_requests()
       if (find_aws_s3("Sessions/user_requests.rds"))
-        user_requests <- load_aws_s3("Sessions/user_requests.rds")
+        u_requests <- load_aws_s3("Sessions/user_requests.rds")
 
-      if (test$FILE_LOCATION %nin% user_requests$FILE_LOCATION &&
+      if (test$FILE_LOCATION %nin% u_requests$FILE_LOCATION &&
           test$FILE_LOCATION %nin% app_requests$FILE_LOCATION)
       {
-        user_requests <- rbind_req(user_requests, test)
-        save_aws_s3(user_requests, "Sessions/user_requests.rds")
+        u_requests <- rbind_req(u_requests, test)
+        save_aws_s3(u_requests, "Sessions/user_requests.rds")
+        user_requests(u_requests)
         notif("Your request has been submitted!", "message")
       }
       else
@@ -283,17 +286,9 @@ Seconds elapsed: %s", my_timer(start)), "message")
       title = HTML("<b>Citations</b>"), easyClose = TRUE, HTML(citations)))
   })
 
-  user_requests <- reactiveVal(default_user_requests)
-
   observeEvent(input$refresh, {
-    if (!use_local_storage)
-    {
-      if (find_aws_s3("Sessions/user_requests.rds"))
-        user_requests(load_aws_s3("Sessions/user_requests.rds"))
-
-      if (find_aws_s3("app_requests.rds"))
-        user_requests(load_aws_s3("app_requests.rds"))
-    }
+    if (!use_local_storage && find_aws_s3("Sessions/user_requests.rds"))
+      user_requests(load_aws_s3("Sessions/user_requests.rds"))
   })
 
   # ----------------

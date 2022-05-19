@@ -393,7 +393,6 @@ ui <- function(request){
         action("start", "Start Plotting", "chart-bar", "#FFF", "#0064C8", "#00356B"),
         action("stop", "Stop Plotting", "ban", "#FFF", "#C90016", "#00356B"),
         action("request_analysis", "Request", "user-edit", "#FFF", "#29AB87", "#00356B"),
-        action("refresh", "Refresh", "redo", "#FFF", "#29AB87", "#00356B"),
         bookmarkButton(),
         downloadButton("download_num_data", "Numeric Data"),
         downloadButton("download_metadata", "Metadata")
