@@ -9,9 +9,7 @@
 # source("install.R")
 
 # Should work out of the box (replace with your app directory):
-# library(shiny)
-# shiny::runApp("C:/Users/Justin Chang/Desktop/exrna_app_3_16/app")
-# shiny::runApp("C:/Users/Justin Chang/Desktop/exrna_app_3_25/app")
+# shiny::runApp("C:/Users/justin/Desktop/CodeR/DataR/sdr_apps/exrna_jun_2")
 
 # Key FLAGS for Goal 3:
 # - sdr_from_app: whether you are sourcing this file from an application [set first by app.R]
@@ -215,7 +213,7 @@ get_project_loc <- function(file)
 {
   if (!sdr_from_app && !exists("sdr_project_loc"))
     set_project_loc()
-  sprintf("%s/%s", sdr_project_loc, file)
+  file.path(sdr_project_loc, file)
 }
 
 # gets the location of a source file, accounting for workflow vs application uses
@@ -230,7 +228,7 @@ get_source_loc <- function(file)
 source_sdr <- function(file)
 {
   source_loc <- get_source_loc(file)
-  stopifnot(file.exists(source_loc))
+  stopifnot(file.exists(source_loc), length(source_loc) == 1)
   source(source_loc, encoding = "UTF-8")
 }
 
