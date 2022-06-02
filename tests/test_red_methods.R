@@ -42,6 +42,8 @@ all_reductions <- function(table, labels)
   start <- my_timer()
   results <- list()
   stopifnot(valid_table(table))
+  stopifnot(length(labels) == nrow(table))
+  stopifnot(sum(is.na(labels)) == 0)
 
   # test tsne
   results$tsne <- table_to_tsne(table, 2, 10)
@@ -207,4 +209,17 @@ sprintf_clean("Time elapsed: %s (rbp)", rbp_red$time)
 # system.time(d1 <- summary(Matrix(smm, sparse = TRUE)))
 # system.time(d2 <- which(smm == 1, arr.ind = TRUE))
 
+workflow_name <- "exRNA"
+source_sdr("converter.R")
+source_sdr("sca_nor_fun.R")
+
+setwd(raw_loc)
+setwd("RBP_S2")
+test <- readRDS("com_ZRANB2_K562.rds")
+get_dependency("order_total")
+rbp_order <- match_metadata_to_samples(sprintf("%s.metadata.tsv", test[,1]), order_total$miRNA, "DOWNLOAD_NAME")
+hmm <- norm_min_max(log_scale(apply(test[,-1], 2, as.numeric)))
+hmm2 <- hmm[,ind_sd_top(hmm, 100)]
+valid_inds <- !grepl(".tsv", rbp_order$CONDITION)
+result <- all_reductions(hmm2[valid_inds,], rbp_order$CONDITION[valid_inds])
 
