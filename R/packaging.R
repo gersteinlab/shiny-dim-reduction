@@ -47,7 +47,8 @@ temp_nor <- nor_options[1:2]
 # name_cat <- "miRNA"
 # name_cat <- "tRNA"
 # name_cat <- "piRNA"
-name_cat <- "ex_miRNA"
+name_cat <- "RNA_binding_proteins"
+t_col <- "Unique150"
 
 # ------------
 # PCA REQUESTS
@@ -584,6 +585,37 @@ saveRDS(app_requests_3_13, "app_requests_3_13.rds")
 setwd(ref_loc)
 saveRDS(app_requests_3_13, "app_requests.rds")
 
+# add unique150
+app_requests_3_13 <- readRDS("app_requests_3_13.rds")
+# saveRDS(pca_requests, "u150_pca_r.rds")
+# saveRDS(vae_requests, "u150_vae_r.rds")
+# saveRDS(umap_requests, "u150_umap_r.rds")
+# saveRDS(phate_requests, "u150_phate_r.rds")
+# u150_pca_r <- readRDS("u150_pca_r.rds")
+# u150_pca_d <- perform_reduction(u150_pca_r)
+# saveRDS(u150_pca_d, "u150_pca_d.rds")
+# u150_vae_r <- readRDS("u150_vae_r.rds")
+# u150_vae_d <- perform_reduction(u150_vae_r)
+# saveRDS(u150_vae_d, "u150_vae_d.rds")
+# u150_umap_r <- readRDS("u150_umap_r.rds")
+# u150_umap_d <- perform_reduction(u150_umap_r)
+# saveRDS(u150_umap_d, "u150_umap_d.rds")
+# u150_phate_r <- readRDS("u150_phate_r.rds")
+# u150_phate_d <- perform_reduction(u150_phate_r)
+# saveRDS(u150_phate_d, "u150_phate_d.rds")
+n_requests <- rbind_req(
+  readRDS("u150_pca_d.rds"),
+  readRDS("u150_vae_d.rds"),
+  readRDS("u150_umap_d.rds"),
+  readRDS("u150_phate_d.rds")
+)
+n_requests$REQUEST_ID <- get_request_id(nrow(n_requests))
+app_requests_5_16 <- rbind_req(app_requests_3_13, n_requests)
+saveRDS(app_requests_5_16, "app_requests_5_16.rds")
+
+setwd(ref_loc)
+saveRDS(app_requests_5_16, "app_requests.rds")
+
 # syncs a set of requests from reference to AWS
 sudo_working_key(amazon_keys)
 setwd(ref_loc)
@@ -620,9 +652,9 @@ save_aws_s3(app_requests, "app_requests.rds")
 
 
 
-lol <- list.files(ref_loc, recursive = TRUE)
+extras <- list.files(ref_loc, recursive = TRUE)
 setwd(ref_loc)
 app_requests <- readRDS("app_requests.rds")
-unknown_files <- setdiff(lol, app_requests$FILE_LOCATION)
+unknown_files <- setdiff(extras, app_requests$FILE_LOCATION)
 extra_files <- setdiff(unknown_files, "app_requests.rds")
 # unlink(extra_files)
