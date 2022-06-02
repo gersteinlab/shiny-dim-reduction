@@ -13,7 +13,7 @@
 #   and single quotes are used internally (ex: for JavaScript snippets)
 # to avoid overloading, we use "<-" for assignment and "=" for parameters
 # when declaring lists, names are quoted
-# parameters are assigned according to the form "x = y"
+# parameters are assigned according to the form "x = y, a = b"
 # bucket_case is used for function names
 # brackets are done according to K&R
 # redundant return statements are avoided

@@ -260,6 +260,7 @@ requests_to_final <- function(requests)
 # note: if the TIME_COMPLETED field is before the TIME_REQUESTED field, it hasn't been done yet!
 # note: a set of requests is valid ONLY IF it has a FILE_LOCATION field. This is because regular
 # computation of the FILE_LOCATION field makes merging new requests difficult.
+# note: init_cat, init_sub, and get_dependency("order_total") must be run before this.
 make_requests <- function(
   cat = character(), row = character(), col = character(), sca = character(),
   nor = character(), emb = character(), vis = character(), com = numeric(),

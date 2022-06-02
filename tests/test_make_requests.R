@@ -12,9 +12,16 @@ if (!exists("ran_install"))
     stop("Could not confirm installation. Please source install.R manually.")
 }
 
-# optional but default for now; avoids prompt
-workflow_name <- "exRNA"
 source_sdr("make_requests.R")
+workflow_name <- "exRNA"
+source_sdr("workflows.R")
+
+# must be done before we start making requests
+init_cat()
+init_sub(names)
+
+# must be done before we start making requests
+get_dependency("order_total", empty_named_list(name_cat))
 
 # -------------------
 # TEST VALID REQUESTS
