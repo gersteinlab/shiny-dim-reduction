@@ -263,6 +263,7 @@ Seconds elapsed: %s", my_timer(start)), "message")
       if (test$FILE_LOCATION %nin% u_requests$FILE_LOCATION &&
           test$FILE_LOCATION %nin% app_requests$FILE_LOCATION)
       {
+        test$REQUEST_ID <- get_request_id()
         u_requests <- rbind_req(u_requests, test)
         save_aws_s3(u_requests, "Sessions/user_requests.rds")
         user_requests(u_requests)

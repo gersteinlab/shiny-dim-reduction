@@ -216,3 +216,4 @@ We suggest running the tests in the following order:
 12. test_validation.R
 13. test_red_methods.R
 14. test_red_requests.R
+15. converter.R

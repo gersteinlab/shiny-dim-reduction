@@ -48,12 +48,6 @@ test_color_seq <- function()
   display_palette("#000000", "End of Presentation")
 }
 
-test_ggplot2_null <- function()
-{
-  print_clean("Functions tested: ggplot2_null")
-  ggplot2_null()
-}
-
 test_boxplot_beeswarm <- function(r10 = 100)
 {
   print_clean("Functions tested: boxplot_beeswarm")
@@ -104,11 +98,13 @@ test_make_transparent("#FF0000")
 test_make_transparent("#00FF00")
 test_make_transparent("#0000FF")
 test_color_seq()
-test_ggplot2_null()
 test_boxplot_beeswarm()
+stop("Automated testing complete! All subsequent functions have to be run manually.")
+
+ggplot2_null()
 test_ggplot2_2d()
 test_plotly_2d()
-test_plotly_3d() # note: had to use Desktop OpenGL
+test_plotly_3d()
 
 upset_custom_data <- get_set_data()
 
