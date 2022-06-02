@@ -19,6 +19,7 @@
 # redundant return statements are avoided
 # if wrapping an expression is necessary, end lines on an operator
 # using "T", "F" as abbreviations for "TRUE", "FALSE" is strictly avoided
+# if a function signature is misused 2+ times, it will be redesigned or have validation added
 
 # this function demonstrates the above principles
 example_func <- function(a = 1, b = 2)

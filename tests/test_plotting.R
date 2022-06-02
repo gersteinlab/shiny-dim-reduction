@@ -25,6 +25,11 @@ display_palette <- function(color_seq, title)
 # TESTS
 # -----
 
+test_make_transparent <- function(color)
+{
+  sprintf_clean("make_transparent(%s) yields %s", color, make_transparent(color))
+}
+
 test_color_seq <- function()
 {
   print_clean("Functions tested: display_palette, color_seq")
@@ -95,6 +100,9 @@ get_set_data <- function(row = 10000, col = 4)
 # -------
 # RUN ALL
 # -------
+test_make_transparent("#FF0000")
+test_make_transparent("#00FF00")
+test_make_transparent("#0000FF")
 test_color_seq()
 test_ggplot2_null()
 test_boxplot_beeswarm()

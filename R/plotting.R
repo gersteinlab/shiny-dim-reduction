@@ -42,9 +42,9 @@ double_color_seq <- function(reverse = FALSE)
 
 # lists all color palette options
 color_palettes <- list(
-  "Custom"=c("Custom", "Grayscale", "None"),
-  "Base"=c("Rainbow", "Heat", "Terrain", "Topography", "CM"),
-  "Viridis"=c("Viridis", "Magma", "Plasma", "Inferno", "Cividis")
+  "Custom" = c("Custom", "Grayscale", "None"),
+  "Base" = c("Rainbow", "Heat", "Terrain", "Topography", "CM"),
+  "Viridis" = c("Viridis", "Magma", "Plasma", "Inferno", "Cividis")
 )
 
 # Generates a color sequence of length n_colors with the given type
@@ -85,7 +85,7 @@ color_seq <- function(n_colors, color_type = "Rainbow", reverse = FALSE)
       return(rev(c_seq))
     return(c_seq)
   }
-  stop("color_seq could not generate the provided palette type.")
+  stop(sprintf("%s is not a supported color_type.", color_type))
 }
 
 # get remainder of a but put it in the range 1:b
@@ -95,7 +95,7 @@ mod_from_one <- function(a, b)
 }
 
 # my personal favorite ordering of the 25 default R plot shapes
-ggplot2_shapes_unique <- c(15:25,0:2,5:6,3:4,8,7,9:14)
+ggplot2_shapes_unique <- c(15:25, 0:2, 5:6, 3:4, 8, 7, 9:14)
 # Generates a shape sequence of length n for ggplot2.
 ggplot2_shape_seq <- function(n)
 {
@@ -124,11 +124,11 @@ boxplot_beeswarm <- function(data, colors, title = "", legend = TRUE)
   if (!legend)
     x_bins <- 1:length(x_bins)
 
-  boxplot(rel, data=data, xlab=xlab, ylab=ylab, names=x_bins,
-          col=make_transparent(colors), outline = FALSE, main=title) # transparency
+  boxplot(rel, data = data, xlab = xlab, ylab = ylab, names = x_bins,
+          col=make_transparent(colors), outline = FALSE, main = title) # transparency
 
-  beeswarm(rel, data=data, xlab=xlab, ylab=ylab, labels=x_bins,
-           col=colors, corral="random", main=title, pch=16, add=TRUE) # filled circles
+  beeswarm(rel, data = data, xlab = xlab, ylab = ylab, labels = x_bins,
+           col = colors, corral = "random", main = title, pch = 16, add = TRUE) # filled circles
 }
 
 # -------------------
@@ -158,13 +158,13 @@ ggplot2_2d <- function(x, y, color = NULL, shape = NULL,
   shape_seq <- ggplot2_shape_seq(length(unique(shape)))
 
   theme <- theme(
-    plot.title=element_text(size=22,face="bold"),
-    axis.title.x=element_text(size=16, margin = margin(t = 10)),
-    axis.title.y=element_text(size=16, margin = margin(r = 10)),
-    axis.text=element_text(size=12),
-    legend.title=element_text(size=16),
-    legend.text=element_text(size=10),
-    legend.position=ifelse(legend, "right", "none"),
+    plot.title = element_text(size = 22, face = "bold"),
+    axis.title.x = element_text(size = 16, margin = margin(t = 10)),
+    axis.title.y = element_text(size = 16, margin = margin(r = 10)),
+    axis.text = element_text(size = 12),
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 10),
+    legend.position = ifelse(legend, "right", "none"),
     plot.margin = margin(0.5, 0, 0, 0, "cm"),
     panel.background = element_blank(),
     panel.grid.major = element_line(size = 0.1, linetype = 'solid', colour = "gray"))
@@ -181,7 +181,7 @@ ggplot2_2d <- function(x, y, color = NULL, shape = NULL,
   if (is.null(mode))
     return(plot)
   if (mode == "log")
-    return(plot + geom_smooth(se=FALSE, method="gam", formula = y ~ s(log(x))))
+    return(plot + geom_smooth(se = FALSE, method = "gam", formula = y ~ s(log(x))))
   return(plot + geom_line())
 }
 
@@ -212,8 +212,8 @@ plotly_2d <- function(x, y, color = NULL, text = NULL,
                     "<extra></extra>"), type="scatter")
   layout(plot,
          title = title,
-         xaxis = list(title=x_axis),
-         yaxis = list(title=y_axis),
+         xaxis = list(title = x_axis),
+         yaxis = list(title = y_axis),
          showlegend = legend)
 }
 
@@ -364,9 +364,9 @@ plotly_heatmap_dendrogram <- function(binary, colors = NULL,
   binary[is.na(binary)] <- 0
   heatmaply(
     t(binary),
-    main=title,
-    hide_colorbar=!legend,
-    colors=colors,
+    main = title,
+    hide_colorbar = !legend,
+    colors = colors,
     plot_method = "plotly",
     colorbar_len = ifelse(dend, 0.8, 1),
     showticklabels = c(FALSE, TRUE),
@@ -495,15 +495,15 @@ ggplot2_umap_sum <- function(label_mat, color_seq = NULL, title = "")
   res <- data.frame("Sample_Group" = rownames(label_mat),
                     "Self_Neighbors" = apply(label_mat, 1, first_over_total))
   ggplot(res, aes(y = Self_Neighbors, x = Sample_Group, fill = Sample_Group)) +
-    geom_bar(stat="identity") + coord_flip() +
+    geom_bar(stat = "identity") + coord_flip() +
     scale_fill_manual(values = color_seq) + ggtitle(title) + theme(
-      plot.title=element_text(size=22,face="bold"),
-      axis.title.x=element_text(size=16, margin = margin(t = 10)),
-      axis.title.y=element_text(size=16, margin = margin(r = 10)),
-      axis.text=element_text(size=12),
-      legend.title=element_text(size=16),
-      legend.text=element_text(size=10),
-      legend.position="none",
+      plot.title = element_text(size = 22, face = "bold"),
+      axis.title.x = element_text(size = 16, margin = margin(t = 10)),
+      axis.title.y = element_text(size = 16, margin = margin(r = 10)),
+      axis.text = element_text(size = 12),
+      legend.title = element_text(size = 16),
+      legend.text = element_text(size = 10),
+      legend.position = "none",
       plot.margin = margin(1, 0.5, 0.5, 0.5, "cm"),
       panel.background = element_blank(),
       panel.grid.major = element_line(size = 0.1, linetype = 'solid', colour = "gray"))
