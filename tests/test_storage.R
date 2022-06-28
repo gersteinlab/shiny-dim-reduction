@@ -22,7 +22,7 @@ test_keys <- list(
   "bucket" = "shiny-app-data-justin-test"
 )
 
-test_root <- "C:/Users/Justin Chang/Desktop/ProjectsR/Justin-Tool/test/reference"
+test_root <- "C:/Users/justin/Desktop/CodeR/DataR/sdr_workflows/test/reference"
 
 # ---------
 # AWS TESTS
@@ -177,11 +177,11 @@ Expected [t2.rds, t3.rds, test], Received [%s]", paste(list_store(""), collapse 
 }
 
 disconnect_key()
-set_storage(FALSE, key = sudo_key(test_keys))
+set_storage_aws(sudo_key(test_keys))
 store_test()
 print_clean()
 
 disconnect_ref()
-set_storage(TRUE, ref = test_root)
+set_storage_local(test_root)
 store_test()
 print_clean()

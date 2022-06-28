@@ -651,10 +651,28 @@ for (i in my_range)
 save_aws_s3(app_requests, "app_requests.rds")
 
 
-
 extras <- list.files(ref_loc, recursive = TRUE)
 setwd(ref_loc)
 app_requests <- readRDS("app_requests.rds")
 unknown_files <- setdiff(extras, app_requests$FILE_LOCATION)
 extra_files <- setdiff(unknown_files, "app_requests.rds")
 # unlink(extra_files)
+
+# --------------
+# FIX IND_SD_TOP
+# --------------
+
+setwd(pro_loc)
+app_requests_6_2 <- readRDS("app_requests_5_16.rds")
+non_phate <- app_requests_6_2[app_requests_6_2$EMBEDDING != "PHATE",]
+bad1000 <- non_phate[non_phate$COL_SUBSETS == "SD_Top_1000",]
+bad100 <- non_phate[non_phate$COL_SUBSETS == "SD_Top_100",]
+bad100_pca <- bad100[bad100$EMBEDDING == "PCA",]
+new100_pca <- perform_reduction(bad100_pca, force = 2)
+saveRDS(new100_pca, "f_new100_pca.rds")
+bad100_vu <- bad100[bad100$EMBEDDING %in% c("VAE", "UMAP"),]
+new100_vu <- perform_reduction(bad100_vu, force = 2)
+saveRDS(new100_vu, "f_new100_vu.rds")
+bad1000_pvu <- bad1000[bad1000$EMBEDDING != "PHATE",]
+new1000_pvu <- perform_reduction(bad1000_pvu, force = 2)
+saveRDS(new1000_pvu, "f_new1000_pvu.rds")

@@ -19,6 +19,7 @@ require("VennDiagram")
 require("beeswarm")
 require("heatmaply")
 require("DT")
+require("stringr")
 
 # ----------------------
 # GENERAL GRAPHS / TOOLS
@@ -203,7 +204,7 @@ plotly_2d <- function(x, y, color = NULL, text = NULL,
     color_seq <- color_seq(length(unique(color)))
 
   plot <- plot_ly(x = as.numeric(x), y = as.numeric(y),
-                  color = as.character(color), text = as.character(text),
+                  color = str_to_title(as.character(color)), text = str_to_title(as.character(text)),
                   colors = color_seq, mode = ifelse(lines, "lines+markers", "markers"),
                   marker = list(size = 6, symbol = 'circle'),
                   hovertemplate = paste(
@@ -304,6 +305,8 @@ upset_custom <- function(data, nintersects, ratio, keep_order, text_scale = 1,
   if (ncol(data) < 2 || nrow(data) < 8)
     return(NULL)
 
+  colnames(data) <- gsub(" ", "_", colnames(data))
+
   upset(data, sets = rev(colnames(data)), nintersects = nintersects,
         sets.x.label = "Features Per Factor Level",
         mainbar.y.label = "Features Per Factor Subset",
@@ -337,8 +340,8 @@ plotly_heatmap_variance <- function(binary, colors = NULL,
   if (length(colors) < 1)
     colors <- color_seq(5, "Inferno")
 
-  rows <- sprintf("X:%s", substring(rownames(binary), 0, 50))
-  cols <- sprintf("Y:%s", substring(colnames(binary), 0, 50))
+  rows <- substring(rownames(binary), 0, 50)
+  cols <- substring(colnames(binary), 0, 50)
   rownames(binary) <- NULL
   colnames(binary) <- NULL
 
