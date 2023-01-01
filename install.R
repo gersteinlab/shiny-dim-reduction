@@ -14,7 +14,7 @@
 # Key FLAGS for Goal 3:
 # - sdr_from_app: whether you are sourcing this file from an application [set first by app.R]
 # - sdr_running_local: whether the app is running locally or on a server
-# - there are three states: (T, T), (T, F), and (F, *)
+# - there are three states of (sdr_from_app, sdr_running_local): (T, T), (T, F), and (F, *)
 
 # ----------
 # START TIME
@@ -130,17 +130,17 @@ sdr_pkg_names$data <- c(
 )
 
 sdr_pkg_names$missing_base <- setdiff(sdr_pkg_names$base, sdr_pkg_names$installed)
-sdr_pkg_names$missing_data <- setdiff(sdr_pkg_names$data, sdr_pkg_names$installed)
 
 # if base packages are missing, try to install them
 if (length(sdr_pkg_names$missing_base) > 0)
 {
+  if (!sdr_running_local)
+    stop("Automatic installation to a server-based host is not supported.")
+
   missing_base_str <- paste(sdr_pkg_names$missing_base, collapse = ", ")
   print_clean("
 The following packages are missing and necessary:")
   print_clean(missing_base_str)
-  if (!sdr_running_local)
-    stop("Automatic installation to a server-based host is not supported.")
 
   missing_base_loaded <- intersect(sdr_pkg_names$loaded, sdr_pkg_names$missing_base)
   if (length(missing_base_loaded) > 0)
@@ -159,6 +159,9 @@ Type anything else and press enter to exit. ")
   rm(missing_base_str, missing_base_loaded, confirm_base)
 }
 
+sdr_pkg_names$missing_data <- setdiff(sdr_pkg_names$data, sdr_pkg_names$installed)
+
+# if packages are missing for local workflow use, install them
 if (length(sdr_pkg_names$missing_data) > 0 && sdr_running_local && !sdr_from_app)
 {
   print_clean()
@@ -202,7 +205,7 @@ set_project_loc <- function(loc = getwd())
 {
   while (!("install.R" %in% list.files(loc)))
     loc <- readline(prompt = "
-Error: This location does not contain install.R or app.R.
+Error: This location does not contain install.R.
 Please type the location of the project directory and press enter. ")
 
   assign_global("sdr_project_loc", loc)

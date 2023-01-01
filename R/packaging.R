@@ -47,8 +47,10 @@ temp_nor <- nor_options[1:2]
 # name_cat <- "miRNA"
 # name_cat <- "tRNA"
 # name_cat <- "piRNA"
-name_cat <- "RNA_binding_proteins"
-t_col <- "Unique150"
+# name_cat <- "RNA_binding_proteins"
+# t_col <- "Unique150"
+name_cat <- c("DROSHA_HepG2", "DROSHA_HepG2+K562", "DROSHA_K562",
+                "DGCR8_HepG2", "DGCR8_HepG2+K562", "DGCR8_K562")
 
 # ------------
 # PCA REQUESTS
@@ -613,8 +615,49 @@ n_requests$REQUEST_ID <- get_request_id(nrow(n_requests))
 app_requests_5_16 <- rbind_req(app_requests_3_13, n_requests)
 saveRDS(app_requests_5_16, "app_requests_5_16.rds")
 
+# rest
 setwd(ref_loc)
 saveRDS(app_requests_5_16, "app_requests.rds")
+
+# add drosha, dgcr8
+saveRDS(pca_requests, "rbp2_pca_r.rds")
+saveRDS(vae_requests, "rbp2_vae_r.rds")
+saveRDS(umap_requests, "rbp2_umap_r.rds")
+saveRDS(phate_requests, "rbp2_phate_r.rds")
+saveRDS(sets_requests, "rbp2_sets_r.rds")
+
+rbp2_pca_r <- readRDS("rbp2_pca_r.rds")
+rbp2_pca_d <- perform_reduction(rbp2_pca_r)
+saveRDS(rbp2_pca_d, "rbp2_pca_d.rds")
+
+rbp2_vae_r <- readRDS("rbp2_vae_r.rds")
+rbp2_vae_d <- perform_reduction(rbp2_vae_r)
+saveRDS(rbp2_vae_d, "rbp2_vae_d.rds")
+
+rbp2_umap_r <- readRDS("rbp2_umap_r.rds")
+rbp2_umap_d <- perform_reduction(rbp2_umap_r)
+saveRDS(rbp2_umap_d, "rbp2_umap_d.rds")
+
+rbp2_phate_r <- readRDS("rbp2_phate_r.rds")
+rbp2_phate_d <- perform_reduction(rbp2_phate_r)
+saveRDS(rbp2_phate_d, "rbp2_phate_d.rds")
+
+rbp2_sets_r <- readRDS("rbp2_sets_r.rds")
+rbp2_sets_d <- perform_reduction(rbp2_sets_r)
+saveRDS(rbp2_sets_d, "rbp2_sets_d.rds")
+
+app_requests_5_16 <- readRDS("app_requests_5_16.rds")
+n_requests <- rbind_req(
+  readRDS("rbp2_pca_d.rds"),
+  readRDS("rbp2_vae_d.rds"),
+  readRDS("rbp2_umap_d.rds"),
+  readRDS("rbp2_sets_d.rds")
+)
+n_requests$REQUEST_ID <- get_request_id(nrow(n_requests))
+app_requests_11_25 <- rbind_req(app_requests_5_16, n_requests)
+saveRDS(app_requests_11_25, "app_requests_11_25.rds")
+setwd(ref_loc)
+saveRDS(app_requests_11_25, "app_requests.rds")
 
 # syncs a set of requests from reference to AWS
 sudo_working_key(amazon_keys)
@@ -668,11 +711,14 @@ non_phate <- app_requests_6_2[app_requests_6_2$EMBEDDING != "PHATE",]
 bad1000 <- non_phate[non_phate$COL_SUBSETS == "SD_Top_1000",]
 bad100 <- non_phate[non_phate$COL_SUBSETS == "SD_Top_100",]
 bad100_pca <- bad100[bad100$EMBEDDING == "PCA",]
-new100_pca <- perform_reduction(bad100_pca, force = 2)
-saveRDS(new100_pca, "f_new100_pca.rds")
+# new100_pca <- perform_reduction(bad100_pca, force = 2)
+# saveRDS(new100_pca, "f_new100_pca.rds")
 bad100_vu <- bad100[bad100$EMBEDDING %in% c("VAE", "UMAP"),]
-new100_vu <- perform_reduction(bad100_vu, force = 2)
-saveRDS(new100_vu, "f_new100_vu.rds")
+# new100_vu <- perform_reduction(bad100_vu, force = 2)
+# saveRDS(new100_vu, "f_new100_vu.rds")
 bad1000_pvu <- bad1000[bad1000$EMBEDDING != "PHATE",]
-new1000_pvu <- perform_reduction(bad1000_pvu, force = 2)
-saveRDS(new1000_pvu, "f_new1000_pvu.rds")
+# new1000_pvu <- perform_reduction(bad1000_pvu, force = 2)
+# saveRDS(new1000_pvu, "f_new1000_pvu.rds")
+phate_req <- app_requests_6_2[app_requests_6_2$EMBEDDING == "PHATE",]
+new_phate_req <- perform_reduction(phate_req, force = 2)
+saveRDS(new_phate_req, "f_new_phate_req.rds")

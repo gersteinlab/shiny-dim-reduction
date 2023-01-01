@@ -19,7 +19,6 @@ require("VennDiagram")
 require("beeswarm")
 require("heatmaply")
 require("DT")
-require("stringr")
 
 # ----------------------
 # GENERAL GRAPHS / TOOLS
@@ -204,7 +203,7 @@ plotly_2d <- function(x, y, color = NULL, text = NULL,
     color_seq <- color_seq(length(unique(color)))
 
   plot <- plot_ly(x = as.numeric(x), y = as.numeric(y),
-                  color = str_to_title(as.character(color)), text = str_to_title(as.character(text)),
+                  color = as.character(color), text = as.character(text),
                   colors = color_seq, mode = ifelse(lines, "lines+markers", "markers"),
                   marker = list(size = 6, symbol = 'circle'),
                   hovertemplate = paste(

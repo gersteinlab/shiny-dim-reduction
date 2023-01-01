@@ -27,7 +27,8 @@ dependencies <- function()
   print_clean("DEPENDENCY 01 (REQUIRED): categories_full.rds")
   print_clean("A list of groups (ex: cCREs, Expression, Proteomics), where each
 group is a list of categories (ex: H3K27ac, H3K9me3, Methylation) and the value
-of each category is the number of features prior to dimensionality reduction.
+of each category is the (number of samples, number of features)
+prior to dimensionality reduction.
 All categories must be unique, even if in different groups.")
   print_clean("")
 
@@ -283,7 +284,7 @@ match_metadata_to_samples <- function(sample_names, ord, col = "FASTQ_IDENTIFIER
   seq_missed <- seq_along(missed)
   original_len <- nrow(ord)
   ord[original_len + seq_missed,] <- "Unknown"
-  ord[original_len + seq_missed,] <- missed
+  ord[original_len + seq_missed, col] <- missed
   result <- ord[match(sample_names, ord[[col]]),]
   rownames(result) <- NULL
   result
