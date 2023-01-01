@@ -42,23 +42,13 @@ basic_test <- function()
 get_source_loc_test <- function()
 {
   print_clean("*** Functions Tested: get_source_loc ***")
-  print_clean("Setting sdr_from_app to TRUE")
+  print_clean("Initializing with sdr_from_app:")
   assign_global("sdr_from_app", TRUE)
-  sprintf_clean("get_source_loc(\"find_replace.R\"): %s", get_source_loc("find_replace.R"))
-  print_clean("Setting sdr_from_app to FALSE")
-  assign_global("sdr_from_app", FALSE)
-  sprintf_clean("get_source_loc(\"find_replace.R\"): %s", get_source_loc("find_replace.R"))
-}
-
-attempt_install_test <- function()
-{
-  print_clean("*** INSTALLATION TEST ***")
-
-  print_clean("Removing VennDiagram (make sure it's not attached!) ... ")
-  remove.packages("VennDiagram")
-
-  print_clean("Does installation work?")
   source("install.R")
+  sprintf_clean("get_source_loc(\"find_replace.R\"): %s", get_source_loc("find_replace.R"))
+  print_clean("Initializing without sdr_from_app:")
+  source("install.R")
+  sprintf_clean("get_source_loc(\"find_replace.R\"): %s", get_source_loc("find_replace.R"))
 }
 
 # -------
@@ -67,9 +57,10 @@ attempt_install_test <- function()
 basic_test()
 print_clean()
 get_source_loc_test()
-attempt_install_test()
 
-# manually test if installation can be done on a server
+# manually test installation of packages
+# remove.packages("Rtsne")
+# remove.packages("limma")
 # remove.packages("VennDiagram")
 # Sys.setenv('SHINY_PORT' = 100)
 # source("install.R")
