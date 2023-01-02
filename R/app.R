@@ -1020,8 +1020,6 @@ Seconds elapsed: %s", my_timer(start)), "message")
   })
 }
 
-assign_global("sdr_from_app", FALSE)
-
 # -----------
 # RUN THE APP
 # -----------
