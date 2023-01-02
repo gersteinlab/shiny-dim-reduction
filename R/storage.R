@@ -48,9 +48,9 @@ get_self_rds <- function(name, dir = getwd(), default = NULL)
 # wrapper for get_self_rds, only for dependencies
 get_dependency <- function(name, default = NULL)
 {
-  if (sdr_from_app)
-    return(get_self_rds(name, "dependencies", default))
-  get_self_rds(name, dep_loc, default)
+  if (sdr_config$mode == "workflow")
+    return(get_self_rds(name, dep_loc, default))
+  get_self_rds(name, "dependencies", default)
 }
 
 # performs saveRDS(loc) with the value of a variable with the given name,
@@ -71,7 +71,7 @@ set_self_rds <- function(name, dir = getwd(), default = NULL, compress = TRUE)
 # wrapper for set_self_rds, only for dependencies
 set_dependency <- function(name, default = NULL, compress = TRUE)
 {
-  if (sdr_from_app)
+  if (sdr_config$mode != "workflow")
     stop("Dependencies cannot be set from within the application.")
   set_self_rds(name, dep_loc, default, compress)
 }
@@ -152,11 +152,6 @@ key_is_connected <- function()
   bucket_exists(Sys.getenv("AWS_ACCESS_BUCKET"))
 }
 
-# the expected location of the master key
-master_key_loc <- NULL
-if (!sdr_from_app)
-  master_key_loc <- get_project_loc("sdr_master_key.rds")
-
 # makes a list that qualifies as a key from an ID, a secret, and a bucket
 make_key <- function(id = "", secret = "", bucket = "")
 {
@@ -196,8 +191,8 @@ set_working_key <- function(key = make_key())
 # create a master key and save it in the project directory
 save_master_key <- function(id, secret)
 {
-  stopifnot(is.character(id), is.character(secret),
-            length(id) == 1, length(secret) == 1)
+  stopifnot(is_str(id), is_str(secret))
+  master_key_loc <- get_project_loc("sdr_master_key.rds")
   sdr_master_key <- list("id" = id, "secret" = secret)
   saveRDS(sdr_master_key, master_key_loc)
 }
@@ -206,7 +201,8 @@ save_master_key <- function(id, secret)
 sudo_key <- function(key)
 {
   # to avoid master key privileges: don't include the master key file in apps!
-  stopifnot(file.exists(master_key_loc))
+  stopifnot(is_valid_key(key))
+  master_key_loc <- get_project_loc("sdr_master_key.rds")
   sdr_master_key <- readRDS(master_key_loc)
   make_key(sdr_master_key$id, sdr_master_key$secret, key$bucket)
 }
@@ -284,7 +280,7 @@ set_storage_aws <- function(key)
 
 query_storage <- function(ref = NULL, key = NULL)
 {
-  if (sdr_running_local && is_valid_ref(ref)) # can use local storage
+  if (sdr_config$mode != "online" && is_valid_ref(ref)) # can use local storage
   {
     if (is_valid_key(key)) # can use AWS storage
     {
