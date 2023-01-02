@@ -4,14 +4,7 @@
 # SETUP
 # -----
 
-if (!exists("ran_install"))
-{
-  if (file.exists("install.R"))
-    source("install.R")
-  else
-    stop("Could not confirm installation. Please source install.R manually.")
-}
-
+source("install.R")
 source_sdr("workflows.R")
 
 # -----
@@ -26,11 +19,12 @@ source_sdr("workflows.R")
 # -- try quitting
 # -- try 'exRNA'
 
-sprintf_clean("Root Location: %s", roo_loc)
-sprintf_clean("Raw Location: %s", raw_loc)
-sprintf_clean("Processing Location: %s", pro_loc)
-sprintf_clean("Combined Location: %s", com_loc)
-sprintf_clean("Intermediate Location: %s", int_loc)
-sprintf_clean("Reference Location: %s", ref_loc)
-sprintf_clean("App Location: %s", app_loc)
-sprintf_clean("Dependencies Location: %s", dep_loc)
+sprintf_clean("Root Location: %s", wf_config$roo_loc)
+sprintf_clean("Raw Location: %s", wf_config$raw_loc)
+sprintf_clean("Processing Location: %s", wf_config$pro_loc)
+sprintf_clean("Combined Location: %s", wf_config$com_loc)
+sprintf_clean("Intermediate Location: %s", wf_config$int_loc)
+sprintf_clean("Requests Location: %s", wf_config$req_loc)
+sprintf_clean("Reference Location: %s", wf_config$ref_loc)
+sprintf_clean("App Location: %s", wf_config$app_loc)
+sprintf_clean("Dependencies Location: %s", wf_config$dep_loc)

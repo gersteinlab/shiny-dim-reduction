@@ -141,18 +141,20 @@ pip install phate
 
 ## Performing Reduction
 
-To generate dimensionality reduction workflows, please perform the following steps:
+For each application that you intend to create, you should have a single corresponding dimensionality reduction workflow. To set up these workflows, please perform the following steps in RStudio:
 
 * Navigate to "File" -> "New Project..." -> "Version Control" -> "Git"
 * Set the URL to https://github.com/gersteinlab/shiny-dim-reduction.git
 * Name the Project Directory and select the parent directory.
 * Press "Create Project" and wait for the project to open.
-* To set up the workflow, open the project, open "install.R", and source the file. 
+* To install necessary packages, open "install.R", and source the file. 
 
 During installation, the following warning(s) can be safely ignored:  
 ```
 Your CPU supports instructions that this TensorFlow binary was not compiled to use ...
 ```
+
+Once installation completes, you will need to designate a folder for storing your workflows, which we will call the workflows folder. The desired folder should be initially empty. To set the empty folder as your workflows folder, you will need to open "workflows.R" and source the file. You will be prompted to enter a directory path and should enter the path of your empty folder. After doing so, we strongly recommend against modifying the folder through methods not listed below. You will subsequently be given an interactive prompt to change your workflows folder, open an existing workflow, or create a new workflow. If you move the workflows folder to a new location, you will need to change your workflows folder in the prompt so that it can be found by the project.
 
 <a name="aws-integration"/>
 

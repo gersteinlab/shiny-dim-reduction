@@ -1,122 +1,170 @@
-# The purpose of this script is to store functions for
-# building the files and folders of a dimensionality reduction app.
+# The purpose of this file is to assign a workflow for the given
+# session and manipulate / create directories for the assigned workflow.
 
-if (!exists("ran_install"))
-{
-  if (file.exists("install.R"))
-    source("install.R")
-  else
-    stop("Could not confirm installation. Please source install.R manually.")
-}
+if (!exists("sdr_config") || sdr_config$mode != "workflow")
+  source("install.R")
+
+stopifnot(sdr_config$mode == "workflow")
 
 # -----------------
 # SET WORKFLOW ROOT
 # -----------------
 
-workflow_root_loc <- get_project_loc("sdr_workflow_root.rds")
+wf_config <- list(
+  "root_storage_loc" = get_project_loc("sdr_workflow_root.rds")
+)
+
+# displays the current workflow root (aka workflows folder)
+display_workflow_root <- function()
+{
+  if (is.null(wf_config$root))
+    print_clean("Workflows Folder: NULL (unspecified)")
+  else
+    sprintf_clean("Workflows Folder: %s", wf_config$root)
+}
 
 # interactive prompt to set the location of the workflow root
 set_workflow_root <- function()
 {
   while (TRUE)
   {
-    loc <- readline(prompt = "
-Type a valid directory to store all future workflows in.
-Type 'Q' and press enter to quit. ")
+    print_clean()
+    display_workflow_root()
+    confirm_loc <- readline(
+      prompt = "To assign all future workflows to an (ideally empty) folder,
+type the folder's path and press enter.
+To quit, type 'q()' and press enter.")
 
-    if (loc == "Q")
-      stop("Quitting reduction pipeline ... workflow root not set.")
+    if (confirm_loc == "q()")
+    {
+      if (is.null(wf_config$root))
+        stop("Workflows folder not specified!")
+      else
+      {
+        message("Workflows folder unchanged!")
+        break
+      }
+    }
 
     if (dir.exists(loc))
     {
-      assign_global("sdr_workflow_root", loc)
+      wf_config$root <- loc
       saveRDS(loc, workflow_root_loc)
       break
     }
   }
 }
 
-# gets the absolute path of a file given its relative path to the workflow root
-get_workflow_loc <- function(file)
-{
-  if(!exists("sdr_workflow_root"))
-    set_workflow_root_loc()
-  sprintf("%s/%s", sdr_workflow_root, file)
-}
-
 # loads the workflow root or sets its location
-if (file.exists(workflow_root_loc))
+if (file.exists(wf_config$root_storage_loc))
 {
-  sdr_workflow_root <- readRDS(workflow_root_loc)
-  if (!dir.exists(sdr_workflow_root))
+  cand_root <- readRDS(wf_config$root_storage_loc)
+  if (!dir.exists(cand_root))
     set_workflow_root()
+  else
+    wf_config$root <- cand_root
+  rm(cand_root)
 } else
 {
   set_workflow_root()
 }
 
-# have the user enter the workflow name
-while (!exists("workflow_name"))
+# NOTE: past this point, we assume a valid wf_config$root
+
+# gets the absolute path of a file given its relative path to the workflow root
+get_workflow_loc <- function(file)
 {
-  sprintf_clean("Current Workflow Root: %s", sdr_workflow_root)
-  workflow_names <- list.files(sdr_workflow_root)
-  sprintf_clean("Current Workflows Available: %s", paste(workflow_names, collapse = ", "))
-  sprintf_clean("To change the workflow root, type set_workflow_root().")
-  attempted_name <- readline(
-    prompt = "Type the name of the workflow that you would like to use and press enter.
-To change projects, restart this session. Type 'Q' and press enter to quit. ")
-
-  if (attempted_name == "set_workflow_root()")
-    set_workflow_root()
-
-  if (attempted_name == "Q")
-    stop("Quitting ... project not selected.")
-
-  if (attempted_name %in% workflow_names)
-    assign_global("workflow_name", attempted_name)
+  stopifnot(is_str(file))
+  sprintf("%s/%s", wf_config$root, file)
 }
 
-# creates a directory carefully
+# creates a directory if it does not exist
 safe_dir <- function(path)
 {
   if (!dir.exists(path))
     dir.create(path)
-  invisible()
 }
 
-# ALTERNATE DESIGN PHILOSOPHY:
-# roo (root, ex: exRNA)
-# -- com (combined)
-# -- int (intermediate)
-# -- ref (reference)
-# -- req (requests)
-# -- app (app)
-# -- -- dep (dependencies)
+# have the user enter the workflow name
+while (is.null(wf_config$workflow))
+{
+  display_workflow_root()
+  workflow_names <- list.dirs(wf_config$root, full.names = FALSE, recursive = FALSE)
+  sprintf_clean("Available Workflows: %s", paste(workflow_names, collapse = ", "))
+  confirm_wf <- readline(
+    prompt = "To quit, type 'q()' and press enter.
+To change the workflows folder, type 'root()' and press enter.
+To open an available workflow, type its name and press enter.
+To create a new workflow, type its name and press enter.")
+
+  if (confirm_wf == "q()")
+    stop("Section workflow not specified.")
+
+  if (confirm_wf == "root()")
+    set_workflow_root()
+  else
+  {
+    if (confirm_wf != make.names(confirm_wf))
+      message("This workflow name is not valid (see base::make.names).")
+    else
+    {
+      if (confirm_wf %in% workflow_names)
+      {
+        wf_config$workflow <- confirm_wf
+        message("Your workflow has been assigned.
+The R session must be restarted to change your workflow.")
+      }
+      else
+      {
+        confirm_create_wf <- readline(
+          prompt = sprintf("Are you sure you want to create the workflow '%s'?
+To proceed, type 'Y' and press enter.
+Type anything else and press enter to quit.",
+                           confirm_wf))
+
+        if (confirm_create_wf == "Y")
+        {
+          safe_dir(get_workflow_loc(confirm_wf))
+          wf_config$workflow <- confirm_wf
+          message("Your workflow has been assigned.
+The R session must be restarted to change your workflow.")
+        }
+
+        rm(confirm_create_wf)
+      }
+    }
+  }
+
+  rm(workflow_names, confirm_wf)
+}
 
 # roo (root)
-# -- raw (raw)
+# -- raw (raw) [can be edited by the user]
 # -- pro (processing)
 # -- -- com (combined)
 # -- -- int (inter)
+# -- -- req (requests) [can be edited by the user]
 # -- ref (reference)
 # -- app (app)
 # -- -- dep (dependencies)
-roo_loc <- sprintf("%s/%s", sdr_workflow_root, workflow_name)
-safe_dir(roo_loc)
-raw_loc <- sprintf("%s/raw", roo_loc)
-safe_dir(raw_loc)
-pro_loc <- sprintf("%s/processing", roo_loc)
-safe_dir(pro_loc)
-com_loc <- sprintf("%s/combined", pro_loc)
-safe_dir(com_loc)
-int_loc <- sprintf("%s/inter", pro_loc)
-safe_dir(int_loc)
-ref_loc <- sprintf("%s/reference", roo_loc)
-safe_dir(ref_loc)
-app_loc <- sprintf("%s/app", roo_loc)
-safe_dir(app_loc)
-dep_loc <- sprintf("%s/dependencies", app_loc)
-safe_dir(dep_loc)
+wf_config$roo_loc <- sprintf("%s/%s", wf_config$root, wf_config$workflow)
+safe_dir(wf_config$roo_loc)
+wf_config$raw_loc <- sprintf("%s/raw", wf_config$roo_loc)
+safe_dir(wf_config$raw_loc)
+wf_config$pro_loc <- sprintf("%s/processing", wf_config$roo_loc)
+safe_dir(wf_config$pro_loc)
+wf_config$com_loc <- sprintf("%s/combined", wf_config$pro_loc)
+safe_dir(wf_config$com_loc)
+wf_config$int_loc <- sprintf("%s/inter", wf_config$pro_loc)
+safe_dir(wf_config$int_loc)
+wf_config$req_loc <- sprintf("%s/requests", wf_config$pro_loc)
+safe_dir(wf_config$req_loc)
+wf_config$ref_loc <- sprintf("%s/reference", wf_config$roo_loc)
+safe_dir(wf_config$ref_loc)
+wf_config$app_loc <- sprintf("%s/app", wf_config$roo_loc)
+safe_dir(wf_config$app_loc)
+wf_config$dep_loc <- sprintf("%s/dependencies", wf_config$app_loc)
+safe_dir(wf_config$dep_loc)
 
 # --------------------
 # DEPLOYMENT FUNCTIONS
@@ -124,6 +172,7 @@ safe_dir(dep_loc)
 
 # update the selected files in the app
 update_app <- function(filenames) {
+  app_loc <- wf_config$app_loc
   safe_dir(sprintf("%s/src", app_loc))
 
   file.copy(get_project_loc("R/app.R"), app_loc, overwrite = TRUE)
@@ -136,7 +185,7 @@ update_app <- function(filenames) {
 
 # runs the app
 rapp <- function(){
-  shiny::runApp(sprintf("%s/app.R", app_loc))
+  shiny::runApp(sprintf("%s/app.R", wf_config$app_loc))
 }
 
 # updates and runs the app
@@ -155,5 +204,7 @@ uapp <- function(){
   rapp()
 }
 
-# rsconnect::deployApp(app_loc, appName = "exrna_F21",
-#                      account = "justinchang1124", launch.browser = TRUE)
+# example code for deployment
+# rsconnect::deployApp(
+#   wf_config$app_loc, appName = "exrna_F21",
+#   account = "justinchang1124", launch.browser = TRUE)
