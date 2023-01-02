@@ -45,10 +45,10 @@ To quit, type 'q()' and press enter.")
       }
     }
 
-    if (dir.exists(loc))
+    if (dir.exists(confirm_loc))
     {
-      wf_config$root <- loc
-      saveRDS(loc, workflow_root_loc)
+      wf_config$root <- confirm_loc
+      saveRDS(confirm_loc, wf_config$root_storage_loc)
       break
     }
   }
@@ -190,6 +190,7 @@ rapp <- function(){
 # updates and runs the app
 uapp <- function(){
   print_clean("Beginning update ...")
+  source("install.R") # needed to reset mode
   update_app(c("find_replace.R",
                "text_work.R",
                "ui_functions.R",
