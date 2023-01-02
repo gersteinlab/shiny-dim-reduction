@@ -3,22 +3,17 @@
 # Each section is sorted from most algorithmic to least algorithmic,
 # though intended purpose may create a more reasonable ordering.
 
-if (!exists("ran_install"))
-{
-  if (file.exists("install.R"))
-    source("install.R")
-  else
-    stop("Could not confirm installation. Please source install.R manually.")
-}
+if (!exists("sdr_config"))
+  source("install.R")
 
-require("viridis")
-require("ggplot2")
-require("plotly")
-require("UpSetR")
-require("VennDiagram")
-require("beeswarm")
-require("heatmaply")
-require("DT")
+library(viridis)
+library(ggplot2)
+library(plotly)
+library(UpSetR)
+library(VennDiagram)
+library(beeswarm)
+library(heatmaply)
+library(DT)
 
 # ----------------------
 # GENERAL GRAPHS / TOOLS

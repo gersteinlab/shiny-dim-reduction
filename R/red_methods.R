@@ -1,16 +1,9 @@
 # The purpose of this file is to store all methods for reduction of a provided table.
 # By a table, we mean an object of class matrix and array that contains numerics for each cell.
 
-if (!exists("ran_install"))
-{
-  if (file.exists("install.R"))
-    source("install.R")
-  else
-    stop("Could not confirm installation. Please source install.R manually.")
-}
-
-# necessary for validation
-source_sdr("validation.R")
+if (!exists("sdr_config") || sdr_config$mode != "workflow")
+  source("install.R")
+stopifnot(sdr_config$mode == "workflow")
 
 # depends on Anaconda
 library(reticulate)
@@ -22,6 +15,9 @@ library(phateR)
 library(umap)
 library(Rtsne)
 library(Matrix)
+
+# necessary for validation
+source_sdr("validation.R")
 
 # should reduction methods be verbose?
 verbose_red <- FALSE

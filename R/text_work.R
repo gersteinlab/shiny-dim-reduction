@@ -1,12 +1,7 @@
 # The purpose of this file is to store long texts and functions for text manipulation.
 
-if (!exists("ran_install"))
-{
-  if (file.exists("install.R"))
-    source("install.R")
-  else
-    stop("Could not confirm installation. Please source install.R manually.")
-}
+if (!exists("sdr_config"))
+  source("install.R")
 
 source_sdr("find_replace.R")
 

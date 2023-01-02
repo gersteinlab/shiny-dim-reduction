@@ -3,7 +3,6 @@
 
 if (!exists("sdr_config") || sdr_config$mode != "workflow")
   source("install.R")
-
 stopifnot(sdr_config$mode == "workflow")
 
 # -----------------

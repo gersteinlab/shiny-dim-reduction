@@ -1,8 +1,7 @@
-# The goal of this app is to display dimensionality reduction results.
+# The purpose of this file is to run an application for
+# visualizing dimensionality reduction results.
 
 # In the project, app.R is located in the R folder so execution stops immediately
-if (!file.exists("install.R"))
-  stop("Could not confirm installation. Please source install.R manually.")
 assign("sdr_from_app", TRUE, envir = .GlobalEnv)
 source("install.R")
 

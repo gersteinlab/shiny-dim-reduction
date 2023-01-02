@@ -1,12 +1,8 @@
 # The purpose of this file is to validate numeric data and metadata files.
 
-if (!exists("ran_install"))
-{
-  if (file.exists("install.R"))
-    source("install.R")
-  else
-    stop("Could not confirm installation. Please source install.R manually.")
-}
+if (!exists("sdr_config") || sdr_config$mode != "workflow")
+  source("install.R")
+stopifnot(sdr_config$mode == "workflow")
 
 # determines if a table is valid for dimensionality reduction
 # note: anything of the form "combined_miRNA" should satisfy this

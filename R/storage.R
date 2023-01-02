@@ -6,15 +6,10 @@
 # save_store: saves a file, creating the directory if it doesn't exist
 # load_store: loads a file, returning NULL if it doesn't exist
 
-if (!exists("ran_install"))
-{
-  if (file.exists("install.R"))
-    source("install.R")
-  else
-    stop("Could not confirm installation. Please source install.R manually.")
-}
+if (!exists("sdr_config"))
+  source("install.R")
 
-require(aws.s3)
+library(aws.s3)
 
 # ----------------
 # LOCAL MANAGEMENT

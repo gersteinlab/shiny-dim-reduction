@@ -2,13 +2,9 @@
 # Intermediate-level files will be saved in pro_loc/inter
 # Final-level files will be saved in ref_loc
 
-if (!exists("ran_install"))
-{
-  if (file.exists("install.R"))
-    source("install.R")
-  else
-    stop("Could not confirm installation. Please source install.R manually.")
-}
+if (!exists("sdr_config") || sdr_config$mode != "workflow")
+  source("install.R")
+stopifnot(sdr_config$mode == "workflow")
 
 source_sdr("sca_nor_fun.R")
 source_sdr("red_methods.R")

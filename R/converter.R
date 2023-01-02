@@ -2,13 +2,9 @@
 # to converting from raw data to combined data and metadata.
 # Actual converter files should source this file.
 
-if (!exists("ran_install"))
-{
-  if (file.exists("install.R"))
-    source("install.R")
-  else
-    stop("Could not confirm installation. Please source install.R manually.")
-}
+if (!exists("sdr_config") || sdr_config$mode != "workflow")
+  source("install.R")
+stopifnot(sdr_config$mode == "workflow")
 
 source_sdr("workflows.R")
 source_sdr("find_replace.R")

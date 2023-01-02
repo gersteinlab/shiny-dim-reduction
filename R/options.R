@@ -4,19 +4,14 @@
 # Note: Most interface numbers are rounded to 4 decimal places.
 # This likely will not change in the near future.
 
-if (!exists("ran_install"))
-{
-  if (file.exists("install.R"))
-    source("install.R")
-  else
-    stop("Could not confirm installation. Please source install.R manually.")
-}
+if (!exists("sdr_config"))
+  source("install.R")
+
+library(shinydashboard)
+library(shinyjs)
 
 source_sdr("ui_functions.R")
 source_sdr("make_requests.R")
-
-require("shinydashboard")
-require("shinyjs")
 
 # ------------------
 # CONNECT TO STORAGE

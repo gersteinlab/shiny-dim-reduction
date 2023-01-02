@@ -4,15 +4,11 @@
 # record: all data uploaded for the first time on v6, Feb 5, 2022.
 # updating Ran's data: Feb X, 2022.
 
-if (!exists("ran_install"))
-{
-  if (file.exists("install.R"))
-    source("install.R")
-  else
-    stop("Could not confirm installation. Please source install.R manually.")
-}
+if (!exists("sdr_config") || sdr_config$mode != "workflow")
+  source("install.R")
+stopifnot(sdr_config$mode == "workflow")
 
-workflow_name <- "exRNA"
+wf_config <- list("workflow" = "exRNA")
 source_sdr("red_requests.R")
 
 # simplifying perplexity for now

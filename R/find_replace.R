@@ -1,6 +1,9 @@
 # The purpose of this file is to store functions for find / replace purposes.
 
-require("stringi")
+if (!exists("sdr_config"))
+  source("install.R")
+
+library(stringi)
 
 # for each string in "x_stringi", replaces each element of "pattern" with the
 # corresponding element in "replacement" and returns an error if

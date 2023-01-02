@@ -1,13 +1,9 @@
 # The purpose of this file is to store functions related to scaling and normalization.
 # Note: all functions take a matrix as input and return a matrix as output.
 
-if (!exists("ran_install"))
-{
-  if (file.exists("install.R"))
-    source("install.R")
-  else
-    stop("Could not confirm installation. Please source install.R manually.")
-}
+if (!exists("sdr_config") || sdr_config$mode != "workflow")
+  source("install.R")
+stopifnot(sdr_config$mode == "workflow")
 
 library(limma)
 

@@ -1,13 +1,8 @@
 # The purpose of this file is to name, initialize, and set roles for reduction parameters,
 # while also enabling the naming, storing, and loading of reduction files.
 
-if (!exists("ran_install"))
-{
-  if (file.exists("install.R"))
-    source("install.R")
-  else
-    stop("Could not confirm installation. Please source install.R manually.")
-}
+if (!exists("sdr_config"))
+  source("install.R")
 
 source_sdr("storage.R")
 

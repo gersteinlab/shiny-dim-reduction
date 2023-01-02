@@ -1,6 +1,12 @@
 # The purpose of this file is to list coding conventions used in this project.
 # Each file begins with comments of this form, which summarize the purpose of the file.
 
+# order of imports:
+# --check install
+# --import third-party libraries
+#     note: since we check install, use library not require
+# --source local code files
+
 # --------------
 # SECTION HEADER
 # --------------
@@ -19,7 +25,6 @@
 # redundant return statements are avoided
 # if wrapping an expression is necessary, end lines on an operator
 # using "T", "F" as abbreviations for "TRUE", "FALSE" is strictly avoided
-# if a function signature is misused 2+ times, it will be redesigned or have validation added
 
 # this function demonstrates the above principles
 example_func <- function(a = 1, b = 2)
