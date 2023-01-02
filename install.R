@@ -96,8 +96,8 @@ versions of the following packages are attached:\n%s",
                  paste(pkg_vec_loaded, collapse = ", ")))
 
   confirm_install <- readline(prompt = "
-Type 'Y' and press enter to install these packages.
-Type anything else and press enter to exit. ")
+To install these packages, type 'Y' and press enter.
+To exit, type anything else and press enter. ")
 
   if (confirm_install != "Y")
     stop("Quitting installation - some packages remain uninstalled.")
