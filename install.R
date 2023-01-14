@@ -2,7 +2,7 @@
 # --confirm that the current working directory contains install.R
 # --declare several utility functions with base R
 # --create sdr_config, a list of install settings
-# ----start_time: when install.R was first sourced
+# ----start_time: when this file was sourced
 # ----mode: one of c("local", "online", "workflow")
 # ------local: local visualization app
 # ------online: online visualization app

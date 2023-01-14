@@ -49,7 +49,7 @@ get_self_rds <- function(name, dir = getwd(), default = NULL)
 get_dependency <- function(name, default = NULL)
 {
   if (sdr_config$mode == "workflow")
-    return(get_self_rds(name, dep_loc, default))
+    return(get_self_rds(name, wf_config$dep_loc, default))
   get_self_rds(name, "dependencies", default)
 }
 
@@ -155,8 +155,7 @@ key_is_connected <- function()
 # makes a list that qualifies as a key from an ID, a secret, and a bucket
 make_key <- function(id = "", secret = "", bucket = "")
 {
-  stopifnot(is.character(id), is.character(secret), is.character(bucket),
-            length(id) == 1, length(secret) == 1, length(bucket) == 1)
+  stopifnot(is_str(id), is_str(secret), is_str(bucket))
 
   list(
     "id" = id,

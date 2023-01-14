@@ -287,7 +287,8 @@ make_requests <- function(
     "NORMALIZATION" = nor, "EMBEDDING" = emb, "VISUALIZATION" = vis, "COMPONENT" = com,
     "DIMENSION" = dim, "PERPLEXITY" = per, "BATCH_SIZE" = bat, "THRESHOLD" = thr,
     "CHARACTERISTIC" = cha, "AUTHOR" = aut,
-    "TIME_REQUESTED" = times_requested, "TIME_COMPLETED" = times_requested - 60 * 60 * 24 # minus 1 day
+    "TIME_REQUESTED" = times_requested,
+    "TIME_COMPLETED" = times_requested - 60 * 60 * 24 # minus 1 day
   )
 
   # cleans all requests, quitting if it's not possible to do so

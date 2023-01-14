@@ -9,9 +9,10 @@ stopifnot(sdr_config$mode == "workflow")
 # SET WORKFLOW ROOT
 # -----------------
 
-wf_config <- list(
-  "root_storage_loc" = get_project_loc("sdr_workflow_root.rds")
-)
+if (!exists("wf_config"))
+  wf_config <- list()
+
+wf_config$root_storage_loc <- get_project_loc("sdr_workflow_root.rds")
 
 # displays the current workflow root (aka workflows folder)
 display_workflow_root <- function()
