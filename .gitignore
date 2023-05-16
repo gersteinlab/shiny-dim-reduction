@@ -1,8 +1,18 @@
+# from: https://stackoverflow.com/questions/59626843
 .Rproj.user
-.Rhistory
-.RData
 .Ruserdata
-sdr_master_key.rds
-sdr_workflow_root.rds
-ignore/*
+
+# from: https://github.com/github/gitignore/blob/main/R.gitignore
+.Rhistory
+.Rapp.history
+.RData
+.RDataTmp
+
+# application-specific items
+app/.Renviron
+app/rsconnect
+app/app_data.rds
+
+# other repo-specific items
+ignore
 README.html
