@@ -209,3 +209,16 @@ uapp <- function(){
 # rsconnect::deployApp(
 #   wf_config$app_loc, appName = "exrna_F21",
 #   account = "justinchang1124", launch.browser = TRUE)
+
+# source_sdr("storage.R")
+# query_storage(wf_config$ref_loc)
+# app_requests <- load_store("app_requests.rds")
+# supported_cats <- unique(app_requests$CATEGORIES)
+# get_dependency("categories_full")
+#
+# for (group in names(categories_full))
+#   for (cat in names(categories_full[[group]]))
+#     if (!(cat %in% supported_cats))
+#       categories_full[[group]][[cat]] <- NULL
+#
+# set_dependency("categories_full")
