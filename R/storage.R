@@ -73,7 +73,7 @@ set_dependency <- function(name, default = NULL, compress = TRUE)
 {
   if (sdr_config$mode != "workflow")
     stop("Dependencies cannot be set from within the application.")
-  set_self_rds(name, dep_loc, default, compress)
+  set_self_rds(name, wf_config$dep_loc, default, compress)
 }
 
 # -------------
