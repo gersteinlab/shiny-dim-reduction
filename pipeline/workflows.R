@@ -222,3 +222,16 @@ uapp <- function(){
 #       categories_full[[group]][[cat]] <- NULL
 #
 # set_dependency("categories_full")
+
+# app_data <- list(
+#   "amazon_keys" = amazon_keys,
+#   "app_citations" = app_citations,
+#   "app_title" = app_title,
+#   "categories_full" = categories_full,
+#   "custom_color_scales" = custom_color_scales,
+#   "decorations" = decorations,
+#   "order_total" = order_total,
+#   "user_credentials" = user_credentials
+# )
+#
+# saveRDS(app_data, "app/app_data.rds")
