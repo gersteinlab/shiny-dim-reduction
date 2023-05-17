@@ -7,7 +7,7 @@ pagetitle: Shiny Dimensionality Reduction
 
 # Shiny Dimensionality Reduction
 
-<i>Justin Chang, Joel Rozowsky, Mark Gerstein<i>
+<i>Justin Chang, Joel Rozowsky, Mark Gerstein</i>
 
 ##### Table of Contents  
 [Overview](#overview)  
