@@ -18,14 +18,14 @@ pagetitle: Shiny Dimensionality Reduction
 [Installing Anaconda](#installing-anaconda)  
 [Performing Reduction](#performing-reduction)  
 [AWS Integration](#aws-integration)  
-[Running Tests](#running-tests)
+[Running Tests](#running-tests)  
 [Acknowledgements](#acknowledgements) 
 
 <a name="overview"/>
 
 ## Overview
 
-This shiny dimensionality reduction (SDR) project applies dimensionality reduction methods to tabular data through workflows and generates R Shiny apps for interactive, precomputed visualization of the results. Supported analyses include:
+This shiny dimensionality reduction (SDR) project performs dimensionality reduction on tabular data and generates R Shiny apps for interactive, precomputed visualization of the results. Supported analyses include:
 
 * Principal Component Analysis (PCA)
 * Variational Autoencoders (VAE)
@@ -44,7 +44,7 @@ There are several ways to use this project, each with varying system requirement
 
 ## Installing R
 
-To run app source code or generate dimensionality reduction workflows, you must have R >= 4.0.0 installed.
+To run app source code or perform dimensionality reduction, you must have R >= 4.0.0 installed.
 
 You can download an installer for R from https://cran.r-project.org.  
 For reproducibility, the following settings were used in development:  
@@ -72,15 +72,17 @@ source("install.R")
 
 The above code does not need to be run on subsequent app launches. To launch the app, set the working directory to the "app" folder in the repo and run the following code to launch the app:
 
-```
+```R
 shiny::runApp()
 ```
+
+For the initial launch, you will be prompted for the location of the Store.
 
 <a name="installing-rstudio"/>
 
 ## Installing RStudio
 
-To generate dimensionality reduction workflows, we recommend RStudio >= 1.3.0.
+To perform dimensionality reduction, we recommend RStudio >= 1.3.0.
 
 You can download an installer for RStudio from https://rstudio.com/products/rstudio/download.  
 For reproducibility, the following settings were used in development:  
@@ -92,7 +94,7 @@ For reproducibility, the following settings were used in development:
 
 ## Installing Rtools
 
-To generate dimensionality reduction workflows, we recommend Rtools >= Rtools40.
+To perform dimensionality reduction, we recommend Rtools >= Rtools40.
 
 You can download an installer for Rtools40 from https://cran.r-project.org/bin/windows/Rtools.  
 For reproducibility, the following settings were used in development:  
@@ -116,7 +118,7 @@ Sys.which("make")
 
 ## Installing Anaconda
 
-To generate dimensionality reduction workflows, a specialized environment in Anaconda (a Python package manager) is necessary. To install Anaconda, download an installer from https://anaconda.com, ensure RStudio is closed, and perform installation in a PATH without spaces, such as "C:/Anaconda".
+To perform dimensionality reduction, a specialized environment in Anaconda (a Python package manager) is necessary. To install Anaconda, download an installer from https://anaconda.com, ensure RStudio is closed, and perform installation in a PATH without spaces, such as "C:/Anaconda".
 
 Once Anaconda is installed, ensure that no existing environments are named "r-reticulate". You can do so through the following commands:
 
