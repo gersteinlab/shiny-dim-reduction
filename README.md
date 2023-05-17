@@ -104,13 +104,13 @@ For reproducibility, the following settings were used in development:
 
 To add Rtools to your PATH, add the following code to your .Renviron file:
 
-```
+```bash
 PATH="${RTOOLS40_HOME}\usr\bin;${PATH}"
 ```
 
 Restart R and run the following code to test functionality:
 
-```
+```R
 Sys.which("make")
 ```
 
@@ -122,14 +122,14 @@ To perform dimensionality reduction, a specialized environment in Anaconda (a Py
 
 Once Anaconda is installed, ensure that no existing environments are named "r-reticulate". You can do so through the following commands:
 
-```
+```bash
 conda info --envs
 conda env remove --name r-reticulate
 ```
 
 Then set up r-reticulate in the Anaconda Command Prompt:  
 
-```
+```bash
 conda create --name r-reticulate
 conda activate r-reticulate
 conda install tensorflow
