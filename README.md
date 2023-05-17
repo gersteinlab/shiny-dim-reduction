@@ -19,7 +19,7 @@ pagetitle: Shiny Dimensionality Reduction
 [Performing Reduction](#performing-reduction)  
 [AWS Integration](#aws-integration)  
 [Running Tests](#running-tests)  
-[Acknowledgements](#acknowledgements) 
+[Acknowledgments](#acknowledgments) 
 
 <a name="overview"/>
 
@@ -37,8 +37,8 @@ This shiny dimensionality reduction (SDR) project performs dimensionality reduct
 There are several ways to use this project, each with varying system requirements:
 
 * <b>Online App:</b> If you received a URL, no downloads are necessary - visit the provided link with any browser.
-* <b>Local App: </b> If you received a zipped file representing a Store (the stored data for an SDR application), you will need a way to unzip files (we recommend 7Zip) and R >= 4.0.0 (see [Installing R](#installing-r)). To run the app, begin by unzipping the Store and obtaining this repository locally by downloading / unzipping, using "git clone", or using RStudio's "Create Project (Version Control)" functionality. Then run the local application code as described in [Running App Code](#running-app-code).
-* <b>Pipeline:</b> If you intend to perform dimensionality reduction with this project, please read the rest of this document before proceeding.  
+* <b>Local App: </b> If you received a zipped file representing a Store (the stored data for an SDR application), you will need a way to unzip files (e.g. 7Zip) and R >= 4.0.0 (see [Installing R](#installing-r)). Begin by unzipping the Store and obtaining this repository locally by downloading / unzipping, using "git clone", or using RStudio's "Create Project (Version Control)" functionality. Then follow the instructions in [Running App Code](#running-app-code).
+* <b>Pipeline:</b> If you intend to perform dimensionality reduction, please read the rest of this document before proceeding.  
 
 <a name="installing-r"/>
 
@@ -190,7 +190,7 @@ We suggest running the tests in the following order:
 12. test_validation.R
 13. test_red_methods.R
 14. test_red_requests.R
-15. converter.R
+15. test_converter.R
 
 <a name="acknowledgments"/>
 
