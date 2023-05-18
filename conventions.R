@@ -27,6 +27,7 @@
 # if wrapping an expression is necessary, end lines on an operator (like +)
 # using "T", "F" as abbreviations for "TRUE", "FALSE" is strictly avoided
 # functions with comments should obey roxygen2 conventions
+# --if the returned value will not be used, do not specify @returns
 # the function below demonstrates the above principles
 
 #' Manipulate two objects
