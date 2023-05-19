@@ -40,3 +40,6 @@ example_func <- function(a = 1, b = 2)
   list("A test" = a, "B test" = b, "C test" = "test", "D test" = TRUE && TRUE && TRUE &&
          TRUE && (FALSE || TRUE || FALSE || TRUE || FALSE || TRUE || FALSE || TRUE))
 }
+
+# to test how many times a function is called in the codebase:
+# grep --include=\*.R -Rnw '.' -e "function_name("
