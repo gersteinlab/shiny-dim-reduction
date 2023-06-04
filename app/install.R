@@ -240,7 +240,10 @@ rm(prep_pkgs_install, sdr_pkgs_installed) # comment out for debugging
 # PROJECT LOCATION FUNCTIONS
 # --------------------------
 
-# gets the location of a source file
+#' gets the location of a source file, accounting
+#' for pipeline vs application differences
+#'
+#' @param file A string.
 get_source_loc <- function(file)
 {
   stopifnot(is_str(file))
@@ -263,7 +266,9 @@ get_source_loc <- function(file)
   file
 }
 
-# sources a file, accounting for workflow vs application uses
+#' sources a file in the context of this project
+#'
+#' @param file A string.
 source_sdr <- function(file)
 {
   # UTF-8 to maximize compatibility (especially with JSON)
