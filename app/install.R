@@ -1,105 +1,121 @@
 # The purpose of this file is to perform the following operations:
-# --confirm that the current working directory contains install.R
 # --declare several utility functions with base R
 # --create sdr_config, a list of install settings
-# ----start_time: when this file was sourced
-# ----mode: one of c("local", "online", "workflow")
-# ------local: local visualization app
-# ------online: online visualization app
-# ------workflow: perform dimensionality reduction
-# ----proj_loc: the path of the project (Shiny port if online)
 # --install missing packages and raise errors if unsuccessful
-# Note: to make "local" or "online" your mode, sdr_from_app must
-# exist before we run source("install.R"). If the code below runs
-# without raising an error, sdr_from_app will no longer exist. To
-# change the mode, source install.R with / without sdr_from_app.
-
-stopifnot(file.exists("install.R"))
 
 # -----------------
 # UTILITY FUNCTIONS
 # -----------------
 
-# whether x is an integer
+#' wrapper for cat(sprintf(...))
+#'
+#' @param ... A dots construct.
+cat_f <- function(...)
+{
+  cat(sprintf(...))
+}
+
+#' wrapper for stop(sprintf(...))
+#'
+#' @param ... A dots construct.
+stop_f <- function(...)
+{
+  stop(sprintf(...))
+}
+
+#' whether x is an integer
+#'
+#' @param x An object.
+#' @returns A logical.
 is_int <- function(x)
 {
-  is.integer(x) && length(x) == 1
+  is.integer(x) && (length(x) == 1)
 }
 
-# whether x is a number
+#' whether x is a numeric
+#'
+#' @param x An object.
+#' @returns A logical.
 is_num <- function(x)
 {
-  is.numeric(x) && length(x) == 1
+  is.numeric(x) && (length(x) == 1)
 }
 
-# whether x is a string
+#' whether x is a string
+#'
+#' @param x An object.
+#' @returns A logical.
 is_str <- function(x)
 {
-  is.character(x) && length(x) == 1
+  is.character(x) && (length(x) == 1)
 }
 
-# returns the rounded elapsed system time since 'start'
-my_timer <- function(start = 0, num_digits = 4L){
-  stopifnot(is_num(start), is_int(num_digits))
-  round(as.numeric(Sys.time()) - start, num_digits)
-}
-
-# prints cleanly and adds a new line
-print_clean <- function(msg = ""){
-  stopifnot(is_str(msg))
-  cat(sprintf("%s\n", msg))
-}
-
-# wrapper for print_clean and sprintf
-sprintf_clean <- function(...)
+#' returns (time t2 - time t1) in seconds
+#'
+#' @param t1 A POSIXct.
+#' @param t2 A POSIXct.
+#' @returns A numeric.
+time_diff <- function(t1, t2)
 {
-  print_clean(sprintf(...))
+  stopifnot(
+    "POSIXct" %in% class(t1),
+    "POSIXct" %in% class(t2)
+  )
+  as.numeric(t2 - t1)
 }
 
-# creates an empty list of integer length n
+#' converts a vector to a string
+#'
+#' @param v A vector.
+#' @returns A string.
+vec_str <- function(v)
+{
+  stopifnot(is.vector(v))
+  paste(v, collapse = ", ")
+}
+
+#' creates an empty list of length n
+#'
+#' @param n An integer.
+#' @returns A list.
 len_n_list <- function(n)
 {
   stopifnot(is_int(n))
   vector(mode = "list", length = n)
 }
 
-# creates an empty list, has faster performance than expanding list
-# note: empty_named_list(c("A", "B")) = empty_named_list("A", "B")
-empty_named_list <- function(...)
+#' creates an empty list with specified list_names
+#' to improve performance (vs expanding a list)
+#'
+#' @param list_names A character.
+#' @returns A list.
+empty_named_list <- function(list_names)
 {
-  names <- unlist(list(...))
-  target <- len_n_list(length(names))
-  names(target) <- names
-  target
+  stopifnot(is.character(list_names))
+  setNames(len_n_list(length(list_names)), list_names)
 }
 
-# assigns the given value to a global variable with the given name
-assign_global <- function(name, value)
+#' checks loaded packages and sends prompts
+#' to prepare for package installation
+#'
+#' @param pkg_names A character.
+prep_pkgs_install <- function(pkg_names)
 {
-  assign(name, value, envir = .GlobalEnv)
-}
+  stopifnot(is.character(pkg_names))
+  cat("The following packages are missing and necessary:\n")
+  cat_f("%s\n", vec_str(pkg_names))
+  loaded_pkg_names <- intersect(.packages(), pkg_names)
 
-# an empty data frame used for various purposes
-empty_df <- data.frame(matrix(nrow = 0, ncol = 1))
-colnames(empty_df) <- "Unknown"
-
-# prepares to install each package in pkg_vec
-prep_pkgs_install <- function(pkg_vec)
-{
-  print_clean("The following packages are missing and necessary:")
-  print_clean(paste(pkg_vec, collapse = ", "))
-  pkg_vec_loaded <- intersect(.packages(), pkg_vec)
-
-  if (length(pkg_vec_loaded) > 0)
-    stop(sprintf("Installation cannot proceed because outdated
+  if (length(loaded_pkg_names) > 0)
+    stop_f("Installation cannot proceed because outdated
 versions of the following packages are attached:\n%s",
-                 paste(pkg_vec_loaded, collapse = ", ")))
+                 vec_str(loaded_pkg_names))
 
   confirm_install <- readline(prompt = "
-To install these packages, type 'Y' and press enter.
+To install these packages, type 'y' and press enter.
 To exit, type anything else and press enter. ")
 
-  if (confirm_install != "Y")
+  if (confirm_install != "y")
     stop("Quitting installation - some packages remain uninstalled.")
 }
 
@@ -107,33 +123,37 @@ To exit, type anything else and press enter. ")
 # CREATE SDR CONFIG
 # -----------------
 
-sdr_config <- list(
-  "start_time" = my_timer(),
-  "proj_loc" = Sys.getenv('SHINY_PORT')
-)
+sdr_config <- list("start_time" = Sys.time())
 
-if (exists("sdr_from_app"))
+# if you are in the repository base folder ...
+if (all(file.exists(
+  "app/install.R", "app/app.R"
+)))
 {
-  rm(sdr_from_app, envir = .GlobalEnv)
-  if (sdr_config$proj_loc == "")
-  {
-    sdr_config$mode <- "local"
-    sdr_config$proj_loc <- getwd()
-  }
-  else
-    sdr_config$mode <- "online"
+  # pipeline: perform dimensionality reduction
+  sdr_config$mode <- "pipeline"
+  sdr_config$proj_loc <- getwd()
 } else
 {
-  sdr_config$mode <- "workflow"
-  sdr_config$proj_loc <- getwd()
+  # if you are in the application folder ...
+  stopifnot(file.exists(
+    "install.R", "app.R"
+  ))
+
+  # local vs cloud application
+  if (Sys.getenv("SHINY_PORT") == "")
+    sdr_config$mode <- "local"
+  else
+    sdr_config$mode <- "cloud"
 }
+
+# Note: to change sdr_config$mode, source install.R again.
 
 # ------------
 # INSTALLATION
 # ------------
 
-print_clean()
-print_clean("Checking Installation ...")
+cat("\nChecking Installation ...\n")
 
 sdr_pkgs_installed <- as.vector(installed.packages()[,1])
 
@@ -165,18 +185,17 @@ sdr_pkgs_missing_base <- setdiff(sdr_pkgs_base, sdr_pkgs_installed)
 # if base packages are missing, try to install them
 if (length(sdr_pkgs_missing_base) > 0)
 {
-  if (sdr_config$mode == "online")
-    stop("Automatic installation to an online application is not supported.")
+  if (sdr_config$mode == "cloud")
+    stop("Automated installation is not supported for cloud applications.")
 
-  print_clean()
-  print_clean("Analyzing application packages ...")
+  cat("\nAnalyzing application packages ...\n")
   prep_pkgs_install(sdr_pkgs_missing_base)
   install.packages(sdr_pkgs_missing_base, type = "binary", character.only = TRUE)
 }
 
 rm(sdr_pkgs_base, sdr_pkgs_missing_base) # comment out for debugging
 
-if (sdr_config$mode == "workflow")
+if (sdr_config$mode == "pipeline")
 {
   # a list of extra packages necessary for reduction code
   sdr_pkgs_data <- c(
@@ -196,16 +215,15 @@ if (sdr_config$mode == "workflow")
   # if data packages are missing, try to install them
   if (length(sdr_pkgs_missing_data) > 0)
   {
-    print_clean()
-    print_clean("Analyzing workflow packages ...")
-    prep_pkgs_install(sdr_pkg_names$missing_data)
+    cat("\nAnalyzing workflow packages ...\n")
+    prep_pkgs_install(sdr_pkgs_missing_data)
 
-    all_but_limma <- setdiff(sdr_pkg_names$missing_data, "limma")
+    all_but_limma <- setdiff(sdr_pkgs_missing_data, "limma")
     install.packages(all_but_limma, type = "binary", character.only = TRUE)
-    if ("limma" %in% sdr_pkg_names$missing_data)
+    if ("limma" %in% sdr_pkgs_missing_data)
     {
-      print_clean("Bioconductor may ask if you wish to update other packages.
-We recommend you type 'n' and press enter.")
+      cat("Bioconductor may ask if you wish to update other packages.
+We recommend you type 'n' and press enter.\n")
       library(BiocManager)
       BiocManager::install("limma")
     }
@@ -222,25 +240,33 @@ rm(prep_pkgs_install, sdr_pkgs_installed) # comment out for debugging
 # PROJECT LOCATION FUNCTIONS
 # --------------------------
 
-# gets the absolute path of a file given its relative path to the project
-get_project_loc <- function(file)
-{
-  stopifnot(sdr_config$mode == "workflow", is_str(file))
-  file.path(sdr_config$proj_loc, file)
-}
-
-# gets the location of a source file (does NOT work on app.R, install.R)
+# gets the location of a source file
 get_source_loc <- function(file)
 {
-  if (sdr_config$mode == "workflow")
-    return(get_project_loc(sprintf("R/%s", file)))
   stopifnot(is_str(file))
-  sprintf("src/%s", file)
+
+  if (sdr_config$mode == "pipeline")
+  {
+    proj_loc <- sdr_config$proj_loc
+
+    a_file <- file.path(proj_loc, "app", file)
+    if (file.exists(a_file))
+      return(a_file)
+
+    p_file <- file.path(proj_loc, "pipeline", file)
+    if (file.exists(p_file))
+      return(p_file)
+
+    stop_f("Source file could not be found: %s", file)
+  }
+
+  file
 }
 
 # sources a file, accounting for workflow vs application uses
 source_sdr <- function(file)
 {
+  # UTF-8 to maximize compatibility (especially with JSON)
   source(get_source_loc(file), encoding = "UTF-8")
 }
 
@@ -251,12 +277,14 @@ source_sdr <- function(file)
 require(shiny)
 require(dplyr)
 
-print_clean()
-message("*** SHINY DIMENSIONALITY REDUCTION ***")
+init_time <- time_diff(sdr_config$start_time, Sys.time())
+
+cat("\n")
+message("--- SHINY DIMENSIONALITY REDUCTION ---")
 message("DEVELOPER: Justin Chang @ Gerstein Lab")
 message("ALL R PACKAGES INSTALLED; CHECK README")
-print_clean()
-sprintf_clean("Project Location: %s", sdr_config$proj_loc)
-sprintf_clean("Initialization time (seconds): %s",
-              my_timer(sdr_config$start_time))
-print_clean()
+cat_f("SDR RUNTIME MODE: %s\n", sdr_config$mode)
+cat_f("VALIDATION TIMER: %.2f secs\n", init_time)
+# note: prints nothing if proj_loc is NULL
+cat_f("PROJECT LOCATION: %s\n", sdr_config$proj_loc)
+cat("\n")

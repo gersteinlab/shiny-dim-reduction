@@ -4,63 +4,77 @@
 # SETUP
 # -----
 
-source("install.R")
+source("app/install.R")
 
 # -----
 # TESTS
 # -----
 
-test_assign <- function()
+utils_test <- function()
 {
-  assign_global("test_assign_var", 42)
-}
+  cat("--- Testing Utility Functions ---\n\n")
 
-basic_test <- function()
-{
-  print_clean("*** Testing Basic Functions ***")
-  print_clean("This should print cleanly!")
-  print_clean()
-  sprintf_clean("The current time is: %s", Sys.time())
-  start <- my_timer()
-  print_clean("Sleeping for 1 second ...")
+  cat_f("is_int(NULL): %s\n", is_int(NULL))
+  cat_f("is_int(NA): %s\n", is_int(NA))
+  cat_f("is_int(1:2): %s\n", is_int(1:2))
+  cat_f("is_int(-1): %s\n", is_int(-1))
+  cat_f("is_int(-1L): %s\n\n", is_int(-1L))
+
+  cat_f("is_num(NULL): %s\n", is_num(NULL))
+  cat_f("is_num(NA): %s\n", is_num(NA))
+  cat_f("is_num(1:2): %s\n", is_num(1:2))
+  cat_f("is_num(-1): %s\n", is_num(-1))
+  cat_f("is_num(-1.5): %s\n\n", is_num(-1.5))
+
+  cat_f("is_str(NULL): %s\n", is_str(NULL))
+  cat_f("is_str(NA): %s\n", is_str(NA))
+  cat_f("is_str(0): %s\n", is_str(0))
+  cat_f("is_str(LETTERS): %s\n", is_str(LETTERS))
+  cat_f("is_str('ABC'): %s\n\n", is_str("ABC"))
+
+  t1 <- Sys.time()
+  cat_f("Store current time: t1 = %s\n", t1)
+  cat("Sleeping for 1 second ...\n")
   Sys.sleep(1)
-  sprintf_clean("Now, my_timer(start) yields: %s", my_timer(start))
-  print_clean()
-  sprintf_clean("The result of len_n_list(3) is: %s", paste(len_n_list(3), collapse = ", "))
-  sprintf_clean("The names of empty_named_list(c(\"A\", \"B\", \"C\")) are: %s",
-                paste(names(empty_named_list(c("A", "B", "C"))), collapse = ", "))
-  sprintf_clean("The names of empty_named_list(\"A\", \"B\", \"C\") are: %s",
-                paste(names(empty_named_list("A", "B", "C")), collapse = ", "))
+  t2 <- Sys.time()
+  cat_f("Store current time: t2 = %s\n", t2)
+  cat_f("time_diff(t1, t2): %.4f\n\n", time_diff(t1, t2))
 
-  test_assign()
-  sprintf_clean("The result of test_assign() is: %s [expected: 42]",
-                test_assign_var)
-  rm(test_assign_var, envir = .GlobalEnv)
+  cat_f("vec_str(numeric()): '%s'\n", vec_str(numeric()))
+  cat_f("vec_str(NA): '%s'\n", vec_str(NA))
+  cat_f("vec_str(1:5): '%s'\n", vec_str(1:5))
+  cat_f("vec_str(c('A', 'B')): '%s'\n\n", vec_str(c("A", "B")))
 
+  cat_f("len_n_list(3): %s\n", vec_str(len_n_list(3L)))
+  letters_list <- empty_named_list(LETTERS)
+  cat_f("length(empty_named_list(LETTERS)): %d\n", length(letters_list))
 }
 
-get_source_loc_test <- function()
+source_test <- function()
 {
-  print_clean("*** Functions Tested: get_source_loc ***")
-  print_clean("Initializing with sdr_from_app:")
-  assign_global("sdr_from_app", TRUE)
+  cat("--- Functions Tested: get_source_loc ---\n\n")
+  cat("Setting mode to app:\n")
+  setwd("app")
   source("install.R")
-  sprintf_clean("get_source_loc(\"find_replace.R\"): %s", get_source_loc("find_replace.R"))
-  print_clean("Initializing without sdr_from_app:")
-  source("install.R")
-  sprintf_clean("get_source_loc(\"find_replace.R\"): %s", get_source_loc("find_replace.R"))
+  cat_f("get_source_loc('find_replace.R'): %s\n", get_source_loc("find_replace.R"))
+
+  cat("Setting mode to pipeline:\n")
+  setwd("..")
+  source("app/install.R")
+  cat_f("get_source_loc('find_replace.R'): %s\n", get_source_loc("find_replace.R"))
+  cat_f("get_source_loc('packaging.R'): %s\n", get_source_loc("packaging.R"))
 }
 
 # -------
 # RUN ALL
 # -------
-basic_test()
-print_clean()
-get_source_loc_test()
+utils_test()
+cat("\n")
+source_test()
 
 # manually test installation of packages
 # remove.packages("Rtsne")
 # remove.packages("limma")
 # remove.packages("VennDiagram")
 # Sys.setenv('SHINY_PORT' = 100)
-# source("install.R")
+# source("app/install.R")
