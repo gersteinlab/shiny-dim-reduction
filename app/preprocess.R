@@ -34,7 +34,7 @@ num_digits <- 4
 # to remove: rm(categories_full, cat_groups, name_cat, num_cat, categories)
 init_cat <- function()
 {
-  get_dependency("categories_full", stop("Critical dependency missing!"))
+  # get_dependency("categories_full", stop("Critical dependency missing!"))
 
   # cat groups
   assign_global("cat_groups", lapply(categories_full, names))
@@ -60,7 +60,7 @@ init_cat <- function()
 # to remove: rm(decorations, sub_row_groups, sub_col_groups)
 init_sub <- function(map_fun)
 {
-  get_dependency("decorations")
+  # get_dependency("decorations")
 
   sub_row_groups <- empty_named_list(name_cat)
   sub_col_groups <- empty_named_list(name_cat)

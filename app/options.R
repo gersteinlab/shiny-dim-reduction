@@ -5,7 +5,7 @@
 # This likely will not change in the near future.
 
 if (!exists("sdr_config"))
-  source("install.R")
+  source("app/install.R")
 
 library(shinydashboard)
 library(shinyjs)
@@ -30,7 +30,7 @@ init_cat()
 init_sub(name_len_opts)
 
 # set the storage as local or AWS; queries the user if an option is available
-get_dependency("amazon_keys")
+# get_dependency("amazon_keys")
 app_ref_loc <- "../reference"
 use_local_storage <- query_storage(app_ref_loc, amazon_keys)
 
@@ -53,11 +53,11 @@ if (!use_local_storage && find_aws_s3("Sessions/user_requests.rds"))
 # ----------------
 
 # get all remaining dependencies
-get_dependency("order_total", empty_named_list(name_cat))
-get_dependency("app_title", "Dimensionality Reduction Tool")
-get_dependency("app_citations", "No data citations could be found.")
-get_dependency("user_credentials")
-get_dependency("custom_color_scales")
+# get_dependency("order_total", empty_named_list(name_cat))
+# get_dependency("app_title", "Dimensionality Reduction Tool")
+# get_dependency("app_citations", "No data citations could be found.")
+# get_dependency("user_credentials")
+# get_dependency("custom_color_scales")
 
 # create bibliography
 citations <- rep_str(bibliography, "!!!!!!!!!!", app_citations)

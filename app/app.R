@@ -1,9 +1,31 @@
 # The purpose of this file is to run an application for
 # visualizing dimensionality reduction results.
 
-# In the project, app.R is located in the R folder so execution stops immediately
-assign("sdr_from_app", TRUE, envir = .GlobalEnv)
 source("install.R")
+
+is_app_data <- function(app_data) {
+  TRUE
+}
+
+# assign globally with default
+
+load_app_data <- function(app_data) {
+  for (dep in names(app_data))
+    assign_global(dep, app_data[[dep]])
+}
+
+# ensure the data for the application is valid
+app_data_loc <- "app_data.rds"
+if (!file.exists(app_data_loc))
+{
+
+}
+
+app_data <- readRDS("app_data.rds")
+if (!is_app_data(app_data))
+  stop("The application data ('app_data.rds') is invalid.
+Please delete 'app_data.rds' and rerun the application.")
+load_app_data(app_data)
 
 source_sdr("plotting.R")
 source_sdr("authentication.R")
@@ -91,7 +113,7 @@ Please suspend plotting or wait for plotting to
 finish before attempting a new configuration.", num), "default")
     num_plots(num+1)
 
-    start <- my_timer()
+    start <- Sys.time()
 
     if (is.null(target))
     {
@@ -103,7 +125,7 @@ Possible reasons:<br>
     }
 
     notif(sprintf("Plot generation was successful.<br>
-Seconds elapsed: %s", my_timer(start)), "message")
+Seconds elapsed: %.2f", time_diff(start)), "message")
 
     target
   }

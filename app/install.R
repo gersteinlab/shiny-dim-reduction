@@ -23,19 +23,20 @@ stop_f <- function(...)
   stop(sprintf(...))
 }
 
-#' whether x is an integer
+#' whether all elements of x are finite
+#' (note: succeeds if x is length 0)
 #'
 #' @param x An object.
-#' @returns A logical.
-is_int <- function(x)
+#' @returns A logical of length one.
+all_fin <- function(x)
 {
-  is.integer(x) && (length(x) == 1)
+  all(is.finite(x))
 }
 
-#' whether x is a numeric
+#' whether x is a single number
 #'
 #' @param x An object.
-#' @returns A logical.
+#' @returns A logical of length one.
 is_num <- function(x)
 {
   is.numeric(x) && (length(x) == 1)
@@ -44,7 +45,7 @@ is_num <- function(x)
 #' whether x is a string
 #'
 #' @param x An object.
-#' @returns A logical.
+#' @returns A logical of length one.
 is_str <- function(x)
 {
   is.character(x) && (length(x) == 1)
@@ -55,7 +56,7 @@ is_str <- function(x)
 #' @param t1 A POSIXct.
 #' @param t2 A POSIXct.
 #' @returns A numeric.
-time_diff <- function(t1, t2)
+time_diff <- function(t1, t2 = Sys.time())
 {
   stopifnot(
     "POSIXct" %in% class(t1),
@@ -80,7 +81,7 @@ vec_str <- function(v)
 #' @returns A list.
 len_n_list <- function(n)
 {
-  stopifnot(is_int(n))
+  stopifnot(is_num(n))
   vector(mode = "list", length = n)
 }
 
@@ -93,6 +94,16 @@ empty_named_list <- function(list_names)
 {
   stopifnot(is.character(list_names))
   setNames(len_n_list(length(list_names)), list_names)
+}
+
+#' wrapper for assigning to global env
+#'
+#' @param name A string.
+#' @param value An object.
+assign_global <- function(name, value)
+{
+  stopifnot(is_str(name))
+  assign(name, value, envir = .GlobalEnv)
 }
 
 #' checks loaded packages and sends prompts
@@ -282,7 +293,7 @@ source_sdr <- function(file)
 require(shiny)
 require(dplyr)
 
-init_time <- time_diff(sdr_config$start_time, Sys.time())
+init_time <- time_diff(sdr_config$start_time)
 
 cat("\n")
 message("--- SHINY DIMENSIONALITY REDUCTION ---")

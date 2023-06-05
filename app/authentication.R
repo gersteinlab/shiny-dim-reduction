@@ -8,6 +8,7 @@ library(bcrypt)
 # straightforward password hashing
 my_hash <- function(password)
 {
+  stopifnot(is_str(password))
   bcrypt::hashpw(password, gensalt(12))
 }
 

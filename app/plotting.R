@@ -4,7 +4,7 @@
 # though intended purpose may create a more reasonable ordering.
 
 if (!exists("sdr_config"))
-  source("install.R")
+  source("app/install.R")
 
 library(viridis)
 library(ggplot2)
@@ -18,6 +18,11 @@ library(DT)
 # ----------------------
 # GENERAL GRAPHS / TOOLS
 # ----------------------
+
+is_color <- function(c_str)
+{
+  is_str(c_str) && grepl('^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$', str)
+}
 
 # adds a transparency of alpha = 0.5 to a color
 make_transparent <- function(color)
@@ -80,7 +85,7 @@ color_seq <- function(n_colors, color_type = "Rainbow", reverse = FALSE)
       return(rev(c_seq))
     return(c_seq)
   }
-  stop(sprintf("%s is not a supported color_type.", color_type))
+  stop_f("Unsupported color_type: %s", color_type)
 }
 
 # get remainder of a but put it in the range 1:b
@@ -117,10 +122,10 @@ boxplot_beeswarm <- function(data, colors, title = "", legend = TRUE)
   x_bins <- unique(data[,1])
 
   if (!legend)
-    x_bins <- 1:length(x_bins)
+    x_bins <- seq_len(x_bins)
 
   boxplot(rel, data = data, xlab = xlab, ylab = ylab, names = x_bins,
-          col=make_transparent(colors), outline = FALSE, main = title) # transparency
+          col = make_transparent(colors), outline = FALSE, main = title) # transparency
 
   beeswarm(rel, data = data, xlab = xlab, ylab = ylab, labels = x_bins,
            col = colors, corral = "random", main = title, pch = 16, add = TRUE) # filled circles

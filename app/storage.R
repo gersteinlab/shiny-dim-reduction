@@ -283,7 +283,7 @@ set_storage_aws <- function(key)
 
 query_storage <- function(ref = NULL, key = NULL)
 {
-  if (sdr_config$mode != "online" && is_valid_ref(ref)) # can use local storage
+  if (sdr_config$mode != "cloud" && is_valid_ref(ref)) # can use local storage
   {
     if (is_valid_key(key)) # can use AWS storage
     {
