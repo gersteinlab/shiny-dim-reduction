@@ -187,8 +187,6 @@ sdr_config <- create_sdr_config()
 # INSTALLATION
 # ------------
 
-cat("\nChecking Installation ...\n")
-
 sdr_pkgs_installed <- installed.packages()[,1]
 stopifnot(is.character(sdr_pkgs_installed))
 
@@ -323,12 +321,10 @@ suppressPackageStartupMessages({
 
 init_time <- time_diff(sdr_config$start_time)
 
-cat("\n")
-message("--- SHINY DIMENSIONALITY REDUCTION ---")
+message("\n--- SHINY DIMENSIONALITY REDUCTION ---")
 message("DEVELOPER: Justin Chang @ Gerstein Lab")
 message("ALL R PACKAGES INSTALLED; CHECK README")
-cat_f("SDR RUNTIME MODE: %s\n", sdr_config$mode)
+cat_f("\nSDR RUNTIME MODE: %s\n", sdr_config$mode)
 cat_f("VALIDATION TIMER: %.2f secs\n", init_time)
 # note: prints nothing if proj_loc is NULL
-cat_f("PROJECT LOCATION: %s\n", sdr_config$proj_loc)
-cat("\n")
+cat_f("PROJECT LOCATION: %s\n\n", sdr_config$proj_loc)
