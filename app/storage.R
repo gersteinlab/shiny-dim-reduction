@@ -105,7 +105,7 @@ ref_is_connected <- function()
 # checks if a reference is valid
 is_valid_ref <- function(loc)
 {
-  length(loc) == 1 && is.character(loc) && file.exists(loc)
+  is_str(loc) && file.exists(loc)
 }
 
 # gives the local storage path for a prefix (usually in reference)
