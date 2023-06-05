@@ -1,4 +1,4 @@
-# The purpose of this file is to manage Local / AWS.S3 storage.
+# The purpose of this file is to manage storage systems (stores).
 
 # Goals:
 # list_store: list all files with a prefix
@@ -7,9 +7,13 @@
 # load_store: loads a file, returning NULL if it doesn't exist
 
 if (!exists("sdr_config"))
-  source("install.R")
+  source("app/install.R")
 
 library(aws.s3)
+
+# ----------
+# STORE INFO
+# ----------
 
 # ----------------
 # LOCAL MANAGEMENT
