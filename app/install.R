@@ -15,6 +15,14 @@ cat_f <- function(...)
   cat(sprintf(...))
 }
 
+#' wrapper for message(sprintf(...))
+#'
+#' @param ... A dots construct.
+message_f <- function(...)
+{
+  message(sprintf(...))
+}
+
 #' wrapper for stop(sprintf(...))
 #'
 #' @param ... A dots construct.
@@ -31,6 +39,15 @@ stop_f <- function(...)
 all_fin <- function(x)
 {
   all(is.finite(x))
+}
+
+#' whether x is a single integer
+#'
+#' @param x An object.
+#' @returns A logical of length one.
+is_int <- function(x)
+{
+  is.integer(x) && (length(x) == 1)
 }
 
 #' whether x is a single number
@@ -81,7 +98,7 @@ vec_str <- function(v)
 #' @returns A list.
 len_n_list <- function(n)
 {
-  stopifnot(is_num(n))
+  stopifnot(is_int(n))
   vector(mode = "list", length = n)
 }
 
@@ -113,7 +130,7 @@ assign_global <- function(name, value)
 prep_pkgs_install <- function(pkg_names)
 {
   stopifnot(is.character(pkg_names))
-  cat("The following packages are missing and necessary:\n")
+  cat("\nThe following packages are missing and necessary:\n")
   cat_f("%s\n", vec_str(pkg_names))
   loaded_pkg_names <- intersect(.packages(), pkg_names)
 
@@ -134,31 +151,37 @@ To exit, type anything else and press enter. ")
 # CREATE SDR CONFIG
 # -----------------
 
-sdr_config <- list("start_time" = Sys.time())
-
-# if you are in the repository base folder ...
-if (all(file.exists(
-  "app/install.R", "app/app.R"
-)))
+#' creates an sdr_config object
+#' @returns A list.
+create_sdr_config <- function()
 {
-  # pipeline: perform dimensionality reduction
-  sdr_config$mode <- "pipeline"
-  sdr_config$proj_loc <- getwd()
-} else
-{
-  # if you are in the application folder ...
-  stopifnot(file.exists(
-    "install.R", "app.R"
-  ))
+  config <- list("start_time" = Sys.time())
+  app_files <- c("install.R", "app.R")
 
-  # local vs cloud application
-  if (Sys.getenv("SHINY_PORT") == "")
-    sdr_config$mode <- "local"
+  # if you are in the repository base folder ...
+  if (all(app_files %in% list.files("app")))
+  {
+    # pipeline: perform dimensionality reduction
+    config$mode <- "pipeline"
+    config$proj_loc <- getwd()
+  }
   else
-    sdr_config$mode <- "cloud"
+  {
+    # if you are in the application folder ...
+    stopifnot(file.exists(app_files))
+
+    # local vs cloud application
+    if (Sys.getenv("SHINY_PORT") == "")
+      config$mode <- "local"
+    else
+      config$mode <- "cloud"
+  }
+
+  config
 }
 
-# Note: to change sdr_config$mode, source install.R again.
+# Note: to update sdr_config, source install.R again.
+sdr_config <- create_sdr_config()
 
 # ------------
 # INSTALLATION
@@ -166,7 +189,8 @@ if (all(file.exists(
 
 cat("\nChecking Installation ...\n")
 
-sdr_pkgs_installed <- as.vector(installed.packages()[,1])
+sdr_pkgs_installed <- installed.packages()[,1]
+stopifnot(is.character(sdr_pkgs_installed))
 
 # a list of packages necessary for application code
 sdr_pkgs_base <- c(
@@ -204,7 +228,7 @@ if (length(sdr_pkgs_missing_base) > 0)
   install.packages(sdr_pkgs_missing_base, type = "binary", character.only = TRUE)
 }
 
-rm(sdr_pkgs_base, sdr_pkgs_missing_base) # comment out for debugging
+rm(sdr_pkgs_base, sdr_pkgs_missing_base)
 
 if (sdr_config$mode == "pipeline")
 {
@@ -227,25 +251,26 @@ if (sdr_config$mode == "pipeline")
   if (length(sdr_pkgs_missing_data) > 0)
   {
     cat("\nAnalyzing workflow packages ...\n")
+    missing_limma <- ("limma" %in% sdr_pkgs_missing_data)
+    if (missing_limma)
+      cat("You are missing 'limma', which is managed by Bioconductor.
+Bioconductor may ask whether to update other packages '[a/s/n]'.
+We recommend you type 'n' and press enter.\n")
+
     prep_pkgs_install(sdr_pkgs_missing_data)
 
     all_but_limma <- setdiff(sdr_pkgs_missing_data, "limma")
     install.packages(all_but_limma, type = "binary", character.only = TRUE)
-    if ("limma" %in% sdr_pkgs_missing_data)
-    {
-      cat("Bioconductor may ask if you wish to update other packages.
-We recommend you type 'n' and press enter.\n")
-      library(BiocManager)
+    if (missing_limma)
       BiocManager::install("limma")
-    }
 
-    rm(all_but_limma)
+    rm(missing_limma, all_but_limma)
   }
 
-  rm(sdr_pkgs_data, sdr_pkgs_missing_data) # comment out for debugging
+  rm(sdr_pkgs_data, sdr_pkgs_missing_data)
 }
 
-rm(prep_pkgs_install, sdr_pkgs_installed) # comment out for debugging
+rm(prep_pkgs_install, sdr_pkgs_installed)
 
 # --------------------------
 # PROJECT LOCATION FUNCTIONS
