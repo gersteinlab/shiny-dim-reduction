@@ -42,4 +42,7 @@ example_func <- function(a = 1, b = 2)
 }
 
 # to test how many times a function is called in the codebase:
-# grep --include=\*.R -Rnw '.' -e "function_name("
+# grep --include=\*.R -Rnw '.' -e "function_name"
+
+# common mistakes:
+# --use "any(x)" instead of "sum(x) > 0"

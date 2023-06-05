@@ -38,7 +38,7 @@ There are several ways to use this project, each with varying system requirement
 
 * <b>Online App:</b> If you received a URL, no downloads are necessary - visit the provided link with any browser.
 * <b>Local App: </b> If you received a zipped file representing a Store (the stored data for an SDR application), you will need a way to unzip files (e.g. 7Zip) and R >= 4.0.0 (see [Installing R](#installing-r)). Begin by unzipping the Store and obtaining this repository locally by downloading / unzipping, using "git clone", or using RStudio's "Create Project (Version Control)" functionality. Then follow the instructions in [Running App Code](#running-app-code).
-* <b>Pipeline:</b> If you intend to perform dimensionality reduction, please read the rest of this document before proceeding.  
+* <b>Pipeline:</b> If you intend to run a dimensionality reduction pipeline on tabular data, please read the rest of this document before proceeding.  
 
 <a name="installing-r"/>
 
