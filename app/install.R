@@ -225,7 +225,8 @@ if (length(sdr_pkgs_missing_base) > 0)
 
   cat("\nAnalyzing application packages ...\n")
   prep_pkgs_install(sdr_pkgs_missing_base)
-  install.packages(sdr_pkgs_missing_base, type = "binary", character.only = TRUE)
+  install.packages(sdr_pkgs_missing_base,
+                   type = "binary", character.only = TRUE)
 }
 
 rm(sdr_pkgs_base, sdr_pkgs_missing_base)
@@ -251,20 +252,20 @@ if (sdr_config$mode == "pipeline")
   if (length(sdr_pkgs_missing_data) > 0)
   {
     cat("\nAnalyzing workflow packages ...\n")
-    missing_limma <- ("limma" %in% sdr_pkgs_missing_data)
-    if (missing_limma)
-      cat("You are missing 'limma', which is managed by Bioconductor.
-Bioconductor may ask whether to update other packages '[a/s/n]'.
-We recommend you type 'n' and press enter.\n")
-
     prep_pkgs_install(sdr_pkgs_missing_data)
-
     all_but_limma <- setdiff(sdr_pkgs_missing_data, "limma")
     install.packages(all_but_limma, type = "binary", character.only = TRUE)
-    if (missing_limma)
-      BiocManager::install("limma")
 
-    rm(missing_limma, all_but_limma)
+    if ("limma" %in% sdr_pkgs_missing_data) {
+      readline(prompt ="
+You are missing 'limma', which is managed by Bioconductor.
+If Bioconductor later asks to update other packages '[a/s/n]',
+we recommend you type 'n' and press enter.
+Press enter to proceed.\n")
+      BiocManager::install("limma")
+    }
+
+    rm(all_but_limma)
   }
 
   rm(sdr_pkgs_data, sdr_pkgs_missing_data)
@@ -315,8 +316,10 @@ source_sdr <- function(file)
 # COMPLETE INSTALLATION
 # ---------------------
 
-require(shiny)
-require(dplyr)
+suppressPackageStartupMessages({
+  library(shiny)
+  library(dplyr)
+})
 
 init_time <- time_diff(sdr_config$start_time)
 
