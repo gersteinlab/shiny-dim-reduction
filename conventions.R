@@ -41,8 +41,17 @@ example_func <- function(a = 1, b = 2)
          TRUE && (FALSE || TRUE || FALSE || TRUE || FALSE || TRUE || FALSE || TRUE))
 }
 
-# to test how many times a function is called in the codebase:
-# grep --include=\*.R -Rnw '.' -e "function_name"
-
 # common mistakes:
 # --use "any(x)" instead of "sum(x) > 0"
+
+# to test how many times a function is called in the codebase:
+# grep --include=\*.R -rnw '.' -e "function_name"
+
+# USEFUL GREP FLAGS:
+# --include: Specify a glob pattern for files to search.
+# -r: Recursive without following symbolic links.
+# -n: Shows line numbers.
+# -w: Searches for words ('b' will not match 'abc')
+# -e: Specifies a search pattern.
+# -i: Be case-insensitive for letters.
+# -F: Treat patterns as literal strings instead of regexes.
