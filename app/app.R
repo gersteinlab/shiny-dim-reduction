@@ -3,6 +3,10 @@
 
 source("install.R")
 
+elapsed_app_time <- function() {
+  time_diff(sdr_config$start_time)
+}
+
 is_app_data <- function(app_data) {
   TRUE
 }
@@ -29,6 +33,9 @@ load_app_data(app_data)
 
 source_sdr("plotting.R")
 source_sdr("authentication.R")
+
+
+
 source_sdr("options.R")
 
 server <- function(input, output, session) {
@@ -108,10 +115,14 @@ server <- function(input, output, session) {
       return(ggplot2_null())
 
     num <- isolate(num_plots())
+
+    if (num == 1)
+      notif(sprintf("APP LAUNCH TIME: %.1f (sec)", elapsed_app_time()), "warning")
+
     notif(sprintf("Generating Plot #%s:<br>
 Please suspend plotting or wait for plotting to
 finish before attempting a new configuration.", num), "default")
-    num_plots(num+1)
+    num_plots(num + 1)
 
     start <- Sys.time()
 
@@ -583,7 +594,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
       addr <- make_phate_name(cati(), rowi(), coli(), iplot$scaling, iplot$normalization, 2, peri())
       curr_adr(addr)
       data <- load_store(addr)
-      data <- data[keep(),,drop=FALSE]
+      data <- data[keep(), , drop = FALSE]
 
       num_data(data)
 
@@ -616,7 +627,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
         return(ggplot2_umap_sum(knn_label_matrix(data, colors()), paint(), title_embed()))
     }
 
-    data <- data[keep(),,drop=FALSE]
+    data <- data[keep(), , drop = FALSE]
     num_data(data)
 
     if (iplot$visualize == "Explore")
@@ -1041,6 +1052,8 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
       updateTabsetPanel(session, name, selected = tabset_panel_data[[name]])
   })
 }
+
+cat_f("APP BUILD TIME: %.1f (sec)", elapsed_app_time())
 
 # -----------
 # RUN THE APP

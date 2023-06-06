@@ -163,7 +163,7 @@ create_sdr_config <- function()
   {
     # pipeline: perform dimensionality reduction
     config$mode <- "pipeline"
-    config$proj_loc <- getwd()
+    config$path <- getwd()
   }
   else
   {
@@ -285,13 +285,13 @@ get_source_loc <- function(file)
 
   if (sdr_config$mode == "pipeline")
   {
-    proj_loc <- sdr_config$proj_loc
+    sdr_path <- sdr_config$path
 
-    a_file <- file.path(proj_loc, "app", file)
+    a_file <- file.path(sdr_path, "app", file)
     if (file.exists(a_file))
       return(a_file)
 
-    p_file <- file.path(proj_loc, "pipeline", file)
+    p_file <- file.path(sdr_path, "pipeline", file)
     if (file.exists(p_file))
       return(p_file)
 
@@ -324,7 +324,7 @@ init_time <- time_diff(sdr_config$start_time)
 message("\n--- SHINY DIMENSIONALITY REDUCTION ---")
 message("DEVELOPER: Justin Chang @ Gerstein Lab")
 message("ALL R PACKAGES INSTALLED; CHECK README")
-cat_f("\nSDR RUNTIME MODE: %s\n", sdr_config$mode)
-cat_f("VALIDATION TIMER: %.2f secs\n", init_time)
-# note: prints nothing if proj_loc is NULL
-cat_f("PROJECT LOCATION: %s\n\n", sdr_config$proj_loc)
+cat_f("\nSDR MODE: %s\n", sdr_config$mode)
+cat_f("SDR TIME: %.1f (sec)\n", init_time)
+# note: prints nothing if path is NULL
+cat_f("SDR PATH: %s\n\n", sdr_config$path)

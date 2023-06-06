@@ -115,11 +115,11 @@ test_that("assign_global() works", {
     assign_global("test_var", 1)
   }
 
-  expect_false(exists("test_var"))
+  exists("test_var") %>% expect_false()
   test_fun1()
-  expect_false(exists("test_var"))
+  exists("test_var") %>% expect_false()
   test_fun2()
-  expect_true(exists("test_var"))
+  exists("test_var") %>% expect_true()
   rm(test_var, envir = .GlobalEnv)
 })
 
@@ -130,28 +130,28 @@ test_that("get_source_loc() works", {
   Sys.setenv("SHINY_PORT" = "")
   source("install.R")
   expect_identical(sdr_config$mode, "local")
-  expect_null(sdr_config$proj_loc)
+  expect_null(sdr_config$path)
   expect_identical(get_source_loc("find_replace.R"), "find_replace.R")
 
   # cloud
   Sys.setenv("SHINY_PORT" = 100)
   source("install.R")
   expect_identical(sdr_config$mode, "cloud")
-  expect_null(sdr_config$proj_loc)
+  expect_null(sdr_config$path)
   expect_identical(get_source_loc("find_replace.R"), "find_replace.R")
 
   # pipeline
   setwd("..")
   source("app/install.R")
   expect_identical(sdr_config$mode, "pipeline")
-  expect_true(is.character(sdr_config$proj_loc))
+  is.character(sdr_config$proj_loc) %>% expect_true()
   a_loc <- file.path("app", "find_replace.R")
   expect_match(get_source_loc("find_replace.R"), a_loc, fixed = TRUE)
   p_loc <- file.path("pipeline", "packaging.R")
   expect_match(get_source_loc("packaging.R"), p_loc, fixed = TRUE)
 })
 
-message_f("TESTING TIME (seconds): %.2f", time_diff(start_time))
+message_f("TESTING TIME (seconds): %.1f", time_diff(start_time))
 
 # manually test installation of packages
 # source("app/install.R")
