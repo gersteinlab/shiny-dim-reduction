@@ -144,7 +144,7 @@ test_that("get_source_loc() works", {
   setwd("..")
   source("app/install.R")
   expect_identical(sdr_config$mode, "pipeline")
-  is.character(sdr_config$proj_loc) %>% expect_true()
+  is.character(sdr_config$path) %>% expect_true()
   a_loc <- file.path("app", "find_replace.R")
   expect_match(get_source_loc("find_replace.R"), a_loc, fixed = TRUE)
   p_loc <- file.path("pipeline", "packaging.R")
