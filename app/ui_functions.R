@@ -158,7 +158,7 @@ thre_select_panel <- function(choices, cat, sca)
 notification <- function(message, time, form)
 {
   if (time > 0)
-    showNotification(HTML(message), duration = time, closeButton = TRUE, type=form)
+    showNotification(HTML(message), duration = time, closeButton = TRUE, type = form)
 }
 
 # picks a random option for an input picker that accepts only 1 option

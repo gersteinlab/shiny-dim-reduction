@@ -2,9 +2,9 @@
 # Intermediate-level files will be saved in pro_loc/inter
 # Final-level files will be saved in ref_loc
 
-if (!exists("sdr_config") || sdr_config$mode != "workflow")
-  source("install.R")
-stopifnot(sdr_config$mode == "workflow")
+if (!exists("sdr_config") || sdr_config$mode != "pipeline")
+  source("app/install.R")
+stopifnot(sdr_config$mode == "pipeline")
 
 source_sdr("sca_nor_fun.R")
 source_sdr("red_methods.R")

@@ -1,9 +1,9 @@
 # The purpose of this file is to assign a workflow for the given
 # session and manipulate / create directories for the assigned workflow.
 
-if (!exists("sdr_config") || sdr_config$mode != "workflow")
-  source("install.R")
-stopifnot(sdr_config$mode == "workflow")
+if (!exists("sdr_config") || sdr_config$mode != "pipeline")
+  source("app/install.R")
+stopifnot(sdr_config$mode == "pipeline")
 
 # -----------------
 # SET WORKFLOW ROOT

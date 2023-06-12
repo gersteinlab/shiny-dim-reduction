@@ -1,9 +1,9 @@
 # The purpose of this file is to store all methods for reduction of a provided table.
 # By a table, we mean an object of class matrix and array that contains numerics for each cell.
 
-if (!exists("sdr_config") || sdr_config$mode != "workflow")
-  source("install.R")
-stopifnot(sdr_config$mode == "workflow")
+if (!exists("sdr_config") || sdr_config$mode != "pipeline")
+  source("app/install.R")
+stopifnot(sdr_config$mode == "pipeline")
 
 # depends on Anaconda
 library(reticulate)

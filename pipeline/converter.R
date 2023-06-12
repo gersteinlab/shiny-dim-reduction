@@ -2,9 +2,9 @@
 # to converting from raw data to combined data and metadata.
 # Actual converter files should source this file.
 
-if (!exists("sdr_config") || sdr_config$mode != "workflow")
-  source("install.R")
-stopifnot(sdr_config$mode == "workflow")
+if (!exists("sdr_config") || sdr_config$mode != "pipeline")
+  source("app/install.R")
+stopifnot(sdr_config$mode == "pipeline")
 
 source_sdr("workflows.R")
 source_sdr("find_replace.R")

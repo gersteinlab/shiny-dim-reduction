@@ -1,42 +1,32 @@
 # The purpose of this file is to validate numeric data and metadata files.
 
-if (!exists("sdr_config") || sdr_config$mode != "workflow")
-  source("install.R")
-stopifnot(sdr_config$mode == "workflow")
+if (!exists("sdr_config") || sdr_config$mode != "pipeline")
+  source("app/install.R")
+stopifnot(sdr_config$mode == "pipeline")
 
-# determines if a table is valid for dimensionality reduction
+# should be valid as input AND output for reductions
 # note: anything of the form "combined_miRNA" should satisfy this
-valid_table <- function(cand_table)
+is_num_data <- function(num_data)
 {
-  if (!all.equal(class(matrix()), class(cand_table)))
+  # must be a matrix (enforce one type)
+  if (!("matrix" %in% class(num_data)))
     return(FALSE)
 
-  row_n <- nrow(cand_table)
-  col_n <- ncol(cand_table)
-
-  # refuse to have less than 4 rows initially, since 3 points define a plane
-  # refuse to have less than 4 columns initially, since then you can immediately plot on 3D
-  # and plot on 2D for second-round reductions.
-  if (row_n < 4 || col_n < 4)
+  # prevents NA, NaN, Inf, -Inf, non-numerics
+  if (!all_fin(num_data))
     return(FALSE)
 
-  if (sum(is.na(cand_table)) > 0) # NAs not allowed
+  # needs at least one row and one column
+  if (nrow(num_data) < 1 || ncol(num_data) < 1)
     return(FALSE)
 
-  if (sum(is.nan(cand_table)) > 0) # NaNs not allowed
-    return(FALSE)
-
-  # row names should be absent
+  # row names should be absent (tidyverse convention)
   if (!is.null(rownames(cand_table)))
     return(FALSE)
 
-  # column names are required
-  if (length(colnames(cand_table)) != col_n)
+  # column names are required (tidyverse convention)
+  if (!is.character(colnames(num_data)))
     return(FALSE)
-
-  for (j in seq_len(col_n))
-    if (!is.numeric(cand_table[,j]))
-      return(FALSE)
 
   TRUE
 }

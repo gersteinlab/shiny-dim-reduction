@@ -1,9 +1,9 @@
 # The purpose of this file is to store functions related to scaling and normalization.
 # Note: all functions take a matrix as input and return a matrix as output.
 
-if (!exists("sdr_config") || sdr_config$mode != "workflow")
-  source("install.R")
-stopifnot(sdr_config$mode == "workflow")
+if (!exists("sdr_config") || sdr_config$mode != "pipeline")
+  source("app/install.R")
+stopifnot(sdr_config$mode == "pipeline")
 
 library(limma)
 
