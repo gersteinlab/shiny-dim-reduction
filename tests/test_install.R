@@ -149,6 +149,7 @@ test_that("get_source_loc() works", {
   expect_match(get_source_loc("find_replace.R"), a_loc, fixed = TRUE)
   p_loc <- file.path("pipeline", "packaging.R")
   expect_match(get_source_loc("packaging.R"), p_loc, fixed = TRUE)
+  expect_error(get_source_loc("nonexistent.R"))
 })
 
 message_f("TESTING TIME (seconds): %.1f", time_diff(start_time))
