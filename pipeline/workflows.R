@@ -18,9 +18,9 @@ wf_config$root_storage_loc <- get_project_loc("sdr_workflow_root.rds")
 display_workflow_root <- function()
 {
   if (is.null(wf_config$root))
-    print_clean("Workflows Folder: NULL (unspecified)")
+    cat("Workflows Folder: NULL (unspecified)\n")
   else
-    sprintf_clean("Workflows Folder: %s", wf_config$root)
+    cat_f("Workflows Folder: %s\n", wf_config$root)
 }
 
 # interactive prompt to set the location of the workflow root
@@ -28,7 +28,7 @@ set_workflow_root <- function()
 {
   while (TRUE)
   {
-    print_clean()
+    cat("\n")
     display_workflow_root()
     confirm_loc <- readline(
       prompt = "To assign all future workflows to an (ideally empty) folder,
@@ -90,7 +90,7 @@ while (is.null(wf_config$workflow))
 {
   display_workflow_root()
   workflow_names <- list.dirs(wf_config$root, full.names = FALSE, recursive = FALSE)
-  sprintf_clean("Available Workflows: %s", paste(workflow_names, collapse = ", "))
+  cat_f("Available Workflows: %s\n", paste(workflow_names, collapse = ", "))
   confirm_wf <- readline(
     prompt = "To quit, type 'q()' and press enter.
 To change the workflows folder, type 'root()' and press enter.
@@ -147,68 +147,25 @@ The R session must be restarted to change your workflow.")
 # -- ref (reference)
 # -- app (app)
 # -- -- dep (dependencies)
-wf_config$roo_loc <- sprintf("%s/%s", wf_config$root, wf_config$workflow)
+wf_config$roo_loc <- file.path(wf_config$root, wf_config$workflow)
 safe_dir(wf_config$roo_loc)
-wf_config$raw_loc <- sprintf("%s/raw", wf_config$roo_loc)
+wf_config$raw_loc <- file.path(wf_config$roo_loc, "raw")
 safe_dir(wf_config$raw_loc)
-wf_config$pro_loc <- sprintf("%s/processing", wf_config$roo_loc)
+wf_config$pro_loc <- file.path(wf_config$roo_loc, "processing")
 safe_dir(wf_config$pro_loc)
-wf_config$com_loc <- sprintf("%s/combined", wf_config$pro_loc)
+wf_config$com_loc <- file.path(wf_config$pro_loc, "combined")
 safe_dir(wf_config$com_loc)
-wf_config$int_loc <- sprintf("%s/inter", wf_config$pro_loc)
+wf_config$int_loc <- file.path(wf_config$pro_loc, "inter")
 safe_dir(wf_config$int_loc)
-wf_config$req_loc <- sprintf("%s/requests", wf_config$pro_loc)
+wf_config$req_loc <- file.path(wf_config$pro_loc, "requests")
 safe_dir(wf_config$req_loc)
-wf_config$ref_loc <- sprintf("%s/reference", wf_config$roo_loc)
+wf_config$ref_loc <- file.path(wf_config$roo_loc, "reference")
 safe_dir(wf_config$ref_loc)
-wf_config$app_loc <- sprintf("%s/app", wf_config$roo_loc)
-safe_dir(wf_config$app_loc)
-wf_config$dep_loc <- sprintf("%s/dependencies", wf_config$app_loc)
-safe_dir(wf_config$dep_loc)
 
 # --------------------
 # DEPLOYMENT FUNCTIONS
 # --------------------
 
-# update the selected files in the app
-update_app <- function(filenames) {
-  app_loc <- wf_config$app_loc
-  safe_dir(sprintf("%s/src", app_loc))
-
-  file.copy(get_project_loc("R/app.R"), app_loc, overwrite = TRUE)
-  file.copy(get_project_loc("install.R"), app_loc, overwrite = TRUE)
-
-  for (file in filenames)
-    file.copy(get_project_loc(sprintf("R/%s", file)),
-              sprintf("%s/src", app_loc), overwrite = TRUE)
-}
-
-# runs the app
-rapp <- function(){
-  shiny::runApp(sprintf("%s/app.R", wf_config$app_loc))
-}
-
-# updates and runs the app
-uapp <- function(){
-  print_clean("Beginning update ...")
-  source("install.R") # needed to reset mode
-  update_app(c("find_replace.R",
-               "text_work.R",
-               "ui_functions.R",
-               "storage.R",
-               "preprocess.R",
-               "make_requests.R",
-               "options.R",
-               "plotting.R",
-               "authentication.R"))
-  print_clean("Updates complete ...")
-  rapp()
-}
-
-# example code for deployment
-# rsconnect::deployApp(
-#   wf_config$app_loc, appName = "exrna_F21",
-#   account = "justinchang1124", launch.browser = TRUE)
 
 # source_sdr("storage.R")
 # query_storage(wf_config$ref_loc)

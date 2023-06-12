@@ -3,9 +3,9 @@
 # --create sdr_config, a list of install settings
 # --install missing packages and raise errors if unsuccessful
 
-# -----------------
-# UTILITY FUNCTIONS
-# -----------------
+# --------------------
+# VALIDATION FUNCTIONS
+# --------------------
 
 #' wrapper for cat(sprintf(...))
 #'
@@ -35,38 +35,134 @@ stop_f <- function(...)
 #' (note: succeeds if x is length 0)
 #'
 #' @param x An object.
-#' @returns A logical of length one.
+#' @returns TRUE or FALSE.
 all_fin <- function(x)
 {
   all(is.finite(x))
 }
 
-#' whether x is a single integer
+#' whether x has names n
 #'
 #' @param x An object.
-#' @returns A logical of length one.
-is_int <- function(x)
+#' @param n A character (not checked).
+#' @returns TRUE or FALSE.
+has_names <- function(x, n)
 {
-  is.integer(x) && (length(x) == 1)
+  identical(names(x), n)
 }
 
-#' whether x is a single number
+#' whether x is a logical of length n
 #'
 #' @param x An object.
-#' @returns A logical of length one.
-is_num <- function(x)
+#' @param n An integer (not checked).
+#' @returns TRUE or FALSE.
+is_lgi <- function(x, n = 1L)
 {
-  is.numeric(x) && (length(x) == 1)
+  is.logical(x) && length(x) == n
 }
 
-#' whether x is a string
+#' whether x is an integer of length n
+#'
+#' @param x An object.
+#' @param n An integer (not checked).
+#' @returns TRUE or FALSE.
+is_int <- function(x, n = 1L)
+{
+  is.integer(x) && length(x) == n
+}
+
+#' whether x is a numeric of length n
+#'
+#' @param x An object.
+#' @param n An integer (not checked).
+#' @returns TRUE or FALSE.
+is_num <- function(x, n = 1L)
+{
+  is.numeric(x) && length(x) == n
+}
+
+#' whether x is a character of length n
+#'
+#' @param x An object.
+#' @param n An integer (not checked).
+#' @returns TRUE or FALSE.
+is_str <- function(x, n = 1L)
+{
+  is.character(x) && length(x) == n
+}
+
+#' whether x contains only unique values
+#' note: if n is an integer, then
+#' !(n) is TRUE for n = 0, FALSE otherwise
+#'
+#' @param x An object.
+#' @returns TRUE or FALSE.
+is_unique <- function(x)
+{
+  # aka: length(unique(x)) == length(x)
+  # aka: !any(duplicated(x))
+  !anyDuplicated(x)
+}
+
+#' the number of unique values in x
+#'
+#' @param x An object.
+#' @returns An integer.
+len_unique <- function(x)
+{
+  length(unique(x))
+}
+
+#' whether x is a 'subsets' object
+#'
+#' @param x An object.
+#' @param n An integer (not checked).
+#' @returns TRUE or FALSE.
+are_subsets <- function(x, n)
+{
+  if (!is.list(x))
+    return(FALSE)
+
+  for (subset in x)
+    if (!is_lgi(subset, n))
+      return(FALSE)
+
+  TRUE
+}
+
+#' whether x is an axis object
+#'
+#' @param x An object.
+#' @returns TRUE or FALSE.
+is_axis <- function(x)
+{
+  is.list(x) && has_names(x, c("length", "names", "subsets")) &&
+    is_int(x$length) &&
+    is_str(x$names, x$length) && is_unique(x$names) &&
+    are_subsets(x$subsets, x$length)
+}
+
+#' whether x is a groups object
 #'
 #' @param x An object.
 #' @returns A logical of length one.
-is_str <- function(x)
+is_groups <- function(x)
 {
-  is.character(x) && (length(x) == 1)
+  is.list(x) && all(vapply(x, is.character, logical(1)))
 }
+
+#' whether x is a category object
+#'
+#' @param x An object.
+#' @returns A logical of length one.
+is_axis <- function(x)
+{
+  is.list(x) && has_names(x, c("row_axis", "col_axis", "subsets"))
+}
+
+# -----------------
+# UTILITY FUNCTIONS
+# -----------------
 
 #' returns (time t2 - time t1) in seconds
 #'
@@ -123,30 +219,6 @@ assign_global <- function(name, value)
   assign(name, value, envir = .GlobalEnv)
 }
 
-#' checks loaded packages and sends prompts
-#' to prepare for package installation
-#'
-#' @param pkg_names A character.
-prep_pkgs_install <- function(pkg_names)
-{
-  stopifnot(is.character(pkg_names))
-  cat("\nThe following packages are missing and necessary:\n")
-  cat_f("%s\n", vec_str(pkg_names))
-  loaded_pkg_names <- intersect(.packages(), pkg_names)
-
-  if (length(loaded_pkg_names) > 0)
-    stop_f("Installation cannot proceed because outdated
-versions of the following packages are attached:\n%s",
-                 vec_str(loaded_pkg_names))
-
-  confirm_install <- readline(prompt = "
-To install these packages, type 'y' and press enter.
-To exit, type anything else and press enter. ")
-
-  if (confirm_install != "y")
-    stop("Quitting installation - some packages remain uninstalled.")
-}
-
 # -----------------
 # CREATE SDR CONFIG
 # -----------------
@@ -182,10 +254,35 @@ create_sdr_config <- function()
 
 # Note: to update sdr_config, source install.R again.
 sdr_config <- create_sdr_config()
+rm(create_sdr_config)
 
 # ------------
 # INSTALLATION
 # ------------
+
+#' checks loaded packages and sends prompts
+#' to prepare for package installation
+#'
+#' @param pkg_names A character.
+prep_pkgs_install <- function(pkg_names)
+{
+  stopifnot(is.character(pkg_names))
+  cat("\nThe following packages are missing and necessary:\n")
+  cat_f("%s\n", vec_str(pkg_names))
+  loaded_pkg_names <- intersect(.packages(), pkg_names)
+
+  if (length(loaded_pkg_names) > 0)
+    stop_f("Installation cannot proceed because outdated
+versions of the following packages are attached:\n%s",
+           vec_str(loaded_pkg_names))
+
+  confirm_install <- readline(prompt = "
+To install these packages, type 'y' and press enter.
+To exit, type anything else and press enter. ")
+
+  if (confirm_install != "y")
+    stop("Quitting installation - some packages remain uninstalled.")
+}
 
 sdr_pkgs_installed <- installed.packages()[,1]
 stopifnot(is.character(sdr_pkgs_installed))
@@ -271,9 +368,23 @@ Press enter to proceed.\n")
 
 rm(prep_pkgs_install, sdr_pkgs_installed)
 
+suppressPackageStartupMessages({
+  library(shiny)
+  library(dplyr)
+})
+
 # --------------------------
 # PROJECT LOCATION FUNCTIONS
 # --------------------------
+
+#' gets the location of a project file
+#' note: can ONLY be used for pipelines
+#'
+#' @param file A string.
+get_project_loc <- function(file)
+{
+  file.path(sdr_config$path, file)
+}
 
 #' gets the location of a source file, accounting
 #' for pipeline vs application differences
@@ -285,13 +396,11 @@ get_source_loc <- function(file)
 
   if (sdr_config$mode == "pipeline")
   {
-    sdr_path <- sdr_config$path
-
-    a_file <- file.path(sdr_path, "app", file)
+    a_file <- file.path("app", file) %>% get_project_loc()
     if (file.exists(a_file))
       return(a_file)
 
-    p_file <- file.path(sdr_path, "pipeline", file)
+    p_file <- file.path("pipeline", file) %>% get_project_loc()
     if (file.exists(p_file))
       return(p_file)
 
@@ -313,11 +422,6 @@ source_sdr <- function(file)
 # ---------------------
 # COMPLETE INSTALLATION
 # ---------------------
-
-suppressPackageStartupMessages({
-  library(shiny)
-  library(dplyr)
-})
 
 init_time <- time_diff(sdr_config$start_time)
 

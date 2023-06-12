@@ -16,3 +16,5 @@ app/app_data.rds
 # other repo-specific items
 ignore
 README.html
+sdr_master_key.rds
+sdr_workflow_root.rds
