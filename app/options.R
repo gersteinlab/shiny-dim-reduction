@@ -60,7 +60,14 @@ if (!use_local_storage && find_aws_s3("Sessions/user_requests.rds"))
 # get_dependency("custom_color_scales")
 
 # create bibliography
-citations <- rep_str(bibliography, "!!!!!!!!!!", app_citations)
+citations <- paste(
+  citations1,
+  app_citations,
+  citations2,
+  citations3,
+  citations4,
+  sep = ""
+)
 
 # creates a print version of the instructions / citations
 print_instructions <- rem_html_tags(instructions)

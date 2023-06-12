@@ -208,18 +208,16 @@ default_exclude_vector <- c(
   )
 )
 
-bibliography <- sprintf(
-  "Developed at Gerstein Lab from 2019-2020.
-<br><br>
-Developed by Justin Chang at the Gerstein Lab from 2019-2020,
-under the mentorship of Joel Rozowsky. I appreciate
-the help of Abhinav Godavarthi, Max Sun, and Ana Berthel in developing
-this tool. The citations below are in the format requested by their respective creators.
+citations1 <- "Contributors to the Shiny Dimensionality Reduction project
+are listed at our
+<a href='https://github.com/gersteinlab/shiny-dim-reduction/'
+target='_blank' rel='noopener noreferrer'>Github</a>.
+The citations below are in the format requested by their respective creators.
 <br><br>
 <b>Data Sources</b>
-<br>
-!!!!!!!!!!
-<br><br>
+<br>"
+
+citations2 <- "<br><br>
 <b>R Packages</b>
 <br>
 <u>Rtsne:</u> Jesse H. Krijthe (2015). Rtsne: T-Distributed Stochastic Neighbor
@@ -253,11 +251,15 @@ Carson (2017). \"heatmaply: an R package for creating interactive cluster heatma
 for online publishing.\" Bioinformatics. doi:
 <a href=\"http://dx.doi.org/10.1093/bioinformatics/btx657\" target=\"_blank\">
 http://dx.doi.org/10.1093/bioinformatics/btx657</a>
-<br>
+<br>"
+
+citations3 <- sprintf("
 <u>Cividis:</u> Nu%sez, Jamie R., Christopher R. Anderton, and Ryan S. Renslow.
 \"Optimizing colormaps with consideration for color vision deficiency to enable
 accurate interpretation of scientific data.\" PloS one 13.7 (2018): e0199239.
-<br><br>
+", intToUtf8(0x00F1))
+
+citations4 <- "<br><br>
 <b>Further Reading</b>
 <br>
 <u>Optimizing tSNE:</u> Wattenberg, et al., \"How to Use t-SNE Effectively\",
@@ -266,7 +268,7 @@ http://doi.org/10.23915/distill.00002</a>
 <br>
 <u>James Diao's ERCC Plotting Tool:</u>
 <a href=\"https://github.com/jamesdiao/ERCC-Plotting-Tool\" target=\"_blank\">
-https://github.com/jamesdiao/ERCC-Plotting-Tool</a>", intToUtf8(0x00F1))
+https://github.com/jamesdiao/ERCC-Plotting-Tool</a>"
 
 plotting_glossary <- "
 <li><u>Start Plotting:</u>
