@@ -5,9 +5,18 @@ if (!exists("sdr_config"))
 
 library(viridis)
 
-is_color <- function(c_str)
+# -----------------
+# UTILITY FUNCTIONS
+# -----------------
+
+is_color_vec <- function(x)
 {
-  is_str(c_str) && grepl('^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$', str)
+  is.character(x) && all(grepl('^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$', x))
+}
+
+is_color_scale <- function(x)
+{
+  is_color_vec(x) && is.character(names(x))
 }
 
 # adds a transparency of alpha = 0.5 to a color
