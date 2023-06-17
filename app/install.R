@@ -3,9 +3,9 @@
 # --create sdr_config, a list of install settings
 # --install missing packages and raise errors if unsuccessful
 
-# --------------------
-# VALIDATION FUNCTIONS
-# --------------------
+# ---------------
+# FORMAT WRAPPERS
+# ---------------
 
 #' wrapper for cat(sprintf(...))
 #'
@@ -31,25 +31,9 @@ stop_f <- function(...)
   stop(sprintf(...))
 }
 
-#' whether all elements of x are finite
-#' (note: succeeds if x is length 0)
-#'
-#' @param x An object.
-#' @returns TRUE or FALSE.
-all_fin <- function(x)
-{
-  all(is.finite(x))
-}
-
-#' whether x has names n
-#'
-#' @param x An object.
-#' @param n A character (not checked).
-#' @returns TRUE or FALSE.
-has_names <- function(x, n)
-{
-  identical(names(x), n)
-}
+# --------------------
+# VALIDATION FUNCTIONS
+# --------------------
 
 #' whether x is a logical of length n
 #'
@@ -91,6 +75,36 @@ is_str <- function(x, n = 1L)
   is.character(x) && length(x) == n
 }
 
+#' whether all elements of x are finite
+#' (note: succeeds if x is length 0)
+#'
+#' @param x An object (e.g. vector, matrix)
+#' @returns TRUE or FALSE.
+all_fin <- function(x)
+{
+  all(is.finite(x))
+}
+
+#' whether x has names n (ordered)
+#'
+#' @param x An object.
+#' @param n A character (not checked).
+#' @returns TRUE or FALSE.
+has_members <- function(x, n)
+{
+  identical(names(x), n)
+}
+
+#' whether x has names n (unordered)
+#'
+#' @param x An object.
+#' @param n A character (not checked).
+#' @returns TRUE or FALSE.
+has_names <- function(x, n)
+{
+  identical(sort(names(x)), sort(n))
+}
+
 #' whether x contains only unique values
 #' note: if n is an integer, then
 #' !(n) is TRUE for n = 0, FALSE otherwise
@@ -104,16 +118,8 @@ is_unique <- function(x)
   !anyDuplicated(x)
 }
 
-#' the number of unique values in x
-#'
-#' @param x An object.
-#' @returns An integer.
-len_unique <- function(x)
-{
-  length(unique(x))
-}
-
 #' whether x is a 'subsets' object
+#' with each subset of length n
 #'
 #' @param x An object.
 #' @param n An integer (not checked).
@@ -130,39 +136,110 @@ are_subsets <- function(x, n)
   TRUE
 }
 
-#' whether x is an axis object
+#' whether x is a 'groups' object
 #'
 #' @param x An object.
 #' @returns TRUE or FALSE.
-is_axis <- function(x)
-{
-  is.list(x) && has_names(x, c("length", "names", "subsets")) &&
-    is_int(x$length) &&
-    is_str(x$names, x$length) && is_unique(x$names) &&
-    are_subsets(x$subsets, x$length)
-}
-
-#' whether x is a groups object
-#'
-#' @param x An object.
-#' @returns A logical of length one.
 is_groups <- function(x)
 {
-  is.list(x) && all(vapply(x, is.character, logical(1)))
+  is.list(x) && all(vapply(x, is.character, FALSE))
+}
+
+#' whether x is a 'metadata column' object
+#'
+#' @param x An object.
+#' @returns TRUE or FALSE.
+is_meta_col <- function(x)
+{
+  all_fin(x) || is.character(x)
+}
+
+#' whether x is a 'metadata' object with n rows
+#'
+#' @param x An object.
+#' @param row_n An integer (not checked).
+#' @returns TRUE or FALSE.
+is_metadata <- function(x, row_n)
+{
+  # must be a data.frame
+  "data.frame" %in% class(x) &&
+    # correct dimensions
+    nrow(x) == n && ncol(x) > 0 &&
+    # each column is the correct type
+    all(apply(x, 2, is_metadata_vec)) &&
+    # primary key is first column
+    is_unique(x[, 1])
+}
+
+#' whether x is a 'color vector' object
+#'
+#' @param x An object.
+#' @returns TRUE or FALSE.
+is_color_vec <- function(x)
+{
+  is.character(x) &&
+    all(grepl('^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$', x))
+}
+
+#' whether x is a 'color scale' object
+#' with the given names
+#'
+#' @param x An object.
+#' @returns TRUE or FALSE.
+is_color_scale <- function(x, n)
+{
+  is_color_vec(x) && is_unique(x) && has_names(x, n)
+}
+
+#' whether x is a 'color scales' object such that
+#' each color scale works for the given metadata
+#'
+#' @param x An object.
+#' @param metadata A 'metadata' object (not checked).
+#' @returns TRUE or FALSE.
+are_color_scales <- function(x, metadata)
+{
+  if (!is.list(x))
+    return(FALSE)
+
+  for (met in names(x))
+    if (!is_color_scale(x[[met]], unique(metadata[[met]])))
+      return(FALSE)
+
+  return(TRUE)
 }
 
 #' whether x is a category object
 #'
 #' @param x An object.
 #' @returns A logical of length one.
-is_axis <- function(x)
+is_category <- function(x)
 {
-  is.list(x) && has_names(x, c("row_axis", "col_axis", "subsets"))
+  cat_members <- c(
+    "row_n", "col_n", "row_subsets",
+    "col_subsets", "metadata", "color_scales"
+  )
+
+  is.list(x) && has_members(x, cat_members) &&
+    is_int(x$row_n) && is_int(x$col_n) &&
+    are_subsets(x$row_subsets, x$row_n) &&
+    are_subsets(x$col_subsets, x$col_n) &&
+    is_metadata(x$metadata, x$row_n) &&
+    are_color_scales(x$color_scales, x$metadata)
 }
 
 # -----------------
 # UTILITY FUNCTIONS
 # -----------------
+
+#' the number of unique values in x
+#'
+#' @param x An object.
+#' @returns An integer.
+num_unique <- function(x)
+{
+  length(unique(x))
+}
 
 #' returns (time t2 - time t1) in seconds
 #'
