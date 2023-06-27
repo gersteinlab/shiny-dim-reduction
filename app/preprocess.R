@@ -6,33 +6,54 @@ if (!exists("sdr_config"))
 
 source_sdr("storage.R")
 
-# -------------
-# LOAD APP DATA
-# -------------
+# ---------------
+# HANDLE APP DATA
+# ---------------
 
-is_app_data <- function(app_data) {
-  TRUE
+#' whether x is an 'app_data' object
+#'
+#' @param x An object.
+#' @returns TRUE or FALSE.
+is_app_data <- function(x) {
+  members <- c(
+    "title",
+    "citations",
+    "credentials",
+    "row_axes",
+    "col_axes",
+    "categories",
+    "groups",
+    "local_store",
+    "cloud_store"
+  )
+  is.list(x) && identical(names(x), members) &&
+    is_str(x$title) && is_str(x$citations) &&
+    are_credentials(x$credentials) &&
+    are_axes(x$row_axes) && are_axes(x$col_axes) &&
+    are_categories(x$categories) &&
+    categories_match_axes(x$categories, x$row_axes, x$col_axes) &&
+    are_groups(x$groups) && groups_match_categories(x$groups) &&
+    is_str(x$local_store) && is_cloud_store(x$cloud_store)
 }
+
 
 # assign globally with default
 
-load_app_data <- function(app_data) {
-  for (dep in names(app_data))
-    assign_global(dep, app_data[[dep]])
-}
 
 # ensure the data for the application is valid
 app_data_loc <- get_app_loc("app_data.rds")
-if (!file.exists(app_data_loc))
+while (!file.exists(app_data_loc))
 {
 
 }
 
-app_data <- readRDS("app_data.rds")
+assign_global("app_data", readRDS(app_data_loc))
 if (!is_app_data(app_data))
   stop("The application data ('app_data.rds') is invalid.
 Please delete 'app_data.rds' and rerun the application.")
-load_app_data(app_data)
+
+for (dep in names(app_data))
+  assign_global(dep, app_data[[dep]])
 
 # ----------------
 # ANALYSIS OPTIONS

@@ -33,19 +33,16 @@ chr_d <- function(n = 1)
   rep("-", n)
 }
 
-# Only select characteristics with <= num_filters distinct values.
-num_filters <- 60
-
-# counts the number of characteristics per column of order_cat
-order_char_counts <- function(order_cat)
+# counts the number of characteristics per column of metadata
+order_char_counts <- function(metadata)
 {
-  apply(order_cat, 2, function(x){length(unique(x))})
+  apply(order_cat, 2, num_unique)
 }
 
-# gets the safe colnames for order_cat (number of unique values between 2 and num_filters)
+# gets the safe colnames for order_cat (at least 2 unique values)
 get_safe_chars <- function(order_cat)
 {
-  colnames(order_cat)[between(order_char_counts(order_cat), 2, num_filters)]
+  colnames(order_cat)[order_char_counts(order_cat) >= 2]
 }
 
 # selects only metadata features with safe values

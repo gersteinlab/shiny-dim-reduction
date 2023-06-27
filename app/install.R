@@ -70,7 +70,7 @@ is_str <- function(x, n = 1L)
 }
 
 #' whether all elements of x are finite
-#' (note: succeeds if x is length 0)
+#' note: succeeds if x is length 0
 #'
 #' @param x An object (e.g. vector, matrix).
 #' @returns TRUE or FALSE.
@@ -80,7 +80,7 @@ all_fin <- function(x)
 }
 
 #' whether all elements of x are non-NA
-#' (note: succeeds if x is length 0)
+#' note: succeeds if x is length 0
 #'
 #' @param x An object (e.g. vector, matrix).
 #' @returns TRUE or FALSE.
@@ -90,7 +90,7 @@ none_na <- function(x)
 }
 
 #' whether fun(x) is TRUE for all x in X
-#' (note: succeeds if x is length 0)
+#' note: succeeds if x is length 0
 #'
 #' @param X A vector (not checked).
 #' @returns TRUE or FALSE.
@@ -114,6 +114,7 @@ is_unique <- function(x)
 
 #' whether x is a 'subsets' object
 #' given an original set of size n
+#' note: succeeds if x is list()
 #'
 #' @param x An object.
 #' @param n An integer (not checked).
@@ -131,6 +132,7 @@ are_subsets <- function(x, n)
 }
 
 #' whether x is a 'groups' object
+#' note: succeeds if x is list()
 #'
 #' @param x An object.
 #' @returns TRUE or FALSE.
@@ -140,6 +142,7 @@ are_groups <- function(x)
 }
 
 #' whether x is a 'metadata column' object
+#' note: succeeds if x is character()
 #'
 #' @param x An object.
 #' @returns TRUE or FALSE.
@@ -166,6 +169,7 @@ is_metadata <- function(x, row_n)
 }
 
 #' whether x is a 'color vector' object
+#' note: succeeds if x is character()
 #'
 #' @param x An object.
 #' @returns TRUE or FALSE.
@@ -187,6 +191,7 @@ is_color_scale <- function(x)
 }
 
 #' whether x is a 'color scales' object
+#' note: succeeds if x is list()
 #'
 #' @param x An object.
 #' @returns TRUE or FALSE.
@@ -216,7 +221,7 @@ color_scales_match_metadata <- function(color_scales, metadata)
 #' @returns TRUE or FALSE.
 is_axis <- function(x)
 {
-  members <- c("length", "subsets", "metadata", "color_scales")
+  members <- c("length", "metadata", "subsets", "color_scales")
   is.list(x) && identical(names(x), members) &&
     is_int(x$length) &&
     are_subsets(x$subsets, x$length) &&
@@ -235,8 +240,8 @@ make_axis <- function(metadata, subsets, color_scales)
 {
   result <- list(
     "length" = nrow(metadata),
-    "subsets" = subsets,
     "metadata" = metadata,
+    "subsets" = subsets,
     "color_scales" = color_scales
   )
 
@@ -246,6 +251,7 @@ make_axis <- function(metadata, subsets, color_scales)
 }
 
 #' whether x is an 'axes' object
+#' note: succeeds if x is list()
 #'
 #' @param x An object.
 #' @returns TRUE or FALSE.
@@ -283,6 +289,7 @@ make_category <- function(row_axs, col_axs)
 }
 
 #' whether x is a 'categories' object
+#' note: succeeds if x is list()
 #'
 #' @param x An object.
 #' @returns TRUE or FALSE.
@@ -299,7 +306,8 @@ are_categories <- function(x)
 #' @returns TRUE or FALSE.
 categories_match_axes <- function(categories, row_axes, col_axes)
 {
-  category_match_axes <- function(cat) {
+  category_match_axes <- function(cat)
+  {
     categories[[cat]]$row_axs %in% names(row_axes) &&
       categories[[cat]]$col_axs %in% names(col_axes)
   }
@@ -314,11 +322,22 @@ categories_match_axes <- function(categories, row_axes, col_axes)
 #' @returns TRUE or FALSE.
 groups_match_categories <- function(groups, categories)
 {
-  group_matches_categories <- function(group) {
+  group_matches_categories <- function(group)
+  {
     all(group %in% names(categories))
   }
 
   all_fun_true(groups, group_matches_categories)
+}
+
+#' whether x is a 'credentials' object
+#'
+#' @param x An object.
+#' @returns TRUE or FALSE.
+are_credentials <- function(x)
+{
+  is.character(x) &&
+    is.character(names(x)) && is_unique(names(x)) && none_na(names(x))
 }
 
 # -----------------

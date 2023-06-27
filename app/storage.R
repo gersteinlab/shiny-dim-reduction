@@ -11,73 +11,26 @@ if (!exists("sdr_config"))
 
 library(aws.s3)
 
-# ----------
-# STORE INFO
-# ----------
-
 # ----------------
 # LOCAL MANAGEMENT
 # ----------------
 
-# saveRDS but we force the creation of the directory
-mkdir_saveRDS <- function(data, file, compress = TRUE)
+#' syntactic sugar for saving a variable
+#' in the current working directory
+#'
+#' @param name A string.
+get_self_rds <- function(name)
 {
-  dest_dir <- dirname(file)
-  if (!dir.exists(dest_dir))
-    dir.create(dest_dir, recursive = TRUE)
-  saveRDS(data, file, compress = compress)
+  assign_global(name, readRDS(sprintf("%s.rds", name)))
 }
 
-# readRDS but returns a default if the file does not exist
-w_def_readRDS <- function(file, default = NULL)
+#' syntactic sugar for loading a variable
+#' from the current working directory
+#'
+#' @param name A string.
+set_self_rds <- function(name)
 {
-  if (file.exists(file))
-    return(readRDS(file))
-  default
-}
-
-# assigns the given value readRDS(loc) to a variable with the given name,
-# assigning a default value if file.exists(loc) returns false.
-get_from_loc <- function(name, loc, default = NULL)
-{
-  assign_global(name, w_def_readRDS(loc, default))
-}
-
-# wrapper for get_from_loc that assumes the file was saved with the variable name
-get_self_rds <- function(name, dir = getwd(), default = NULL)
-{
-  get_from_loc(name, sprintf("%s/%s.rds", dir, name), default)
-}
-
-# wrapper for get_self_rds, only for dependencies
-get_dependency <- function(name, default = NULL)
-{
-  if (sdr_config$mode == "workflow")
-    return(get_self_rds(name, wf_config$dep_loc, default))
-  get_self_rds(name, "dependencies", default)
-}
-
-# performs saveRDS(loc) with the value of a variable with the given name,
-# saving a default value if exists(name) returns false.
-set_from_var <- function(name, loc, default = NULL, compress = TRUE)
-{
-  if (exists(name))
-    default <- get(name)
-  saveRDS(default, loc, compress = compress)
-}
-
-# wrapper for set_from_var that saves the file with the variable name
-set_self_rds <- function(name, dir = getwd(), default = NULL, compress = TRUE)
-{
-  set_from_var(name, sprintf("%s/%s.rds", dir, name), default, compress)
-}
-
-# wrapper for set_self_rds, only for dependencies
-set_dependency <- function(name, default = NULL, compress = TRUE)
-{
-  if (sdr_config$mode != "workflow")
-    stop("Dependencies cannot be set from within the application.")
-  set_self_rds(name, wf_config$dep_loc, default, compress)
+  saveRDS(get(name), sprintf("%s.rds", name))
 }
 
 # -------------
@@ -85,15 +38,9 @@ set_dependency <- function(name, default = NULL, compress = TRUE)
 # -------------
 
 # sets the reference location used for local paths, does not check validity
-set_working_ref <- function(loc)
+set_working_ref <- function(loc = "this_is_not_a_file")
 {
   Sys.setenv("LOCAL_STORAGE_REF" = loc) # the old ref is disconnected automatically
-}
-
-# disconnects from ref storage
-disconnect_ref <- function()
-{
-  set_working_ref("this_is_not_a_file")
 }
 
 # determines whether R is connected to ref
