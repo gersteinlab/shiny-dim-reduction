@@ -35,16 +35,6 @@ stop_f <- function(...)
 # VALIDATION FUNCTIONS
 # --------------------
 
-#' whether x is a logical of length n
-#'
-#' @param x An object.
-#' @param n An integer (not checked).
-#' @returns TRUE or FALSE.
-is_lgi <- function(x, n = 1L)
-{
-  is.logical(x) && length(x) == n
-}
-
 #' whether x is an integer of length n
 #'
 #' @param x An object.
@@ -85,24 +75,13 @@ all_fin <- function(x)
   all(is.finite(x))
 }
 
-#' whether x has names n (ordered)
+#' whether fun(x) is TRUE for all x in X
 #'
-#' @param x An object.
-#' @param n A character (not checked).
+#' @param X A vector (not checked)
 #' @returns TRUE or FALSE.
-has_members <- function(x, n)
+all_fun_true <- function(X, FUN)
 {
-  identical(names(x), n)
-}
-
-#' whether x has names n (unordered)
-#'
-#' @param x An object.
-#' @param n A character (not checked).
-#' @returns TRUE or FALSE.
-has_names <- function(x, n)
-{
-  identical(sort(names(x)), sort(n))
+  all(vapply(X, FUN, FALSE))
 }
 
 #' whether x contains only unique values
@@ -119,30 +98,30 @@ is_unique <- function(x)
 }
 
 #' whether x is a 'subsets' object
-#' with each subset of length n
+#' given an original set of size n
 #'
 #' @param x An object.
 #' @param n An integer (not checked).
 #' @returns TRUE or FALSE.
 are_subsets <- function(x, n)
 {
-  if (!is.list(x))
-    return(FALSE)
+  set_seq <- seq_len(n)
 
-  for (subset in x)
-    if (!is_lgi(subset, n))
-      return(FALSE)
+  len_n_subset <- function(subset)
+  {
+    is.integer(subset) && all(subset %in% set_seq)
+  }
 
-  TRUE
+  is.list(x) && all_fun_true(x, len_n_subset)
 }
 
 #' whether x is a 'groups' object
 #'
 #' @param x An object.
 #' @returns TRUE or FALSE.
-is_groups <- function(x)
+are_groups <- function(x)
 {
-  is.list(x) && all(vapply(x, is.character, FALSE))
+  is.list(x) && all_fun_true(x, is.character)
 }
 
 #' whether x is a 'metadata column' object
@@ -154,7 +133,7 @@ is_meta_col <- function(x)
   all_fin(x) || is.character(x)
 }
 
-#' whether x is a 'metadata' object with n rows
+#' whether x is a 'metadata' object with row_n rows
 #'
 #' @param x An object.
 #' @param row_n An integer (not checked).
@@ -164,9 +143,9 @@ is_metadata <- function(x, row_n)
   # must be a data.frame
   "data.frame" %in% class(x) &&
     # correct dimensions
-    nrow(x) == n && ncol(x) > 0 &&
+    nrow(x) == row_n && ncol(x) > 0 &&
     # each column is the correct type
-    all(apply(x, 2, is_metadata_vec)) &&
+    all_fun_true(x, is_meta_col) &&
     # primary key is first column
     is_unique(x[, 1])
 }
@@ -182,31 +161,79 @@ is_color_vec <- function(x)
 }
 
 #' whether x is a 'color scale' object
-#' with the given names
+#' with character names
 #'
 #' @param x An object.
 #' @returns TRUE or FALSE.
-is_color_scale <- function(x, n)
+is_color_scale <- function(x)
 {
-  is_color_vec(x) && is_unique(x) && has_names(x, n)
+  is_color_vec(x) &&
+    is.character(names(x)) && is_unique(names(x))
 }
 
-#' whether x is a 'color scales' object such that
-#' each color scale works for the given metadata
+#' whether x is a valid 'color scales' object
 #'
 #' @param x An object.
-#' @param metadata A 'metadata' object (not checked).
 #' @returns TRUE or FALSE.
-are_color_scales <- function(x, metadata)
+are_color_scales <- function(x)
 {
-  if (!is.list(x))
-    return(FALSE)
+  is.list(x) && all_fun_true(x, is_color_scale)
+}
 
-  for (met in names(x))
-    if (!is_color_scale(x[[met]], unique(metadata[[met]])))
-      return(FALSE)
+#' whether color_scales are compatible with metadata
+#'
+#' @param color_scales A color_scales object (not checked).
+#' @param metadata A metadata object (not checked).
+#' @returns TRUE or FALSE.
+color_scales_match_metadata <- function(color_scales, metadata)
+{
+  color_scale_match_meta_col <- function(cha)
+  {
+    all(names(color_scales[[cha]]) %in% metadata[[cha]])
+  }
 
-  return(TRUE)
+  all_fun_true(names(color_scales), color_scale_match_meta_col)
+}
+
+#' whether x is an axis object
+#'
+#' @param x An object.
+#' @returns A logical of length one.
+is_axis <- function(x)
+{
+  axis_members <- c("length", "subsets", "metadata", "color_scales")
+  is.list(x) &&
+    identical(names(x), axis_members) &&
+    is_int(x$length) &&
+    are_subsets(x$subsets, x$length) &&
+    is_metadata(x$metadata, x$length) &&
+    are_color_scales(x$color_scales) &&
+    color_scales_match_metadata(x$color_scales, x$metadata)
+}
+
+are_axes <- function(x)
+{
+  is.list(x) && all_fun_true(x, is_axis)
+}
+
+#' makes an axis object
+#'
+#' @param metadata A metadata object.
+#' @param subsets A subsets object.
+#' @param color_scales A color_scales object.
+#' @returns An axis object if successful.
+make_axis <- function(metadata, subsets, color_scales)
+{
+  result <- list(
+    "length" = nrow(metadata),
+    "subsets" = subsets,
+    "metadata" = metadata,
+    "color_scales" = color_scales
+  )
+
+  stopifnot(is_axis(result))
+
+  result
 }
 
 #' whether x is a category object
@@ -215,17 +242,43 @@ are_color_scales <- function(x, metadata)
 #' @returns A logical of length one.
 is_category <- function(x)
 {
-  cat_members <- c(
-    "row_n", "col_n", "row_subsets",
-    "col_subsets", "metadata", "color_scales"
+  cat_members <- c("row_axs", "col_axs")
+  is.list(x) && identical(names(x), cat_members) &&
+    is_str(x$row_axs) && is_str(x$col_axs)
+}
+
+are_categories <- function(x)
+{
+  is.list(x) && all_fun_true(x, is_category)
+}
+
+make_category <- function(row_axs, col_axs)
+{
+  result <- list(
+    "row_axs" = row_axs,
+    "col_axs" = col_axs
   )
 
-  is.list(x) && has_members(x, cat_members) &&
-    is_int(x$row_n) && is_int(x$col_n) &&
-    are_subsets(x$row_subsets, x$row_n) &&
-    are_subsets(x$col_subsets, x$col_n) &&
-    is_metadata(x$metadata, x$row_n) &&
-    are_color_scales(x$color_scales, x$metadata)
+  stopifnot(is_category(result))
+
+  result
+}
+
+categories_match_axes <- function(categories, row_axes, col_axes)
+{
+  category_match_axes <- function(cat) {
+    categories[[cat]]$row_axs %in% names(row_axes) &&
+      categories[[cat]]$col_axs %in% names(col_axes)
+  }
+
+  all_fun_true(names(categories), category_match_axes)
+}
+
+groups_match_categories <- function(groups, categories)
+{
+  all_fun_true(groups, function(group) {
+    all(group %in% names(categories))
+  })
 }
 
 # -----------------

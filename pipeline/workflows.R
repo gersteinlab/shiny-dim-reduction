@@ -166,7 +166,6 @@ safe_dir(wf_config$ref_loc)
 # DEPLOYMENT FUNCTIONS
 # --------------------
 
-
 # source_sdr("storage.R")
 # query_storage(wf_config$ref_loc)
 # app_requests <- load_store("app_requests.rds")
