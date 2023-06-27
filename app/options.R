@@ -17,21 +17,14 @@ source_sdr("make_requests.R")
 # CONNECT TO STORAGE
 # ------------------
 
-# given a list of vectors called list_vec, returns
-# get_opt(v, length(list_vec[[v]])) for v in names(list_vec)
-name_len_opts <- function(list_vec)
-{
-  mapply(get_opt, names(list_vec), lapply(list_vec, length), USE.NAMES = FALSE)
-}
-
 # create categories and subsets; does get_dependency(categories_full, decorations)
-# note: must be done before requests because name_cat is needed to clean requests
-init_cat()
-init_sub(name_len_opts)
+# note: must be done before requests because cat_names is needed to clean requests
+init_cat(groups)
+init_sub(row_axes, col_axes)
 
 # set the storage as local or AWS; queries the user if an option is available
 # get_dependency("amazon_keys")
-app_ref_loc <- "../reference"
+app_ref_loc <- "~/DataR/sdr_workflows/exRNA/reference"
 use_local_storage <- query_storage(app_ref_loc, amazon_keys)
 
 # open requests
@@ -53,7 +46,7 @@ if (!use_local_storage && find_aws_s3("Sessions/user_requests.rds"))
 # ----------------
 
 # get all remaining dependencies
-# get_dependency("order_total", empty_named_list(name_cat))
+# get_dependency("order_total", empty_named_list(cat_names))
 # get_dependency("app_title", "Dimensionality Reduction Tool")
 # get_dependency("app_citations", "No data citations could be found.")
 # get_dependency("user_credentials")
@@ -72,17 +65,6 @@ citations <- paste(
 # creates a print version of the instructions / citations
 print_instructions <- rem_html_tags(instructions)
 print_citations <- rem_html_tags(citations)
-
-# given an integer n, create an n x 1 data frame with empty metadata
-len_n_empty_metadata <- function(n)
-{
-  data.frame("Unknown" = rep("Unknown", n))
-}
-
-# fills in order_total in the event of missing metadata tables
-for (cat in name_cat)
-  if (is.null(order_total[[cat]]))
-    order_total[[cat]] <- len_n_empty_metadata(categories[[cat]][1])
 
 # ------------------
 # BROWSER PARAMETERS
@@ -116,33 +98,35 @@ table_server_render <- TRUE
 # all bookmarking IDs for selections and thresholds
 select_ids <- NULL
 thre_ids <- NULL
-selected_chars <- empty_named_list(name_cat)
+selected_chars <- empty_named_list(cat_names)
 
 # empty lists for option boxes, to be presented to the user
-row_sub_opts <- vector(mode = "list", length = num_cat)
-col_sub_opts <- vector(mode = "list", length = num_cat)
-color_opts <- vector(mode = "list", length = num_cat)
-shape_opts <- vector(mode = "list", length = num_cat)
-label_opts <- vector(mode = "list", length = num_cat)
-filter_opts <- vector(mode = "list", length = num_cat)
-select_opts <- vector(mode = "list", length = num_filters*num_cat) # initially oversize
-thre_opts <- vector(mode = "list", length = 2*num_cat)
+row_sub_opts <- vector(mode = "list", length = cat_length)
+col_sub_opts <- vector(mode = "list", length = cat_length)
+color_opts <- vector(mode = "list", length = cat_length)
+shape_opts <- vector(mode = "list", length = cat_length)
+label_opts <- vector(mode = "list", length = cat_length)
+filter_opts <- vector(mode = "list", length = cat_length)
+select_opts <- vector(mode = "list", length = num_filters*cat_length) # initially oversize
+thre_opts <- vector(mode = "list", length = 2*cat_length)
 
 # create the option boxes
-for (cn in seq_len(num_cat))
+for (cn in seq_len(cat_length))
 {
-  cat <- name_cat[cn]
+  cat <- cat_names[cn]
   order_gen <- order_total[[cat]]
 
   # row subsets
   row_subsets <- sub_row_groups[[cat]]
+  row_opts <- get_opt(names(row_subsets), row_subsets)
   row_sub_opts[[cn]] <- cat_select_panel(
-    cat, id_row(cat), sprintf("Sample Subset (%s)", cat), row_subsets, 1)
+    cat, id_row(cat), sprintf("Sample Subset (%s)", cat), row_opts, 1)
 
   # col subsets
   col_subsets <- sub_col_groups[[cat]]
+  col_opts <- get_opt(names(col_subsets), col_subsets)
   col_sub_opts[[cn]] <- cat_select_panel(
-    cat, id_col(cat), sprintf("Feature Subset (%s)", cat), col_subsets, 1)
+    cat, id_col(cat), sprintf("Feature Subset (%s)", cat), col_opts, 1)
 
   # characteristics
   chars <- get_safe_chars(order_gen)
@@ -193,12 +177,12 @@ select_opts <- select_opts[seq_along(select_ids)]
 
 picker_input_ids <- c(
   default_picker_input_ids,
-  id_row(name_cat),
-  id_col(name_cat),
-  id_color(name_cat),
-  id_shape(name_cat),
-  id_label(name_cat),
-  id_filter(name_cat),
+  id_row(cat_names),
+  id_col(cat_names),
+  id_color(cat_names),
+  id_shape(cat_names),
+  id_label(cat_names),
+  id_filter(cat_names),
   select_ids,
   thre_ids
 )

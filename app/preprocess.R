@@ -2,24 +2,73 @@
 # while also enabling the naming, storing, and loading of reduction files.
 
 if (!exists("sdr_config"))
-  source("install.R")
+  source("app/install.R")
 
 source_sdr("storage.R")
+
+# -------------
+# LOAD APP DATA
+# -------------
+
+is_app_data <- function(app_data) {
+  TRUE
+}
+
+# assign globally with default
+
+load_app_data <- function(app_data) {
+  for (dep in names(app_data))
+    assign_global(dep, app_data[[dep]])
+}
+
+# ensure the data for the application is valid
+app_data_loc <- get_app_loc("app_data.rds")
+if (!file.exists(app_data_loc))
+{
+
+}
+
+app_data <- readRDS("app_data.rds")
+if (!is_app_data(app_data))
+  stop("The application data ('app_data.rds') is invalid.
+Please delete 'app_data.rds' and rerun the application.")
+load_app_data(app_data)
 
 # ----------------
 # ANALYSIS OPTIONS
 # ----------------
 
 # scale options
-sca_options <- c("Logarithmic", "Linear")
+sca_options <- c(
+  "Logarithmic",
+  "Linear"
+)
+
 # normalization options
-nor_options <- c("Global Min-Max", "Local Min-Max",
-                 "Global Z-Score", "Local Z-Score",
-                 "Quantile")
+nor_options <- c(
+  "Global Min-Max",
+  "Local Min-Max",
+  "Global Z-Score",
+  "Local Z-Score",
+  "Quantile"
+)
+
 # embedding options
-emb_options <- c("PCA", "VAE", "UMAP", "PHATE", "Sets")
+emb_options <- c(
+  "PCA",
+  "VAE",
+  "UMAP",
+  "PHATE",
+  "Sets"
+)
+
 # visualization options
-vis_options <- c("Explore", "Summarize", "tSNE")
+vis_options <- c(
+  "Explore",
+  "Summarize",
+  "tSNE"
+)
+
 # number of digits of precision for non-integer numbers
 num_digits <- 4
 
@@ -31,62 +80,38 @@ num_digits <- 4
 # after workflows.R if used for dimensionality reduction in order to find dependencies.
 
 # creates category-related data
-# to remove: rm(categories_full, cat_groups, name_cat, num_cat, categories)
-init_cat <- function()
+init_cat <- function(groups)
 {
-  # get_dependency("categories_full", stop("Critical dependency missing!"))
-
-  # cat groups
-  assign_global("cat_groups", lapply(categories_full, names))
-
-  # name_cat
-  assign_global("name_cat", as.character(unlist(cat_groups)))
-
-  # num_cat
-  assign_global("num_cat", length(name_cat))
-
-  # categories
-  categories <- unlist(categories_full, recursive=FALSE)
-  names(categories) <- name_cat
-  assign_global("categories", categories)
-
-  invisible()
+  assign_global("cat_names", as.character(unlist(groups)))
+  assign_global("cat_length", length(cat_names))
 }
 
-# creates subset-related data using a map_fun function.
-# map_fun takes as input a list of vectors where each vector represents
-# the indices of a row or column subset. It returns a vector of characters.
-# When using init_sub, map_fun must be provided (usually names or name_len_opts)
-# to remove: rm(decorations, sub_row_groups, sub_col_groups)
-init_sub <- function(map_fun)
+# creates subset-related data
+# (must be run after init_cat)
+init_sub <- function(row_axes, col_axes)
 {
-  # get_dependency("decorations")
+  sub_row_groups <- empty_named_list(cat_names)
+  sub_col_groups <- empty_named_list(cat_names)
 
-  sub_row_groups <- empty_named_list(name_cat)
-  sub_col_groups <- empty_named_list(name_cat)
-
-  for (cat in name_cat)
+  for (cat in cat_names)
   {
-    sub_row_groups[[cat]] <- list("Total"=rep(0, categories[[cat]][1])) %>% map_fun()
-    sub_col_groups[[cat]] <- list("Total"=rep(0, categories[[cat]][2])) %>% map_fun()
-  }
+    row_axs <- categories[[cat]]$row_axs
+    row_axis <- row_axes[[row_axs]]
+    sub_row_groups[[cat]] <- c(
+      list("Total" = row_axis$length),
+      lapply(row_axis$subsets, length)
+    )
 
-  for (dec_group in decorations)
-  {
-    mapping_row <- dec_group$ROW_SUBSETS %>% map_fun()
-    mapping_col <- dec_group$COL_SUBSETS[-1] %>% map_fun()
-
-    for (good_cat in dec_group$CATEGORIES)
-    {
-      sub_row_groups[[good_cat]] <- c(sub_row_groups[[good_cat]], mapping_row)
-      sub_col_groups[[good_cat]] <- c(sub_col_groups[[good_cat]], mapping_col)
-    }
+    col_axs <- categories[[cat]]$col_axs
+    col_axis <- col_axes[[col_axs]]
+    sub_col_groups[[cat]] <- c(
+      list("Total" = col_axis$length),
+      lapply(col_axis$subsets, length)
+    )
   }
 
   assign_global("sub_row_groups", sub_row_groups)
   assign_global("sub_col_groups", sub_col_groups)
-
-  invisible()
 }
 
 # ----------------

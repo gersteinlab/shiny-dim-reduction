@@ -7,35 +7,8 @@ elapsed_app_time <- function() {
   time_diff(sdr_config$start_time)
 }
 
-is_app_data <- function(app_data) {
-  TRUE
-}
-
-# assign globally with default
-
-load_app_data <- function(app_data) {
-  for (dep in names(app_data))
-    assign_global(dep, app_data[[dep]])
-}
-
-# ensure the data for the application is valid
-app_data_loc <- "app_data.rds"
-if (!file.exists(app_data_loc))
-{
-
-}
-
-app_data <- readRDS("app_data.rds")
-if (!is_app_data(app_data))
-  stop("The application data ('app_data.rds') is invalid.
-Please delete 'app_data.rds' and rerun the application.")
-load_app_data(app_data)
-
 source_sdr("plotting.R")
 source_sdr("authentication.R")
-
-
-
 source_sdr("options.R")
 
 server <- function(input, output, session) {

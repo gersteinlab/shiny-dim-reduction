@@ -35,6 +35,10 @@ stop_f <- function(...)
 # VALIDATION FUNCTIONS
 # --------------------
 
+# note: for each type, we generally do
+# is_type, make_type (for complex types)
+# and make_type calls is_type
+
 #' whether x is an integer of length n
 #'
 #' @param x An object.
@@ -68,16 +72,27 @@ is_str <- function(x, n = 1L)
 #' whether all elements of x are finite
 #' (note: succeeds if x is length 0)
 #'
-#' @param x An object (e.g. vector, matrix)
+#' @param x An object (e.g. vector, matrix).
 #' @returns TRUE or FALSE.
 all_fin <- function(x)
 {
   all(is.finite(x))
 }
 
-#' whether fun(x) is TRUE for all x in X
+#' whether all elements of x are non-NA
+#' (note: succeeds if x is length 0)
 #'
-#' @param X A vector (not checked)
+#' @param x An object (e.g. vector, matrix).
+#' @returns TRUE or FALSE.
+none_na <- function(x)
+{
+  !any(is.na(x))
+}
+
+#' whether fun(x) is TRUE for all x in X
+#' (note: succeeds if x is length 0)
+#'
+#' @param X A vector (not checked).
 #' @returns TRUE or FALSE.
 all_fun_true <- function(X, FUN)
 {
@@ -85,8 +100,8 @@ all_fun_true <- function(X, FUN)
 }
 
 #' whether x contains only unique values
-#' note: if n is an integer, then
-#' !(n) is TRUE for n = 0, FALSE otherwise
+#' note: for any integer n, "!(n)" is
+#' TRUE if n = 0, FALSE otherwise
 #'
 #' @param x An object.
 #' @returns TRUE or FALSE.
@@ -154,7 +169,7 @@ is_metadata <- function(x, row_n)
 #'
 #' @param x An object.
 #' @returns TRUE or FALSE.
-is_color_vec <- function(x)
+is_color_vector <- function(x)
 {
   is.character(x) &&
     all(grepl('^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$', x))
@@ -167,11 +182,11 @@ is_color_vec <- function(x)
 #' @returns TRUE or FALSE.
 is_color_scale <- function(x)
 {
-  is_color_vec(x) &&
-    is.character(names(x)) && is_unique(names(x))
+  is_color_vector(x) &&
+    is.character(names(x)) && is_unique(names(x)) && none_na(names(x))
 }
 
-#' whether x is a valid 'color scales' object
+#' whether x is a 'color scales' object
 #'
 #' @param x An object.
 #' @returns TRUE or FALSE.
@@ -195,25 +210,19 @@ color_scales_match_metadata <- function(color_scales, metadata)
   all_fun_true(names(color_scales), color_scale_match_meta_col)
 }
 
-#' whether x is an axis object
+#' whether x is an 'axis' object
 #'
 #' @param x An object.
-#' @returns A logical of length one.
+#' @returns TRUE or FALSE.
 is_axis <- function(x)
 {
-  axis_members <- c("length", "subsets", "metadata", "color_scales")
-  is.list(x) &&
-    identical(names(x), axis_members) &&
+  members <- c("length", "subsets", "metadata", "color_scales")
+  is.list(x) && identical(names(x), members) &&
     is_int(x$length) &&
     are_subsets(x$subsets, x$length) &&
     is_metadata(x$metadata, x$length) &&
     are_color_scales(x$color_scales) &&
     color_scales_match_metadata(x$color_scales, x$metadata)
-}
-
-are_axes <- function(x)
-{
-  is.list(x) && all_fun_true(x, is_axis)
 }
 
 #' makes an axis object
@@ -236,22 +245,31 @@ make_axis <- function(metadata, subsets, color_scales)
   result
 }
 
-#' whether x is a category object
+#' whether x is an 'axes' object
 #'
 #' @param x An object.
-#' @returns A logical of length one.
+#' @returns TRUE or FALSE.
+are_axes <- function(x)
+{
+  is.list(x) && all_fun_true(x, is_axis)
+}
+
+#' whether x is a 'category' object
+#'
+#' @param x An object.
+#' @returns TRUE or FALSE.
 is_category <- function(x)
 {
-  cat_members <- c("row_axs", "col_axs")
-  is.list(x) && identical(names(x), cat_members) &&
+  members <- c("row_axs", "col_axs")
+  is.list(x) && identical(names(x), members) &&
     is_str(x$row_axs) && is_str(x$col_axs)
 }
 
-are_categories <- function(x)
-{
-  is.list(x) && all_fun_true(x, is_category)
-}
-
+#' makes a category object
+#'
+#' @param row_axs A string for a row axis name.
+#' @param col_axs A string for a col axis name.
+#' @returns A category object if successful.
 make_category <- function(row_axs, col_axs)
 {
   result <- list(
@@ -264,6 +282,21 @@ make_category <- function(row_axs, col_axs)
   result
 }
 
+#' whether x is a 'categories' object
+#'
+#' @param x An object.
+#' @returns TRUE or FALSE.
+are_categories <- function(x)
+{
+  is.list(x) && all_fun_true(x, is_category)
+}
+
+#' whether categories are compatible with row_axes, col_axes
+#'
+#' @param categories A categories object (not checked).
+#' @param row_axes A row axis object (not checked).
+#' @param col_axes A col axis object (not checked).
+#' @returns TRUE or FALSE.
 categories_match_axes <- function(categories, row_axes, col_axes)
 {
   category_match_axes <- function(cat) {
@@ -274,11 +307,18 @@ categories_match_axes <- function(categories, row_axes, col_axes)
   all_fun_true(names(categories), category_match_axes)
 }
 
+#' whether groups are compatible with categories
+#'
+#' @param groups A groups object (not checked).
+#' @param categories A categories object (not checked).
+#' @returns TRUE or FALSE.
 groups_match_categories <- function(groups, categories)
 {
-  all_fun_true(groups, function(group) {
+  group_matches_categories <- function(group) {
     all(group %in% names(categories))
-  })
+  }
+
+  all_fun_true(groups, group_matches_categories)
 }
 
 # -----------------
@@ -508,7 +548,7 @@ suppressPackageStartupMessages({
 # --------------------------
 
 #' gets the location of a project file
-#' note: can ONLY be used for pipelines
+#' note: can ONLY be used in pipeline mode
 #'
 #' @param file A string.
 get_project_loc <- function(file)
@@ -516,28 +556,21 @@ get_project_loc <- function(file)
   file.path(sdr_config$path, file)
 }
 
-#' gets the location of a source file, accounting
-#' for pipeline vs application differences
+#' gets the location of an application file, accounting
+#' for the values of sdr_config$mode
 #'
 #' @param file A string.
-get_source_loc <- function(file)
+get_app_loc <- function(file)
 {
   stopifnot(is_str(file))
 
   if (sdr_config$mode == "pipeline")
-  {
-    a_file <- file.path("app", file) %>% get_project_loc()
-    if (file.exists(a_file))
-      return(a_file)
+    file <- file.path("app", file) %>% get_project_loc()
 
-    p_file <- file.path("pipeline", file) %>% get_project_loc()
-    if (file.exists(p_file))
-      return(p_file)
+  if (file.exists(file))
+    return(file)
 
-    stop_f("Source file could not be found: %s", file)
-  }
-
-  file
+  stop_f("Source file could not be found: %s", file)
 }
 
 #' sources a file in the context of this project
@@ -546,7 +579,7 @@ get_source_loc <- function(file)
 source_sdr <- function(file)
 {
   # UTF-8 to maximize compatibility (especially with JSON)
-  source(get_source_loc(file), encoding = "UTF-8")
+  source(get_app_loc(file), encoding = "UTF-8")
 }
 
 # ---------------------
