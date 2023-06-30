@@ -6,6 +6,76 @@ if (!exists("sdr_config"))
 
 source_sdr("preprocess.R")
 
+# ---------------
+# ANALYSIS NAMING
+# ---------------
+
+make_sets_name <- function(cat, sca, thr, cha)
+{
+  sprintf("Sets/%s/S%s_%s_%s.rds", cat, which(sca_options == sca), thr, cha)
+}
+
+make_phate_name <- function(cat, row, col, sca, nor, com, per)
+{
+  sprintf("PHATE/%s/%s_%s_S%s_N%s_%s_%s.rds",
+          cat, row, col, which(sca_options == sca), which(nor_options == nor), com, per)
+}
+
+make_pvu_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat)
+{
+  sca_ind <- which(sca_options == sca)
+  nor_ind <- which(nor_options == nor)
+
+  if (emb == "PCA")
+  {
+    if (vis == "Explore")
+      return(sprintf("PCA_E/%s/%s_%s_S%s_N%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com))
+    if (vis == "Summarize")
+      return(sprintf("PCA_S/%s/%s_%s_S%s_N%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com))
+    if (vis == "tSNE")
+      return(sprintf("PCA_T/%s/%s_%s_S%s_N%s_%s_%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com, dim, per))
+  }
+
+  if (emb == "VAE")
+  {
+    if (vis == "Explore")
+      return(sprintf("VAE_E/%s/%s_%s_S%s_N%s_%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com, bat))
+    if (vis == "Summarize")
+      return(sprintf("VAE_S/%s/%s_%s_S%s_N%s_%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com, bat))
+    if (vis == "tSNE")
+      return(sprintf("VAE_T/%s/%s_%s_S%s_N%s_%s_%s_%s_%s.rds",
+                     cat, row, col, sca_ind, nor_ind, com, dim, per, bat))
+  }
+
+  # UMAP
+  if (vis == "Explore")
+    return(sprintf("UMAP_E/%s/%s_%s_S%s_N%s_%s_%s.rds",
+                   cat, row, col, sca_ind, nor_ind, com, per))
+  if (vis == "Summarize")
+    return(sprintf("UMAP_S/%s/%s_%s_S%s_N%s_%s_%s.rds",
+                   cat, row, col, sca_ind, nor_ind, com, per))
+  if (vis == "tSNE")
+    return(sprintf("UMAP_T/%s/%s_%s_S%s_N%s_%s_%s_%s.rds",
+                   cat, row, col, sca_ind, nor_ind, com, dim, per))
+}
+
+make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat, thr, cha)
+{
+  if (emb == "Sets")
+    return(make_sets_name(cat, sca, thr, cha))
+
+  if (emb == "PHATE")
+    return(make_phate_name(cat, row, col, sca, nor, com, per))
+
+  # PCA, VAE, UMAP
+  make_pvu_name(cat, row, col, sca, nor, emb, vis, com, dim, per, bat)
+}
+
 # -----------------------------
 # REQUEST VALIDATION / CREATION
 # -----------------------------
@@ -34,15 +104,15 @@ chr_d <- function(n = 1)
 }
 
 # counts the number of characteristics per column of metadata
-order_char_counts <- function(metadata)
+count_metadata_chas <- function(metadata)
 {
-  apply(order_cat, 2, num_unique)
+  apply(metadata, 2, num_unique)
 }
 
-# gets the safe colnames for order_cat (at least 2 unique values)
-get_safe_chars <- function(order_cat)
+# gets the safe colnames for metadata (at least 2 unique values)
+get_safe_chars <- function(metadata)
 {
-  colnames(order_cat)[order_char_counts(order_cat) >= 2]
+  colnames(metadata)[count_metadata_chas(metadata) >= 2]
 }
 
 # selects only metadata features with safe values
@@ -56,7 +126,7 @@ select_chars <- function(order_cat){
 # note: if an attribute is unused, we set it to a default value (ex: batch_size to NaN for PCA)
 clean_request <- function(request)
 {
-  cat <- request$CATEGORIES
+  cat <- request$CATEGORY
   sca <- request$SCALING
   nor <- request$NORMALIZATION
   emb <- request$EMBEDDING

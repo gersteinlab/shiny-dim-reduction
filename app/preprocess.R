@@ -32,28 +32,76 @@ is_app_data <- function(x) {
     are_axes(x$row_axes) && are_axes(x$col_axes) &&
     are_categories(x$categories) &&
     categories_match_axes(x$categories, x$row_axes, x$col_axes) &&
-    are_groups(x$groups) && groups_match_categories(x$groups) &&
-    is_str(x$local_store) && is_cloud_store(x$cloud_store)
+    are_groups(x$groups) &&
+    groups_match_categories(x$groups, x$categories) &&
+    is_local_store(x$local_store) && is_cloud_store(x$cloud_store)
 }
-
-
-# assign globally with default
-
 
 # ensure the data for the application is valid
 app_data_loc <- get_app_loc("app_data.rds")
 while (!file.exists(app_data_loc))
 {
-
+  if (sdr_config$mode == "cloud")
+    stop_f("Missing %s localization is not supported for cloud applications.", app_data_loc)
+  confirm_install <- readline(prompt = "
+To install these packages, type 'y' and press enter.
+To exit, type anything else and press enter. ")
 }
 
-assign_global("app_data", readRDS(app_data_loc))
+app_data <- readRDS(app_data_loc)
 if (!is_app_data(app_data))
   stop("The application data ('app_data.rds') is invalid.
 Please delete 'app_data.rds' and rerun the application.")
+assign_global("app_data", app_data)
 
 for (dep in names(app_data))
   assign_global(dep, app_data[[dep]])
+
+assign_global("cat_names", names(categories))
+
+# retrieves a row axis by category
+get_row_axis <- function(cat)
+{
+  row_axs <- categories[[cat]]$row_axs
+  row_axes[[row_axs]]
+}
+
+# retrieves a row subset by category
+get_row_subset <- function(cat, row)
+{
+  row_axis <- get_row_axis(cat)
+  row_axis$subsets[[row]]
+}
+
+# subsets data by a row subset
+subset_by_row <- function(data, cat, row)
+{
+  if (row == "Total")
+    return(data)
+  data[get_row_subset(cat, row), , drop = FALSE]
+}
+
+# retrieves a col axis by category
+get_col_axis <- function(cat)
+{
+  col_axs <- categories[[cat]]$col_axs
+  col_axes[[col_axs]]
+}
+
+# retrieves a col subset by category
+get_col_subset <- function(cat, col)
+{
+  col_axis <- get_col_axis(cat)
+  col_axis$subsets[[col]]
+}
+
+# subsets data by a col subset
+subset_by_col <- function(data, cat, col)
+{
+  if (col == "Total")
+    return(data)
+  data[, get_col_subset(cat, col), drop = FALSE]
+}
 
 # ----------------
 # ANALYSIS OPTIONS
@@ -89,179 +137,3 @@ vis_options <- c(
   "Summarize",
   "tSNE"
 )
-
-# number of digits of precision for non-integer numbers
-num_digits <- 4
-
-# -----------------
-# CAT / SUB LOADING
-# -----------------
-
-# Note: The following functions can be run any time from the application. They must be run
-# after workflows.R if used for dimensionality reduction in order to find dependencies.
-
-# creates category-related data
-init_cat <- function(groups)
-{
-  assign_global("cat_names", as.character(unlist(groups)))
-  assign_global("cat_length", length(cat_names))
-}
-
-# creates subset-related data
-# (must be run after init_cat)
-init_sub <- function(row_axes, col_axes)
-{
-  sub_row_groups <- empty_named_list(cat_names)
-  sub_col_groups <- empty_named_list(cat_names)
-
-  for (cat in cat_names)
-  {
-    row_axs <- categories[[cat]]$row_axs
-    row_axis <- row_axes[[row_axs]]
-    sub_row_groups[[cat]] <- c(
-      list("Total" = row_axis$length),
-      lapply(row_axis$subsets, length)
-    )
-
-    col_axs <- categories[[cat]]$col_axs
-    col_axis <- col_axes[[col_axs]]
-    sub_col_groups[[cat]] <- c(
-      list("Total" = col_axis$length),
-      lapply(col_axis$subsets, length)
-    )
-  }
-
-  assign_global("sub_row_groups", sub_row_groups)
-  assign_global("sub_col_groups", sub_col_groups)
-}
-
-# ----------------
-# SUBSET FUNCTIONS
-# ----------------
-
-# retrieves a row subset, which is a vector of indices
-# row subsets are index-based because metadata is expected
-# to maintain the same row ordering as the numerical data.
-# requires init_sub() to be run first
-get_row_decor_subset <- function(cat, row)
-{
-  for (dec_group in decorations)
-    if (cat %in% dec_group$CATEGORIES)
-      return(dec_group$ROW_SUBSETS[[row]])
-
-  return(NULL)
-}
-
-# retrieves a col subset, which is a vector of column names
-# column subsets are name-based because columns can be reordered
-# based on metrics (ex: standard deviation) or excluded in a non-trivial
-# way (example: thresholding for Sets dimensionality reduction).
-# requires init_sub() to be run first
-get_col_decor_subset <- function(cat, col)
-{
-  for (dec_group in decorations)
-  {
-    if (cat %in% dec_group$CATEGORIES)
-    {
-      ref <- dec_group$COL_SUBSETS$Reference
-      # ensure that the number of features according to the decoration agrees
-      # with the number of features according to categories
-      stopifnot(length(ref) == categories[[cat]][2])
-      ind <- dec_group$COL_SUBSETS[[col]]
-      return(ref[ind])
-    }
-  }
-
-  return(NULL)
-}
-
-# obtains a subset of data's rows
-# requires init_sub() to be run first
-get_row_sub <- function(data, cat, sub)
-{
-  if (sub != "Total")
-    return(data[get_row_decor_subset(cat, sub),,drop=FALSE])
-
-  data
-}
-
-# obtains a subset of data's cols
-# requires init_sub() to be run first
-get_col_sub <- function(data, cat, sub)
-{
-  if (sub != "Total")
-    return(data[,colnames(data) %in% get_col_decor_subset(cat, sub),drop=FALSE])
-
-  data
-}
-
-# ---------------
-# ANALYSIS NAMING
-# ---------------
-
-make_sets_name <- function(cat, sca, thr, cha)
-{
-  sprintf(sprintf("Sets/%%s/S%%s_%%0.%sf_%%s.rds",
-                  num_digits), cat, which(sca_options == sca), thr, cha)
-}
-
-make_phate_name <- function(cat, row, col, sca, nor, com, per)
-{
-  sprintf("PHATE/%s/%s_%s_S%s_N%s_%s_%s.rds",
-          cat, row, col, which(sca_options == sca), which(nor_options == nor), com, per)
-}
-
-make_pvu_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat)
-{
-  sca_ind <- which(sca_options == sca)
-  nor_ind <- which(nor_options == nor)
-
-  if (emb == "PCA")
-  {
-    if (vis == "Explore")
-      return(sprintf("PCA_E/%s/%s_%s_S%s_N%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com))
-    if (vis == "Summarize")
-      return(sprintf("PCA_S/%s/%s_%s_S%s_N%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com))
-    if (vis == "tSNE")
-      return(sprintf("PCA_T/%s/%s_%s_S%s_N%s_%s_%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com, dim, per))
-  }
-
-  if (emb == "VAE")
-  {
-    if (vis == "Explore")
-      return(sprintf("VAE_E/%s/%s_%s_S%s_N%s_%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com, bat))
-    if (vis == "Summarize")
-      return(sprintf("VAE_S/%s/%s_%s_S%s_N%s_%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com, bat))
-    if (vis == "tSNE")
-      return(sprintf("VAE_T/%s/%s_%s_S%s_N%s_%s_%s_%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com, dim, per, bat))
-  }
-
-  # UMAP
-  if (vis == "Explore")
-    return(sprintf("UMAP_E/%s/%s_%s_S%s_N%s_%s_%s.rds",
-                   cat, row, col, sca_ind, nor_ind, com, per))
-  if (vis == "Summarize")
-    return(sprintf("UMAP_S/%s/%s_%s_S%s_N%s_%s_%s.rds",
-                   cat, row, col, sca_ind, nor_ind, com, per))
-  if (vis == "tSNE")
-    return(sprintf("UMAP_T/%s/%s_%s_S%s_N%s_%s_%s_%s.rds",
-                   cat, row, col, sca_ind, nor_ind, com, dim, per))
-}
-
-make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat, thr, cha)
-{
-  if (emb == "Sets")
-    return(make_sets_name(cat, sca, thr, cha))
-
-  if (emb == "PHATE")
-    return(make_phate_name(cat, row, col, sca, nor, com, per))
-
-  # PCA, VAE, UMAP
-  make_pvu_name(cat, row, col, sca, nor, emb, vis, com, dim, per, bat)
-}

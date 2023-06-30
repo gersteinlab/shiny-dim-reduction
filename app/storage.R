@@ -11,54 +11,25 @@ if (!exists("sdr_config"))
 
 library(aws.s3)
 
-# ----------------
-# LOCAL MANAGEMENT
-# ----------------
-
-#' syntactic sugar for saving a variable
-#' in the current working directory
-#'
-#' @param name A string.
-get_self_rds <- function(name)
-{
-  assign_global(name, readRDS(sprintf("%s.rds", name)))
-}
-
-#' syntactic sugar for loading a variable
-#' from the current working directory
-#'
-#' @param name A string.
-set_self_rds <- function(name)
-{
-  saveRDS(get(name), sprintf("%s.rds", name))
-}
-
 # -------------
 # LOCAL STORAGE
 # -------------
 
-# sets the reference location used for local paths, does not check validity
-set_working_ref <- function(loc = "this_is_not_a_file")
+is_local_store <- function(x)
 {
-  Sys.setenv("LOCAL_STORAGE_REF" = loc) # the old ref is disconnected automatically
+  is_str(x)
 }
 
-# determines whether R is connected to ref
-ref_is_connected <- function()
+local_connects <- function(local_store)
 {
-  file.exists(Sys.getenv("LOCAL_STORAGE_REF"))
+  Sys.setenv("LOCAL_STORE" = local_store)
+  file.exists(local_store)
 }
 
-# checks if a reference is valid
-is_valid_ref <- function(loc)
+# gives the local storage path for a location
+path_local <- function(loc)
 {
-  is_str(loc) && file.exists(loc)
-}
-
-# gives the local storage path for a prefix (usually in reference)
-path_local <- function(prefix)
-{
-  sprintf("%s/%s", Sys.getenv("LOCAL_STORAGE_REF"), prefix)
+  file.path(Sys.getenv("LOCAL_STORE"), loc)
 }
 
 # lists all files with the given prefix (usually a valid directory)
@@ -89,56 +60,41 @@ load_local <- function(filename)
 # KEY MANAGEMENT
 # --------------
 
-# disconnects from AWS
-disconnect_key <- function()
+is_cloud_store <- function(x)
 {
-  Sys.setenv("AWS_ACCESS_KEY_ID" = "",
-             "AWS_SECRET_ACCESS_KEY" = "",
-             "AWS_ACCESS_BUCKET" = "")
-}
-
-# determines if R is connected to AWS
-key_is_connected <- function()
-{
-  bucket_exists(Sys.getenv("AWS_ACCESS_BUCKET"))
+  members <- c("id", "secret", "bucket")
+  is.list(x) && identical(names(x), members) &&
+    is_str(x$id) && is_str(x$secret) && is_str(x$bucket)
 }
 
 # makes a list that qualifies as a key from an ID, a secret, and a bucket
-make_key <- function(id = "", secret = "", bucket = "")
+make_cloud_store <- function(id = "", secret = "", bucket = "")
 {
-  stopifnot(is_str(id), is_str(secret), is_str(bucket))
-
-  list(
+  result <- list(
     "id" = id,
     "secret" = secret,
     "bucket" = bucket
   )
+
+  stopifnot(is_cloud_store(result))
+
+  result
 }
 
-# checks if a key is valid
-is_valid_key <- function(key)
+# determines if R is connected to AWS
+cloud_connects <- function(cloud_store)
 {
-  (class(key) == "list") && isTRUE(all.equal(names(key), c("id", "secret", "bucket")))
-}
+  Sys.setenv(
+    "AWS_ACCESS_KEY_ID" = key$id,
+    "AWS_SECRET_ACCESS_KEY" = key$secret,
+    "AWS_ACCESS_BUCKET" = key$bucket
+  )
 
-# sets the current working AWS access key, which comprises: id, secret, bucket
-set_working_key <- function(key = make_key())
-{
-  stopifnot(is_valid_key(key))
-  disconnect_key()
-  Sys.setenv("AWS_ACCESS_KEY_ID" = key$id,
-             "AWS_SECRET_ACCESS_KEY" = key$secret,
-             "AWS_ACCESS_BUCKET" = key$bucket)
-
-  # if the provided keys don't allow bucket access
-  if (!key_is_connected())
-  {
-    disconnect_key()
-    stop("The provided keys do not correspond to a working bucket.")
-  }
+  bucket_exists(Sys.getenv("AWS_ACCESS_BUCKET"))
 }
 
 # create a master key and save it in the project directory
+# EVERY WORKFLOW SHOULD HAVE A SEPARATE ADMIN / USER KEY
 save_master_key <- function(id, secret)
 {
   stopifnot(is_str(id), is_str(secret))

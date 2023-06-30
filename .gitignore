@@ -12,9 +12,10 @@
 app/.Renviron
 app/rsconnect
 app/app_data.rds
+app/local_store.rds
+app/cloud_store.rds
 
 # other repo-specific items
 ignore
 README.html
-sdr_master_key.rds
-sdr_workflow_root.rds
+sdr_workflows.rds

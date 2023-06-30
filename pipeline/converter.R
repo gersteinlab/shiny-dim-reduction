@@ -6,65 +6,33 @@ if (!exists("sdr_config") || sdr_config$mode != "pipeline")
   source("app/install.R")
 stopifnot(sdr_config$mode == "pipeline")
 
-source_sdr("workflows.R")
-source_sdr("find_replace.R")
-source_sdr("storage.R")
-source_sdr("authentication.R")
-source_sdr("validation.R")
-
-# ------------
-# DEPENDENCIES
-# ------------
-
-# Lists the dependencies that ought to be generated for the app.
-# these are ordered from most to least necessary for app function.
-dependencies <- function()
-{
-  print_clean("DEPENDENCY 01 (REQUIRED): categories_full.rds")
-  print_clean("A list of groups (ex: cCREs, Expression, Proteomics), where each
-group is a list of categories (ex: H3K27ac, H3K9me3, Methylation) and the value
-of each category is the (number of samples, number of features)
-prior to dimensionality reduction.
-All categories must be unique, even if in different groups.")
-  print_clean("")
-
-  print_clean("DEPENDENCY 02 (OPTIONAL): amazon_keys.rds")
-  print_clean("A vector for AWS - access ID, access secret, and bucket.")
-  print_clean("")
-
-  print_clean("DEPENDENCY 03 (OPTIONAL): order_total.rds")
-  print_clean("A list of data frames, one for each category.
-Each data frame has samples as rows and columns as metadata features.")
-  print_clean("")
-
-  print_clean("DEPENDENCY 04 (OPTIONAL): decorations.rds")
-  print_clean("A list of decorations, where each decoration contains (i) a
-vector of applicable categories, (ii) the row subsets, and (iii) the column subsets.
-Each subset contains (a) a reference character vector and (b) indices that constitute subsets.")
-  print_clean("")
-
-  print_clean("DEPENDENCY 05 (OPTIONAL): app_title.rds")
-  print_clean("The title of the application.")
-  print_clean("")
-
-  print_clean("DEPENDENCY 06 (OPTIONAL): app_citations.rds")
-  print_clean("The data-related citations for this application.")
-  print_clean("")
-
-  print_clean("DEPENDENCY 07 (OPTIONAL): user_credentials.rds")
-  print_clean("A list of user credentials, where usernames are
-names(user_credentials) and passwords are unlist(user_credentials).")
-  print_clean("")
-
-  print_clean("DEPENDENCY 08 (OPTIONAL): custom_color_scales.rds")
-  print_clean("A list of custom color scales, where each scale is a list such that
-the labels are names(scale) and the colors are unlist(scale).")
-  print_clean("")
-}
+source("app/find_replace.R")
+source("app/storage.R")
+source("app/authentication.R")
+source("pipeline/workflows.R")
+source("pipeline/validation.R")
 
 # ---------
 # FUNCTIONS
 # ---------
+
+#' syntactic sugar for saving a variable
+#' in the current working directory
+#'
+#' @param name A string.
+get_self_rds <- function(name)
+{
+  assign_global(name, readRDS(sprintf("%s.rds", name)))
+}
+
+#' syntactic sugar for loading a variable
+#' from the current working directory
+#'
+#' @param name A string.
+set_self_rds <- function(name)
+{
+  saveRDS(get(name), sprintf("%s.rds", name))
+}
 
 # reads tsv text
 read_tsv_text <- function(filename)
