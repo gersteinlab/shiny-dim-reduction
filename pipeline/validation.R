@@ -13,7 +13,7 @@ stopifnot(sdr_config$mode == "pipeline")
 is_num_data <- function(x, row_n, col_n)
 {
   # must be a matrix
-  "matrix" %in% class(x) &&
+  is.matrix(x) &&
     # prevents NA, NaN, Inf, -Inf, non-numerics
     all_fin(x) &&
     # correct dimensions

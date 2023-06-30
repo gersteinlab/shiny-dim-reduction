@@ -159,7 +159,7 @@ is_meta_col <- function(x)
 is_metadata <- function(x, row_n)
 {
   # must be a data.frame
-  "data.frame" %in% class(x) &&
+  is.data.frame(x) &&
     # correct dimensions
     nrow(x) == row_n && ncol(x) > 0 &&
     # each column is the correct type
