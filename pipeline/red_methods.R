@@ -17,7 +17,7 @@ library(Rtsne)
 library(Matrix)
 
 # necessary for validation
-source_sdr("validation.R")
+source("pipeline/validation.R")
 
 # should reduction methods be verbose?
 verbose_red <- FALSE
@@ -59,7 +59,7 @@ table_to_tsne <- function(table, dim = 2, per = 0, max_iter = 500, theta = 0.5,
 # performs principal component analysis with no scaling on the provided table
 table_to_pca <- function(table, dim = 2)
 {
-  sprintf_clean("PCA Table Dimensions: (%s, %s)", nrow(table), ncol(table))
+  cat_f("PCA: (%s, %s)\n", nrow(table), ncol(table))
   pca <- stats::prcomp(table, center = TRUE, rank. = dim)
   pca$rotation <- NULL
   pca$center <- NULL
@@ -167,12 +167,14 @@ table_to_vae <- function(table, dim = 2, batch_size = 2,
   num_samp <- nrow(table)
   input_dim <- ncol(table)
   latent_dim <- dim
-  sprintf_clean("VAE Table Dimensions: (%s, %s)", num_samp, input_dim)
 
   dims <- get_intermediate(input_dim, latent_dim)
   dim_d1 <- dims[1]
   dim_d2 <- dims[2]
-  sprintf_clean("Layers (x2): %s neurons, %s neurons", dim_d1, dim_d2)
+  cat_f(
+    "VAE: (%s, %s -> %s -> %s -> %s)\n",
+    num_samp, input_dim, dim_d1, dim_d2, dim
+  )
 
   x_inputs <- layer_input(shape = input_dim)
   enc_d1 <- layer_dense(x_inputs, dim_d1, activation = "relu")
@@ -289,7 +291,7 @@ vae_to_tsne <- function(vae_result, dim = 2, per = 0)
 # but the duplicates will not have zero distance from each other!
 table_to_umap <- function(table, dim = 2, per = 0, verbose = verbose_red)
 {
-  sprintf_clean("UMAP Table Dimensions: (%s, %s)", nrow(table), ncol(table))
+  cat_f("UMAP: (%s, %s -> %s)\n", nrow(table), ncol(table), dim)
   umap::umap(
     table,
     method = "naive",
@@ -355,7 +357,7 @@ perturb_duplicates <- function(mat, weight = 0.000000001)
 # results$phate$embedding[result$phate$to_dup_indices,] restores the duplicates.
 # note: returns the embedding and does not preserve other parts for storage reasons.
 table_to_phate <- function(table, dim = 2, per = 0, verbose = verbose_red) {
-  sprintf_clean("PHATE Table Dimensions: (%s, %s)", nrow(table), ncol(table))
+  cat_f("PHATE: (%s, %s -> %s)\n", nrow(table), ncol(table), dim)
   result <- phateR::phate(
     perturb_duplicates(table), ndim = dim, knn = per, decay = 40, n.landmark = 2000,
     gamma = 1, t = "auto", mds.solver = "sgd", knn.dist.method = "euclidean",
@@ -377,8 +379,10 @@ table_to_sets <- function(table, threshold) {
   stopifnot(sum(table > 1) + sum(table < 0) == 0)
   stopifnot(between(threshold, 0, 1))
 
-  sprintf_clean("Sets Table Dimensions: (%s, %s)", nrow(table), ncol(table))
-  target <- matrix(as.numeric(table >= threshold), nrow=nrow(table), dimnames = dimnames(table))
+  cat_f("Sets: (%s, %s >= %s)\n", nrow(table), ncol(table), threshold)
+  target <- matrix(as.numeric(table >= threshold),
+                   nrow = nrow(table),
+                   dimnames = dimnames(table))
   target[, colSums(target) > 0, drop = FALSE]
 }
 
@@ -407,7 +411,7 @@ set_label_matrix <- function(sets_result, labels){
   lookup <- match(labels, set_types)
   lookup2 <- (lookup - 1) * rowlen_final
 
-  for (len in 1:length(summary_i))
+  for (len in seq_along(summary_i))
   {
     num_i <- summary_i[len]
     index <- lookup2[num_i] + summary_j[len]
