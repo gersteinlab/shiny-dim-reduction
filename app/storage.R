@@ -93,32 +93,6 @@ cloud_connects <- function(cloud_store)
   bucket_exists(Sys.getenv("AWS_ACCESS_BUCKET"))
 }
 
-# create a master key and save it in the project directory
-# EVERY WORKFLOW SHOULD HAVE A SEPARATE ADMIN / USER KEY
-save_master_key <- function(id, secret)
-{
-  stopifnot(is_str(id), is_str(secret))
-  master_key_loc <- get_project_loc("sdr_master_key.rds")
-  sdr_master_key <- list("id" = id, "secret" = secret)
-  saveRDS(sdr_master_key, master_key_loc)
-}
-
-# turns a key into a master key
-sudo_key <- function(key)
-{
-  # to avoid master key privileges: don't include the master key file in apps!
-  stopifnot(is_valid_key(key))
-  master_key_loc <- get_project_loc("sdr_master_key.rds")
-  sdr_master_key <- readRDS(master_key_loc)
-  make_key(sdr_master_key$id, sdr_master_key$secret, key$bucket)
-}
-
-# wrapper for sudo_key that also assigns the key
-sudo_working_key <- function(key)
-{
-  set_working_key(sudo_key(key))
-}
-
 # --------------
 # AWS.S3 STORAGE
 # --------------
