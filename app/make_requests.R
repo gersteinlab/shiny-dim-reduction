@@ -6,25 +6,70 @@ if (!exists("sdr_config"))
 
 source_sdr("preprocess.R")
 
+# ----------------
+# ANALYSIS OPTIONS
+# ----------------
+
+# scale options
+sca_options <- c(
+  "Logarithmic",
+  "Linear"
+)
+
+get_sca_ind <- function(sca)
+{
+  which(sca_options == sca)
+}
+
+# normalization options
+nor_options <- c(
+  "Global Min-Max",
+  "Local Min-Max",
+  "Global Z-Score",
+  "Local Z-Score",
+  "Quantile"
+)
+
+get_nor_ind <- function(nor)
+{
+  which(nor_options == nor)
+}
+
+# embedding options
+emb_options <- c(
+  "PCA",
+  "VAE",
+  "UMAP",
+  "PHATE",
+  "Sets"
+)
+
+# visualization options
+vis_options <- c(
+  "Explore",
+  "Summarize",
+  "tSNE"
+)
+
 # ---------------
 # ANALYSIS NAMING
 # ---------------
 
 make_sets_name <- function(cat, sca, thr, cha)
 {
-  sprintf("Sets/%s/S%s_%s_%s.rds", cat, which(sca_options == sca), thr, cha)
+  sprintf("Sets/%s/S%s_%s_%s.rds", cat, get_sca_ind(sca), thr, cha)
 }
 
 make_phate_name <- function(cat, row, col, sca, nor, com, per)
 {
   sprintf("PHATE/%s/%s_%s_S%s_N%s_%s_%s.rds",
-          cat, row, col, which(sca_options == sca), which(nor_options == nor), com, per)
+          cat, row, col, get_sca_ind(sca), get_nor_ind(nor), com, per)
 }
 
 make_pvu_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat)
 {
-  sca_ind <- which(sca_options == sca)
-  nor_ind <- which(nor_options == nor)
+  sca_ind <- get_sca_ind(sca)
+  nor_ind <- get_nor_ind(nor)
 
   if (emb == "PCA")
   {
@@ -80,11 +125,6 @@ make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat,
 # REQUEST VALIDATION / CREATION
 # -----------------------------
 
-# syntactic sugar for !(a %in% b)
-`%nin%` <- function(a, b) {
-  !(a %in% b)
-}
-
 # for integers and numerics: default value is -1
 # for author: default value is "ADMIN"
 # for all other characters: default value is "-"
@@ -103,21 +143,38 @@ chr_d <- function(n = 1)
   rep("-", n)
 }
 
-# counts the number of characteristics per column of metadata
-count_metadata_chas <- function(metadata)
-{
-  apply(metadata, 2, num_unique)
-}
+request_members <- c(
+  "CATEGORIES" = "cat",
+  "SCALING" = "sca",
+  "NORMALIZATION" = "nor",
+  "EMBEDDING" = "emb",
+  "ROW_SUBSETS" = "row",
+  "COL_SUBSETS" = "col",
+  "VISUALIZATION" = "vis",
+  "COMPONENT" = "com",
+  "DIMENSION" = "dim",
+  "PERPLEXITY" = "per",
+  "BATCH_SIZE" = "bat",
+  "THRESHOLD" = "thr",
+  "CHARACTERISTIC" = "cha"
+)
 
-# gets the safe colnames for metadata (at least 2 unique values)
-get_safe_chars <- function(metadata)
+# are these requests?
+are_requests <- function(x)
 {
-  colnames(metadata)[count_metadata_chas(metadata) >= 2]
-}
-
-# selects only metadata features with safe values
-select_chars <- function(order_cat){
-  order_cat[, get_safe_chars(order_cat), drop = FALSE]
+  is.data.frame(x) && identical(names(x), names(request_members)) &&
+    is.character(x$CATEGORIES) &&
+    is.character(x$SCALING) &&
+    is.character(x$NORMALIZATION) &&
+    is.character(x$EMBEDDING) &&
+    is.character(x$ROW_SUBSETS) &&
+    is.character(x$COL_SUBSETS) &&
+    is.character(x$VISUALIZATION) &&
+    is.integer(x$COMPONENT) &&
+    is.integer(x$DIMENSION) &&
+    is.integer(x$PERPLEXITY) &&
+    is.finite(x$THRESHOLD) &&
+    is.character(x$CHARACTERISTIC)
 }
 
 # cleans a request (a requests data.frame with a single row) and returns the cleaned version,
@@ -126,10 +183,19 @@ select_chars <- function(order_cat){
 # note: if an attribute is unused, we set it to a default value (ex: batch_size to NaN for PCA)
 clean_request <- function(request)
 {
-  cat <- request$CATEGORY
-  sca <- request$SCALING
-  nor <- request$NORMALIZATION
+  cat <- request$CATEGORIES
+  if (!(cat %in% cat_names))
+    return(NULL)
+
   emb <- request$EMBEDDING
+  if (!(emb %in% emb_options))
+    return(NULL)
+
+  sca <- request$SCALING
+  if (!sca %in% sca_options)
+    return(NULL)
+
+  nor <- request$NORMALIZATION
   row <- request$ROW_SUBSETS
   col <- request$COL_SUBSETS
   vis <- request$VISUALIZATION
@@ -139,9 +205,6 @@ clean_request <- function(request)
   bat <- request$BATCH_SIZE
   thr <- request$THRESHOLD
   cha <- request$CHARACTERISTIC
-
-  if (cat %nin% name_cat || emb %nin% emb_options || sca %nin% sca_options)
-    return(NULL)
 
   if (emb == "Sets")
   {
@@ -154,8 +217,9 @@ clean_request <- function(request)
       return(NULL)
 
     # ensure the characteristic is valid
-    characteristics <- colnames(select_chars(order_total[[cat]]))
-    if (cha %nin% characteristics)
+    row_meta <- get_row_meta(cat)
+    characteristics <- get_safe_chas(row_meta)
+    if (!(cha %in% characteristics))
       return(NULL)
 
     # clean all irrelevant attributes
@@ -172,7 +236,7 @@ clean_request <- function(request)
   else
   {
     # a valid normalization is required
-    if (nor %nin% nor_options)
+    if (!(nor %in% nor_options))
       return(NULL)
 
     # clean set-related attributes
@@ -180,20 +244,14 @@ clean_request <- function(request)
     request$CHARACTERISTIC <- chr_d()
 
     # must be a valid row subset
-    if (row %nin% sub_row_groups[[cat]] && row %nin% parse_opt(sub_row_groups[[cat]]))
+    row_num <- row_subset_lengths[[cat]][[row]]
+    if (!is.integer(row_num))
       return(NULL)
-
-    row_num <- categories[[cat]][1]
-    if (row != "Total")
-      row_num <- length(get_row_decor_subset(cat, row))
 
     # must be a valid column subset
-    if (col %nin% sub_col_groups[[cat]] && col %nin% parse_opt(sub_col_groups[[cat]]))
+    col_num <- col_subset_lengths[[cat]][[col]]
+    is (!is.integer(col_num))
       return(NULL)
-
-    col_num <- categories[[cat]][2]
-    if (col != "Total")
-      col_num <- length(get_col_decor_subset(cat, col))
 
     # avoid out-of-range perplexities
     max_perplexity <- min(100, floor((row_num - 1)/3))
@@ -202,10 +260,11 @@ clean_request <- function(request)
     if (emb == "PHATE")
     {
       # must be reduced down to 2 or 3 dimensions for plotting
-      if (com != 2 && com != 3)
+      if (com != 2L && com != 3L)
         return(NULL)
+
       # avoid out-of-range perplexities
-      if (!dplyr::between(per, 0, max_perplexity))
+      if (!dplyr::between(per, 0L, max_perplexity))
         return(NULL)
 
       # clean all irrelevant components
