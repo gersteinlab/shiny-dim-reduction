@@ -105,8 +105,9 @@ subset_by_col <- function(data, cat, col)
   data[, col_axis$subsets[[col]], drop = FALSE]
 }
 
-# gets the safe characteristics of a metadata
-get_safe_chas <- function(metadata)
+# gets the safe characteristics of a category
+get_safe_chas <- function(cat)
 {
-  colnames(metadata)[apply(metadata, 2, num_unique) >= 2]
+  row_meta <- get_row_axis(cat)$metadata
+  colnames(row_meta)[apply(row_meta, 2, num_unique) >= 2]
 }

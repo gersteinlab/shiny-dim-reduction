@@ -1,9 +1,9 @@
 # The purpose of this file is to store long texts and functions for text manipulation.
 
 if (!exists("sdr_config"))
-  source("install.R")
+  source("app/install.R")
 
-source_sdr("find_replace.R")
+source_app("find_replace.R")
 
 # ---------
 # FUNCTIONS

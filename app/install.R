@@ -154,18 +154,29 @@ is_meta_col <- function(x)
 #' whether x is a 'metadata' object with row_n rows
 #'
 #' @param x An object.
-#' @param row_n An integer (not checked).
 #' @returns TRUE or FALSE.
-is_metadata <- function(x, row_n)
+is_metadata <- function(x)
 {
   # must be a data.frame
   is.data.frame(x) &&
-    # correct dimensions
-    nrow(x) == row_n && ncol(x) > 0 &&
+    # positive dimensions
+    nrow(x) > 0 && ncol(x) > 0 &&
     # each column is the correct type
     all_fun_true(x, is_meta_col) &&
     # primary key is first column
-    is_unique(x[, 1])
+    is_unique(x[, 1]) &&
+    # no rownames (tidyverse convention)
+    is.null(rownames(x))
+}
+
+#' whether metadata has corresponding row count
+#'
+#' @param metadata A metadata object (not checked).
+#' @param row_n An integer (not checked).
+#' @returns TRUE or FALSE.
+metadata_has_row_n <- function(metadata, row_n)
+{
+  nrow(metadata) == row_n
 }
 
 #' whether x is a 'color vector' object
@@ -223,7 +234,7 @@ is_axis <- function(x)
 {
   members <- c("length", "metadata", "subsets", "color_scales")
   is.list(x) && identical(names(x), members) &&
-    is_int(x$length) &&
+    is_int(x$length) && x$length > 0L &&
     are_subsets(x$subsets, x$length) &&
     is_metadata(x$metadata, x$length) &&
     are_color_scales(x$color_scales) &&
@@ -338,6 +349,33 @@ are_credentials <- function(x)
 {
   is.character(x) &&
     is.character(names(x)) && is_unique(names(x)) && none_na(names(x))
+}
+
+#' whether x is a table object
+#'
+#' @param x An object.
+#' @returns TRUE or FALSE.
+is_table <- function(x)
+{
+  # must be a matrix
+  is.matrix(x) &&
+    # positive dimensions
+    nrow(x) > 0 && ncol(x) > 0 &&
+    # prevents NA, NaN, Inf, -Inf, non-numerics
+    all_fin(x) &&
+    # no rownames (tidyverse convention)
+    is.null(rownames(x))
+}
+
+#' whether table has corresponding row / col counts
+#'
+#' @param table A table (not checked).
+#' @param row_n An integer (not checked).
+#' @param col_n An integer (not checked).
+#' @returns TRUE or FALSE.
+table_has_dim_n <- function(table, row_n, col_n)
+{
+  nrow(table) == row_n && ncol(table) == col_n
 }
 
 # -----------------
@@ -592,10 +630,10 @@ get_app_loc <- function(file)
   stop_f("Source file could not be found: %s", file)
 }
 
-#' sources a file in the context of this project
+#' sources a file in app/ in the context of various use cases
 #'
 #' @param file A string.
-source_sdr <- function(file)
+source_app <- function(file)
 {
   # UTF-8 to maximize compatibility (especially with JSON)
   source(get_app_loc(file), encoding = "UTF-8")

@@ -2,9 +2,9 @@
 # creating, and combining reduction requests.
 
 if (!exists("sdr_config"))
-  source("install.R")
+  source("app/install.R")
 
-source_sdr("preprocess.R")
+source_app("preprocess.R")
 
 # ----------------
 # ANALYSIS OPTIONS
@@ -125,19 +125,25 @@ make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat,
 # REQUEST VALIDATION / CREATION
 # -----------------------------
 
-# for integers and numerics: default value is -1
-# for author: default value is "ADMIN"
-# for all other characters: default value is "-"
-num_d <- function(n = 1)
+# default integer value
+int_d <- function(n = 1)
+{
+  rep(-1L, n)
+}
+
+# default finite value
+fin_d <- function(n = 1)
 {
   rep(-1, n)
 }
 
+# default author value
 aut_d <- function(n = 1)
 {
   rep("ADMIN", n)
 }
 
+# default character value
 chr_d <- function(n = 1)
 {
   rep("-", n)
@@ -183,21 +189,17 @@ are_requests <- function(x)
 # note: if an attribute is unused, we set it to a default value (ex: batch_size to NaN for PCA)
 clean_request <- function(request)
 {
+  # must be a single request
+  if (!are_requests(request) || nrow(request) != 1)
+    return(NULL)
+
+  # abbreviations
   cat <- request$CATEGORIES
-  if (!(cat %in% cat_names))
-    return(NULL)
-
-  emb <- request$EMBEDDING
-  if (!(emb %in% emb_options))
-    return(NULL)
-
   sca <- request$SCALING
-  if (!sca %in% sca_options)
-    return(NULL)
-
   nor <- request$NORMALIZATION
   row <- request$ROW_SUBSETS
   col <- request$COL_SUBSETS
+  emb <- request$EMBEDDING
   vis <- request$VISUALIZATION
   com <- request$COMPONENT
   dim <- request$DIMENSION
@@ -205,6 +207,15 @@ clean_request <- function(request)
   bat <- request$BATCH_SIZE
   thr <- request$THRESHOLD
   cha <- request$CHARACTERISTIC
+
+  if (!(cat %in% cat_names))
+    return(NULL)
+
+  if (!(emb %in% emb_options))
+    return(NULL)
+
+  if (!(sca %in% sca_options))
+    return(NULL)
 
   if (emb == "Sets")
   {
@@ -217,19 +228,18 @@ clean_request <- function(request)
       return(NULL)
 
     # ensure the characteristic is valid
-    row_meta <- get_row_meta(cat)
-    characteristics <- get_safe_chas(row_meta)
-    if (!(cha %in% characteristics))
+    cha_options <- get_safe_chas(cat)
+    if (!(cha %in% cha_options))
       return(NULL)
 
     # clean all irrelevant attributes
     request$ROW_SUBSETS <- chr_d()
     request$COL_SUBSETS <- chr_d()
     request$VISUALIZATION <- chr_d()
-    request$COMPONENT <- num_d()
-    request$DIMENSION <- num_d()
-    request$PERPLEXITY <- num_d()
-    request$BATCH_SIZE <- num_d()
+    request$COMPONENT <- int_d()
+    request$DIMENSION <- int_d()
+    request$PERPLEXITY <- int_d()
+    request$BATCH_SIZE <- int_d()
 
     return(request)
   }
@@ -240,7 +250,7 @@ clean_request <- function(request)
       return(NULL)
 
     # clean set-related attributes
-    request$THRESHOLD <- num_d()
+    request$THRESHOLD <- fin_d()
     request$CHARACTERISTIC <- chr_d()
 
     # must be a valid row subset
@@ -254,7 +264,7 @@ clean_request <- function(request)
       return(NULL)
 
     # avoid out-of-range perplexities
-    max_perplexity <- min(100, floor((row_num - 1)/3))
+    max_perplexity <- as.integer((row_num - 1) / 3)
 
     # PHATE
     if (emb == "PHATE")
@@ -264,13 +274,13 @@ clean_request <- function(request)
         return(NULL)
 
       # avoid out-of-range perplexities
-      if (!dplyr::between(per, 0L, max_perplexity))
+      if (!dplyr::between(per, 1L, max_perplexity))
         return(NULL)
 
       # clean all irrelevant components
       request$VISUALIZATION <- chr_d()
-      request$DIMENSION <- num_d()
-      request$BATCH_SIZE <- num_d()
+      request$DIMENSION <- int_d()
+      request$BATCH_SIZE <- int_d()
 
       return(request)
     }
@@ -279,15 +289,16 @@ clean_request <- function(request)
       if (vis %nin% vis_options)
         return(NULL)
 
-      # avoid out-of-range components
-      if (!dplyr::between(com, 2, col_num - 1))
-        return(NULL)
-
       if (vis == "tSNE")
       {
-        # must go to 2D or 3D and have less columns than first-round reduction
-        if ((dim != 2 && dim != 3) || dim >= com)
+        # must go to 2D or 3D
+        if (dim != 2 && dim != 3)
           return(NULL)
+
+        # components must be between
+        if (!dplyr::between(com, dim, col_num - 1))
+          return(NULL)
+
 
         # avoid out-of-range perplexity
         if (!dplyr::between(per, 0, max_perplexity))
@@ -295,6 +306,10 @@ clean_request <- function(request)
       }
       else
       {
+        # avoid out-of-range components
+        if (!dplyr::between(com, 1, col_num - 1))
+          return(NULL)
+
         # no second-level reduction? no DIMENSION parameter needed
         request$DIMENSION <- num_d()
       }

@@ -1,12 +1,12 @@
 # The purpose of this file is to store various UI-related functions for the app.
 
 if (!exists("sdr_config"))
-  source("install.R")
+  source("app/install.R")
 
 library(shinycssloaders)
 library(shinyWidgets)
 
-source_sdr("text_work.R")
+source_app("text_work.R")
 
 # performs get_opt on every unique member of a vector v
 get_opts <- function(v)

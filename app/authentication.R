@@ -1,7 +1,7 @@
 # The purpose of this file is to provide functions for bcrypt authentication.
 
 if (!exists("sdr_config"))
-  source("install.R")
+  source("app/install.R")
 
 library(bcrypt)
 

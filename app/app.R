@@ -7,9 +7,9 @@ elapsed_app_time <- function() {
   time_diff(sdr_config$start_time)
 }
 
-source_sdr("plotting.R")
-source_sdr("authentication.R")
-source_sdr("options.R")
+source_app("plotting.R")
+source_app("authentication.R")
+source_app("options.R")
 
 server <- function(input, output, session) {
   if (run_default)

@@ -16,9 +16,6 @@ library(umap)
 library(Rtsne)
 library(Matrix)
 
-# necessary for validation
-source("pipeline/validation.R")
-
 # should reduction methods be verbose?
 verbose_red <- FALSE
 

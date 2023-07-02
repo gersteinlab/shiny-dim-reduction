@@ -14,7 +14,7 @@ library(beeswarm)
 library(heatmaply)
 library(DT)
 
-source_sdr("color_scales.R")
+source_app("color_scales.R")
 
 # ----------------------
 # GENERAL GRAPHS / TOOLS
