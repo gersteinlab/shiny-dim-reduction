@@ -17,10 +17,6 @@ source_app("make_requests.R")
 # CONNECT TO STORAGE
 # ------------------
 
-# set the storage as local or AWS; queries the user if an option is available
-app_ref_loc <- "~/DataR/sdr_workflows/exRNA/reference"
-use_local_storage <- query_storage(app_ref_loc, amazon_keys)
-
 # open requests
 app_requests <- make_requests()
 if (find_store("app_requests.rds"))
@@ -45,16 +41,6 @@ if (!use_local_storage && find_aws_s3("Sessions/user_requests.rds"))
 # get_dependency("app_citations", "No data citations could be found.")
 # get_dependency("user_credentials")
 # get_dependency("custom_color_scales")
-
-# create bibliography
-citations <- paste(
-  citations1,
-  app_citations,
-  citations2,
-  citations3,
-  citations4,
-  sep = ""
-)
 
 # creates a print version of the instructions / citations
 print_instructions <- rem_html_tags(instructions)

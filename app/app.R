@@ -8,7 +8,6 @@ elapsed_app_time <- function() {
 }
 
 source_app("plotting.R")
-source_app("authentication.R")
 source_app("options.R")
 
 server <- function(input, output, session) {

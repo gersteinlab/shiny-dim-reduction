@@ -5,6 +5,24 @@ if (!exists("sdr_config"))
 
 library(bcrypt)
 
+#' whether x is a 'credentials' object
+#'
+#' @param x An object.
+#' @returns TRUE or FALSE.
+are_credentials <- function(x)
+{
+  is.character(x) &&
+    is.character(names(x)) && is_unique(names(x)) && none_na(names(x))
+}
+
+# for changing what the credentials are
+assign_global("credentials", list())
+set_credentials <- function(x)
+{
+  stopifnot(are_credentials(x))
+  assign_global("credentials", x)
+}
+
 # straightforward password hashing
 my_hash <- function(password)
 {
@@ -12,10 +30,11 @@ my_hash <- function(password)
   bcrypt::hashpw(password, gensalt(12))
 }
 
-# checks if user_credentials[[username]] == password
-my_auth <- function(username, password, user_credentials)
+# checks if credentials[[username]] == password
+my_auth <- function(username, password)
 {
+  stopifnot(exists("credentials"))
   is_str(username) && is_str(password) &&
-    (username %in% names(user_credentials)) &&
-    bcrypt::checkpw(password, user_credentials[[username]])
+    (username %in% names(credentials)) &&
+    bcrypt::checkpw(password, credentials[[username]])
 }

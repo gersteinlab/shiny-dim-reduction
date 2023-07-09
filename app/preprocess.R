@@ -4,10 +4,11 @@
 if (!exists("sdr_config"))
   source("app/install.R")
 
+source_app("authentication.R")
 source_app("storage.R")
 
 # ---------------
-# HANDLE APP DATA
+# IMPORT APP DATA
 # ---------------
 
 #' whether x is an 'app_data' object
@@ -44,17 +45,38 @@ app_data_loc <- get_app_loc("app_data.rds")
 if (!file.exists(app_data_loc))
   stop_f("The application data could not be found at: %s", app_data_loc)
 
+# assign application data
 app_data <- readRDS(app_data_loc)
 if (!is_app_data(app_data))
   stop("The application data ('app_data.rds') is invalid.
 Please delete 'app_data.rds' and rerun the application.")
 assign_global("app_data", app_data)
 
-for (dep in names(app_data))
-  assign_global(dep, app_data[[dep]])
-rm(dep)
+# set credentials
+set_credentials(app_data[["credentials"]])
 
+# set row axes
+assign_global("row_axes", app_data[["row_axes"]])
+
+# set col axes
+assign_global("col_axes", app_data[["col_axes"]])
+
+# set categories
+assign_global("categories", app_data[["categories"]])
 assign_global("cat_names", names(categories))
+
+# set groups
+assign_global("groups", app_data[["groups"]])
+
+# set stores
+assign_global("connected", decide_store_mode(
+  app_data[["local_store"]],
+  app_data[["cloud_store"]]
+))
+
+# --------------
+# SUBSET LENGTHS
+# --------------
 
 # retrieves a row axis by category
 get_row_axis <- function(cat)
@@ -121,3 +143,4 @@ get_safe_chas <- function(cat)
   row_meta <- get_row_axis(cat)$metadata
   colnames(row_meta)[apply(row_meta, 2, num_unique) >= 2]
 }
+

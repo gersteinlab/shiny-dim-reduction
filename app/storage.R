@@ -30,9 +30,9 @@ make_local_store <- function(dirname = "")
 }
 
 # set local store (not checked)
-set_local_store <- function(local_store)
+set_local_store <- function(x)
 {
-  Sys.setenv("LOCAL_STORE" = local_store)
+  Sys.setenv("LOCAL_STORE" = x)
 }
 
 # check if the local store is connected
@@ -110,12 +110,12 @@ make_cloud_store <- function(id = "", secret = "", bucket = "")
 }
 
 # set cloud store (not checked)
-set_cloud_store <- function(cloud_store)
+set_cloud_store <- function(x)
 {
   Sys.setenv(
-    "AWS_ACCESS_KEY_ID" = cloud_store$id,
-    "AWS_SECRET_ACCESS_KEY" = cloud_store$secret,
-    "AWS_ACCESS_BUCKET" = cloud_store$bucket
+    "AWS_ACCESS_KEY_ID" = x$id,
+    "AWS_SECRET_ACCESS_KEY" = x$secret,
+    "AWS_ACCESS_BUCKET" = x$bucket
   )
 }
 
@@ -198,7 +198,7 @@ Type anything else and press enter to use AWS storage.") == "Y")
   "cloud"
 }
 
-decide_store_mode <- function()
+decide_store_mode <- function(local_store, cloud_store)
 {
   if (local_connects(local_store))
   {

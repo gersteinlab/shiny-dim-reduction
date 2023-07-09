@@ -331,16 +331,6 @@ groups_match_categories <- function(groups, categories)
   all_fun_true(groups, group_matches_categories)
 }
 
-#' whether x is a 'credentials' object
-#'
-#' @param x An object.
-#' @returns TRUE or FALSE.
-are_credentials <- function(x)
-{
-  is.character(x) &&
-    is.character(names(x)) && is_unique(names(x)) && none_na(names(x))
-}
-
 #' whether x is a table object
 #'
 #' @param x An object.
@@ -366,6 +356,15 @@ is_table <- function(x)
 table_has_dim_n <- function(table, row_n, col_n)
 {
   nrow(table) == row_n && ncol(table) == col_n
+}
+
+#' Whether a perplexity is valid given the number of rows
+#'
+#' @param per An integer (not checked).
+perplexity_is_valid <- function(per, row_n)
+{
+  max_perplexity <- as.integer((row_n - 1) / 3)
+  dplyr::between(per, 1L, max_perplexity)
 }
 
 # -----------------
@@ -627,15 +626,6 @@ source_app <- function(file)
 {
   # UTF-8 to maximize compatibility (especially with JSON)
   source(get_app_loc(file), encoding = "UTF-8")
-}
-
-#' Whether a perplexity is valid given the number of rows
-#'
-#' @param per An integer (not checked).
-perplexity_is_valid <- function(per, row_n)
-{
-  max_perplexity <- as.integer((row_n - 1) / 3)
-  dplyr::between(per, 1L, max_perplexity)
 }
 
 # ---------------------

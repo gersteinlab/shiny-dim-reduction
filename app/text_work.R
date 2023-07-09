@@ -9,22 +9,21 @@ source_app("find_replace.R")
 # FUNCTIONS
 # ---------
 
-# formats to "opt (num)"
-get_opt <- function(opt, num)
+# formats to "opt_name (opt_num)"
+get_opt <- function(opt_name, opt_num)
 {
-  sprintf("%s (%s)", opt, num)
+  sprintf("%s (%s)", opt_name, opt_num)
 }
 
 # Suppose we have a vector of strings of the form "A (B)",
 # where A is any string and B is a number. Then
 # return a vector containing for each string c("A", "B").
-sep_opt <- function(str)
+sep_opt <- function(opt_str)
 {
-  if (!is.character(str))
-    return(NULL)
+  stopifnot(is.character(opt_str))
 
-  n <- length(str)
-  rev_str <- stri_reverse(str) # reverse the string to use stri_split_fixed
+  n <- length(opt_str)
+  rev_str <- stri_reverse(opt_str) # reverse the string to use stri_split_fixed
   result <- unlist(stri_split_fixed(rev_str,"( ", n = 2)) # split into two parts
 
   for (i in seq_len(n))
@@ -508,3 +507,15 @@ my_css_styling <- HTML("
   text-align: center !important;
 }
 ")
+
+make_citations <- function(app_citations)
+{
+  paste(
+    citations1,
+    app_citations,
+    citations2,
+    citations3,
+    citations4,
+    sep = ""
+  )
+}

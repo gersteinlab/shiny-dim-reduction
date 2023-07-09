@@ -115,7 +115,7 @@ chr_d <- function(n = 1)
 # are these request keys?
 are_req_keys <- function(x)
 {
-  is.data.frame(x) && identical(names(x), names(request_members)) &&
+  is.data.frame(x) && identical(names(x), names(req_key_members)) &&
     is.character(x$CATEGORIES) &&
     is.character(x$ROW_SUBSETS) &&
     is.character(x$COL_SUBSETS) &&
@@ -126,15 +126,14 @@ are_req_keys <- function(x)
     is.integer(x$COMPONENT) &&
     is.integer(x$DIMENSION) &&
     is.integer(x$PERPLEXITY) &&
-    is.finite(x$THRESHOLD) &&
+    is.numeric(x$THRESHOLD) &&
     is.character(x$CHARACTERISTIC)
 }
 
-# cleans a request key (a requests data.frame with a single row) and returns the cleaned version,
-# returning NULL if the request cannot be properly cleaned.
+# cleans a request key (a req_keys data.frame with a single row) and
+# returns the cleaned version or NULL if the request cannot be properly cleaned.
 # note: should only be called through make_req_keys, assuming valid types
-# note: if an attribute is unused, we set it to a default value (ex: batch_size to NaN for PCA)
-# note: we assume it is a single req_key with 1 row
+# note: if an attribute is unused, we set it to the default value.
 clean_req_key <- function(req_key)
 {
   # abbreviations
@@ -385,7 +384,7 @@ make_key_names <- function(req_keys)
 
 make_req_keys <- function(
     cat = character(), row = character(), col = character(), sca = character(),
-    nor = character(), emb = character(), vis = character(), com = numeric(),
+    nor = character(), emb = character(), vis = character(), com = integer(),
     dim = integer(), per = integer(), bat = integer(), thr = numeric(),
     cha = character()
 )
@@ -419,13 +418,12 @@ make_req_keys <- function(
 # otherwise, return a set of requests in the appropriate form.
 
 # note: the first 13 attributes MUST be a primary key;
-# --author / timestamps don't differentiate
+#   author / timestamps don't differentiate
 # note: if the TIME_COMPLETED field is before the TIME_REQUESTED field,
-# --it hasn't been done yet!
+#   it hasn't been done yet!
 # note: a set of requests is valid ONLY IF it has a FILE_LOCATION field.
-# This is because regular computation of the FILE_LOCATION field
-# --makes merging new requests difficult. Duplicate FILE_LOCATION values are not allowed.
-# note: init_cat, init_sub, and get_dependency("order_total") must be run before this.
+#   This is because regular computation of the FILE_LOCATION field
+#   makes merging new requests difficult. Duplicate values are not allowed.
 make_requests <- function(
     cat = character(), row = character(), col = character(), sca = character(),
     nor = character(), emb = character(), vis = character(), com = numeric(),
@@ -606,10 +604,11 @@ rbind_req <- function(...)
 # ----------
 
 # gets n request ids
+# warning: only works with access to AWS
 get_request_id <- function(n = 1)
 {
   # if AWS is not available, IDs cannot be generated
-  if (!cloud_is_connected())
+  if (connected != "cloud")
     return(-1)
 
   if (n < 1)
