@@ -10,20 +10,14 @@ if (!exists("sdr_config"))
 library(shinydashboard)
 library(shinyjs)
 
-source_sdr("ui_functions.R")
-source_sdr("make_requests.R")
+source_app("ui_functions.R")
+source_app("make_requests.R")
 
 # ------------------
 # CONNECT TO STORAGE
 # ------------------
 
-# create categories and subsets; does get_dependency(categories_full, decorations)
-# note: must be done before requests because cat_names is needed to clean requests
-init_cat(groups)
-init_sub(row_axes, col_axes)
-
 # set the storage as local or AWS; queries the user if an option is available
-# get_dependency("amazon_keys")
 app_ref_loc <- "~/DataR/sdr_workflows/exRNA/reference"
 use_local_storage <- query_storage(app_ref_loc, amazon_keys)
 

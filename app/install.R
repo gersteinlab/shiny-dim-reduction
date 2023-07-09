@@ -152,6 +152,7 @@ is_meta_col <- function(x)
 }
 
 #' whether x is a 'metadata' object with row_n rows
+#' note: metadata rownames should not be used
 #'
 #' @param x An object.
 #' @returns TRUE or FALSE.
@@ -164,19 +165,7 @@ is_metadata <- function(x)
     # each column is the correct type
     all_fun_true(x, is_meta_col) &&
     # primary key is first column
-    is_unique(x[, 1]) &&
-    # no rownames (tidyverse convention)
-    is.null(rownames(x))
-}
-
-#' whether metadata has corresponding row count
-#'
-#' @param metadata A metadata object (not checked).
-#' @param row_n An integer (not checked).
-#' @returns TRUE or FALSE.
-metadata_has_row_n <- function(metadata, row_n)
-{
-  nrow(metadata) == row_n
+    is_unique(x[, 1])
 }
 
 #' whether x is a 'color vector' object
@@ -236,7 +225,8 @@ is_axis <- function(x)
   is.list(x) && identical(names(x), members) &&
     is_int(x$length) && x$length > 0L &&
     are_subsets(x$subsets, x$length) &&
-    is_metadata(x$metadata, x$length) &&
+    is_metadata(x$metadata) &&
+    nrow(x$metadata) == x$length &&
     are_color_scales(x$color_scales) &&
     color_scales_match_metadata(x$color_scales, x$metadata)
 }
@@ -630,7 +620,7 @@ get_app_loc <- function(file)
   stop_f("Source file could not be found: %s", file)
 }
 
-#' sources a file in app/ in the context of various use cases
+#' sources a file in "app/" in the context of various use cases
 #'
 #' @param file A string.
 source_app <- function(file)
@@ -639,16 +629,24 @@ source_app <- function(file)
   source(get_app_loc(file), encoding = "UTF-8")
 }
 
+#' Whether a perplexity is valid given the number of rows
+#'
+#' @param per An integer (not checked).
+perplexity_is_valid <- function(per, row_n)
+{
+  max_perplexity <- as.integer((row_n - 1) / 3)
+  dplyr::between(per, 1L, max_perplexity)
+}
+
 # ---------------------
 # COMPLETE INSTALLATION
 # ---------------------
-
-init_time <- time_diff(sdr_config$start_time)
 
 message("\n--- SHINY DIMENSIONALITY REDUCTION ---")
 message("DEVELOPER: Justin Chang @ Gerstein Lab")
 message("ALL R PACKAGES INSTALLED; CHECK README")
 cat_f("\nSDR MODE: %s\n", sdr_config$mode)
-cat_f("SDR TIME: %.1f (sec)\n", init_time)
+cat_f("SDR TIME: %.1f (sec)\n",
+      time_diff(sdr_config$start_time))
 # note: prints nothing if path is NULL
 cat_f("SDR PATH: %s\n\n", sdr_config$path)

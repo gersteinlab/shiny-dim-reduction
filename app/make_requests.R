@@ -51,9 +51,254 @@ vis_options <- c(
   "tSNE"
 )
 
-# ---------------
-# ANALYSIS NAMING
-# ---------------
+# ----------------------
+# REQUEST KEY VALIDATION
+# ----------------------
+
+# ANATOMY OF A REQUEST:
+# first 13 columns constitute a request key (req_key),
+# which determines the analysis performed, the name of
+# all intermediate / final reductions
+req_key_members <- c(
+  # see install.R
+  "CATEGORIES" = "cat",
+  # see preprocess.R
+  "ROW_SUBSETS" = "row",
+  # see preprocess.R
+  "COL_SUBSETS" = "col",
+  # see sca_options
+  "SCALING" = "sca",
+  # see nor_options
+  "NORMALIZATION" = "nor",
+  # see red_methods.R
+  "EMBEDDING" = "emb",
+  # see red_methods.R
+  "VISUALIZATION" = "vis",
+  # com: components for first-round dimensionality reduction
+  "COMPONENT" = "com",
+  # dim: dimension for second-round dimensionality reduction
+  "DIMENSION" = "dim",
+  # see red_methods.R
+  "PERPLEXITY" = "per",
+  # see red_methods.R
+  "BATCH_SIZE" = "bat",
+  # see red_methods.R
+  "THRESHOLD" = "thr",
+  # see red_methods.R
+  "CHARACTERISTIC" = "cha"
+)
+
+# default integer value
+int_d <- function(n = 1)
+{
+  rep(-1L, n)
+}
+
+# default numeric value
+num_d <- function(n = 1)
+{
+  rep(-1, n)
+}
+
+# default author value
+aut_d <- function(n = 1)
+{
+  rep("ADMIN", n)
+}
+
+# default character value
+chr_d <- function(n = 1)
+{
+  rep("-", n)
+}
+
+# are these request keys?
+are_req_keys <- function(x)
+{
+  is.data.frame(x) && identical(names(x), names(request_members)) &&
+    is.character(x$CATEGORIES) &&
+    is.character(x$ROW_SUBSETS) &&
+    is.character(x$COL_SUBSETS) &&
+    is.character(x$SCALING) &&
+    is.character(x$NORMALIZATION) &&
+    is.character(x$EMBEDDING) &&
+    is.character(x$VISUALIZATION) &&
+    is.integer(x$COMPONENT) &&
+    is.integer(x$DIMENSION) &&
+    is.integer(x$PERPLEXITY) &&
+    is.finite(x$THRESHOLD) &&
+    is.character(x$CHARACTERISTIC)
+}
+
+# cleans a request key (a requests data.frame with a single row) and returns the cleaned version,
+# returning NULL if the request cannot be properly cleaned.
+# note: should only be called through make_req_keys, assuming valid types
+# note: if an attribute is unused, we set it to a default value (ex: batch_size to NaN for PCA)
+# note: we assume it is a single req_key with 1 row
+clean_req_key <- function(req_key)
+{
+  # abbreviations
+  cat <- req_key$CATEGORIES
+  row <- req_key$ROW_SUBSETS
+  col <- req_key$COL_SUBSETS
+  sca <- req_key$SCALING
+  nor <- req_key$NORMALIZATION
+  emb <- req_key$EMBEDDING
+  vis <- req_key$VISUALIZATION
+  com <- req_key$COMPONENT
+  dim <- req_key$DIMENSION
+  per <- req_key$PERPLEXITY
+  bat <- req_key$BATCH_SIZE
+  thr <- req_key$THRESHOLD
+  cha <- req_key$CHARACTERISTIC
+
+  if (!(cat %in% cat_names))
+    return(NULL)
+
+  if (!(emb %in% emb_options))
+    return(NULL)
+
+  if (!(sca %in% sca_options))
+    return(NULL)
+
+  if (emb == "Sets")
+  {
+    # Global Min-Max normalization is required
+    if (nor != "Global Min-Max")
+      return(NULL)
+
+    # needs a valid threshold
+    if (!dplyr::between(thr, 0, 1))
+      return(NULL)
+
+    # ensure the characteristic is valid
+    cha_options <- get_safe_chas(cat)
+    if (!(cha %in% cha_options))
+      return(NULL)
+
+    # clean all irrelevant attributes
+    req_key$ROW_SUBSETS <- chr_d()
+    req_key$COL_SUBSETS <- chr_d()
+    req_key$VISUALIZATION <- chr_d()
+    req_key$COMPONENT <- int_d()
+    req_key$DIMENSION <- int_d()
+    req_key$PERPLEXITY <- int_d()
+    req_key$BATCH_SIZE <- int_d()
+
+    return(req_key)
+  }
+  else
+  {
+    # a valid normalization is required
+    if (!(nor %in% nor_options))
+      return(NULL)
+
+    # clean set-related attributes
+    req_key$THRESHOLD <- num_d()
+    req_key$CHARACTERISTIC <- chr_d()
+
+    # must be a valid row subset
+    row_n <- row_subset_lengths[[cat]][[row]]
+    if (!is.integer(row_n))
+      return(NULL)
+
+    # must be a valid column subset
+    col_n <- col_subset_lengths[[cat]][[col]]
+    is (!is.integer(col_n))
+    return(NULL)
+
+    # PHATE
+    if (emb == "PHATE")
+    {
+      # must be reduced down to 2 or 3 dimensions for plotting
+      if (com != 2L && com != 3L)
+        return(NULL)
+
+      # avoid out-of-range perplexity
+      if (!perplexity_is_valid(per, row_n))
+        return(NULL)
+
+      # clean all irrelevant components
+      req_key$VISUALIZATION <- chr_d()
+      req_key$DIMENSION <- int_d()
+      req_key$BATCH_SIZE <- int_d()
+
+      return(req_key)
+    }
+    else # PCA, VAE, UMAP
+    {
+      if (!(vis %in% vis_options))
+        return(NULL)
+
+      if (vis == "tSNE")
+      {
+        # must go to 2D or 3D
+        if (dim != 2L && dim != 3L)
+          return(NULL)
+
+        # components must be between
+        if (!dplyr::between(com, dim, col_n))
+          return(NULL)
+
+        # avoid out-of-range perplexity
+        if (!perplexity_is_valid(per, row_n))
+          return(NULL)
+      }
+      else
+      {
+        # avoid out-of-range / unplottable components
+        if (!dplyr::between(com, 2L, col_n))
+          return(NULL)
+
+        # no second-level reduction? no DIMENSION parameter needed
+        req_key$DIMENSION <- int_d()
+      }
+
+      if (emb == "VAE")
+      {
+        # prevent normalizations that don't end in the range [0, 1]
+        if (nor != "Global Min-Max" && nor != "Local Min-Max")
+          return(NULL)
+
+        # avoid out-of-range batch sizes
+        if (!dplyr::between(bat, 1L, row_n))
+          return(NULL)
+
+        if (vis != "tSNE")
+          req_key$PERPLEXITY <- int_d()
+
+        return(req_key)
+      }
+      else
+      {
+        req_key$BATCH_SIZE <- int_d()
+
+        if (emb == "UMAP")
+        {
+          # avoid non-integral or negative perplexities
+          if (!perplexity_is_valid(per, row_n))
+            return(NULL)
+
+          return(req_key)
+        }
+        else # emb == "PCA" at this stage
+        {
+          if (vis != "tSNE")
+            request$PERPLEXITY <- int_d()
+
+          return(req_key)
+        }
+      }
+    }
+  }
+
+  # should never be reached?
+  return(NULL)
+}
+
+# ------------------
+# REQUEST KEY NAMING
+# ------------------
 
 make_sets_name <- function(cat, sca, thr, cha)
 {
@@ -121,331 +366,89 @@ make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat,
   make_pvu_name(cat, row, col, sca, nor, emb, vis, com, dim, per, bat)
 }
 
-# -----------------------------
-# REQUEST VALIDATION / CREATION
-# -----------------------------
-
-# default integer value
-int_d <- function(n = 1)
+# converts request keys into the locations of their final files
+make_key_names <- function(req_keys)
 {
-  rep(-1L, n)
-}
-
-# default finite value
-fin_d <- function(n = 1)
-{
-  rep(-1, n)
-}
-
-# default author value
-aut_d <- function(n = 1)
-{
-  rep("ADMIN", n)
-}
-
-# default character value
-chr_d <- function(n = 1)
-{
-  rep("-", n)
-}
-
-request_members <- c(
-  "CATEGORIES" = "cat",
-  "SCALING" = "sca",
-  "NORMALIZATION" = "nor",
-  "EMBEDDING" = "emb",
-  "ROW_SUBSETS" = "row",
-  "COL_SUBSETS" = "col",
-  "VISUALIZATION" = "vis",
-  "COMPONENT" = "com",
-  "DIMENSION" = "dim",
-  "PERPLEXITY" = "per",
-  "BATCH_SIZE" = "bat",
-  "THRESHOLD" = "thr",
-  "CHARACTERISTIC" = "cha"
-)
-
-# are these requests?
-are_requests <- function(x)
-{
-  is.data.frame(x) && identical(names(x), names(request_members)) &&
-    is.character(x$CATEGORIES) &&
-    is.character(x$SCALING) &&
-    is.character(x$NORMALIZATION) &&
-    is.character(x$EMBEDDING) &&
-    is.character(x$ROW_SUBSETS) &&
-    is.character(x$COL_SUBSETS) &&
-    is.character(x$VISUALIZATION) &&
-    is.integer(x$COMPONENT) &&
-    is.integer(x$DIMENSION) &&
-    is.integer(x$PERPLEXITY) &&
-    is.finite(x$THRESHOLD) &&
-    is.character(x$CHARACTERISTIC)
-}
-
-# cleans a request (a requests data.frame with a single row) and returns the cleaned version,
-# returning NULL if the request cannot be properly cleaned.
-# note: should only be called through make_requests, assuming valid types
-# note: if an attribute is unused, we set it to a default value (ex: batch_size to NaN for PCA)
-clean_request <- function(request)
-{
-  # must be a single request
-  if (!are_requests(request) || nrow(request) != 1)
-    return(NULL)
-
-  # abbreviations
-  cat <- request$CATEGORIES
-  sca <- request$SCALING
-  nor <- request$NORMALIZATION
-  row <- request$ROW_SUBSETS
-  col <- request$COL_SUBSETS
-  emb <- request$EMBEDDING
-  vis <- request$VISUALIZATION
-  com <- request$COMPONENT
-  dim <- request$DIMENSION
-  per <- request$PERPLEXITY
-  bat <- request$BATCH_SIZE
-  thr <- request$THRESHOLD
-  cha <- request$CHARACTERISTIC
-
-  if (!(cat %in% cat_names))
-    return(NULL)
-
-  if (!(emb %in% emb_options))
-    return(NULL)
-
-  if (!(sca %in% sca_options))
-    return(NULL)
-
-  if (emb == "Sets")
-  {
-    # Global Min-Max normalization is required
-    if (nor != "Global Min-Max")
-      return(NULL)
-
-    # needs a valid threshold
-    if (!dplyr::between(thr, 0, 1))
-      return(NULL)
-
-    # ensure the characteristic is valid
-    cha_options <- get_safe_chas(cat)
-    if (!(cha %in% cha_options))
-      return(NULL)
-
-    # clean all irrelevant attributes
-    request$ROW_SUBSETS <- chr_d()
-    request$COL_SUBSETS <- chr_d()
-    request$VISUALIZATION <- chr_d()
-    request$COMPONENT <- int_d()
-    request$DIMENSION <- int_d()
-    request$PERPLEXITY <- int_d()
-    request$BATCH_SIZE <- int_d()
-
-    return(request)
-  }
-  else
-  {
-    # a valid normalization is required
-    if (!(nor %in% nor_options))
-      return(NULL)
-
-    # clean set-related attributes
-    request$THRESHOLD <- fin_d()
-    request$CHARACTERISTIC <- chr_d()
-
-    # must be a valid row subset
-    row_num <- row_subset_lengths[[cat]][[row]]
-    if (!is.integer(row_num))
-      return(NULL)
-
-    # must be a valid column subset
-    col_num <- col_subset_lengths[[cat]][[col]]
-    is (!is.integer(col_num))
-      return(NULL)
-
-    # avoid out-of-range perplexities
-    max_perplexity <- as.integer((row_num - 1) / 3)
-
-    # PHATE
-    if (emb == "PHATE")
-    {
-      # must be reduced down to 2 or 3 dimensions for plotting
-      if (com != 2L && com != 3L)
-        return(NULL)
-
-      # avoid out-of-range perplexities
-      if (!dplyr::between(per, 1L, max_perplexity))
-        return(NULL)
-
-      # clean all irrelevant components
-      request$VISUALIZATION <- chr_d()
-      request$DIMENSION <- int_d()
-      request$BATCH_SIZE <- int_d()
-
-      return(request)
-    }
-    else # PCA, VAE, UMAP
-    {
-      if (vis %nin% vis_options)
-        return(NULL)
-
-      if (vis == "tSNE")
-      {
-        # must go to 2D or 3D
-        if (dim != 2 && dim != 3)
-          return(NULL)
-
-        # components must be between
-        if (!dplyr::between(com, dim, col_num - 1))
-          return(NULL)
-
-
-        # avoid out-of-range perplexity
-        if (!dplyr::between(per, 0, max_perplexity))
-          return(NULL)
-      }
-      else
-      {
-        # avoid out-of-range components
-        if (!dplyr::between(com, 1, col_num - 1))
-          return(NULL)
-
-        # no second-level reduction? no DIMENSION parameter needed
-        request$DIMENSION <- num_d()
-      }
-
-      # first round reduction must be plottable in 2D, at least
-      if (com < 2)
-        return(NULL)
-
-      request$THRESHOLD <- num_d()
-      request$CHARACTERISTIC <- chr_d()
-
-      if (emb == "VAE")
-      {
-        # prevent normalizations that don't end in the range [0, 1]
-        if (nor %in% nor_options[4:5])
-          return(NULL)
-
-        # avoid out-of-range batch sizes
-        if (!dplyr::between(bat, 1, row_num))
-          return(NULL)
-
-        if (vis != "tSNE")
-          request$PERPLEXITY <- num_d()
-
-        return(request)
-      }
-      else
-      {
-        request$BATCH_SIZE <- num_d()
-
-        if (emb == "UMAP")
-        {
-          # avoid non-integral or negative perplexities
-          if (!dplyr::between(per, 0, max_perplexity))
-            return(NULL)
-
-          return(request)
-        }
-        else # emb == "PCA" at this stage
-        {
-          if (vis != "tSNE")
-            request$PERPLEXITY <- num_d()
-
-          return(request)
-        }
-      }
-    }
-  }
-
-  return(NULL)
-}
-
-# check if we have an integer for an attribute
-att_is_int <- function(x)
-{
-  bool_vec <- suppressWarnings(x == as.integer(x))
-  sum(bool_vec) == length(bool_vec)
-}
-
-# converts requests into the locations of their final files
-# note: a set of requests is invalid if the following occurs:
-#   rel_fin_locs <- requests_to_final(requests)
-#   sum(duplicated(rel_fin_locs)) > 0
-requests_to_final <- function(requests)
-{
+  stopifnot(are_req_keys(req_keys))
   n <- nrow(requests)
   result <- character(n)
 
   for (i in seq_len(n))
   {
-    args <- as.list(requests[i,])
-    names(args) <- NULL
-    result[i] <- do.call(make_sdr_name, args[1:13])
+    args <- as.list(req_keys[i,])
+    names(args) <- as.character(req_key_members)
+    result[i] <- do.call(make_sdr_name, args)
   }
 
   result
 }
 
-# if the inputs do not correspond to a valid set of requests, return NULL.
-# otherwise, return a set of requests in the appropriate form.
-# com: components for first-round dimensionality reduction
-# dim: dimension for second-round dimensionality reduction
-# note: the first 13 attributes MUST be a primary key; author / timestamps don't differentiate
-# note: if the TIME_COMPLETED field is before the TIME_REQUESTED field, it hasn't been done yet!
-# note: a set of requests is valid ONLY IF it has a FILE_LOCATION field. This is because regular
-# computation of the FILE_LOCATION field makes merging new requests difficult.
-# note: init_cat, init_sub, and get_dependency("order_total") must be run before this.
-make_requests <- function(
-  cat = character(), row = character(), col = character(), sca = character(),
-  nor = character(), emb = character(), vis = character(), com = numeric(),
-  dim = numeric(), per = numeric(), bat = numeric(), thr = numeric(),
-  cha = character(), aut = character()
-){
-  # it's not a valid request if the lengths of all attributes aren't equal
-  n_cat <- length(cat)
-  att_lengths <- c(
-    n_cat, length(row), length(col), length(sca), length(nor), length(emb), length(vis),
-    length(com), length(dim), length(per), length(bat), length(thr), length(cha), length(aut)
-  )
-  if (length(unique(att_lengths)) != 1)
-    return(NULL)
-
-  # ensure types are correct
-  if (!(
-    is.character(cat) && is.character(row) && is.character(col) && is.character(sca) &&
-    is.character(nor) && is.character(emb) && is.character(vis) && att_is_int(com) &&
-    att_is_int(dim) && att_is_int(per) && att_is_int(bat) && is.numeric(thr) &&
-    is.character(cha) && is.character(aut)
-  ))
-    return(NULL)
-
-  # create a data frame of requests
-  times_requested <- rep(Sys.time(), n_cat)
-  requests <- data.frame(
-    "CATEGORIES" = cat, "ROW_SUBSETS" = row, "COL_SUBSETS" = col, "SCALING" = sca,
-    "NORMALIZATION" = nor, "EMBEDDING" = emb, "VISUALIZATION" = vis, "COMPONENT" = com,
-    "DIMENSION" = dim, "PERPLEXITY" = per, "BATCH_SIZE" = bat, "THRESHOLD" = thr,
-    "CHARACTERISTIC" = cha, "AUTHOR" = aut,
-    "TIME_REQUESTED" = times_requested,
-    "TIME_COMPLETED" = times_requested - 60 * 60 * 24 # minus 1 day
+make_req_keys <- function(
+    cat = character(), row = character(), col = character(), sca = character(),
+    nor = character(), emb = character(), vis = character(), com = numeric(),
+    dim = integer(), per = integer(), bat = integer(), thr = numeric(),
+    cha = character()
+)
+{
+  req_keys <- data.frame(
+    "CATEGORIES" = cat,
+    "ROW_SUBSETS" = row, "COL_SUBSETS" = col,
+    "SCALING" = sca, "NORMALIZATION" = nor,
+    "EMBEDDING" = emb, "VISUALIZATION" = vis,
+    "COMPONENT" = com, "DIMENSION" = dim,
+    "PERPLEXITY" = per, "BATCH_SIZE" = bat,
+    "THRESHOLD" = thr,
+    "CHARACTERISTIC" = cha
   )
 
-  # cleans all requests, quitting if it's not possible to do so
-  for (i in seq_len(nrow(requests)))
+  stopifnot(are_req_keys(req_keys))
+  n_keys <- nrow(req_keys)
+
+  for (i in seq_len(n_keys))
   {
-    clean_req <- clean_request(requests[i,])
+    clean_req <- clean_req_key(req_keys[i,])
     if (is.null(clean_req))
-      return(NULL)
-    requests[i,] <- clean_req
+      stop_f("Could not clean key %s!", i)
+    req_keys[i,] <- clean_req
   }
 
-  requests$FILE_LOCATION <- requests_to_final(requests)
+  req_keys
+}
 
-  # quit if two requests have duplicate final locations
-  if (sum(duplicated(requests$FILE_LOCATION)) > 0)
-    return(NULL)
+# if the inputs do not correspond to a valid set of requests, return NULL.
+# otherwise, return a set of requests in the appropriate form.
+
+# note: the first 13 attributes MUST be a primary key;
+# --author / timestamps don't differentiate
+# note: if the TIME_COMPLETED field is before the TIME_REQUESTED field,
+# --it hasn't been done yet!
+# note: a set of requests is valid ONLY IF it has a FILE_LOCATION field.
+# This is because regular computation of the FILE_LOCATION field
+# --makes merging new requests difficult. Duplicate FILE_LOCATION values are not allowed.
+# note: init_cat, init_sub, and get_dependency("order_total") must be run before this.
+make_requests <- function(
+    cat = character(), row = character(), col = character(), sca = character(),
+    nor = character(), emb = character(), vis = character(), com = numeric(),
+    dim = integer(), per = numeric(), bat = numeric(), thr = numeric(),
+    cha = character(), aut = character()
+){
+  # it's not a valid request if the lengths of all attributes aren't equal
+  requests <- make_req_keys(
+    cat, row, col, sca, nor,
+    emb, vis, com, dim, per, bat, thr, cha)
+
+  n_req <- nrow(requests)
+  stopifnot(is_str(aut, n_req))
+
+  key_names <- make_key_names(requests) # still req_keys
+  stopifnot(is_unique(key_names))
+
+  requests$AUTHOR <- aut
+  day_in_seconds <- 60 * 60 * 24
+  time_vec <- rep(Sys.time(), n_req)
+  requests$TIME_REQUESTED <- time_vec
+  requests$TIME_COMPLETED <- time_vec - day_in_seconds
+  requests$FILE_LOCATION <- key_names
 
   requests
 }
@@ -456,9 +459,9 @@ make_requests <- function(
 
 # pca, vae, umap
 make_pvu_requests <- function(
-  cat = character(), row = character(), col = character(), sca = character(),
-  nor = character(), emb = character(), vis = character(), com = numeric(),
-  dim = numeric(), per = numeric(), bat = numeric(), aut = character()
+    cat = character(), row = character(), col = character(), sca = character(),
+    nor = character(), emb = character(), vis = character(), com = numeric(),
+    dim = numeric(), per = numeric(), bat = numeric(), aut = character()
 )
 {
   n_cat <- length(cat)
@@ -470,8 +473,8 @@ make_pvu_requests <- function(
 
 # simplifies the generation of PHATE requests
 make_phate_requests <- function(
-  cat = character(), row = character(), col = character(), sca = character(),
-  nor = character(), com = numeric(), per = numeric(), aut = character()
+    cat = character(), row = character(), col = character(), sca = character(),
+    nor = character(), com = numeric(), per = numeric(), aut = character()
 )
 {
   n_cat <- length(cat)
@@ -483,7 +486,7 @@ make_phate_requests <- function(
 
 # simplifies the generation of Sets requests
 make_sets_requests <- function(
-  cat = character(), sca = character(), thr = numeric(), cha = character(), aut = character())
+    cat = character(), sca = character(), thr = numeric(), cha = character(), aut = character())
 {
   n_cat <- length(cat)
 
@@ -606,7 +609,7 @@ rbind_req <- function(...)
 get_request_id <- function(n = 1)
 {
   # if AWS is not available, IDs cannot be generated
-  if (!key_is_connected())
+  if (!cloud_is_connected())
     return(-1)
 
   if (n < 1)
@@ -624,7 +627,7 @@ get_request_id <- function(n = 1)
 # PRESENT REQUESTS
 # ----------------
 
-colnames_ids_first <- c("REQUEST_ID", colnames(make_requests()))
+colnames_ids_first <- c("REQUEST_ID", names(req_key_members))
 
 # prettifies a request table for use by the library DT
 present_requests <- function(requests)

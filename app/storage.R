@@ -20,10 +20,15 @@ is_local_store <- function(x)
   is_str(x)
 }
 
+local_is_connected <- function()
+{
+  dir.exists(Sys.getenv("LOCAL_STORE"))
+}
+
 local_connects <- function(local_store)
 {
   Sys.setenv("LOCAL_STORE" = local_store)
-  file.exists(local_store)
+  local_is_connected()
 }
 
 # gives the local storage path for a location
@@ -53,7 +58,9 @@ save_local <- function(data, filename)
 # loads data from filename in the root directory
 load_local <- function(filename)
 {
-  w_def_readRDS(path_local(filename), NULL)
+  if (!find_local(filename))
+    return(NULL)
+  readRDS(path_local(filename))
 }
 
 # --------------
@@ -81,16 +88,22 @@ make_cloud_store <- function(id = "", secret = "", bucket = "")
   result
 }
 
-# determines if R is connected to AWS
+# checks if there exists a connection to AWS
+cloud_is_connected <- function()
+{
+  bucket_exists(Sys.getenv("AWS_ACCESS_BUCKET"))
+}
+
+# determines if cloud_store actually works
 cloud_connects <- function(cloud_store)
 {
   Sys.setenv(
-    "AWS_ACCESS_KEY_ID" = key$id,
-    "AWS_SECRET_ACCESS_KEY" = key$secret,
-    "AWS_ACCESS_BUCKET" = key$bucket
+    "AWS_ACCESS_KEY_ID" = cloud_store$id,
+    "AWS_SECRET_ACCESS_KEY" = cloud_store$secret,
+    "AWS_ACCESS_BUCKET" = cloud_store$bucket
   )
 
-  bucket_exists(Sys.getenv("AWS_ACCESS_BUCKET"))
+  cloud_is_connected()
 }
 
 # --------------
@@ -111,7 +124,7 @@ list_aws_s3 <- function(prefix = NULL)
 # determines whether a single object with the given filename exists
 find_aws_s3 <- function(filename)
 {
-  object_exists(filename, Sys.getenv("AWS_ACCESS_BUCKET"))
+  suppressMessages(object_exists(filename, Sys.getenv("AWS_ACCESS_BUCKET")))
 }
 
 # saves a single object to AWS.s3 - modified from s3save
@@ -131,7 +144,11 @@ load_aws_s3 <- function(filename)
     return(NULL)
   tmp <- tempfile(fileext = ".rdata")
   on.exit(unlink(tmp))
-  save_object(bucket = Sys.getenv("AWS_ACCESS_BUCKET"), object = filename, file = tmp)
+  save_object(
+    bucket = Sys.getenv("AWS_ACCESS_BUCKET"),
+    object = filename,
+    file = tmp
+  )
   load(tmp, envir = .GlobalEnv)
   my_amazon_obj
 }
@@ -142,7 +159,6 @@ load_aws_s3 <- function(filename)
 
 set_storage_local <- function(ref)
 {
-  set_working_ref(ref)
   assign_global("list_store", list_local)
   assign_global("find_store", find_local)
   assign_global("save_store", save_local)
@@ -151,7 +167,6 @@ set_storage_local <- function(ref)
 
 set_storage_aws <- function(key)
 {
-  set_working_key(key)
   assign_global("list_store", list_aws_s3)
   assign_global("find_store", find_aws_s3)
   assign_global("save_store", save_aws_s3)

@@ -4,6 +4,8 @@
 if (!exists("sdr_config"))
   source("app/install.R")
 
+source_app("storage.R")
+
 # ---------------
 # HANDLE APP DATA
 # ---------------
@@ -20,7 +22,9 @@ is_app_data <- function(x) {
     "row_axes",
     "col_axes",
     "categories",
-    "groups"
+    "groups",
+    "local_store",
+    "cloud_store"
   )
   is.list(x) && identical(names(x), members) &&
     is_str(x$title) && is_str(x$citations) &&
@@ -29,11 +33,16 @@ is_app_data <- function(x) {
     are_categories(x$categories) &&
     categories_match_axes(x$categories, x$row_axes, x$col_axes) &&
     are_groups(x$groups) &&
-    groups_match_categories(x$groups, x$categories)
+    groups_match_categories(x$groups, x$categories) &&
+    is_local_store(x$local_store) &&
+    is_cloud_store(x$cloud_store)
 }
 
 # ensure the data for the application is valid
 app_data_loc <- get_app_loc("app_data.rds")
+# saveRDS(app_data, app_data_loc)
+if (!file.exists(app_data_loc))
+  stop_f("The application data could not be found at: %s", app_data_loc)
 
 app_data <- readRDS(app_data_loc)
 if (!is_app_data(app_data))
@@ -43,6 +52,7 @@ assign_global("app_data", app_data)
 
 for (dep in names(app_data))
   assign_global(dep, app_data[[dep]])
+rm(dep)
 
 assign_global("cat_names", names(categories))
 
