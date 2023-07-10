@@ -1,6 +1,11 @@
 # The purpose of this file is to manage storage systems (stores).
 
-# Goals:
+# Goals for each store:
+# is_store: is in correct format
+# make_store: make the store
+# set_store: set the store
+# store_connected: whether store connects
+# store_connects: try to connect and see the result
 # list_store: list all files with a prefix
 # find_store: returns whether a file exists
 # save_store: saves a file, creating the directory if it doesn't exist
@@ -57,7 +62,7 @@ path_local <- function(loc)
 }
 
 # lists all files with the given prefix (usually a valid directory)
-list_local <- function(prefix = "")
+list_local <- function(prefix)
 {
   list.files(path_local(prefix))
 }
@@ -68,6 +73,15 @@ find_local <- function(filename)
   file.exists(path_local(filename))
 }
 
+# saveRDS but we force the creation of the directory
+mkdir_saveRDS <- function(data, file, compress = TRUE)
+{
+  dest_dir <- dirname(file)
+  if (!dir.exists(dest_dir))
+    dir.create(dest_dir, recursive = TRUE)
+  saveRDS(data, file, compress = compress)
+}
+
 # saves data to filename in the root directory
 save_local <- function(data, filename)
 {
@@ -75,10 +89,10 @@ save_local <- function(data, filename)
 }
 
 # loads data from filename in the root directory
-load_local <- function(filename)
+load_local <- function(filename, default = NULL)
 {
   if (!find_local(filename))
-    return(NULL)
+    return(default)
   readRDS(path_local(filename))
 }
 
@@ -139,7 +153,7 @@ cloud_connects <- function(cloud_store)
 }
 
 # lists the contents of a bucket's prefix
-list_aws_s3 <- function(prefix = NULL)
+list_aws_s3 <- function(prefix)
 {
   as.character(sapply(
     get_bucket(Sys.getenv("AWS_ACCESS_BUCKET"), prefix = prefix, max = Inf),
@@ -171,10 +185,10 @@ save_aws_s3 <- function(data, filename)
 }
 
 # loads a single object from AWS.s3 - modified from s3load
-load_aws_s3 <- function(filename)
+load_aws_s3 <- function(filename, default = NULL)
 {
   if (!find_aws_s3(filename))
-    return(NULL)
+    return(default)
   tmp <- tempfile(fileext = ".rdata")
   on.exit(unlink(tmp))
   save_object(

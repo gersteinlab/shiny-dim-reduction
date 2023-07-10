@@ -369,7 +369,7 @@ make_sdr_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat,
 make_key_names <- function(req_keys)
 {
   stopifnot(are_req_keys(req_keys))
-  n <- nrow(requests)
+  n <- nrow(req_keys)
   result <- character(n)
 
   for (i in seq_len(n))
@@ -426,8 +426,8 @@ make_req_keys <- function(
 #   makes merging new requests difficult. Duplicate values are not allowed.
 make_requests <- function(
     cat = character(), row = character(), col = character(), sca = character(),
-    nor = character(), emb = character(), vis = character(), com = numeric(),
-    dim = integer(), per = numeric(), bat = numeric(), thr = numeric(),
+    nor = character(), emb = character(), vis = character(), com = integer(),
+    dim = integer(), per = integer(), bat = integer(), thr = numeric(),
     cha = character(), aut = character()
 ){
   # it's not a valid request if the lengths of all attributes aren't equal
