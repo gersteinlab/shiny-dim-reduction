@@ -74,6 +74,46 @@ assign_global("connected", decide_store_mode(
   app_data[["cloud_store"]]
 ))
 
+# -----------------------
+# GENERAL STORE FUNCTIONS
+# -----------------------
+
+list_store <- function(prefix)
+{
+  if (connected == "local")
+    return(list_local(prefix))
+  if (connected == "cloud")
+    return(list_aws_s3(prefix))
+  stop("Invalid connection mode for list_store.")
+}
+
+find_store <- function(filename)
+{
+  if (connected == "local")
+    return(find_local(filename))
+  if (connected == "cloud")
+    return(find_aws_s3(filename))
+  stop("Invalid connection mode for find_store.")
+}
+
+save_store <- function(data, filename)
+{
+  if (connected == "local")
+    return(save_local(data, filename))
+  if (connected == "cloud")
+    return(save_aws_s3(data, filename))
+  stop("Invalid connection mode for find_store.")
+}
+
+load_store <- function(filename, default = NULL)
+{
+  if (connected == "local")
+    return(load_local(filename, default))
+  if (connected == "cloud")
+    return(load_aws_s3(filename, default))
+  stop("Invalid connection mode for load_store.")
+}
+
 # --------------
 # SUBSET LENGTHS
 # --------------
