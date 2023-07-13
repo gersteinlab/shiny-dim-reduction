@@ -141,16 +141,6 @@ are_groups <- function(x)
   is.list(x) && all_fun_true(x, is.character)
 }
 
-#' whether x is a 'metadata column' object
-#' note: succeeds if x is character()
-#'
-#' @param x An object.
-#' @returns TRUE or FALSE.
-is_meta_col <- function(x)
-{
-  all_fin(x) || is.character(x)
-}
-
 #' whether x is a 'metadata' object with row_n rows
 #' note: metadata rownames should not be used
 #'
@@ -162,8 +152,8 @@ is_metadata <- function(x)
   is.data.frame(x) &&
     # positive dimensions
     nrow(x) > 0 && ncol(x) > 0 &&
-    # each column is the correct type
-    all_fun_true(x, is_meta_col) &&
+    # each column is a character
+    all_fun_true(x, is.character) &&
     # primary key is first column
     is_unique(x[, 1])
 }
@@ -221,14 +211,15 @@ color_scales_match_metadata <- function(color_scales, metadata)
 #' @returns TRUE or FALSE.
 is_axis <- function(x)
 {
-  members <- c("length", "metadata", "subsets", "color_scales")
+  members <- c("length", "metadata", "subsets", "color_scales", "rel_meta")
   is.list(x) && identical(names(x), members) &&
     is_int(x$length) && x$length > 0L &&
     are_subsets(x$subsets, x$length) &&
     is_metadata(x$metadata) &&
     nrow(x$metadata) == x$length &&
     are_color_scales(x$color_scales) &&
-    color_scales_match_metadata(x$color_scales, x$metadata)
+    color_scales_match_metadata(x$color_scales, x$metadata) &&
+    all(x$rel_meta %in% names(x$metadata))
 }
 
 #' makes an axis object
@@ -267,9 +258,9 @@ are_axes <- function(x)
 #' @returns TRUE or FALSE.
 is_category <- function(x)
 {
-  members <- c("row_axs", "col_axs")
+  members <- c("row_axs", "col_axs", "note")
   is.list(x) && identical(names(x), members) &&
-    is_str(x$row_axs) && is_str(x$col_axs)
+    is_str(x$row_axs) && is_str(x$col_axs) && is_str(x$note)
 }
 
 #' makes a category object
@@ -277,11 +268,12 @@ is_category <- function(x)
 #' @param row_axs A string for a row axis name.
 #' @param col_axs A string for a col axis name.
 #' @returns A category object if successful.
-make_category <- function(row_axs, col_axs)
+make_category <- function(row_axs, col_axs, note = "")
 {
   result <- list(
     "row_axs" = row_axs,
-    "col_axs" = col_axs
+    "col_axs" = col_axs,
+    "note" = note
   )
 
   stopifnot(is_category(result))
@@ -380,6 +372,19 @@ num_unique <- function(x)
   length(unique(x))
 }
 
+#' assert that x has at most n unique values
+#'
+#' @param x An object.
+#' @returns TRUE or FALSE.
+has_n_unique <- function(x, n)
+{
+  tryCatch(
+    return(unique(x, nmax = n) <= n),
+    error = function(e) return(FALSE),
+    warning = function(e) return(FALSE)
+  )
+}
+
 #' returns (time t2 - time t1) in seconds
 #'
 #' @param t1 A POSIXct.
@@ -469,6 +474,7 @@ create_sdr_config <- function()
 }
 
 # Note: to update sdr_config, source install.R again.
+gc()
 sdr_config <- create_sdr_config()
 rm(create_sdr_config)
 
@@ -632,11 +638,17 @@ source_app <- function(file)
 # COMPLETE INSTALLATION
 # ---------------------
 
+#' Syntactic sugar for time_diff.
+#'
+#' @returns A numeric.
+net_time <- function() {
+  time_diff(sdr_config$start_time)
+}
+
 message("\n--- SHINY DIMENSIONALITY REDUCTION ---")
 message("DEVELOPER: Justin Chang @ Gerstein Lab")
 message("ALL R PACKAGES INSTALLED; CHECK README")
 cat_f("\nSDR MODE: %s\n", sdr_config$mode)
-cat_f("SDR TIME: %.1f (sec)\n",
-      time_diff(sdr_config$start_time))
+cat_f("SDR TIME: %.1f (sec)\n", net_time())
 # note: prints nothing if path is NULL
 cat_f("SDR PATH: %s\n\n", sdr_config$path)

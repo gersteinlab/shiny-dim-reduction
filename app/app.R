@@ -2,12 +2,6 @@
 # visualizing dimensionality reduction results.
 
 source("install.R")
-
-elapsed_app_time <- function() {
-  time_diff(sdr_config$start_time)
-}
-
-source_app("plotting.R")
 source_app("options.R")
 
 server <- function(input, output, session) {
@@ -30,7 +24,7 @@ server <- function(input, output, session) {
   observeEvent(input$attempt_login, {
     notification("Attempting authentication ...", 3, "default")
 
-    if (my_auth(input$username, input$password, user_credentials))
+    if (my_auth(input$username, input$password))
     {
       notification("Authentication was successful - welcome!", 3, "message")
       removeModal()
@@ -89,7 +83,7 @@ server <- function(input, output, session) {
     num <- isolate(num_plots())
 
     if (num == 1)
-      notif(sprintf("APP LAUNCH TIME: %.1f (sec)", elapsed_app_time()), "warning")
+      cat_f("APP LAUNCH TIME: %.1f (sec)\n", net_time())
 
     notif(sprintf("Generating Plot #%s:<br>
 Please suspend plotting or wait for plotting to
@@ -181,13 +175,223 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     running(FALSE)
   })
 
+  # dynamic input picker IDs
+  app_state_selected <- reactiveVal(app_cat_selected)
+
+  # update app state
+  observeEvent(input$rowby, {
+    cat <- isolate(input$category)
+    app_state <- app_state_selected()
+    app_state[[cat]]$rowby <- input$rowby
+    app_state_selected(app_state)
+  })
+
+  observeEvent(input$colby, {
+    cat <- isolate(input$category)
+    app_state <- app_state_selected()
+    app_state[[cat]]$colby <- input$colby
+    app_state_selected(app_state)
+  })
+
+  observeEvent(input$colorby, {
+    cat <- isolate(input$category)
+    app_state <- app_state_selected()
+    app_state[[cat]]$colorby <- input$colorby
+    app_state_selected(app_state)
+  })
+
+  observeEvent(input$shapeby, {
+    cat <- isolate(input$category)
+    app_state <- app_state_selected()
+    app_state[[cat]]$shapeby <- input$shapeby
+    app_state_selected(app_state)
+  })
+
+  observeEvent(input$labelby, {
+    cat <- isolate(input$category)
+    app_state <- app_state_selected()
+    app_state[[cat]]$labelby <- input$labelby
+    app_state_selected(app_state)
+  })
+
+  observeEvent(input$filterby, {
+    cat <- isolate(input$category)
+    app_state <- app_state_selected()
+    app_state[[cat]]$filterby <- input$filterby
+    app_state_selected(app_state)
+  })
+
+  observeEvent(input$selectby, {
+    cat <- isolate(input$category)
+    app_state <- app_state_selected()
+    fil <- app_state[[cat]]$filterby
+    app_state[[cat]]$selectby[[fil]] <- input$selectby
+    app_state_selected(app_state)
+    # NULL is a problem
+  }, ignoreNULL = FALSE)
+
+  observeEvent(input$threby, {
+    cat <- isolate(input$category)
+    sca <- isolate(input$scaling)
+    app_state <- app_state_selected()
+    app_state[[cat]]$threby[[sca]] <- input$threby
+    app_state_selected(app_state)
+  })
+
+  update_dynam_picker <- function(inputId, label, selected, choices)
+  {
+    updatePickerInput(
+      session,
+      inputId = inputId,
+      label = label,
+      selected = selected,
+      choices = choices
+    )
+  }
+
+  # update input pickers
+  observeEvent(input$category, {
+    app_state <- app_state_selected()
+
+    cat <- input$category
+    sca <- input$scaling
+
+    row_axs <- get_row_axs(cat)
+    col_axs <- get_col_axs(cat)
+
+    row_choices <- app_row_choices[[row_axs]]
+    col_choices <- app_col_choices[[col_axs]]
+    cat_choices <- app_cat_choices[[cat]]
+
+    cat_selected <- app_state[[cat]]
+    filterby <- cat_selected$filterby
+
+    update_dynam_picker(
+      "rowby",
+      sprintf("Sample Subset (%s)", cat),
+      selected = cat_selected$rowby,
+      choices = row_choices$rowby
+    )
+
+    update_dynam_picker(
+      "colby",
+      sprintf("Feature Subset (%s)", cat),
+      selected = cat_selected$colby,
+      choices = col_choices$colby
+    )
+
+    update_dynam_picker(
+      "colorby",
+      sprintf("Color By (%s)", cat),
+      selected = cat_selected$colorby,
+      choices = row_choices$full_chas
+    )
+
+    update_dynam_picker(
+      "shapeby",
+      sprintf("Shape By (%s)", cat),
+      selected = cat_selected$shapeby,
+      choices = row_choices$full_chas
+    )
+
+    update_dynam_picker(
+      "labelby",
+      sprintf("Label By (%s)", cat),
+      selected = cat_selected$labelby,
+      choices = row_choices$full_chas
+    )
+
+    update_dynam_picker(
+      "filterby",
+      sprintf("Filter By (%s)", cat),
+      selected = filterby,
+      choices = row_choices$safe_chas
+    )
+
+    update_dynam_picker(
+      "selectby",
+      sprintf("Selections (%s, %s)", cat, filterby),
+      selected = cat_selected$selectby[[filterby]],
+      choices = row_choices$selectby[[filterby]]
+    )
+
+    update_dynam_picker(
+      "threby",
+      sprintf("Threshold (%s, %s)", cat, sca),
+      selected = cat_selected$threby[[sca]],
+      choices = cat_choices$threby[[sca]]
+    )
+  })
+
+  observeEvent(input$scaling, {
+    app_state <- app_state_selected()
+
+    cat <- input$category
+    sca <- input$scaling
+
+    cat_choices <- app_cat_choices[[cat]]
+
+    cat_selected <- app_state[[cat]]
+    filterby <- cat_selected$filterby
+
+    update_dynam_picker(
+      "threby",
+      sprintf("Threshold (%s, %s)", cat, sca),
+      selected = cat_selected$threby[[sca]],
+      choices = cat_choices$threby[[sca]]
+    )
+  })
+
+  observeEvent(input$filterby, {
+    app_state <- app_state_selected()
+
+    cat <- input$category
+    sca <- input$scaling
+
+    row_axs <- get_row_axs(cat)
+
+    row_choices <- app_row_choices[[row_axs]]
+    cat_choices <- app_cat_choices[[cat]]
+
+    cat_selected <- app_state[[cat]]
+    filterby <- cat_selected$filterby
+
+    update_dynam_picker(
+      "selectby",
+      sprintf("Selections (%s, %s)", cat, filterby),
+      selected = cat_selected$selectby[[filterby]],
+      choices = row_choices$selectby[[filterby]]
+    )
+  })
+
   # a copy of all reactives that can stop running
   iplot <- reactiveValues()
 
   observe({
     if (running())
+    {
       for (id in bookmarkable_ids)
         iplot[[id]] <- input[[id]]
+    }
+  })
+
+  rowi <- reactive(parse_opt(input$rowby))
+  coli <- reactive(parse_opt(input$colby))
+  thre <- reactive(as.numeric(input$threby))
+
+  colorby <- reactive(input$colorby)
+  shapeby <- reactive({
+    if (!sep_colors())
+      return(colorby())
+    input$shapeby
+  })
+  labelby <- reactive({
+    if (!sep_colors())
+      return(colorby())
+    input$labelby
+  })
+  filterby <- reactive({
+    input$filterby
   })
 
   observeEvent(input$request_analysis, {
@@ -242,9 +446,9 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   })
 
   observeEvent(input$req_cat, {
-    updatePickerInput(session, "req_row", choices = sub_row_groups[[input$req_cat]])
-    updatePickerInput(session, "req_col", choices = sub_col_groups[[input$req_cat]])
-    updatePickerInput(session, "req_cha", choices = names(order_total[[input$req_cat]]))
+    updatePickerInput(session, "req_row", choices = app_row_choices[[row_axs]]$rowby)
+    updatePickerInput(session, "req_col", choices = app_col_choices[[col_axs]]$colby)
+    updatePickerInput(session, "req_cha", choices = app_row_choices[[row_axs]]$safe_chas)
   })
 
   user_requests <- reactiveVal(default_user_requests)
@@ -255,7 +459,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
       col = parse_opt(input$req_col), sca = input$req_sca,
       nor = input$req_nor, emb = input$req_emb, vis = input$req_vis, com = input$req_com,
       dim = input$req_dim, per = input$req_per, bat = input$req_bat, thr = input$req_thr,
-      cha = input$req_cha, aut = input$req_aut
+      cha = parse_opt(input$req_cha), aut = input$req_aut
     )
 
     if (length(test) > 0) # valid request!
@@ -376,49 +580,29 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   boost <- reactive("Boost Graphics" %in% iplot$sMenu)
   not_rev <- reactive("Uninverted Colors" %in% iplot$sMenu)
 
-  cati <- reactive({
-    if (grepl("Transpose", iplot$category, fixed = TRUE))
-      notif("The matrix for this category was transposed. The current
-              samples represent original features and the current
-              features represent original samples.", "warning")
-
-    iplot$category
-  })
-  rowi <- reactive(parse_opt(iplot[[id_row(cati())]]))
-  coli <- reactive(parse_opt(iplot[[id_col(cati())]]))
-  peri <- reactive(iplot$perplexity)
-  bati <- reactive(iplot$batch_size)
-  thre <- reactive(as.numeric(iplot[[id_thre(cati(), iplot$scaling)]]))
   curr_adr <- reactiveVal("")
 
-  colorby <- reactive(iplot[[id_color(cati())]])
-  shapeby <- reactive({
-    if (!sep_colors())
-      return(colorby())
-    iplot[[id_shape(cati())]]
-  })
-  labelby <- reactive({
-    if (!sep_colors())
-      return(colorby())
-    iplot[[id_label(cati())]]
-  })
-  filterby <- reactive(iplot[[id_filter(cati())]])
+  cati <- reactive(iplot$category)
+  peri <- reactive(iplot$perplexity)
+  bati <- reactive(iplot$batch_size)
 
   # calculate which samples to keep after considering all metadata filters
-  order <- reactive(order_total[[cati()]])
+  order <- reactive({
+    get_row_axis(cati())$metadata
+  })
   row_order <- reactive({
-    if (rowi() == "Total")
-      return(order())
-
-    row_inds <- get_row_decor_subset(cati(), rowi())
-    order()[row_inds,,drop = FALSE]
+    subset_by_row(order(), cati(), rowi())
   })
   keep <- reactive({
     keep <- rep(TRUE, nrow(row_order()))
+    row_axs <- get_row_axs(cati())
+    app_state <- app_state_selected()
 
-    for (char in selected_chars[[cati()]])
+    for (char in app_row_choices[[row_axs]]$safe_chas)
     {
-      cur_filter <- row_order()[[char]] %in% parse_opt(iplot[[id_select(cati(), char)]])
+      x <- app_state[[cati()]]$selectby[[char]]
+      cur_filter <- row_order()[[char]] %in%
+        parse_opt(x)
       keep <- keep & cur_filter
     }
 
@@ -426,18 +610,19 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   })
   metadata <- reactive(row_order()[keep(),,drop=FALSE])
 
-  colors <- reactive(metadata()[, colorby()])
+  colors <- reactive({
+    metadata()[, colorby()]
+  })
   shapes <- reactive(metadata()[, shapeby()])
   labels <- reactive(sprintf("%s: %s", labelby(), metadata()[, labelby()]))
-  my_chars <- reactive(parse_opt(iplot[[id_select(cati(), filterby())]]))
+  my_chars <- reactive({
+    x <- app_state[[cati()]]$selectby[[filterby()]]
+    parse_opt(x)
+  })
 
   # the number of features before dimensionality reduction
   num_feat <- reactive({
-    ifelse(
-      coli() == "Total",
-      categories[[cati()]][2],
-      length(get_col_decor_subset(cati(), coli()))
-    )
+    get_col_subset_length(cati(), coli())
   })
 
   # numeric data for displaying / downloading
@@ -475,6 +660,8 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   })
 
   paint <- reactive({
+    custom_color_scales <- get_row_axis(cati())$color_scales
+
     if (iplot$palette == "Custom") # requesting a custom color palette
     {
       if (iplot$visualize != "Summarize" && length(custom_color_scales) > 0)
@@ -482,7 +669,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
         # for scatterplots, see if colorby() has a corresponding palette available
         if (iplot$embedding != "Sets" && colorby() %in% names(custom_color_scales))
         {
-          new <- custom_color_scales[[colorby()]] %>% unlist()
+          new <- custom_color_scales[[colorby()]]
 
           if (check_custom_colors(colors(), names(new)))
             return(new)
@@ -576,7 +763,8 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     }
 
     addr <- make_pvu_name(
-      cati(), rowi(), coli(), iplot$scaling, iplot$normalization, iplot$embedding, iplot$visualize,
+      cati(), rowi(), coli(), iplot$scaling, iplot$normalization,
+      iplot$embedding, iplot$visualize,
       pc_cap, 2, peri(), bati())
     curr_adr(addr)
 
@@ -1025,7 +1213,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   })
 }
 
-cat_f("APP BUILD TIME: %.1f (sec)", elapsed_app_time())
+cat_f("APP BUILD TIME: %.1f (sec)\n", net_time())
 
 # -----------
 # RUN THE APP

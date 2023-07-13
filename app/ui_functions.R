@@ -8,15 +8,23 @@ library(shinyWidgets)
 
 source_app("text_work.R")
 
-# performs get_opt on every unique member of a vector v
-get_opts <- function(v)
+# syntactic sugar if x is a named vector
+get_opt_named <- function(x)
 {
-  unlist(lapply(unique(v), function(sample){get_opt(sample, sum(v %in% sample))}))
+  get_opt(names(x), x)
+}
+
+# converts a character vector to opts
+get_opt_chr <- function(x)
+{
+  stopifnot(is.character(x))
+  get_opt_named(table(x))
 }
 
 # From sep_opt, return all As if ind = 1 or all Bs if ind = 2.
 parse_opt <- function(str, ind = 1)
 {
+  stopifnot(is.character(str))
   result <- sep_opt(str)
   result[(seq(result) + ind) %% 2 == 0]
 }
@@ -38,19 +46,12 @@ pc_slider <- function(n, pc_cap)
               min=1, max=pc_cap, value=n, step=1, ticks = FALSE)
 }
 
-# assumes that the non-conditional arguments are lists of arguments, which
-# can be concatenated to replicate the behavior of conditionalPanel
-expand_cond_panel <- function(condition, ...)
-{
-  do.call(conditionalPanel, c(condition = condition, ...))
-}
-
 # Creates a selectizeInput panel with only one option allowed.
-select_panel <- function(id, name, options, chosen = 1)
+select_panel <- function(inputId, label, choices = NULL, selected = NULL)
 {
   result <- pickerInput(
-    inputId = id, label = name, choices = options,
-    selected = options[min(chosen, length(options))], multiple = FALSE,
+    inputId = inputId, label = label, choices = choices,
+    selected = selected, multiple = FALSE,
     options = list(
       `live-search` = TRUE,
       `live-search-placeholder` = "Search for a phrase ..."
@@ -80,14 +81,11 @@ select_panel <- function(id, name, options, chosen = 1)
 }
 
 # Creates a group of checked boxes with the given id, name, and inputs
-check_panel <- function(id, name, inputs, indices)
+check_panel <- function(inputId, label, choices = NULL, selected = choices)
 {
-  if (missing(indices))
-    indices <- 1:length(inputs)
-
   pickerInput(
-    inputId = id, label = name,
-    choices = inputs, selected = inputs[indices], multiple = TRUE,
+    inputId = inputId, label = label,
+    choices = choices, selected = selected, multiple = TRUE,
     options = list(
       `actions-box` = TRUE,
       `selected-text-format` = "count > 1",

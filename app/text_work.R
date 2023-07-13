@@ -59,53 +59,53 @@ pc <- function(name = "1")
   sprintf("Component %s", name)
 }
 
-# Useful for finding row subset IDs
-id_row <- function(category)
-{
-  sprintf("rowby_%s", category)
-}
-
-# useful for finding col subset IDs
-id_col <- function(category)
-{
-  sprintf("colby_%s", category)
-}
-
-# Useful for finding color IDs
-id_color <- function(category)
-{
-  sprintf("colorby_%s", category)
-}
-
-# Useful for finding shape IDs
-id_shape <- function(category)
-{
-  sprintf("shapeby_%s", category)
-}
-
-# Useful for finding label IDs
-id_label <- function(category)
-{
-  sprintf("labelby_%s", category)
-}
-
-# Useful for finding filter IDs
-id_filter <- function(category)
-{
-  sprintf("filterby_%s", category)
-}
-
-# Useful for finding select IDs
-id_select <- function(category, character)
-{
-  sprintf("selectby_%s_%s", category, character)
-}
-
-# Useful for finding thre IDs
-id_thre <- function(category, scale)
-{
-  sprintf("thre_%s_%s", category, scale)
-}
+# # Useful for finding row subset IDs
+# id_row <- function(category)
+# {
+#   sprintf("rowby_%s", category)
+# }
+#
+# # useful for finding col subset IDs
+# id_col <- function(category)
+# {
+#   sprintf("colby_%s", category)
+# }
+#
+# # Useful for finding color IDs
+# id_color <- function(category)
+# {
+#   sprintf("colorby_%s", category)
+# }
+#
+# # Useful for finding shape IDs
+# id_shape <- function(category)
+# {
+#   sprintf("shapeby_%s", category)
+# }
+#
+# # Useful for finding label IDs
+# id_label <- function(category)
+# {
+#   sprintf("labelby_%s", category)
+# }
+#
+# # Useful for finding filter IDs
+# id_filter <- function(category)
+# {
+#   sprintf("filterby_%s", category)
+# }
+#
+# # Useful for finding select IDs
+# id_select <- function(category, character)
+# {
+#   sprintf("selectby_%s_%s", category, character)
+# }
+#
+# # Useful for finding thre IDs
+# id_thre <- function(category, scale)
+# {
+#   sprintf("thre_%s_%s", category, scale)
+# }
 
 # creates a vector of inputs that should be excluded
 # from bookmarking, based on the table's ID
@@ -130,14 +130,24 @@ table_exclude_vector <- function(...)
 # ----------
 
 session_data_template <- list(
-  "pickerInput"=list(),
-  "numericInput"=list(),
-  "numericRangeInput"=list(),
-  "sliderInput"=list(),
-  "tabsetPanel"=list()
+  "pickerInput" = list(),
+  "numericInput" = list(),
+  "numericRangeInput" = list(),
+  "sliderInput" = list(),
+  "tabsetPanel" = list()
 )
 
-default_picker_input_ids <- c(
+dynam_picker_input_ids <- c(
+  "rowby",
+  "colby",
+  "colorby",
+  "shapeby",
+  "filterby",
+  "selectby",
+  "threby"
+)
+
+picker_input_ids <- c(
   "sMenu",
   "category",
   "scaling",
@@ -519,3 +529,5 @@ make_citations <- function(app_citations)
     sep = ""
   )
 }
+
+print_instructions <- rem_html_tags(instructions)

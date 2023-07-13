@@ -10,46 +10,67 @@ if (!exists("sdr_config"))
 library(shinydashboard)
 library(shinyjs)
 
+source_app("plotting.R")
 source_app("ui_functions.R")
 source_app("make_requests.R")
 
-# ------------------
-# CONNECT TO STORAGE
-# ------------------
+app_requests <- load_store("app_requests.rds", make_requests())
+# app_requests$COMPONENT <- as.integer(app_requests$COMPONENT)
+# app_requests$DIMENSION <- as.integer(app_requests$DIMENSION)
+# app_requests$PERPLEXITY <- as.integer(app_requests$PERPLEXITY)
+# app_requests$BATCH_SIZE <- as.integer(app_requests$BATCH_SIZE)
+# save_store(app_requests, "app_requests.rds")
 
-# open requests
-app_requests <- make_requests()
-if (find_store("app_requests.rds"))
-  app_requests <- load_store("app_requests.rds")
+# for (cat in cat_names) {
+#   categories[[cat]]$note <- sprintf("This is the %s dataset.", cat)
+#   if (grepl("Transpose", cat, fixed = TRUE))
+#     categories[[cat]]$note <- sprintf("This is the %s dataset.
+# The matrix for this category was transposed. The current
+# samples represent original features and the current
+# features represent original samples.", cat)
+# }
+
+# app_data$categories <- categories
+
+# for (row_axs in row_axs_names)
+# {
+#   row_meta <- row_axes[[row_axs]]$metadata
+#   row_meta_counts <- apply(row_meta, 2, num_unique)
+#
+#   full_chas <- get_opt(names(row_meta_counts), row_meta_counts)
+#   safe_chas <- names(row_meta_counts)[row_meta_counts <= 60]
+#   app_data$row_axes[[row_axs]]$rel_meta <- safe_chas
+# }
+#
+# for (col_axs in col_axs_names)
+# {
+#   app_data$col_axes[[col_axs]]$rel_meta <- character()
+# }
+
+stopifnot(are_req_keys(app_requests[, 1:13]))
 
 # get newest request
-newest_request_i <- which.max(app_requests$TIME_COMPLETED)
-newest_request <- app_requests[newest_request_i,]
+newest_request_date <- max(app_requests$TIME_COMPLETED)
+# newest_request <- app_requests[newest_request_i,]
 
 # create default user requests
 default_user_requests <- make_requests()
-if (!use_local_storage && find_aws_s3("Sessions/user_requests.rds"))
-  default_user_requests <- load_aws_s3("Sessions/user_requests.rds")
+# if (!use_local_storage && find_aws_s3("Sessions/user_requests.rds"))
+#   default_user_requests <- load_aws_s3("Sessions/user_requests.rds")
 
-# ----------------
-# FIX DEPENDENCIES
-# ----------------
+# ------------------------
+# INSTRUCTIONS / CITATIONS
+# ------------------------
 
-# get all remaining dependencies
-# get_dependency("order_total", empty_named_list(cat_names))
-# get_dependency("app_title", "Dimensionality Reduction Tool")
-# get_dependency("app_citations", "No data citations could be found.")
-# get_dependency("user_credentials")
-# get_dependency("custom_color_scales")
-
-# creates a print version of the instructions / citations
-print_instructions <- rem_html_tags(instructions)
+citations <- make_citations(app_data$citations)
 print_citations <- rem_html_tags(citations)
 
 # ------------------
 # BROWSER PARAMETERS
 # ------------------
 
+# maximum number of unique attributes to filter by
+num_safe_filter <- 60
 # The height of a graph by default. Depends on browser interpretation.
 graph_height <- 520
 # the default barplot/(barplot+matrix) ratio on an upset plot
@@ -75,97 +96,108 @@ table_server_render <- TRUE
 # GENERATE OPTIONS AND BOOKMARKS
 # ------------------------------
 
-# all bookmarking IDs for selections and thresholds
-select_ids <- NULL
-thre_ids <- NULL
-selected_chars <- empty_named_list(cat_names)
+# APPLICATION INTERNAL STATE:
+# --per category: [[cat]]
+#     row subset (one of row subsets)
+#     col subset (one of col subsets)
+#     color (one of metadata characteristics)
+#     shape (one of metadata characteristics)
+#     label (one of metadata characteristics)
+#     filter (one of safe metadata characteristics)
+#     select per safe metadata characteristic [[cha]]
+#         vector of selected options
+#     thre per scaling option
+#         one of obtained thresholds
 
-# empty lists for option boxes, to be presented to the user
-row_sub_opts <- vector(mode = "list", length = cat_length)
-col_sub_opts <- vector(mode = "list", length = cat_length)
-color_opts <- vector(mode = "list", length = cat_length)
-shape_opts <- vector(mode = "list", length = cat_length)
-label_opts <- vector(mode = "list", length = cat_length)
-filter_opts <- vector(mode = "list", length = cat_length)
-select_opts <- vector(mode = "list", length = num_filters*cat_length) # initially oversize
-thre_opts <- vector(mode = "list", length = 2*cat_length)
+# useful for thresholds
+sets_requests <- app_requests[
+  app_requests$EMBEDDING == "Sets",
+  c("CATEGORIES", "SCALING", "THRESHOLD"),
+  drop = FALSE]
 
-# create the option boxes
-for (cn in seq_len(cat_length))
+# specify choices unique to each row axis
+app_row_choices <- empty_named_list(row_axs_names)
+for (row_axs in row_axs_names)
 {
-  cat <- cat_names[cn]
-  order_gen <- order_total[[cat]]
+  row_axis <- row_axes[[row_axs]]
+  row_meta <- row_axis$metadata
+  rel_meta <- row_axis$rel_meta
 
-  # row subsets
-  row_subsets <- sub_row_groups[[cat]]
-  row_opts <- get_opt(names(row_subsets), row_subsets)
-  row_sub_opts[[cn]] <- cat_select_panel(
-    cat, id_row(cat), sprintf("Sample Subset (%s)", cat), row_opts, 1)
-
-  # col subsets
-  col_subsets <- sub_col_groups[[cat]]
-  col_opts <- get_opt(names(col_subsets), col_subsets)
-  col_sub_opts[[cn]] <- cat_select_panel(
-    cat, id_col(cat), sprintf("Feature Subset (%s)", cat), col_opts, 1)
-
-  # characteristics
-  chars <- get_safe_chars(order_gen)
-  if (length(chars) < 1)
-    chars <- "Unknown"
-  selected_chars[[cat]] <- chars
-
-  # filters
-  filter_opts[[cn]] <- cat_select_panel(
-    cat, id_filter(cat), sprintf("Current Filter (%s)", cat), chars, 1)
-
-  # colors
-  color_opts[[cn]] <- cat_select_panel(
-    cat, id_color(cat), sprintf("Color By (%s)", cat), chars, 1)
-
-  # shapes
-  shape_opts[[cn]] <- cat_select_panel(
-    cat, id_shape(cat), sprintf("Shape By (%s)", cat), chars, 2)
-
-  # labels
-  label_opts[[cn]] <- cat_select_panel(
-    cat, id_label(cat), sprintf("Label By (%s)", cat), chars, 1)
-
-  # selections
-  for (char in chars)
-  {
-    select_ids <- c(select_ids, id_select(cat, char))
-    select_opts[[length(select_ids)]] <- select_check_panel(order_gen[[char]], cat, char)
-  }
-
-  # thresholds
-  for (sca in sca_options)
-  {
-    thre_ids <- c(thre_ids, id_thre(cat, sca))
-    requests_subset <- (app_requests$CATEGORIES == cat) & (app_requests$SCALING == sca) &
-      (app_requests$EMBEDDING) == "Sets"
-    thre_opts[[length(thre_ids)]] <- thre_select_panel(
-      unique(app_requests$THRESHOLD[requests_subset]), cat, sca)
-  }
+  app_row_choices[[row_axs]] <- list(
+    "rowby" = get_opt_named(row_subset_lengths[[row_axs]]),
+    "full_chas" = names(row_meta),
+    "safe_chas" = rel_meta,
+    "selectby" = apply(row_meta[, rel_meta], 2, get_opt_chr)
+  )
 }
 
-# truncate select_opts
-select_opts <- select_opts[seq_along(select_ids)]
+# specify choices unique to each col axis (colby)
+app_col_choices <- empty_named_list(col_axs_names)
+for (col_axs in col_axs_names)
+{
+  app_col_choices[[col_axs]] <- list(
+    "colby" = get_opt_named(col_subset_lengths[[col_axs]])
+  )
+}
+
+# useful
+median_index <- function(x) {
+  ceiling(length(x) / 2)
+}
+
+median_value <- function(x) {
+  x[median_index(x)]
+}
+
+# this is suspicious ... improve later to be like thresholds?
+perplexity_types <- setdiff(unique(app_requests$PERPLEXITY), num_d())
+pc_cap <- max(app_requests$COMPONENT)
+batch_sizes <- setdiff(unique(app_requests$BATCH_SIZE), num_d())
+
+# specify choices unique to each category (threby) and
+# the selections for each category
+app_cat_choices <- empty_named_list(cat_names)
+app_cat_selected <- empty_named_list(cat_names)
+
+for (cat in cat_names)
+{
+  row_axs <- get_row_axs(cat)
+  col_axs <- get_col_axs(cat)
+  cat_row_choices <- app_row_choices[[row_axs]]
+  cat_col_choices <- app_col_choices[[col_axs]]
+
+  # sprintf("Threshold (%s.%s)", cat, sca)
+  thre_choices <- empty_named_list(sca_options)
+  thre_selected <- empty_named_list(sca_options)
+
+  for (sca in sca_options)
+  {
+    requests_subset <- (sets_requests$CATEGORIES == cat) &
+      (sets_requests$SCALING == sca)
+
+    thresholds <- sort(unique(sets_requests$THRESHOLD[requests_subset]))
+    thre_choices[[sca]] <- thresholds
+    thre_selected[[sca]] <- median_value(thresholds)
+  }
+
+  app_cat_choices[[cat]] <- list("threby" = thre_choices)
+  safe_chas <- cat_row_choices$safe_chas
+
+  app_cat_selected[[cat]] <- list(
+    "rowby" = cat_row_choices$rowby[1],
+    "colby" = cat_col_choices$colby[1],
+    "colorby" = safe_chas[1],
+    "shapeby" = safe_chas[2],
+    "labelby" = safe_chas[1],
+    "filterby" = safe_chas[1],
+    "selectby" = cat_row_choices$selectby,
+    "threby" = thre_selected
+  )
+}
 
 # -----------
 # BOOKMARKING
 # -----------
-
-picker_input_ids <- c(
-  default_picker_input_ids,
-  id_row(cat_names),
-  id_col(cat_names),
-  id_color(cat_names),
-  id_shape(cat_names),
-  id_label(cat_names),
-  id_filter(cat_names),
-  select_ids,
-  thre_ids
-)
 
 console_ids <- c(
   "address",
@@ -173,7 +205,8 @@ console_ids <- c(
   "metadata",
   "app_requests",
   "user_requests",
-  default_picker_input_ids,
+  picker_input_ids,
+  dynam_picker_input_ids,
   numeric_input_ids,
   numeric_range_input_ids,
   slider_input_ids,
@@ -182,7 +215,7 @@ console_ids <- c(
 
 bookmarkable_ids <- c(
   picker_input_ids,
-  sprintf("%s_open", picker_input_ids),
+  # sprintf("%s_open", picker_input_ids),
   numeric_input_ids,
   numeric_range_input_ids,
   slider_input_ids,
@@ -208,18 +241,15 @@ output_conditions <- c(
   "shape_opts_cond",
   "label_opts_cond")
 
-perplexity_types <- setdiff(unique(app_requests$PERPLEXITY), num_d())
-pc_cap <- max(app_requests$COMPONENT)
-batch_sizes <- setdiff(unique(app_requests$BATCH_SIZE), num_d())
-
 # ---------------
 # ASSEMBLE THE UI
 # ---------------
 
 settings_menu <- menuItem(
   "Settings",
-  check_panel("sMenu", "Settings", c("Embed Title", "Embed Legend", "Separate Colors",
-                                     "Boost Graphics", "Uninverted Colors")),
+  check_panel("sMenu", "Settings",
+              c("Embed Title", "Embed Legend", "Separate Colors",
+                "Boost Graphics", "Uninverted Colors")),
   select_panel("palette", "Color Palette", color_palettes),
   numericInput("width", "Graph Width", value=NULL, min=1, max=4000),
   numericInput("height", "Graph Height", value=graph_height, min=1, max=4000),
@@ -227,15 +257,13 @@ settings_menu <- menuItem(
   check_panel("console", "Console Output", console_ids, NULL)
 )
 
-category_sel <- select_panel("category", "Category", cat_groups)
-
 table_1_menu <- menuItem(
   "Table Selection",
   startExpanded = TRUE,
   icon = icon("table"),
-  category_sel,
-  row_sub_opts,
-  col_sub_opts,
+  select_panel("category", "Category", groups),
+  select_panel("rowby", "Sample Subset"),
+  select_panel("colby", "Feature Subset"),
   select_panel("scaling", "Scaling", sca_options),
   select_panel("normalization", "Normalization", nor_options)
 )
@@ -253,7 +281,7 @@ analysis_1_menu <- menuItem(
     conditionalPanel(
       condition = "output.perplexity_cond",
       select_panel("perplexity", "Perplexity", perplexity_types,
-                   ceiling(length(perplexity_types)/2))
+                   median_value(perplexity_types))
     ),
     conditionalPanel(
       condition = "output.pc_sliders_cond",
@@ -272,27 +300,29 @@ analysis_1_menu <- menuItem(
       select_panel("batch_size", "Batch Size", batch_sizes)
     )
   ),
-  expand_cond_panel(
+  conditionalPanel(
     condition = "input.embedding == 'Sets'",
-    thre_opts,
-    list(
-      numericRangeInput("set_f1", "Fraction of Samples", c(0.5,1)),
-      numericRangeInput("set_f2", "Number of Characteristics", c(1,num_filters)),
-      conditionalPanel(
-        condition = "output.set_feat_upse_cond",
-        numericInput("set_feat_upse", "Maximum Features",
-                     value=max_upse, min=pc_cap, max=2^24)
-      ),
-      conditionalPanel(
-        condition = "output.set_feat_heat_cond",
-        numericInput("set_feat_heat", "Maximum Features",
-                     value=max_heat, min=pc_cap, max=2^24)
-      ),
-      conditionalPanel(
-        condition = "output.set_feat_dend_cond",
-        numericInput("set_feat_dend", "Maximum Features",
-                     value=max_dend, min=pc_cap, max=2^24)
-      )
+    select_panel(
+      "threby", sprintf("Threshold (%s, %s)", def_cat, def_sca),
+      def_cat_choices$threby[[def_sca]],
+      def_cat_selected$threby[[def_sca]]
+    ),
+    numericRangeInput("set_f1", "Fraction of Samples", c(0.5, 1)),
+    numericRangeInput("set_f2", "Number of Characteristics", c(1, 60)),
+    conditionalPanel(
+      condition = "output.set_feat_upse_cond",
+      numericInput("set_feat_upse", "Maximum Features",
+                   value=max_upse, min=pc_cap, max=2^24)
+    ),
+    conditionalPanel(
+      condition = "output.set_feat_heat_cond",
+      numericInput("set_feat_heat", "Maximum Features",
+                   value=max_heat, min=pc_cap, max=2^24)
+    ),
+    conditionalPanel(
+      condition = "output.set_feat_dend_cond",
+      numericInput("set_feat_dend", "Maximum Features",
+                   value=max_dend, min=pc_cap, max=2^24)
     )
   )
 )
@@ -303,17 +333,23 @@ filters_1_menu <- menuItem(
   conditionalPanel(
     condition = "input.embedding != 'Sets' &&
     (input.visualize != 'Summarize' || input.embedding == 'PHATE')",
-    expand_cond_panel(
-      condition = "true",
-      color_opts
+    select_panel(
+      "colorby", sprintf("Color By (%s)", def_cat),
+      def_row_choices$full_chas, def_cat_selected$colorby
     ),
-    expand_cond_panel(
+    conditionalPanel(
       condition = "output.shape_opts_cond",
-      shape_opts
+      select_panel(
+        "shapeby", sprintf("Shape By (%s)", def_cat),
+        def_row_choices$full_chas, def_cat_selected$shapeby
+      )
     ),
-    expand_cond_panel(
+    conditionalPanel(
       condition = "output.label_opts_cond",
-      label_opts
+      select_panel(
+        "labelby", sprintf("Label By (%s)", def_cat),
+        def_row_choices$full_chas, def_cat_selected$labelby
+      )
     )
   ),
   conditionalPanel(
@@ -323,18 +359,26 @@ filters_1_menu <- menuItem(
     numericInput("bar_frac", "Bar Plot Fraction", value=def_bar_frac, min=0, max=1),
     numericInput("text_scale", "Text Scale", value=1, min=0.01, max = 100)
   ),
-  expand_cond_panel(
+  conditionalPanel(
     condition = "input.embedding == 'Sets' ||
     (input.visualize != 'Summarize' || input.embedding == 'PHATE')",
-    filter_opts,
-    select_opts
+    select_panel(
+      "filterby", sprintf("Filter By (%s)", def_cat),
+      def_row_choices$safe_chas, def_filterby
+    ),
+    check_panel(
+      "selectby",
+      sprintf("Selections (%s, %s)", def_cat, def_filterby),
+      def_row_choices$selectby[[def_filterby]],
+      def_cat_selected$selectby[[def_filterby]]
+    )
   )
 )
 
 ui <- function(request){
   dashboardPage(
     skin="blue",
-    dashboardHeader(title=app_title, titleWidth="100%"),
+    dashboardHeader(title = app_data$title, titleWidth="100%"),
     dashboardSidebar(
       width=300,
       sidebarMenu(
@@ -345,9 +389,7 @@ ui <- function(request){
         div(
           style = "margin: 10px",
           h4(HTML(sprintf("  <b>Last Updated:</b> %s",
-                          format(newest_request$TIME_COMPLETED, "%b %d, %Y")))),
-          h4(HTML(sprintf("  <b>Newest Analysis ID:</b> %s",
-                          newest_request$REQUEST_ID)))
+                          format(newest_request_date, "%b %d, %Y"))))
         )
       )
     ),
@@ -388,3 +430,5 @@ ui <- function(request){
     )
   )
 }
+
+cat_f("DASHBOARD TIME: %.1f (sec)\n", net_time())

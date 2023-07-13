@@ -313,13 +313,13 @@ can_be_numeric <- function(vec)
 my_datatable <- function(df = empty_df)
 {
   if (class(df) != "data.frame" || ncol(df) < 1)
-    df <- empty_df
+    df <- data.frame("Unknown" = numeric())
 
   for (col in colnames(df))
   {
     if (!can_be_numeric(df[[col]]))
     {
-      if (length(unique(df[[col]])) <= num_filters)
+      if (num_unique(df[[col]]) <= num_safe_filter)
         df[[col]] <- as.factor(df[[col]])
       else
         df[[col]] <- as.character(df[[col]])

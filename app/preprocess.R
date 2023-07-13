@@ -41,7 +41,7 @@ is_app_data <- function(x) {
 
 # ensure the data for the application is valid
 app_data_loc <- get_app_loc("app_data.rds")
-# saveRDS(app_data, app_data_loc)
+# saveRDS(app_data, app_data_loc, compress = FALSE)
 if (!file.exists(app_data_loc))
   stop_f("The application data could not be found at: %s", app_data_loc)
 
@@ -51,15 +51,18 @@ if (!is_app_data(app_data))
   stop("The application data ('app_data.rds') is invalid.
 Please delete 'app_data.rds' and rerun the application.")
 assign_global("app_data", app_data)
+cat_f("APP_DATA LOAD TIME: %.1f (sec)\n", net_time())
 
 # set credentials
 set_credentials(app_data[["credentials"]])
 
 # set row axes
 assign_global("row_axes", app_data[["row_axes"]])
+assign_global("row_axs_names", names(row_axes))
 
 # set col axes
 assign_global("col_axes", app_data[["col_axes"]])
+assign_global("col_axs_names", names(col_axes))
 
 # set categories
 assign_global("categories", app_data[["categories"]])
@@ -114,22 +117,32 @@ load_store <- function(filename, default = NULL)
   stop("Invalid connection mode for load_store.")
 }
 
-# --------------
-# SUBSET LENGTHS
-# --------------
+# -----------------
+# ROW / COL SUBSETS
+# -----------------
+
+# retrieves a row_axs by category
+get_row_axs <- function(cat)
+{
+  categories[[cat]]$row_axs
+}
 
 # retrieves a row axis by category
 get_row_axis <- function(cat)
 {
-  row_axs <- categories[[cat]]$row_axs
-  row_axes[[row_axs]]
+  row_axes[[get_row_axs(cat)]]
+}
+
+# retrieves a col_axs by category
+get_col_axs <- function(cat)
+{
+  categories[[cat]]$col_axs
 }
 
 # retrieves a col axis by category
 get_col_axis <- function(cat)
 {
-  col_axs <- categories[[cat]]$col_axs
-  col_axes[[col_axs]]
+  col_axes[[get_col_axs(cat)]]
 }
 
 # summarizes an axis
@@ -142,21 +155,22 @@ summarize_axis <- function(axis)
 }
 
 # for checking if row subsets are valid
-row_subset_lengths <- empty_named_list(cat_names)
-col_subset_lengths <- empty_named_list(cat_names)
+row_subset_lengths <- empty_named_list(row_axs_names)
+for (row_axs in row_axs_names)
+  row_subset_lengths[[row_axs]] <- summarize_axis(row_axes[[row_axs]])
 
-for (cat in cat_names)
+col_subset_lengths <- empty_named_list(col_axs_names)
+for (col_axs in col_axs_names)
+  col_subset_lengths[[col_axs]] <- summarize_axis(col_axes[[col_axs]])
+
+# gets a row subset's length
+get_row_subset_length <- function(cat, row)
 {
   row_axis <- get_row_axis(cat)
-  row_subset_lengths[[cat]] <- summarize_axis(row_axis)
-
-  col_axis <- get_col_axis(cat)
-  col_subset_lengths[[cat]] <- summarize_axis(col_axis)
+  if (row == "Total")
+    return(row_axis$length)
+  length(row_axis$subsets[[row]])
 }
-
-# ---------------------------
-# ROW / COL UTILITY FUNCTIONS
-# ---------------------------
 
 # subsets data by a row subset
 subset_by_row <- function(data, cat, row)
@@ -168,6 +182,15 @@ subset_by_row <- function(data, cat, row)
   data[row_axis$subsets[[row]], , drop = FALSE]
 }
 
+# gets a col subset's length
+get_col_subset_length <- function(cat, col)
+{
+  col_axis <- get_col_axis(cat)
+  if (col == "Total")
+    return(col_axis$length)
+  length(col_axis$subsets[[col]])
+}
+
 # subsets data by a col subset
 subset_by_col <- function(data, cat, col)
 {
@@ -177,10 +200,4 @@ subset_by_col <- function(data, cat, col)
   data[, col_axis$subsets[[col]], drop = FALSE]
 }
 
-# gets the safe characteristics of a category
-get_safe_chas <- function(cat)
-{
-  row_meta <- get_row_axis(cat)$metadata
-  colnames(row_meta)[apply(row_meta, 2, num_unique) >= 2]
-}
-
+cat_f("PREPROCESSING TIME: %.1f (sec)\n", net_time())
