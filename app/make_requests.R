@@ -458,8 +458,8 @@ make_requests <- function(
 # pca, vae, umap
 make_pvu_requests <- function(
     cat = character(), row = character(), col = character(), sca = character(),
-    nor = character(), emb = character(), vis = character(), com = numeric(),
-    dim = numeric(), per = numeric(), bat = numeric(), aut = character()
+    nor = character(), emb = character(), vis = character(), com = integer(),
+    dim = integer(), per = integer(), bat = integer(), aut = character()
 )
 {
   n_cat <- length(cat)
@@ -472,7 +472,7 @@ make_pvu_requests <- function(
 # simplifies the generation of PHATE requests
 make_phate_requests <- function(
     cat = character(), row = character(), col = character(), sca = character(),
-    nor = character(), com = numeric(), per = numeric(), aut = character()
+    nor = character(), com = integer(), per = integer(), aut = character()
 )
 {
   n_cat <- length(cat)
@@ -484,7 +484,8 @@ make_phate_requests <- function(
 
 # simplifies the generation of Sets requests
 make_sets_requests <- function(
-    cat = character(), sca = character(), thr = numeric(), cha = character(), aut = character())
+    cat = character(), sca = character(), thr = numeric(),
+    cha = character(), aut = character())
 {
   n_cat <- length(cat)
 
