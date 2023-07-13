@@ -184,51 +184,51 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     app_state <- app_state_selected()
     app_state[[cat]]$rowby <- input$rowby
     app_state_selected(app_state)
-  })
+  }, ignoreInit = TRUE)
 
   observeEvent(input$colby, {
     cat <- isolate(input$category)
     app_state <- app_state_selected()
     app_state[[cat]]$colby <- input$colby
     app_state_selected(app_state)
-  })
+  }, ignoreInit = TRUE)
 
   observeEvent(input$colorby, {
     cat <- isolate(input$category)
     app_state <- app_state_selected()
     app_state[[cat]]$colorby <- input$colorby
     app_state_selected(app_state)
-  })
+  }, ignoreInit = TRUE)
 
   observeEvent(input$shapeby, {
     cat <- isolate(input$category)
     app_state <- app_state_selected()
     app_state[[cat]]$shapeby <- input$shapeby
     app_state_selected(app_state)
-  })
+  }, ignoreInit = TRUE)
 
   observeEvent(input$labelby, {
     cat <- isolate(input$category)
     app_state <- app_state_selected()
     app_state[[cat]]$labelby <- input$labelby
     app_state_selected(app_state)
-  })
+  }, ignoreInit = TRUE)
 
   observeEvent(input$filterby, {
     cat <- isolate(input$category)
     app_state <- app_state_selected()
     app_state[[cat]]$filterby <- input$filterby
     app_state_selected(app_state)
-  })
+  }, ignoreInit = TRUE)
 
   observeEvent(input$selectby, {
     cat <- isolate(input$category)
     app_state <- app_state_selected()
     fil <- app_state[[cat]]$filterby
-    app_state[[cat]]$selectby[[fil]] <- input$selectby
+    app_state[[cat]]$selectby[[fil]] <- as.character(input$selectby)
     app_state_selected(app_state)
     # NULL is a problem
-  }, ignoreNULL = FALSE)
+  }, ignoreNULL = FALSE, ignoreInit = TRUE)
 
   observeEvent(input$threby, {
     cat <- isolate(input$category)
@@ -236,7 +236,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     app_state <- app_state_selected()
     app_state[[cat]]$threby[[sca]] <- input$threby
     app_state_selected(app_state)
-  })
+  }, ignoreInit = TRUE)
 
   update_dynam_picker <- function(inputId, label, selected, choices)
   {
@@ -308,6 +308,9 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
       choices = row_choices$safe_chas
     )
 
+    message_f("FILTERBY: %s", filterby)
+    print(row_choices$selectby[[filterby]])
+
     update_dynam_picker(
       "selectby",
       sprintf("Selections (%s, %s)", cat, filterby),
@@ -375,8 +378,16 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     }
   })
 
-  rowi <- reactive(parse_opt(input$rowby))
-  coli <- reactive(parse_opt(input$colby))
+  rowi <- reactive({
+    if (is.null(input$rowby))
+      print("NULL ROW")
+    parse_opt(input$rowby)
+  })
+  coli <- reactive({
+    if (is.null(input$colby))
+      print("NULL COL")
+    parse_opt(input$colby)
+  })
   thre <- reactive(as.numeric(input$threby))
 
   colorby <- reactive(input$colorby)
@@ -601,6 +612,8 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     for (char in app_row_choices[[row_axs]]$safe_chas)
     {
       x <- app_state[[cati()]]$selectby[[char]]
+      if (is.null(x))
+        message_f("NULL AT %s", char)
       cur_filter <- row_order()[[char]] %in%
         parse_opt(x)
       keep <- keep & cur_filter
@@ -616,6 +629,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   shapes <- reactive(metadata()[, shapeby()])
   labels <- reactive(sprintf("%s: %s", labelby(), metadata()[, labelby()]))
   my_chars <- reactive({
+    app_state <- app_state_selected()
     x <- app_state[[cati()]]$selectby[[filterby()]]
     parse_opt(x)
   })

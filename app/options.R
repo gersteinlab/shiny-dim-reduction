@@ -92,9 +92,9 @@ run_default <- TRUE
 # should server-side rendering be used for tables?
 table_server_render <- TRUE
 
-# ------------------------------
-# GENERATE OPTIONS AND BOOKMARKS
-# ------------------------------
+# ----------------------------
+# DYNAMIC CHOICES / SELECTIONS
+# ----------------------------
 
 # APPLICATION INTERNAL STATE:
 # --per category: [[cat]]
@@ -148,11 +148,6 @@ median_index <- function(x) {
 median_value <- function(x) {
   x[median_index(x)]
 }
-
-# this is suspicious ... improve later to be like thresholds?
-perplexity_types <- setdiff(unique(app_requests$PERPLEXITY), num_d())
-pc_cap <- max(app_requests$COMPONENT)
-batch_sizes <- setdiff(unique(app_requests$BATCH_SIZE), num_d())
 
 # specify choices unique to each category (threby) and
 # the selections for each category
@@ -245,6 +240,11 @@ output_conditions <- c(
 # ASSEMBLE THE UI
 # ---------------
 
+# this is suspicious ... improve later to be like thresholds?
+perplexity_types <- setdiff(unique(app_requests$PERPLEXITY), num_d())
+pc_cap <- max(app_requests$COMPONENT)
+batch_sizes <- setdiff(unique(app_requests$BATCH_SIZE), num_d())
+
 settings_menu <- menuItem(
   "Settings",
   check_panel("sMenu", "Settings",
@@ -262,8 +262,8 @@ table_1_menu <- menuItem(
   startExpanded = TRUE,
   icon = icon("table"),
   select_panel("category", "Category", groups),
-  select_panel("rowby", "Sample Subset"),
-  select_panel("colby", "Feature Subset"),
+  select_panel("rowby", "Sample Subset"), # DYNAMIC
+  select_panel("colby", "Feature Subset"), # DYNAMIC
   select_panel("scaling", "Scaling", sca_options),
   select_panel("normalization", "Normalization", nor_options)
 )
@@ -302,11 +302,7 @@ analysis_1_menu <- menuItem(
   ),
   conditionalPanel(
     condition = "input.embedding == 'Sets'",
-    select_panel(
-      "threby", sprintf("Threshold (%s, %s)", def_cat, def_sca),
-      def_cat_choices$threby[[def_sca]],
-      def_cat_selected$threby[[def_sca]]
-    ),
+    select_panel("threby", "Threshold"),
     numericRangeInput("set_f1", "Fraction of Samples", c(0.5, 1)),
     numericRangeInput("set_f2", "Number of Characteristics", c(1, 60)),
     conditionalPanel(
@@ -333,23 +329,14 @@ filters_1_menu <- menuItem(
   conditionalPanel(
     condition = "input.embedding != 'Sets' &&
     (input.visualize != 'Summarize' || input.embedding == 'PHATE')",
-    select_panel(
-      "colorby", sprintf("Color By (%s)", def_cat),
-      def_row_choices$full_chas, def_cat_selected$colorby
-    ),
+    select_panel("colorby", "Color By"), # DYNAMIC
     conditionalPanel(
       condition = "output.shape_opts_cond",
-      select_panel(
-        "shapeby", sprintf("Shape By (%s)", def_cat),
-        def_row_choices$full_chas, def_cat_selected$shapeby
-      )
+      select_panel("shapeby", "Shape By") # DYNAMIC
     ),
     conditionalPanel(
       condition = "output.label_opts_cond",
-      select_panel(
-        "labelby", sprintf("Label By (%s)", def_cat),
-        def_row_choices$full_chas, def_cat_selected$labelby
-      )
+      select_panel("labelby", "Label By") # DYNAMIC
     )
   ),
   conditionalPanel(
@@ -362,16 +349,8 @@ filters_1_menu <- menuItem(
   conditionalPanel(
     condition = "input.embedding == 'Sets' ||
     (input.visualize != 'Summarize' || input.embedding == 'PHATE')",
-    select_panel(
-      "filterby", sprintf("Filter By (%s)", def_cat),
-      def_row_choices$safe_chas, def_filterby
-    ),
-    check_panel(
-      "selectby",
-      sprintf("Selections (%s, %s)", def_cat, def_filterby),
-      def_row_choices$selectby[[def_filterby]],
-      def_cat_selected$selectby[[def_filterby]]
-    )
+    select_panel("filterby", "Filter By"), # DYNAMIC
+    check_panel("selectby", "Selections") # DYNAMIC
   )
 )
 
@@ -432,3 +411,21 @@ ui <- function(request){
 }
 
 cat_f("DASHBOARD TIME: %.1f (sec)\n", net_time())
+
+# app_state <- app_cat_selected
+#
+# cat <- cat_names[1]
+# sca <- sca_options[1]
+#
+# row_axs <- get_row_axs(cat)
+# col_axs <- get_col_axs(cat)
+#
+# row_choices <- app_row_choices[[row_axs]]
+# col_choices <- app_col_choices[[col_axs]]
+# cat_choices <- app_cat_choices[[cat]]
+#
+# cat_selected <- app_state[[cat]]
+# filterby <- cat_selected$filterby
+#
+# print(cat_selected$selectby[[filterby]])
+# print(row_choices$selectby[[filterby]])
