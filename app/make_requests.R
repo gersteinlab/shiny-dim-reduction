@@ -599,29 +599,6 @@ rbind_req <- function(...)
   result
 }
 
-# ----------
-# REQUEST ID
-# ----------
-
-# gets n request ids
-# warning: only works with access to AWS
-get_request_id <- function(n = 1)
-{
-  # if AWS is not available, IDs cannot be generated
-  if (connected != "cloud")
-    return(-1)
-
-  if (n < 1)
-    return(numeric())
-
-  id <- 1:n
-  if (find_aws_s3("Sessions/cur_id.rds"))
-    id <- id + load_aws_s3("Sessions/cur_id.rds")
-
-  save_aws_s3(id[n], "Sessions/cur_id.rds")
-  id
-}
-
 # ----------------
 # PRESENT REQUESTS
 # ----------------
