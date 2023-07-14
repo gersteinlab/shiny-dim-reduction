@@ -556,3 +556,5 @@ present_requests <- function(requests)
       res$TIME_COMPLETED[i] <- NA
   res
 }
+
+cat_f("REQUEST MANAGER TIME: %.1f (sec)\n", net_time())

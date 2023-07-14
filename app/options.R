@@ -14,49 +14,18 @@ source_app("plotting.R")
 source_app("ui_functions.R")
 source_app("make_requests.R")
 
-app_requests <- load_store("app_requests.rds", make_requests())
-# app_requests$COMPONENT <- as.integer(app_requests$COMPONENT)
-# app_requests$DIMENSION <- as.integer(app_requests$DIMENSION)
-# app_requests$PERPLEXITY <- as.integer(app_requests$PERPLEXITY)
-# app_requests$BATCH_SIZE <- as.integer(app_requests$BATCH_SIZE)
-# save_store(app_requests, "app_requests.rds")
-
-# for (cat in cat_names) {
-#   categories[[cat]]$note <- sprintf("This is the %s dataset.", cat)
-#   if (grepl("Transpose", cat, fixed = TRUE))
-#     categories[[cat]]$note <- sprintf("This is the %s dataset.
-# The matrix for this category was transposed. The current
-# samples represent original features and the current
-# features represent original samples.", cat)
-# }
-
-# app_data$categories <- categories
-
-# for (row_axs in row_axs_names)
-# {
-#   row_meta <- row_axes[[row_axs]]$metadata
-#   row_meta_counts <- apply(row_meta, 2, num_unique)
-#
-#   full_chas <- get_opt(names(row_meta_counts), row_meta_counts)
-#   safe_chas <- names(row_meta_counts)[row_meta_counts <= 60]
-#   app_data$row_axes[[row_axs]]$rel_meta <- safe_chas
-# }
-#
-# for (col_axs in col_axs_names)
-# {
-#   app_data$col_axes[[col_axs]]$rel_meta <- character()
-# }
-
-stopifnot(are_req_keys(app_requests[, 1:13]))
-
-# get newest request
-newest_request_date <- max(app_requests$TIME_COMPLETED)
-# newest_request <- app_requests[newest_request_i,]
+app_requests <- load_store(
+  "app_requests.rds",
+  make_requests()
+)
+# clean_req_keys(app_requests[, 1:13])
 
 # create default user requests
-default_user_requests <- make_requests()
-# if (!use_local_storage && find_aws_s3("Sessions/user_requests.rds"))
-#   default_user_requests <- load_aws_s3("Sessions/user_requests.rds")
+default_user_requests <- load_store(
+  "Sessions/user_requests.rds",
+  make_requests()
+)
+# clean_req_keys(default_user_requests[, 1:13])
 
 # ------------------------
 # INSTRUCTIONS / CITATIONS
@@ -69,8 +38,6 @@ print_citations <- rem_html_tags(citations)
 # BROWSER PARAMETERS
 # ------------------
 
-# maximum number of unique attributes to filter by
-num_safe_filter <- 60
 # The height of a graph by default. Depends on browser interpretation.
 graph_height <- 520
 # the default barplot/(barplot+matrix) ratio on an upset plot
@@ -98,22 +65,16 @@ table_server_render <- TRUE
 
 # APPLICATION INTERNAL STATE:
 # --per category: [[cat]]
-#     row subset (one of row subsets)
-#     col subset (one of col subsets)
-#     color (one of metadata characteristics)
-#     shape (one of metadata characteristics)
-#     label (one of metadata characteristics)
-#     filter (one of safe metadata characteristics)
-#     select per safe metadata characteristic [[cha]]
-#         vector of selected options
-#     thre per scaling option
+#     rowby (one of row subsets)
+#     colby (one of col subsets)
+#     colorby (one of metadata characteristics)
+#     shapeby (one of metadata characteristics)
+#     labelby (one of metadata characteristics)
+#     filterby (one of safe metadata characteristics)
+#     selectby per relevant metadata characteristic [[cha]]
+#         character vector of selected options
+#     threby per scaling option
 #         one of obtained thresholds
-
-# useful for thresholds
-sets_requests <- app_requests[
-  app_requests$EMBEDDING == "Sets",
-  c("CATEGORIES", "SCALING", "THRESHOLD"),
-  drop = FALSE]
 
 # specify choices unique to each row axis
 app_row_choices <- empty_named_list(row_axs_names)
@@ -154,23 +115,23 @@ median_value <- function(x) {
 app_cat_choices <- empty_named_list(cat_names)
 app_cat_selected <- empty_named_list(cat_names)
 
+# useful for thresholds
+is_sets <- (app_requests$EMBEDDING == "Sets")
+cat_vec <- app_requests$CATEGORIES[is_sets]
+sca_vec <- app_requests$SCALING[is_sets]
+thr_vec <- app_requests$THRESHOLD[is_sets]
+
 for (cat in cat_names)
 {
-  row_axs <- get_row_axs(cat)
-  col_axs <- get_col_axs(cat)
-  cat_row_choices <- app_row_choices[[row_axs]]
-  cat_col_choices <- app_col_choices[[col_axs]]
-
-  # sprintf("Threshold (%s.%s)", cat, sca)
+  cat_row_choices <- app_row_choices[[get_row_axs(cat)]]
+  cat_col_choices <- app_col_choices[[get_col_axs(cat)]]
   thre_choices <- empty_named_list(sca_options)
   thre_selected <- empty_named_list(sca_options)
 
   for (sca in sca_options)
   {
-    requests_subset <- (sets_requests$CATEGORIES == cat) &
-      (sets_requests$SCALING == sca)
-
-    thresholds <- sort(unique(sets_requests$THRESHOLD[requests_subset]))
+    raw_thresholds <- thr_vec[(cat_vec == cat) & (sca_vec == sca)]
+    thresholds <- sort(unique(raw_thresholds))
     thre_choices[[sca]] <- thresholds
     thre_selected[[sca]] <- median_value(thresholds)
   }
@@ -241,9 +202,9 @@ output_conditions <- c(
 # ---------------
 
 # this is suspicious ... improve later to be like thresholds?
-perplexity_types <- setdiff(unique(app_requests$PERPLEXITY), num_d())
+perplexity_types <- setdiff(unique(app_requests$PERPLEXITY), num_d)
 pc_cap <- max(app_requests$COMPONENT)
-batch_sizes <- setdiff(unique(app_requests$BATCH_SIZE), num_d())
+batch_sizes <- setdiff(unique(app_requests$BATCH_SIZE), num_d)
 
 settings_menu <- menuItem(
   "Settings",
@@ -354,6 +315,11 @@ filters_1_menu <- menuItem(
   )
 )
 
+last_updated_text <- sprintf(
+  "  <b>Last Updated:</b> %s",
+  format(max(app_requests$TIME_COMPLETED), "%b %d, %Y")
+)
+
 ui <- function(request){
   dashboardPage(
     skin="blue",
@@ -367,8 +333,7 @@ ui <- function(request){
         settings_menu,
         div(
           style = "margin: 10px",
-          h4(HTML(sprintf("  <b>Last Updated:</b> %s",
-                          format(newest_request_date, "%b %d, %Y"))))
+          h4(HTML(last_updated_text))
         )
       )
     ),
@@ -411,21 +376,3 @@ ui <- function(request){
 }
 
 cat_f("DASHBOARD TIME: %.1f (sec)\n", net_time())
-
-# app_state <- app_cat_selected
-#
-# cat <- cat_names[1]
-# sca <- sca_options[1]
-#
-# row_axs <- get_row_axs(cat)
-# col_axs <- get_col_axs(cat)
-#
-# row_choices <- app_row_choices[[row_axs]]
-# col_choices <- app_col_choices[[col_axs]]
-# cat_choices <- app_cat_choices[[cat]]
-#
-# cat_selected <- app_state[[cat]]
-# filterby <- cat_selected$filterby
-#
-# print(cat_selected$selectby[[filterby]])
-# print(row_choices$selectby[[filterby]])

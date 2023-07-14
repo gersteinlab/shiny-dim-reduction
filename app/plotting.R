@@ -309,17 +309,19 @@ can_be_numeric <- function(vec)
   sum(is.na(suppressWarnings(as.character(vec)))) == sum(is.na(suppressWarnings(as.numeric(vec))))
 }
 
+empty_df <- data.frame("Unknown" = numeric())
+
 # Creates a datatable from a data frame
-my_datatable <- function(df = empty_df)
+my_datatable <- function(df = empty_df, levels_nmax = 60)
 {
   if (class(df) != "data.frame" || ncol(df) < 1)
-    df <- data.frame("Unknown" = numeric())
+    df <- empty_df
 
   for (col in colnames(df))
   {
     if (!can_be_numeric(df[[col]]))
     {
-      if (num_unique(df[[col]]) <= num_safe_filter)
+      if (num_unique(df[[col]]) <= levels_nmax)
         df[[col]] <- as.factor(df[[col]])
       else
         df[[col]] <- as.character(df[[col]])

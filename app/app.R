@@ -136,7 +136,8 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   })
 
   output$pc_sliders_cond <- reactive({
-    input$visualize == "Explore" && (input$embedding %in% c("PCA", "VAE", "UMAP"))
+    input$visualize == "Explore" && (
+      input$embedding %in% c("PCA", "VAE", "UMAP"))
   })
 
   output$pc_slider2_cond <- reactive({
@@ -308,9 +309,6 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
       choices = row_choices$safe_chas
     )
 
-    message_f("FILTERBY: %s", filterby)
-    print(row_choices$selectby[[filterby]])
-
     update_dynam_picker(
       "selectby",
       sprintf("Selections (%s, %s)", cat, filterby),
@@ -373,36 +371,37 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   observe({
     if (running())
     {
+      app_state <- app_state_selected()
+
       for (id in bookmarkable_ids)
         iplot[[id]] <- input[[id]]
+
+      for (id in dynam_picker_input_ids)
+        iplot[[id]] <- app_state[[iplot$category]][[id]]
     }
   })
 
   rowi <- reactive({
-    if (is.null(input$rowby))
-      print("NULL ROW")
-    parse_opt(input$rowby)
+    parse_opt(iplot$rowby)
   })
   coli <- reactive({
-    if (is.null(input$colby))
-      print("NULL COL")
-    parse_opt(input$colby)
+    parse_opt(iplot$colby)
   })
-  thre <- reactive(as.numeric(input$threby))
+  thre <- reactive(as.numeric(iplot$threby))
 
-  colorby <- reactive(input$colorby)
+  colorby <- reactive(iplot$colorby)
   shapeby <- reactive({
     if (!sep_colors())
       return(colorby())
-    input$shapeby
+    iplot$shapeby
   })
   labelby <- reactive({
     if (!sep_colors())
       return(colorby())
-    input$labelby
+    iplot$labelby
   })
   filterby <- reactive({
-    input$filterby
+    iplot$filterby
   })
 
   observeEvent(input$request_analysis, {
@@ -607,15 +606,11 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   keep <- reactive({
     keep <- rep(TRUE, nrow(row_order()))
     row_axs <- get_row_axs(cati())
-    app_state <- app_state_selected()
 
     for (char in app_row_choices[[row_axs]]$safe_chas)
     {
-      x <- app_state[[cati()]]$selectby[[char]]
-      if (is.null(x))
-        message_f("NULL AT %s", char)
       cur_filter <- row_order()[[char]] %in%
-        parse_opt(x)
+        parse_opt(iplot$selectby[[char]])
       keep <- keep & cur_filter
     }
 

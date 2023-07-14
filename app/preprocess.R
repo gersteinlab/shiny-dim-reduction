@@ -163,13 +163,10 @@ col_subset_lengths <- empty_named_list(col_axs_names)
 for (col_axs in col_axs_names)
   col_subset_lengths[[col_axs]] <- summarize_axis(col_axes[[col_axs]])
 
-# gets a row subset's length
-get_row_subset_length <- function(cat, row)
+# gets row subset lengths for a category
+get_row_subset_lengths <- function(cat)
 {
-  row_axis <- get_row_axis(cat)
-  if (row == "Total")
-    return(row_axis$length)
-  length(row_axis$subsets[[row]])
+  row_subset_lengths[[get_row_axs(cat)]]
 }
 
 # subsets data by a row subset
@@ -182,13 +179,10 @@ subset_by_row <- function(data, cat, row)
   data[row_axis$subsets[[row]], , drop = FALSE]
 }
 
-# gets a col subset's length
-get_col_subset_length <- function(cat, col)
+# gets col subset lengths for a category
+get_col_subset_lengths <- function(cat)
 {
-  col_axis <- get_col_axis(cat)
-  if (col == "Total")
-    return(col_axis$length)
-  length(col_axis$subsets[[col]])
+  col_subset_lengths[[get_col_axs(cat)]]
 }
 
 # subsets data by a col subset
