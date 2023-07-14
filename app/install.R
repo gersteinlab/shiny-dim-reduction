@@ -350,13 +350,23 @@ table_has_dim_n <- function(table, row_n, col_n)
   nrow(table) == row_n && ncol(table) == col_n
 }
 
+#' A useful utility function, similar to dplyr::between
+#'
+#' @param x A numeric (not checked).
+#' @param left A numeric (not checked).
+#' @param right A numeric (not checked).
+#' @returns A logical.
+vec_between <- function(x, left, right)
+{
+  (x >= left) & (x <= right)
+}
+
 #' Whether a perplexity is valid given the number of rows
 #'
-#' @param per An integer (not checked).
+#' @param per A numeric (not checked).
 perplexity_is_valid <- function(per, row_n)
 {
-  max_perplexity <- as.integer((row_n - 1) / 3)
-  dplyr::between(per, 1L, max_perplexity)
+  vec_between(per, 1, (row_n - 1) / 3)
 }
 
 # -----------------
