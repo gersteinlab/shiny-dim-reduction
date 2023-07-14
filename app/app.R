@@ -115,8 +115,8 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   })
 
   output$perplexity_cond <- reactive({
-    input$embedding == "PHATE" || input$visualize == "tSNE" || (
-      input$embedding == "UMAP" && input$visualize != "Summarize")
+    input$embedding == "UMAP" || input$embedding == "PHATE" ||
+      input$visualize == "tSNE"
   })
 
   output$set_feat_upse_cond <- reactive({
@@ -636,7 +636,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
 
   # the number of features before dimensionality reduction
   num_feat <- reactive({
-    get_col_subset_length(cati(), coli())
+    get_col_subset_lengths(cati())[[coli()]]
   })
 
   # numeric data for displaying / downloading
@@ -653,8 +653,8 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     }
 
     nei <- ifelse(
-      (iplot$embedding == "UMAP" || iplot$embedding == "PHATE" ||
-         iplot$visualize == "tSNE") && (iplot$visualize != "Summarize"),
+      iplot$embedding == "UMAP" || iplot$embedding == "PHATE" ||
+         iplot$visualize == "tSNE",
       sprintf(", %s Neighbors", iplot$perplexity), "")
 
     # make a noun for the visualization
