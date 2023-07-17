@@ -2,7 +2,7 @@
 # visualizing dimensionality reduction results.
 
 source("install.R")
-source_app("options.R")
+source_app("dashboard.R")
 
 server <- function(input, output, session) {
   if (run_default)
