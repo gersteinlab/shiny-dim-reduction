@@ -112,6 +112,16 @@ is_unique <- function(x)
   !anyDuplicated(x)
 }
 
+#' whether x is a character with unique
+#' values not equal to NA
+#'
+#' @param x An object.
+#' @returns TRUE or FALSE.
+are_list_names <- function(x)
+{
+  is.character(x) && is_unique(x) && none_na(x)
+}
+
 #' whether x is a 'subsets' object
 #' given an original set of size n
 #' note: succeeds if x is list()
@@ -205,14 +215,22 @@ color_scales_match_metadata <- function(color_scales, metadata)
   all_fun_true(names(color_scales), color_scale_match_meta_col)
 }
 
+# the expected members of an axis object
+axis_members <- c(
+  "length",
+  "metadata",
+  "subsets",
+  "color_scales",
+  "rel_meta"
+)
+
 #' whether x is an 'axis' object
 #'
 #' @param x An object.
 #' @returns TRUE or FALSE.
 is_axis <- function(x)
 {
-  members <- c("length", "metadata", "subsets", "color_scales", "rel_meta")
-  is.list(x) && identical(names(x), members) &&
+  is.list(x) && identical(names(x), axis_members) &&
     is_int(x$length) && x$length > 0L &&
     are_subsets(x$subsets, x$length) &&
     is_metadata(x$metadata) &&
