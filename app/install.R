@@ -389,7 +389,7 @@ empty_named_list <- function(safe_names)
 {
   stopifnot(are_safe_names(safe_names))
   n <- length(safe_names)
-  setNames(len_n_list(n), list_names)
+  setNames(len_n_list(n), safe_names)
 }
 
 #' wrapper for assigning to global env
