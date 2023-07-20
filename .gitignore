@@ -19,3 +19,5 @@ app/cloud_store.rds
 ignore
 README.html
 sdr_workflows.rds
+# for microsoft office files
+extras/~$*
