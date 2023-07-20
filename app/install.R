@@ -9,7 +9,7 @@
 
 #' wrapper for cat(sprintf(...))
 #'
-#' @param ... A dots construct.
+#' @param ... [ellipsis]
 cat_f <- function(...)
 {
   cat(sprintf(...))
@@ -17,7 +17,7 @@ cat_f <- function(...)
 
 #' wrapper for message(sprintf(...))
 #'
-#' @param ... A dots construct.
+#' @param ... [ellipsis]
 message_f <- function(...)
 {
   message(sprintf(...))
@@ -25,7 +25,7 @@ message_f <- function(...)
 
 #' wrapper for stop(sprintf(...))
 #'
-#' @param ... A dots construct.
+#' @param ... [ellipsis]
 stop_f <- function(...)
 {
   stop(sprintf(...))
@@ -37,13 +37,17 @@ stop_f <- function(...)
 
 # note: for each type, we generally do
 # is_type, make_type (for complex types)
-# and make_type calls is_type
+# such that make_type calls is_type
+
+# additionally, we initially describe types
+# in is_type as 'type' objects and refer with
+# the type directly in subsequent uses.
 
 #' whether x is an integer of length n
 #'
-#' @param x An object.
-#' @param n An integer (not checked).
-#' @returns TRUE or FALSE.
+#' @param x [object]
+#' @param n [integer] not checked
+#' @returns [boolean]
 is_int <- function(x, n = 1L)
 {
   is.integer(x) && length(x) == n
@@ -51,9 +55,9 @@ is_int <- function(x, n = 1L)
 
 #' whether x is a numeric of length n
 #'
-#' @param x An object.
-#' @param n An integer (not checked).
-#' @returns TRUE or FALSE.
+#' @param x [object]
+#' @param n [integer] not checked
+#' @returns [boolean]
 is_num <- function(x, n = 1L)
 {
   is.numeric(x) && length(x) == n
@@ -61,9 +65,9 @@ is_num <- function(x, n = 1L)
 
 #' whether x is a character of length n
 #'
-#' @param x An object.
-#' @param n An integer (not checked).
-#' @returns TRUE or FALSE.
+#' @param x [object]
+#' @param n [integer] not checked
+#' @returns [boolean]
 is_str <- function(x, n = 1L)
 {
   is.character(x) && length(x) == n
@@ -72,180 +76,149 @@ is_str <- function(x, n = 1L)
 #' whether all elements of x are finite
 #' note: succeeds if x is length 0
 #'
-#' @param x An object (e.g. vector, matrix).
-#' @returns TRUE or FALSE.
+#' @param x [object], e.g. vector, matrix, data.frame
+#' @returns [boolean]
 all_fin <- function(x)
 {
   all(is.finite(x))
 }
 
-#' whether all elements of x are non-NA
-#' note: succeeds if x is length 0
-#'
-#' @param x An object (e.g. vector, matrix).
-#' @returns TRUE or FALSE.
-none_na <- function(x)
-{
-  !any(is.na(x))
-}
-
 #' whether fun(x) is TRUE for all x in X
 #' note: succeeds if x is length 0
 #'
-#' @param X A vector (not checked).
-#' @returns TRUE or FALSE.
+#' @param X [vector] not checked
+#' @param FUN [function] not checked
+#' @returns [boolean]
 all_fun_true <- function(X, FUN)
 {
   all(vapply(X, FUN, FALSE))
 }
 
-#' whether x contains only unique values
-#' note: for any integer n, "!(n)" is
-#' TRUE if n = 0, FALSE otherwise
+#' whether x is a 'safe_names' object, aka
+#' a character with unique non-NA nonempty values
 #'
-#' @param x An object.
-#' @returns TRUE or FALSE.
-is_unique <- function(x)
+#' @param x [object]
+#' @returns [boolean]
+are_safe_names <- function(x)
 {
-  # aka: length(unique(x)) == length(x)
-  # aka: !any(duplicated(x))
-  !anyDuplicated(x)
+  is.null(x) || (is.character(x) && !anyDuplicated(x) &&
+    !anyNA(x) && !any(x == ""))
 }
 
-#' whether x is a character with unique
-#' values not equal to NA
+#' whether x has names that are safe
 #'
-#' @param x An object.
-#' @returns TRUE or FALSE.
-are_list_names <- function(x)
+#' @param x [object], e.g. vector, data.frame
+#' @returns [boolean]
+has_safe_names <- function(x)
 {
-  is.character(x) && is_unique(x) && none_na(x)
+  are_safe_names(names(x))
 }
 
 #' whether x is a 'subsets' object
 #' given an original set of size n
-#' note: succeeds if x is list()
 #'
-#' @param x An object.
-#' @param n An integer (not checked).
-#' @returns TRUE or FALSE.
+#' @param x [object]
+#' @param n [integer] not checked
+#' @returns [boolean]
 are_subsets <- function(x, n)
 {
   set_seq <- seq_len(n)
 
   len_n_subset <- function(subset)
   {
-    is.integer(subset) && all(subset %in% set_seq)
+    is.integer(subset) &&
+      all(subset %in% set_seq)
   }
 
-  is.list(x) && all_fun_true(x, len_n_subset)
-}
-
-#' whether x is a 'groups' object
-#' note: succeeds if x is list()
-#'
-#' @param x An object.
-#' @returns TRUE or FALSE.
-are_groups <- function(x)
-{
-  is.list(x) && all_fun_true(x, is.character)
+  is.list(x) && has_safe_names(x) &&
+    all_fun_true(x, len_n_subset)
 }
 
 #' whether x is a 'metadata' object with row_n rows
 #' note: metadata rownames should not be used
+#' in agreeing with the tidyverse convention
 #'
-#' @param x An object.
-#' @returns TRUE or FALSE.
+#' @param x [object]
+#' @returns [boolean]
 is_metadata <- function(x)
 {
   # must be a data.frame
-  is.data.frame(x) &&
+  is.data.frame(x) && has_safe_names(x) &&
     # positive dimensions
     nrow(x) > 0 && ncol(x) > 0 &&
     # each column is a character
     all_fun_true(x, is.character) &&
     # primary key is first column
-    is_unique(x[, 1])
+    !anyDuplicated(x[, 1])
 }
 
-#' whether x is a 'color vector' object
-#' note: succeeds if x is character()
+#' whether x is a 'color_scale' object, aka
+#' a named vector of hex values
 #'
-#' @param x An object.
-#' @returns TRUE or FALSE.
-is_color_vector <- function(x)
+#' @param x [object]
+#' @returns [boolean]
+is_color_scale <- function(x)
 {
-  is.character(x) &&
+  is.character(x)  && has_safe_names(x) &&
     all(grepl('^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$', x))
 }
 
-#' whether x is a 'color scale' object
-#' with character names
+#' whether x is a 'color_scales' object
 #'
-#' @param x An object.
-#' @returns TRUE or FALSE.
-is_color_scale <- function(x)
-{
-  is_color_vector(x) &&
-    is.character(names(x)) && is_unique(names(x)) && none_na(names(x))
-}
-
-#' whether x is a 'color scales' object
-#' note: succeeds if x is list()
-#'
-#' @param x An object.
-#' @returns TRUE or FALSE.
+#' @param x [object]
+#' @returns [boolean]
 are_color_scales <- function(x)
 {
-  is.list(x) && all_fun_true(x, is_color_scale)
+  is.list(x) && has_safe_names(x) &&
+    all_fun_true(x, is_color_scale)
 }
 
-#' whether color_scales are compatible with metadata
+#' whether color_scales align with metadata
 #'
-#' @param color_scales A color_scales object (not checked).
-#' @param metadata A metadata object (not checked).
-#' @returns TRUE or FALSE.
+#' @param color_scales [color_scales] not checked
+#' @param metadata [metadata] not checked
+#' @returns [boolean]
 color_scales_match_metadata <- function(color_scales, metadata)
 {
-  color_scale_match_meta_col <- function(cha)
+  scale_matches_col <- function(cha)
   {
     all(names(color_scales[[cha]]) %in% metadata[[cha]])
   }
 
-  all_fun_true(names(color_scales), color_scale_match_meta_col)
+  all_fun_true(names(color_scales), scale_matches_col)
 }
-
-# the expected members of an axis object
-axis_members <- c(
-  "length",
-  "metadata",
-  "subsets",
-  "color_scales",
-  "rel_meta"
-)
 
 #' whether x is an 'axis' object
 #'
-#' @param x An object.
-#' @returns TRUE or FALSE.
+#' @param x [object]
+#' @returns [boolean]
 is_axis <- function(x)
 {
-  is.list(x) && identical(names(x), axis_members) &&
+  members <- c(
+    "length",
+    "metadata",
+    "subsets",
+    "color_scales",
+    "rel_meta"
+  )
+
+  is.list(x) && identical(names(x), members) &&
     is_int(x$length) && x$length > 0L &&
     are_subsets(x$subsets, x$length) &&
     is_metadata(x$metadata) &&
     nrow(x$metadata) == x$length &&
     are_color_scales(x$color_scales) &&
-    color_scales_match_metadata(x$color_scales, x$metadata) &&
+    color_scales_match_metadata(
+      x$color_scales, x$metadata) &&
     all(x$rel_meta %in% names(x$metadata))
 }
 
-#' makes an axis object
+#' makes an axis
 #'
-#' @param metadata A metadata object.
-#' @param subsets A subsets object.
-#' @param color_scales A color_scales object.
-#' @returns An axis object if successful.
+#' @param metadata [metadata]
+#' @param subsets [subsets]
+#' @param color_scales [color_scales]
+#' @returns [axis]
 make_axis <- function(metadata, subsets, color_scales)
 {
   result <- list(
@@ -256,24 +229,23 @@ make_axis <- function(metadata, subsets, color_scales)
   )
 
   stopifnot(is_axis(result))
-
   result
 }
 
 #' whether x is an 'axes' object
-#' note: succeeds if x is list()
 #'
-#' @param x An object.
-#' @returns TRUE or FALSE.
+#' @param x [object]
+#' @returns [boolean]
 are_axes <- function(x)
 {
-  is.list(x) && all_fun_true(x, is_axis)
+  is.list(x) && has_safe_names(x) &&
+    all_fun_true(x, is_axis)
 }
 
 #' whether x is a 'category' object
 #'
-#' @param x An object.
-#' @returns TRUE or FALSE.
+#' @param x [object]
+#' @returns [boolean]
 is_category <- function(x)
 {
   members <- c("row_axs", "col_axs", "note")
@@ -281,11 +253,12 @@ is_category <- function(x)
     is_str(x$row_axs) && is_str(x$col_axs) && is_str(x$note)
 }
 
-#' makes a category object
+#' makes a category
 #'
-#' @param row_axs A string for a row axis name.
-#' @param col_axs A string for a col axis name.
-#' @returns A category object if successful.
+#' @param row_axs [string] for a row axis name
+#' @param col_axs [string] for a col axis name
+#' @param note [string] describing the category
+#' @returns [category]
 make_category <- function(row_axs, col_axs, note = "")
 {
   result <- list(
@@ -295,56 +268,40 @@ make_category <- function(row_axs, col_axs, note = "")
   )
 
   stopifnot(is_category(result))
-
   result
 }
 
 #' whether x is a 'categories' object
-#' note: succeeds if x is list()
 #'
-#' @param x An object.
-#' @returns TRUE or FALSE.
+#' @param x [object]
+#' @returns [boolean]
 are_categories <- function(x)
 {
-  is.list(x) && all_fun_true(x, is_category)
+  is.list(x) && has_safe_names(x) &&
+    all_fun_true(x, is_category)
 }
 
-#' whether categories are compatible with row_axes, col_axes
+#' whether categories align with row_axes, col_axes
 #'
-#' @param categories A categories object (not checked).
-#' @param row_axes A row axis object (not checked).
-#' @param col_axes A col axis object (not checked).
-#' @returns TRUE or FALSE.
+#' @param categories [categories] not checked
+#' @param row_axes [row_axes] not checked
+#' @param col_axes [col_axes] not checked
+#' @returns [boolean]
 categories_match_axes <- function(categories, row_axes, col_axes)
 {
-  category_match_axes <- function(cat)
+  category_in_axes <- function(cat)
   {
     categories[[cat]]$row_axs %in% names(row_axes) &&
       categories[[cat]]$col_axs %in% names(col_axes)
   }
 
-  all_fun_true(names(categories), category_match_axes)
+  all_fun_true(names(categories), category_in_axes)
 }
 
-#' whether groups are compatible with categories
+#' whether x is a 'table' object
 #'
-#' @param groups A groups object (not checked).
-#' @param categories A categories object (not checked).
-#' @returns TRUE or FALSE.
-groups_match_categories <- function(groups, categories)
-{
-  group_matches_categories <- function(group)
-  {
-    all(group %in% names(categories))
-  }
-
-  all_fun_true(groups, group_matches_categories)
-}
-
-#' whether x is a table object
-#'
-#' @param x An object.
-#' @returns TRUE or FALSE.
+#' @param x [object]
+#' @returns [boolean]
 is_table <- function(x)
 {
   # must be a matrix
@@ -352,39 +309,28 @@ is_table <- function(x)
     # positive dimensions
     nrow(x) > 0 && ncol(x) > 0 &&
     # prevents NA, NaN, Inf, -Inf, non-numerics
-    all_fin(x) &&
-    # no rownames (tidyverse convention)
-    is.null(rownames(x))
+    all_fin(x)
 }
 
-#' whether table has corresponding row / col counts
+#' more flexible version of dplyr::between
 #'
-#' @param table A table (not checked).
-#' @param row_n An integer (not checked).
-#' @param col_n An integer (not checked).
-#' @returns TRUE or FALSE.
-table_has_dim_n <- function(table, row_n, col_n)
-{
-  nrow(table) == row_n && ncol(table) == col_n
-}
-
-#' A useful utility function, similar to dplyr::between
-#'
-#' @param x A numeric (not checked).
-#' @param left A numeric (not checked).
-#' @param right A numeric (not checked).
-#' @returns A logical.
+#' @param x [numeric] not checked
+#' @param left [numeric] not checked
+#' @param right [numeric] not checked
+#' @returns [logical]
 vec_between <- function(x, left, right)
 {
   (x >= left) & (x <= right)
 }
 
-#' Whether a perplexity is valid given the number of rows
+#' whether a perplexity is valid for n samples
 #'
-#' @param per A numeric (not checked).
-perplexity_is_valid <- function(per, row_n)
+#' @param per [numeric] not checked
+#' @param n [numeric] not checked
+#' @returns [logical]
+perplexity_is_valid <- function(per, n)
 {
-  vec_between(per, 1, (row_n - 1) / 3)
+  vec_between(per, 1, (n - 1) / 3)
 }
 
 # -----------------
@@ -393,31 +339,18 @@ perplexity_is_valid <- function(per, row_n)
 
 #' the number of unique values in x
 #'
-#' @param x An object.
-#' @returns An integer.
+#' @param x [object]
+#' @returns [integer]
 num_unique <- function(x)
 {
   length(unique(x))
 }
 
-#' assert that x has at most n unique values
+#' returns (t2 - t1) in seconds
 #'
-#' @param x An object.
-#' @returns TRUE or FALSE.
-has_n_unique <- function(x, n)
-{
-  tryCatch(
-    return(unique(x, nmax = n) <= n),
-    error = function(e) return(FALSE),
-    warning = function(e) return(FALSE)
-  )
-}
-
-#' returns (time t2 - time t1) in seconds
-#'
-#' @param t1 A POSIXct.
-#' @param t2 A POSIXct.
-#' @returns A numeric.
+#' @param t1 [POSIXct], such as from Sys.time()
+#' @param t2 [POSIXct], such as from Sys.time()
+#' @returns [numeric]
 time_diff <- function(t1, t2 = Sys.time())
 {
   stopifnot(
@@ -427,10 +360,10 @@ time_diff <- function(t1, t2 = Sys.time())
   as.numeric(t2 - t1)
 }
 
-#' converts a vector to a string
+#' string representation of a vector
 #'
-#' @param v A vector.
-#' @returns A string.
+#' @param v [vector], e.g. character, numeric
+#' @returns [string]
 vec_str <- function(v)
 {
   stopifnot(is.vector(v))
@@ -439,29 +372,30 @@ vec_str <- function(v)
 
 #' creates an empty list of length n
 #'
-#' @param n An integer.
-#' @returns A list.
+#' @param n [integer]
+#' @returns [list]
 len_n_list <- function(n)
 {
   stopifnot(is_int(n))
   vector(mode = "list", length = n)
 }
 
-#' creates an empty list with specified list_names
+#' creates an empty list with specified safe_names
 #' to improve performance (vs expanding a list)
 #'
-#' @param list_names A character.
-#' @returns A list.
-empty_named_list <- function(list_names)
+#' @param safe_names [safe_names]
+#' @returns [list]
+empty_named_list <- function(safe_names)
 {
-  stopifnot(is.character(list_names))
-  setNames(len_n_list(length(list_names)), list_names)
+  stopifnot(are_safe_names(safe_names))
+  n <- length(safe_names)
+  setNames(len_n_list(n), list_names)
 }
 
 #' wrapper for assigning to global env
 #'
-#' @param name A string.
-#' @param value An object.
+#' @param name [string]
+#' @param value [object]
 assign_global <- function(name, value)
 {
   stopifnot(is_str(name))
@@ -473,7 +407,8 @@ assign_global <- function(name, value)
 # -----------------
 
 #' creates an sdr_config object
-#' @returns A list.
+#'
+#' @returns [list]
 create_sdr_config <- function()
 {
   config <- list("start_time" = Sys.time())
@@ -513,7 +448,7 @@ rm(create_sdr_config)
 #' checks loaded packages and sends prompts
 #' to prepare for package installation
 #'
-#' @param pkg_names A character.
+#' @param pkg_names [character]
 prep_pkgs_install <- function(pkg_names)
 {
   stopifnot(is.character(pkg_names))
@@ -630,16 +565,18 @@ suppressPackageStartupMessages({
 #' gets the location of a project file
 #' note: can ONLY be used in pipeline mode
 #'
-#' @param file A string.
+#' @param file [string] not checked
+#' @returns [string]
 get_project_loc <- function(file)
 {
   file.path(sdr_config$path, file)
 }
 
-#' gets the location of an application file, accounting
-#' for the values of sdr_config$mode
+#' gets the location of an application file,
+#' accounting for differences in sdr_config$mode
 #'
-#' @param file A string.
+#' @param file [string]
+#' @returns [string]
 get_app_loc <- function(file)
 {
   stopifnot(is_str(file))
@@ -647,15 +584,15 @@ get_app_loc <- function(file)
   if (sdr_config$mode == "pipeline")
     file <- file.path("app", file) %>% get_project_loc()
 
-  if (file.exists(file))
-    return(file)
+  if (!file.exists(file))
+    stop_f("Source file could not be found: %s", file)
 
-  stop_f("Source file could not be found: %s", file)
+  file
 }
 
-#' sources a file in "app/" in the context of various use cases
+#' sources an application file
 #'
-#' @param file A string.
+#' @param file [string]
 source_app <- function(file)
 {
   # UTF-8 to maximize compatibility (especially with JSON)
@@ -666,9 +603,9 @@ source_app <- function(file)
 # COMPLETE INSTALLATION
 # ---------------------
 
-#' Syntactic sugar for time_diff.
+#' syntactic sugar for time_diff
 #'
-#' @returns A numeric.
+#' @returns [numeric]
 net_time <- function() {
   time_diff(sdr_config$start_time)
 }

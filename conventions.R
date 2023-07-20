@@ -26,19 +26,22 @@
 # redundant return statements are avoided
 # if wrapping an expression is necessary, end lines on an operator (like +)
 # using "T", "F" as abbreviations for "TRUE", "FALSE" is strictly avoided
+# booleans refer to TRUE or FALSE, not including NA.
+
 # functions with comments should obey roxygen2 conventions
 # --if the returned value will not be used, do not specify @returns
+# --use [type] to specify the types of parameters.
 # the function below demonstrates the above principles
 
 #' Manipulate two objects
 #'
-#' @param x An object.
-#' @param y An object.
-#' @returns A list.
+#' @param x [object]
+#' @param y [object]
+#' @returns [list] list("A" = a, "B" = b, "C" = "test", "D" = TRUE)
 example_func <- function(a = 1, b = 2)
 {
-  list("A test" = a, "B test" = b, "C test" = "test", "D test" = TRUE && TRUE && TRUE &&
-         TRUE && (FALSE || TRUE || FALSE || TRUE || FALSE || TRUE || FALSE || TRUE))
+  list("A" = a, "B" = b, "C" = "test", "D" = TRUE && TRUE &&
+         TRUE && (FALSE || TRUE || FALSE || TRUE))
 }
 
 # common mistakes:
