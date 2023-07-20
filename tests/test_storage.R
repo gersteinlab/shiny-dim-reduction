@@ -1,36 +1,21 @@
 # This file tests storage.R.
-# Note: storage_query() is not tested in detail because it is dependent on the app.
-# Note: You will need a set of AWS master keys to perform these tests; use save_master_key().
+# source("tests/test_storage.R")
 
 # -----
 # SETUP
 # -----
 
-source("install.R")
-source_sdr("storage.R")
+source("app/install.R")
+if (!require(testthat))
+  stop("Missing package: testthat")
 
-test_keys <- list(
-  "id" = "to-be-sudo",
-  "secret" = "to-be-sudo",
-  "bucket" = "shiny-app-data-justin-test"
-)
-
-test_root <- "C:/Users/justin/Desktop/CodeR/DataR/sdr_workflows/test/reference"
+source("app/storage.R")
 
 # ---------
 # AWS TESTS
 # ---------
 
-library(evaluate)
-
-# checks if a single line evaluation is successful
-single_line_eval <- function(single_line, check_warnings = TRUE, check_errors = TRUE)
-{
-  evaluation <- evaluate::evaluate(quote(single_line))
-  no_warnings <- sum("warning" %in% unlist(lapply(evaluation, class))) == 0
-  no_errors <- sum("error" %in% unlist(lapply(evaluation, class))) == 0
-  (!check_warnings || no_warnings) && (!check_errors || no_errors)
-}
+start_time <- Sys.time()
 
 aws_s3_test_1 <- function()
 {

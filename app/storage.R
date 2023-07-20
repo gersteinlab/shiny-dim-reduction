@@ -1,15 +1,15 @@
 # The purpose of this file is to manage storage systems (stores).
 
 # Goals for each store:
-# is_store: is in correct format
-# make_store: make the store
-# set_store: set the store
-# store_connected: whether store connects
-# store_connects: try to connect and see the result
-# list_store: list all files with a prefix
-# find_store: returns whether a file exists
-# save_store: saves a file, creating the directory if it doesn't exist
-# load_store: loads a file, returning NULL if it doesn't exist
+# --is_store: is in correct format
+# --make_store: make the store
+# --set_store: set the store
+# --store_connected: whether store connects
+# --store_connects: try to connect and see the result
+# --list_store: list all files with a prefix
+# --find_store: returns whether a file exists
+# --save_store: saves a file, creating the directory if it doesn't exist
+# --load_store: loads a file, returning a default if it doesn't exist
 
 if (!exists("sdr_config"))
   source("app/install.R")
@@ -20,33 +20,47 @@ library(aws.s3)
 # LOCAL STORAGE
 # -------------
 
-# is x in the correct format for a local store?
-# (note: can be in correct format and not connect)
+#' whether x is a 'local_store' object
+#' (note: local stores may not connect)
+#'
+#' @param x [object]
+#' @returns [boolean]
 is_local_store <- function(x)
 {
   is_str(x)
 }
 
-# makes a local store object
-make_local_store <- function(dirname = "")
+#' makes a local_store
+#'
+#' @param dir [string], e.g. a directory path
+#' @returns [local_store]
+make_local_store <- function(dir = "")
 {
-  stopifnot(is_local_store(dirname))
-  dirname
+  stopifnot(is_local_store(dir))
+  dir
 }
 
-# set local store (not checked)
+#' sets the global local_store to x
+#'
+#' @param x [local_store] not checked
 set_local_store <- function(x)
 {
   Sys.setenv("LOCAL_STORE" = x)
 }
 
-# check if the local store is connected
+#' is the global local_store connected?
+#'
+#' @returns [boolean]
 local_connected <- function()
 {
-  sdr_config$mode != "cloud" && dir.exists(Sys.getenv("LOCAL_STORE"))
+  dir.exists(Sys.getenv("LOCAL_STORE"))
 }
 
-# check local connection
+#' tries to connect a local_store and
+#' returns whether connecting succeeded
+#'
+#' @param local_store [local_store]
+#' @returns [boolean]
 local_connects <- function(local_store)
 {
   if (!is_local_store(local_store))
@@ -55,53 +69,79 @@ local_connects <- function(local_store)
   local_connected()
 }
 
-# gives the local storage path for a location
-path_local <- function(loc)
+#' adds the local_store path as a prefix
+#'
+#' @param path [string]
+#' @returns [string]
+prefix_local <- function(path)
 {
-  file.path(Sys.getenv("LOCAL_STORE"), loc)
+  file.path(Sys.getenv("LOCAL_STORE"), path)
 }
 
-# lists all files with the given prefix (usually a valid directory)
-list_local <- function(prefix)
+#' lists all files at the given path in local_store
+#'
+#' @param path [string], usually a directory
+#' @returns [character] representing files
+list_local <- function(path)
 {
-  list.files(path_local(prefix))
+  list.files(prefix_local(path), recursive = TRUE)
 }
 
-# determines whether a file with the given filename exists
-find_local <- function(filename)
+#' whether file exists in local_store
+#'
+#' @param file [string]
+#' @returns [boolean]
+find_local <- function(file)
 {
-  file.exists(path_local(filename))
+  file.exists(prefix_local(file))
 }
 
-# saveRDS but we force the creation of the directory
+#' ensures the existence of a directory
+#'
+#' @param path [string], usually a directory
+ensure_dir <- function(path)
+{
+  if (!dir.exists(path))
+    dir.create(path, recursive = TRUE)
+}
+
+#' saveRDS but ensure the directory first
+#'
+#' @param file [string]
 mkdir_saveRDS <- function(data, file, compress = TRUE)
 {
-  dest_dir <- dirname(file)
-  if (!dir.exists(dest_dir))
-    dir.create(dest_dir, recursive = TRUE)
+  ensure_dir(dirname(file))
   saveRDS(data, file, compress = compress)
 }
 
-# saves data to filename in the root directory
-save_local <- function(data, filename)
+#' saves data to file in the local_store
+#'
+#' @param file [string]
+save_local <- function(data, file)
 {
-  mkdir_saveRDS(data, path_local(filename))
+  mkdir_saveRDS(data, prefix_local(file))
 }
 
-# loads data from filename in the root directory
-load_local <- function(filename, default = NULL)
+#' reads data from file in the local_store
+#'
+#' @param file [string]
+#' @returns [object]
+load_local <- function(file, default = NULL)
 {
-  if (!find_local(filename))
+  if (!find_local(file))
     return(default)
-  readRDS(path_local(filename))
+  readRDS(path_local(file))
 }
 
 # -------------
 # CLOUD STORAGE
 # -------------
 
-# is x in the correct format for a cloud store?
-# (note: can be in correct format and not connect)
+#' whether x is a 'cloud_store' object
+#' (note: cloud stores may not connect)
+#'
+#' @param x [object]
+#' @returns [boolean]
 is_cloud_store <- function(x)
 {
   members <- c("id", "secret", "bucket")
@@ -109,7 +149,12 @@ is_cloud_store <- function(x)
     is_str(x$id) && is_str(x$secret) && is_str(x$bucket)
 }
 
-# makes a cloud store object
+#' makes a cloud_store
+#'
+#' @param id [string] per aws.s3::s3HTTP
+#' @param secret [string] per aws.s3::s3HTTP
+#' @param bucket [string] naming the bucket
+#' @returns [cloud_store]
 make_cloud_store <- function(id = "", secret = "", bucket = "")
 {
   result <- list(
@@ -119,11 +164,12 @@ make_cloud_store <- function(id = "", secret = "", bucket = "")
   )
 
   stopifnot(is_cloud_store(result))
-
   result
 }
 
-# set cloud store (not checked)
+#' sets the global cloud_store to x
+#'
+#' @param x [cloud_store] not checked
 set_cloud_store <- function(x)
 {
   Sys.setenv(
@@ -133,7 +179,9 @@ set_cloud_store <- function(x)
   )
 }
 
-# checks if there exists a connection to AWS
+#' is the global cloud_store connected?
+#'
+#' @returns [boolean]
 cloud_connected <- function()
 {
   tryCatch(
@@ -143,7 +191,11 @@ cloud_connected <- function()
   )
 }
 
-# check cloud connection
+#' tries to connect a cloud_store and
+#' returns whether connecting succeeded
+#'
+#' @param cloud_store [cloud_store]
+#' @returns [boolean]
 cloud_connects <- function(cloud_store)
 {
   if (!is_cloud_store(cloud_store))
@@ -152,48 +204,69 @@ cloud_connects <- function(cloud_store)
   cloud_connected()
 }
 
-# lists the contents of a bucket's prefix
-list_aws_s3 <- function(prefix)
+#' lists all files at the given path in cloud_store
+#'
+#' @param path [string], usually a directory
+#' @returns [character] representing files
+list_aws_s3 <- function(path)
 {
   as.character(sapply(
-    get_bucket(Sys.getenv("AWS_ACCESS_BUCKET"), prefix = prefix, max = Inf),
+    get_bucket(
+      Sys.getenv("AWS_ACCESS_BUCKET"),
+      prefix = path,
+      max = Inf
+    ),
     function(x){x$Key}
   ))
 }
 
-# determines whether a single object with the given filename exists
-find_aws_s3 <- function(filename)
+#' whether file exists in cloud_store
+#'
+#' @param file [string]
+#' @returns [boolean]
+find_aws_s3 <- function(file)
 {
   tryCatch(
-    return(object_exists(filename, Sys.getenv("AWS_ACCESS_BUCKET"))),
+    return(object_exists(
+      file,
+      Sys.getenv("AWS_ACCESS_BUCKET")
+    )),
     warning = function(e) return(FALSE),
     error = function(e) return(FALSE)
   )
 }
 
-# for temporary use
+#' saves data to file in the cloud_store
+#' note: modified from aws.s3::s3save
+#'
+#' @param file [string]
 my_amazon_obj <- NULL
-
-# saves a single object to AWS.s3 - modified from s3save
-save_aws_s3 <- function(data, filename)
+save_aws_s3 <- function(data, file)
 {
   tmp <- tempfile(fileext = ".rdata")
   on.exit(unlink(tmp))
   my_amazon_obj <<- data
   save(my_amazon_obj, file = tmp, envir = .GlobalEnv)
-  put_object(file = tmp, bucket = Sys.getenv("AWS_ACCESS_BUCKET"), object = filename)
+  put_object(
+    file = tmp,
+    bucket = Sys.getenv("AWS_ACCESS_BUCKET"),
+    object = file
+  )
 }
 
-# loads a single object from AWS.s3 - modified from s3load
-load_aws_s3 <- function(filename, default = NULL)
+#' reads data from file in the cloud_store
+#'
+#' @param file [string]
+#' @returns [object]
+load_aws_s3 <- function(file, default = NULL)
 {
-  if (!find_aws_s3(filename))
+  if (!find_aws_s3(file))
     return(default)
   tmp <- tempfile(fileext = ".rdata")
   on.exit(unlink(tmp))
   save_object(
     bucket = Sys.getenv("AWS_ACCESS_BUCKET"),
-    object = filename,
+    object = file,
     file = tmp
   )
   load(tmp, envir = .GlobalEnv)
@@ -204,14 +277,21 @@ load_aws_s3 <- function(filename, default = NULL)
 # STORAGE QUERY
 # -------------
 
+#' asks the user whether to use local or cloud storage
+#'
+#' @returns [string]
 get_user_store_mode <- function()
 {
-  if (readline("Type 'Y' and press enter to use local storage.
-Type anything else and press enter to use AWS storage.") == "Y")
+  if (readline("Type 'y' and press enter to use local storage.
+Type anything else and press enter to use cloud (AWS S3) storage."
+  ) == "y")
     return("local")
   "cloud"
 }
 
+#' decides whether to use local or cloud storage
+#'
+#' @returns [string]
 decide_store_mode <- function(local_store, cloud_store)
 {
   if (local_connects(local_store))
