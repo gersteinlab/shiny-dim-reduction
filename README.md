@@ -178,7 +178,6 @@ We suggest running the tests in the following order:
 
 1. test_install.R
 2. test_plotting.R
-3. test_authentication.R
 4. test_find_replace.R
 5. test_text_work.R
 6. test_ui_functions.R

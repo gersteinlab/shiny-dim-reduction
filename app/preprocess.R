@@ -1,25 +1,49 @@
-# The purpose of this file is to name, initialize, and set roles for reduction parameters,
-# while also enabling the naming, storing, and loading of reduction files.
+# The purpose of this file is to load application data
+# and preprocess it for effective application / pipeline use.
 
 if (!exists("sdr_config"))
   source("app/install.R")
 
-source_app("authentication.R")
 source_app("storage.R")
 
 # ---------------
 # IMPORT APP DATA
 # ---------------
 
+#' whether x is a 'groups' object
+#' note: succeeds if x is list()
+#'
+#' @param x [object]
+#' @returns [boolean]
+are_groups <- function(x)
+{
+  is.list(x) && has_safe_names(x) &&
+    all_fun_true(x, is.character)
+}
+
+#' whether groups are compatible with categories
+#'
+#' @param groups [groups] not checked
+#' @param categories [categories] not checked
+#' @returns [boolean]
+groups_match_categories <- function(groups, categories)
+{
+  group_matches_categories <- function(group)
+  {
+    all(group %in% names(categories))
+  }
+
+  all_fun_true(groups, group_matches_categories)
+}
+
 #' whether x is an 'app_data' object
 #'
-#' @param x An object.
-#' @returns TRUE or FALSE.
+#' @param x [object]
+#' @returns [boolean]
 is_app_data <- function(x) {
   members <- c(
     "title",
     "citations",
-    "credentials",
     "row_axes",
     "col_axes",
     "categories",
@@ -27,9 +51,9 @@ is_app_data <- function(x) {
     "local_store",
     "cloud_store"
   )
+
   is.list(x) && identical(names(x), members) &&
     is_str(x$title) && is_str(x$citations) &&
-    are_credentials(x$credentials) &&
     are_axes(x$row_axes) && are_axes(x$col_axes) &&
     are_categories(x$categories) &&
     categories_match_axes(x$categories, x$row_axes, x$col_axes) &&
@@ -52,9 +76,6 @@ if (!is_app_data(app_data))
 Please delete 'app_data.rds' and rerun the application.")
 assign_global("app_data", app_data)
 cat_f("APP_DATA LOAD TIME: %.1f (sec)\n", net_time())
-
-# set credentials
-set_credentials(app_data[["credentials"]])
 
 # set row axes
 assign_global("row_axes", app_data[["row_axes"]])

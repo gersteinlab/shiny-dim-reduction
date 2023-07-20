@@ -52,8 +52,6 @@ max_upse <- 5000
 max_heat <- 20000
 # the initial number of columns on a dendrogram
 max_dend <- 200
-# is the user authenticated by default?
-auth_default <- TRUE
 # should plots respond to user inputs by default?
 run_default <- TRUE
 # should server-side rendering be used for tables?

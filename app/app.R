@@ -10,52 +10,6 @@ server <- function(input, output, session) {
   else
     shinyjs::hide("stop")
 
-  if (!auth_default)
-    showModal(authenticator_modal())
-
-  # --------------
-  # AUTHENTICATION
-  # --------------
-  authenticated <- reactiveVal(auth_default)
-  shinyjs::runjs(no_autofill) # prevent google from autocompleting passwords
-  addClass("password", "my-hidden-text") # hide password text to start
-
-  # handle login attempts
-  observeEvent(input$attempt_login, {
-    notification("Attempting authentication ...", 3, "default")
-
-    if (my_auth(input$username, input$password))
-    {
-      notification("Authentication was successful - welcome!", 3, "message")
-      removeModal()
-      authenticated(TRUE)
-    }
-    else
-    {
-      Sys.sleep(0.5) # prevent repeated attempts too quickly
-      notification("Authentication was unsuccessful.", 6, "error")
-      authenticated(FALSE)
-    }
-  })
-
-  # toggles password visibility
-  observeEvent(input$toggle_password, {
-    if (input$toggle_password %% 2 == 1)
-    {
-      updateTextInput(session, "password",
-                      label = "Password (is visible)",
-                      placeholder = "Please enter your password ...")
-      removeClass("password", "my-hidden-text")
-    }
-    else
-    {
-      updateTextInput(session, "password",
-                      label = "Password (is invisible)",
-                      placeholder = "")
-      addClass("password", "my-hidden-text")
-    }
-  })
-
   # -------------------
   # NOTIFICATION SYSTEM
   # -------------------
@@ -77,9 +31,6 @@ server <- function(input, output, session) {
   # prep a (possibly NULL) plot for rendering and send notifications
   prep_plot <- function(target)
   {
-    if (!authenticated())
-      return(ggplot2_null())
-
     num <- isolate(num_plots())
 
     if (num == 1)
@@ -1010,9 +961,6 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
       sprintf("num_data_%s.csv", rep_str(title_text(), " ", "_"))
     },
     content = function(file) {
-      if (!authenticated())
-        return(NULL)
-
       write.csv(num_data(), file)
     }
   )
@@ -1022,9 +970,6 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
       sprintf("metadata_%s.csv", rep_str(title_text(), " ", "_"))
     },
     content = function(file) {
-      if (!authenticated())
-        return(NULL)
-
       write.csv(metadata(), file)
     }
   )
@@ -1033,24 +978,16 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   # INDIRECT UI OUTPUTS
   # -------------------
   output$title_out <- renderMenu({
-    if (!authenticated())
-      return(NULL)
     if (title_access())
       return(NULL)
     sprintf("<h3><b>Title:</b> %s</h3>", title_text()) %>% HTML()
   })
 
   output$requests_out <- renderDT({
-    if (!authenticated())
-      return(my_datatable())
-
     my_datatable(present_requests(app_requests))
   }, server = table_server_render)
 
   output$user_requests_out <- renderDT({
-    if (!authenticated())
-      return(my_datatable())
-
     my_datatable(present_requests(user_requests()))
   }, server = table_server_render)
 
@@ -1060,23 +997,14 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   output$beeswarm_out <- renderPlot({prep_plot(beeswarm_data())})
 
   output$num_data_table <- renderDT({
-    if (!authenticated())
-      return(my_datatable())
-
     my_datatable(data.frame(num_data()))
   }, server = table_server_render)
 
   output$metadata_table <- renderDT({
-    if (!authenticated())
-      return(my_datatable())
-
     my_datatable(data.frame(metadata()))
   }, server = table_server_render)
 
   output$legend_out <- renderDT({
-    if (!authenticated())
-      return(my_datatable())
-
     my_datatable(generate_legend_table(colors()))
   }, server = table_server_render)
 

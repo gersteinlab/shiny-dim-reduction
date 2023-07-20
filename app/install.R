@@ -478,7 +478,6 @@ sdr_pkgs_base <- c(
   , "dplyr"
   , "stringi"
   , "aws.s3"
-  , "bcrypt"
   , "hash"
 
   , "shinydashboard"
