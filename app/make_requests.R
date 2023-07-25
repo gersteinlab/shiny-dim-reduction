@@ -388,7 +388,7 @@ make_requests <- function(
   stopifnot(!anyDuplicated(key_names))
 
   requests$AUTHOR <- aut
-  cur_time <- Sys.time()
+  cur_time <- rep(Sys.time(), nrow(requests)) # needed in case 0 rows
   requests$TIME_REQUESTED <- cur_time
   day_in_seconds <- 60 * 60 * 24
   requests$TIME_COMPLETED <- cur_time - day_in_seconds
