@@ -14,6 +14,7 @@ app/rsconnect
 app/app_data.rds
 app/local_store.rds
 app/cloud_store.rds
+tests/test_cloud_store.rds
 
 # other repo-specific items
 ignore

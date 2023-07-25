@@ -1,4 +1,10 @@
 # The purpose of this file is to manage storage systems (stores).
+# For AWS S3, you may find it difficult to explore available files
+# with list_cloud because it retrieves all files with data.
+# Instead, you can use the AWS CLI with the system() command.
+# https://docs.aws.amazon.com/cli/latest/userguide/
+# note: you may need to reinstall RStudio to get the CLI to work
+# e.g. system("aws --version")
 
 # Goals for each store:
 # --is_store: is in correct format
@@ -10,6 +16,7 @@
 # --find_store: returns whether a file exists
 # --save_store: saves a file, creating the directory if it doesn't exist
 # --load_store: loads a file, returning a default if it doesn't exist
+# --delete_store: deletes a file
 
 if (!exists("sdr_config"))
   source("app/install.R")
@@ -81,9 +88,10 @@ prefix_local <- function(path)
 #' lists all files at the given path in local_store
 #'
 #' @param path [string], usually a directory
-#' @returns [character] representing files
-list_local <- function(path)
+#' @returns [character] representing files, no prefix
+list_local <- function(path = "")
 {
+  stopifnot(is_str(path))
   list.files(prefix_local(path), recursive = TRUE)
 }
 
@@ -93,6 +101,7 @@ list_local <- function(path)
 #' @returns [boolean]
 find_local <- function(file)
 {
+  stopifnot(is_str(file))
   file.exists(prefix_local(file))
 }
 
@@ -119,6 +128,7 @@ mkdir_saveRDS <- function(data, file, compress = TRUE)
 #' @param file [string]
 save_local <- function(data, file)
 {
+  stopifnot(is_str(file))
   mkdir_saveRDS(data, prefix_local(file))
 }
 
@@ -130,7 +140,17 @@ load_local <- function(file, default = NULL)
 {
   if (!find_local(file))
     return(default)
-  readRDS(path_local(file))
+  readRDS(prefix_local(file))
+}
+
+#' deletes file in the local_store
+#'
+#' @param file [string]
+#' @returns [object]
+delete_local <- function(file)
+{
+  stopifnot(is_str(file))
+  unlink(file)
 }
 
 # -------------
@@ -184,8 +204,9 @@ set_cloud_store <- function(x)
 #' @returns [boolean]
 cloud_connected <- function()
 {
+  env_bucket <- Sys.getenv("AWS_ACCESS_BUCKET")
   tryCatch(
-    return(bucket_exists(Sys.getenv("AWS_ACCESS_BUCKET"))),
+    return(aws.s3::bucket_exists(env_bucket)),
     warning = function(e) return(FALSE),
     error = function(e) return(FALSE)
   )
@@ -204,33 +225,53 @@ cloud_connects <- function(cloud_store)
   cloud_connected()
 }
 
+#' get first index past prefix, including slashes
+#'
+#' @param n [integer] length of prefix
+#' @returns [integer]
+get_prefix_start <- function(n = 0)
+{
+  if (n < 1)
+    return(1)
+  n + 2
+}
+
 #' lists all files at the given path in cloud_store
 #'
 #' @param path [string], usually a directory
-#' @returns [character] representing files
-list_aws_s3 <- function(path)
+#' @returns [character] representing files, no prefix
+list_cloud <- function(path = "")
 {
-  as.character(sapply(
-    get_bucket(
-      Sys.getenv("AWS_ACCESS_BUCKET"),
-      prefix = path,
-      max = Inf
-    ),
+  stopifnot(is_str(path))
+  env_bucket <- Sys.getenv("AWS_ACCESS_BUCKET")
+  result <- as.character(sapply(
+    aws.s3::get_bucket(env_bucket, path, max = Inf),
     function(x){x$Key}
   ))
+  substring(result, get_prefix_start(nchar(path)))
+}
+
+#' summarizes a bucket
+#'
+#' @returns [integer] status code
+summarize_bucket <- function()
+{
+  stopifnot(is_str(path))
+  env_bucket <- Sys.getenv("AWS_ACCESS_BUCKET")
+  # stopifnot(system2("aws", "--version") == 0)
+  system2("aws", c("s3", "ls", env_bucket, "--summarize", "--recursive"))
 }
 
 #' whether file exists in cloud_store
 #'
 #' @param file [string]
 #' @returns [boolean]
-find_aws_s3 <- function(file)
+find_cloud <- function(file)
 {
+  stopifnot(is_str(file))
+  env_bucket <- Sys.getenv("AWS_ACCESS_BUCKET")
   tryCatch(
-    return(object_exists(
-      file,
-      Sys.getenv("AWS_ACCESS_BUCKET")
-    )),
+    return(aws.s3::object_exists(file, env_bucket)),
     warning = function(e) return(FALSE),
     error = function(e) return(FALSE)
   )
@@ -241,41 +282,119 @@ find_aws_s3 <- function(file)
 #'
 #' @param file [string]
 my_amazon_obj <- NULL
-save_aws_s3 <- function(data, file)
+save_cloud <- function(data, file)
 {
+  stopifnot(is_str(file))
+  env_bucket <- Sys.getenv("AWS_ACCESS_BUCKET")
   tmp <- tempfile(fileext = ".rdata")
   on.exit(unlink(tmp))
   my_amazon_obj <<- data
   save(my_amazon_obj, file = tmp, envir = .GlobalEnv)
-  put_object(
-    file = tmp,
-    bucket = Sys.getenv("AWS_ACCESS_BUCKET"),
-    object = file
-  )
+  aws.s3::put_object(tmp, file, env_bucket)
 }
 
 #' reads data from file in the cloud_store
 #'
 #' @param file [string]
 #' @returns [object]
-load_aws_s3 <- function(file, default = NULL)
+load_cloud <- function(file, default = NULL)
 {
-  if (!find_aws_s3(file))
+  if (!find_cloud(file))
     return(default)
+  env_bucket <- Sys.getenv("AWS_ACCESS_BUCKET")
   tmp <- tempfile(fileext = ".rdata")
   on.exit(unlink(tmp))
-  save_object(
-    bucket = Sys.getenv("AWS_ACCESS_BUCKET"),
-    object = file,
-    file = tmp
-  )
+  aws.s3::save_object(file, env_bucket, tmp)
   load(tmp, envir = .GlobalEnv)
   my_amazon_obj
 }
 
-# -------------
-# STORAGE QUERY
-# -------------
+#' deletes file in the cloud_store
+#'
+#' @param file [string]
+#' @returns [object]
+delete_cloud <- function(file)
+{
+  stopifnot(is_str(file))
+  env_bucket <- Sys.getenv("AWS_ACCESS_BUCKET")
+  aws.s3::delete_object(file, env_bucket)
+}
+
+# -----------------------
+# GENERAL STORE FUNCTIONS
+# -----------------------
+
+# the mode currently being used ("local" or "cloud")
+assign_global("store_mode", "local")
+
+#' lists all files at the given path
+#'
+#' @param path [string], usually a directory
+#' @returns [character] representing files
+list_store <- function(path)
+{
+  if (store_mode == "local")
+    return(list_local(path))
+  if (store_mode == "cloud")
+    return(list_cloud(path))
+  stop("Invalid store_mode for list_store.")
+}
+
+#' whether file exists
+#'
+#' @param file [string]
+#' @returns [boolean]
+find_store <- function(file)
+{
+  if (store_mode == "local")
+    return(find_local(file))
+  if (store_mode == "cloud")
+    return(find_cloud(file))
+  stop("Invalid store_mode for find_store.")
+}
+
+#' saves data to file
+#'
+#' @param file [string]
+save_store <- function(data, file)
+{
+  if (store_mode == "local")
+    return(save_local(data, file))
+  if (store_mode == "cloud")
+    return(save_cloud(data, file))
+  stop("Invalid store_mode for find_store.")
+}
+
+#' reads data from file
+#'
+#' @param file [string]
+#' @param default [object] returned when the file doesn't exist
+#' @returns [object]
+load_store <- function(file, default = NULL)
+{
+  if (store_mode == "local")
+    return(load_local(file, default))
+  if (store_mode == "cloud")
+    return(load_cloud(file, default))
+  stop("Invalid store_mode for load_store.")
+}
+
+#' deletes file
+#'
+#' @param file [string]
+#' @returns [object]
+delete_store <- function(file)
+{
+  if (store_mode == "local")
+    return(delete_local(file))
+  if (store_mode == "cloud")
+    return(delete_cloud(file))
+  stop("Invalid store_mode for delete_store.")
+}
+
+# -----------------
+# DECIDE STORE MODE
+# -----------------
 
 #' asks the user whether to use local or cloud storage
 #'
@@ -291,6 +410,8 @@ Type anything else and press enter to use cloud (AWS S3) storage."
 
 #' decides whether to use local or cloud storage
 #'
+#' @param local_store [local_store]
+#' @param cloud_store [cloud_store]
 #' @returns [string]
 decide_store_mode <- function(local_store, cloud_store)
 {
@@ -308,4 +429,14 @@ decide_store_mode <- function(local_store, cloud_store)
     else
       stop("Local / cloud connections failed.")
   }
+}
+
+#' sets store_mode based on provided inputs
+#'
+#' @param local_store [local_store]
+#' @param cloud_store [cloud_store]
+set_store_mode <- function(local_store, cloud_store)
+{
+  assign_global("store_mode", decide_store_mode(
+    local_store, cloud_store))
 }

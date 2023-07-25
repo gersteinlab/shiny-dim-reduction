@@ -10,156 +10,217 @@ if (!require(testthat))
   stop("Missing package: testthat")
 
 source("app/storage.R")
-
-# ---------
-# AWS TESTS
-# ---------
-
 start_time <- Sys.time()
 
-aws_s3_test_1 <- function()
-{
-  print_clean("Functions Tested: list_aws_s3, find_aws_s3, save_aws_s3, load_aws_s3")
-  test_data <- matrix(1:10000, nrow=100)
-  test_object <- "test"
-
-  sudo_working_key(test_keys)
-
-  r1 <- single_line_eval(save_aws_s3(test_data, test_object))
-  sprintf_clean("Does normal saving work? %s", r1)
-
-  r2 <- single_line_eval(save_aws_s3(test_data, NULL))
-  sprintf_clean("Does saving to NULL work? %s", r2)
-
-  r3 <- nrow(load_aws_s3(test_object)) == nrow(test_data)
-  sprintf_clean("Is row number preserved? %s", r3)
-
-  r4 <- single_line_eval(load_aws_s3(NULL))
-  sprintf_clean("Does loading NULL work? %s", r4)
-
-  r5 <- find_aws_s3(test_object)
-  sprintf_clean("Does finding normally work? %s", r5)
-
-  r6 <- find_aws_s3("this_is_not_a_file")
-  sprintf_clean("Does finding a non-existent file work? %s", r6)
-
-  save_aws_s3(test_data, "t2.rds")
-  save_aws_s3(test_data, "t3.rds")
-
-  sprintf_clean("We should have 3 saved files.
-Expected [t2.rds, t3.rds, test], Received [%s]", paste(list_aws_s3(""), collapse = ", "))
-}
-
-aws_s3_test_2 <- function(num = 10)
-{
-  print_clean("Functions Tested: find_aws_s3, save_aws_s3, load_aws_s3")
-  test_data <- matrix(1:10000, nrow=100)
-  test_object <- "test"
-
-  sudo_working_key(test_keys)
-
-  print(system.time({
-    for (i in 1:num)
-      save_aws_s3(test_data, test_object)
-  }))
-
-  print(system.time({
-    for (i in 1:num)
-      find_aws_s3(test_object)
-  }))
-
-  print(system.time({
-    for (i in 1:num)
-      load_aws_s3(test_object)
-  }))
-}
-
-aws_s3_test_1()
-print_clean()
-aws_s3_test_2()
-print_clean()
+# you will have to manage these stores yourself
+test_local_store <- "~/shiny-dim-reduction"
+test_cloud_store <- readRDS("tests/test_cloud_store.rds")
 
 # -----------
 # LOCAL TESTS
 # -----------
 
-local_test <- function()
-{
-  print_clean("Functions Tested: list_local, find_local, save_local, load_local")
-  test_data <- matrix(1:10000, nrow=100)
-  test_object <- "test"
+test_that("is_local_store() works", {
+  is_local_store(test_local_store) %>% expect_true()
+})
 
-  set_working_ref(test_root)
+test_that("make_local_store() works", {
+  expect_identical(test_local_store, make_local_store(test_local_store))
+  expect_error(make_local_store(FALSE))
+})
 
-  r1 <- single_line_eval(save_local(test_data, test_object))
-  sprintf_clean("Does normal saving work? %s", r1)
+set_local_store(test_local_store)
 
-  r2 <- single_line_eval(save_local(test_data, NULL))
-  sprintf_clean("Does saving to NULL work? %s", r2)
+test_that("set_local_store() works", {
+  expect_identical(Sys.getenv("LOCAL_STORE"), test_local_store)
+})
 
-  r3 <- nrow(load_local(test_object)) == nrow(test_data)
-  sprintf_clean("Is row number preserved? %s", r3)
+test_that("local_connected() works", {
+  local_connected() %>% expect_true()
+})
 
-  r4 <- single_line_eval(load_local(NULL))
-  sprintf_clean("Does loading NULL work? %s", r4)
+test_that("list_local() works", {
+  ("conventions.R" %in% list_local()) %>% expect_true()
+  ("app.R" %in% list_local()) %>% expect_false()
+  ("app.R" %in% list_local("app")) %>% expect_true()
+  ("red_methods.R" %in% list_local("pipeline")) %>% expect_true()
+  list_local(FALSE) %>% expect_error()
+})
 
-  r5 <- find_local(test_object)
-  sprintf_clean("Does finding normally work? %s", r5)
+test_that("find_local() works", {
+  find_local("conventions.R") %>% expect_true()
+  find_local("app.R") %>% expect_false()
+  find_local("app/app.R") %>% expect_true()
+  find_local(FALSE) %>% expect_error()
+})
 
-  r6 <- find_local("this_is_not_a_file")
-  sprintf_clean("Does finding a non-existent file work? %s", r6)
+test_that("save_local(), load_local(), delete_local() works", {
+  data <- matrix(runif(100000), nrow = 100) # 1000 x 100
+  file <- "tests/test_data.rds"
+  def_data <- matrix(runif(1000), nrow = 10) # 100 x 10
 
-  save_local(test_data, "t2.rds")
-  save_local(test_data, "t3.rds")
+  # saving
+  save_start <- Sys.time()
+  save_cloud(data, file)
+  cat_f("LOCAL SAVE TIME: %.1f (sec)\n", time_diff(save_start))
 
-  sprintf_clean("We should have 3 saved files.
-Expected [t2.rds, t3.rds, test], Received [%s]", paste(list_local(""), collapse = ", "))
-}
+  find_cloud(file) %>% expect_true()
 
-local_test()
-print_clean()
+  # loading
+  load_start <- Sys.time()
+  data2 <- load_cloud(file)
+  cat_f("LOCAL LOAD TIME: %.1f (sec)\n", time_diff(load_start))
+
+  expect_identical(data, data2)
+  delete_cloud(file)
+  find_cloud(file) %>% expect_false()
+
+  load_local(NULL) %>% expect_error()
+  data3 <- load_local("this_is_not_a_file", def_data)
+  expect_identical(def_data, data3)
+})
+
+# -----------
+# CLOUD TESTS
+# -----------
+
+test_that("is_cloud_store() works", {
+  is_cloud_store(test_cloud_store) %>% expect_true()
+})
+
+test_that("make_cloud_store() works", {
+  expect_identical(test_cloud_store, do.call(make_cloud_store, test_cloud_store))
+  expect_error(make_cloud_store(FALSE, NULL, NaN))
+})
+
+set_cloud_store(test_cloud_store)
+
+test_that("set_cloud_store() works", {
+  expect_identical(Sys.getenv("AWS_ACCESS_KEY_ID"), test_cloud_store$id)
+  expect_identical(Sys.getenv("AWS_SECRET_ACCESS_KEY"), test_cloud_store$secret)
+  expect_identical(Sys.getenv("AWS_ACCESS_BUCKET"), test_cloud_store$bucket)
+})
+
+test_that("cloud_connected() works", {
+  cloud_connected() %>% expect_true()
+})
+
+test_that("summarize_bucket() works", {
+  if (system2("aws", "--version") == 0)
+    summarize_bucket() %>% expect_identical(0L)
+})
+
+test_that("list_cloud() works", {
+  files <- c("t1.rds", "t2.rds", "t3.rds", "dogs/shiba.rds")
+  for (file in files)
+    save_cloud(runif(1), file)
+
+  all(files %in% list_cloud()) %>% expect_true()
+  expect_identical(list_cloud("dogs"), "shiba.rds")
+  expect_identical(list_cloud("cats"), character())
+  list_cloud(FALSE) %>% expect_error()
+})
+
+test_that("find_cloud(), save_cloud(), load_cloud(), delete_cloud() works", {
+  find_cloud(FALSE) %>% expect_error()
+
+  data <- matrix(runif(100000), nrow = 1000) # 1000 x 100
+  file <- "test_data.rds"
+  def_data <- matrix(runif(100), nrow = 10) # 100 x 10
+
+  find_cloud(file) %>% expect_false()
+
+  # saving
+  save_start <- Sys.time()
+  save_cloud(data, file)
+  cat_f("CLOUD SAVE TIME: %.1f (sec)\n", time_diff(save_start))
+
+  find_cloud(file) %>% expect_true()
+
+  # loading
+  load_start <- Sys.time()
+  data2 <- load_cloud(file)
+  cat_f("CLOUD LOAD TIME: %.1f (sec)\n", time_diff(load_start))
+
+  expect_identical(data, data2)
+  delete_cloud(file)
+  find_cloud(file) %>% expect_false()
+
+  load_cloud(NULL) %>% expect_error()
+  data3 <- load_cloud("this_is_not_a_file", def_data)
+  expect_identical(def_data, data3)
+})
 
 # --------------
 # COMBINED TESTS
 # --------------
 
-store_test <- function()
-{
-  print_clean("Functions Tested: list_store, find_store, save_store, load_store")
-  test_data <- matrix(1:10000, nrow=100)
-  test_object <- "test"
+assign_global("store_mode", "local")
 
-  r1 <- single_line_eval(save_store(test_data, test_object))
-  sprintf_clean("Does normal saving work? %s", r1)
+test_that("local store_mode works", {
+  find_store(FALSE) %>% expect_error()
 
-  r2 <- single_line_eval(save_store(test_data, NULL))
-  sprintf_clean("Does saving to NULL work? %s", r2)
+  data <- matrix(runif(100000), nrow = 1000) # 1000 x 100
+  file <- "combined_test_data.rds"
+  def_data <- matrix(runif(100), nrow = 10) # 100 x 10
 
-  r3 <- nrow(load_store(test_object)) == nrow(test_data)
-  sprintf_clean("Is row number preserved? %s", r3)
+  find_store(file) %>% expect_false()
 
-  r4 <- single_line_eval(load_store(NULL))
-  sprintf_clean("Does loading NULL work? %s", r4)
+  # saving
+  save_start <- Sys.time()
+  save_store(data, file)
+  cat_f("STORE SAVE TIME [%s]: %.1f (sec)\n", store_mode, time_diff(save_start))
 
-  r5 <- find_store(test_object)
-  sprintf_clean("Does finding normally work? %s", r5)
+  find_store(file) %>% expect_true()
 
-  r6 <- find_store("this_is_not_a_file")
-  sprintf_clean("Does finding a non-existent file work? %s", r6)
+  # loading
+  load_start <- Sys.time()
+  data2 <- load_store(file)
+  cat_f("STORE LOAD TIME [%s]: %.1f (sec)\n", store_mode, time_diff(load_start))
 
-  save_store(test_data, "t2.rds")
-  save_store(test_data, "t3.rds")
+  expect_identical(data, data2)
+  delete_store(file)
+  find_store(file) %>% expect_false()
 
-  sprintf_clean("We should have 3 saved files.
-Expected [t2.rds, t3.rds, test], Received [%s]", paste(list_store(""), collapse = ", "))
-}
+  load_store(NULL) %>% expect_error()
+  data3 <- load_store("this_is_not_a_file", def_data)
+  expect_identical(def_data, data3)
+})
 
-disconnect_key()
-set_storage_aws(sudo_key(test_keys))
-store_test()
-print_clean()
+assign_global("store_mode", "cloud")
 
-disconnect_ref()
-set_storage_local(test_root)
-store_test()
-print_clean()
+test_that("cloud store_mode works", {
+  find_store(FALSE) %>% expect_error()
+
+  data <- matrix(runif(100000), nrow = 1000) # 1000 x 100
+  file <- "combined_test_data.rds"
+  def_data <- matrix(runif(100), nrow = 10) # 100 x 10
+
+  find_store(file) %>% expect_false()
+
+  # saving
+  save_start <- Sys.time()
+  save_store(data, file)
+  cat_f("STORE SAVE TIME [%s]: %.1f (sec)\n", store_mode, time_diff(save_start))
+
+  find_store(file) %>% expect_true()
+
+  # loading
+  load_start <- Sys.time()
+  data2 <- load_store(file)
+  cat_f("STORE LOAD TIME [%s]: %.1f (sec)\n", store_mode, time_diff(load_start))
+
+  expect_identical(data, data2)
+  delete_store(file)
+  find_store(file) %>% expect_false()
+
+  load_store(NULL) %>% expect_error()
+  data3 <- load_store("this_is_not_a_file", def_data)
+  expect_identical(def_data, data3)
+})
+
+# -------
+# CLEANUP
+# -------
+
+message_f("TESTING TIME (seconds): %.1f", time_diff(start_time))

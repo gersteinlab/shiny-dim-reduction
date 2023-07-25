@@ -65,9 +65,11 @@ is_app_data <- function(x) {
 
 # ensure the data for the application is valid
 app_data_loc <- get_app_loc("app_data.rds")
-# saveRDS(app_data, app_data_loc, compress = FALSE)
 if (!file.exists(app_data_loc))
-  stop_f("The application data could not be found at: %s", app_data_loc)
+  stop("The application data could not be found.")
+
+# only works in pipeline mode:
+# saveRDS(app_data, app_data_loc, compress = FALSE)
 
 # assign application data
 app_data <- readRDS(app_data_loc)
@@ -93,74 +95,46 @@ assign_global("cat_names", names(categories))
 assign_global("groups", app_data[["groups"]])
 
 # set stores
-assign_global("connected", decide_store_mode(
+set_store_mode(
   app_data[["local_store"]],
   app_data[["cloud_store"]]
-))
-
-# -----------------------
-# GENERAL STORE FUNCTIONS
-# -----------------------
-
-list_store <- function(prefix)
-{
-  if (connected == "local")
-    return(list_local(prefix))
-  if (connected == "cloud")
-    return(list_aws_s3(prefix))
-  stop("Invalid connection mode for list_store.")
-}
-
-find_store <- function(filename)
-{
-  if (connected == "local")
-    return(find_local(filename))
-  if (connected == "cloud")
-    return(find_aws_s3(filename))
-  stop("Invalid connection mode for find_store.")
-}
-
-save_store <- function(data, filename)
-{
-  if (connected == "local")
-    return(save_local(data, filename))
-  if (connected == "cloud")
-    return(save_aws_s3(data, filename))
-  stop("Invalid connection mode for find_store.")
-}
-
-load_store <- function(filename, default = NULL)
-{
-  if (connected == "local")
-    return(load_local(filename, default))
-  if (connected == "cloud")
-    return(load_aws_s3(filename, default))
-  stop("Invalid connection mode for load_store.")
-}
+)
 
 # -----------------
 # ROW / COL SUBSETS
 # -----------------
 
-# retrieves a row_axs by category
+#' cat to row_axs (row axis name)
+#'
+#' @param cat [string] not checked
+#' @returns [string]
 get_row_axs <- function(cat)
 {
   categories[[cat]]$row_axs
 }
 
-# retrieves a row axis by category
+#' cat to row_axis
+#'
+#' @param cat [string] not checked
+#' @returns [string]
 get_row_axis <- function(cat)
 {
   row_axes[[get_row_axs(cat)]]
 }
 
-# retrieves a col_axs by category
+#' cat to col_axs (col axis name)
+#'
+#' @param cat [string] not checked
+#' @returns [string]
 get_col_axs <- function(cat)
 {
   categories[[cat]]$col_axs
 }
 
-# retrieves a col axis by category
+#' cat to col_axis
+#'
+#' @param cat [string] not checked
+#' @returns [string]
 get_col_axis <- function(cat)
 {
   col_axes[[get_col_axs(cat)]]
@@ -175,19 +149,29 @@ summarize_axis <- function(axis)
   )
 }
 
-# for checking if row subsets are valid
+# precomputed row subset lengths
 row_subset_lengths <- empty_named_list(row_axs_names)
 for (row_axs in row_axs_names)
   row_subset_lengths[[row_axs]] <- summarize_axis(row_axes[[row_axs]])
 
+#' gets row subset lengths for a category
+#'
+#' @param cat [string]
+get_row_subset_lengths <- function(cat)
+{
+  row_subset_lengths[[get_row_axs(cat)]]
+}
+
+#' gets col subset lengths for a category
+#'
+#'
 col_subset_lengths <- empty_named_list(col_axs_names)
 for (col_axs in col_axs_names)
   col_subset_lengths[[col_axs]] <- summarize_axis(col_axes[[col_axs]])
 
-# gets row subset lengths for a category
-get_row_subset_lengths <- function(cat)
+get_col_subset_lengths <- function(cat)
 {
-  row_subset_lengths[[get_row_axs(cat)]]
+  col_subset_lengths[[get_col_axs(cat)]]
 }
 
 # subsets data by a row subset
@@ -198,12 +182,6 @@ subset_by_row <- function(data, cat, row)
   if (row == "Total")
     return(data)
   data[row_axis$subsets[[row]], , drop = FALSE]
-}
-
-# gets col subset lengths for a category
-get_col_subset_lengths <- function(cat)
-{
-  col_subset_lengths[[get_col_axs(cat)]]
 }
 
 # subsets data by a col subset

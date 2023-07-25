@@ -6,6 +6,10 @@ if (!exists("sdr_config"))
 
 source_app("preprocess.R")
 
+# ANATOMY OF A REQUEST:
+# - first 13 columns: request key (req_key)
+# - last 4 columns: file metadata (file_md)
+
 # ----------------
 # ANALYSIS OPTIONS
 # ----------------
@@ -55,10 +59,9 @@ vis_options <- c(
 # REQUEST KEY VALIDATION
 # ----------------------
 
-# ANATOMY OF A REQUEST:
-# first 13 columns constitute a request key (req_key),
-# which determines the analysis performed, the name of
-# all intermediate / final reductions
+# req_keys determine the analysis performed
+# and are transformed into the names of
+# all final analysis file locations
 req_key_members <- c(
   # see install.R
   "CATEGORIES" = "cat",
@@ -92,11 +95,6 @@ req_key_members <- c(
   "CHARACTERISTIC" = "cha"
 )
 
-
-num_d <- -1 # default numeric value
-aut_d <- "ADMIN" # default author value
-chr_d <- "-" # default character value
-
 # are these request keys?
 are_req_keys <- function(x)
 {
@@ -114,6 +112,10 @@ are_req_keys <- function(x)
     is.numeric(x$THRESHOLD) &&
     is.character(x$CHARACTERISTIC)
 }
+
+num_d <- -1       # default numeric value
+aut_d <- "ADMIN"  # default author value
+chr_d <- "-"      # default character value
 
 # cleans request keys, stopping if any error is encountered
 # note: should only be called through make_req_keys, assuming valid types
@@ -135,8 +137,10 @@ clean_req_keys <- function(req_keys)
   thr_vec <- req_keys$THRESHOLD
   cha_vec <- req_keys$CHARACTERISTIC
 
+  req_cat_names <- unique(cat_vec)
+
   stopifnot(
-    cat_vec %in% cat_names,
+    req_cat_names %in% cat_names,
     emb_vec %in% emb_options,
     sca_vec %in% sca_options,
     nor_vec %in% nor_options
@@ -190,7 +194,7 @@ clean_req_keys <- function(req_keys)
   )
 
   # for Sets, characteristics must be in relevant metadata cols
-  for (cat in cat_names)
+  for (cat in req_cat_names)
   {
     rel_meta <- get_row_axis(cat)$rel_meta
     stopifnot(cha_vec[is_sets & (cat_vec == cat)] %in% rel_meta)
@@ -200,7 +204,7 @@ clean_req_keys <- function(req_keys)
   row_n_vec <- rep(NA, nrow(req_keys))
   col_n_vec <- rep(NA, nrow(req_keys))
 
-  for (cat in cat_names)
+  for (cat in req_cat_names)
   {
     is_cat <- (cat_vec == cat)
 
@@ -327,6 +331,8 @@ make_key_names <- function(req_keys)
   result
 }
 
+# if the inputs do not correspond to a valid set of requests, return NULL.
+# otherwise, return a set of requests in the appropriate form.
 make_req_keys <- function(
     cat = character(), row = character(), col = character(), sca = character(),
     nor = character(), emb = character(), vis = character(), com = numeric(),
@@ -346,8 +352,19 @@ make_req_keys <- function(
   ))
 }
 
-# if the inputs do not correspond to a valid set of requests, return NULL.
-# otherwise, return a set of requests in the appropriate form.
+# -------------
+# FILE METADATA
+# -------------
+
+# whether x is a file_metadata object
+is_file_metadata <- function(x)
+{
+  is.data.frame(x)
+}
+
+# ------------------
+# REQUEST MANAGEMENT
+# ------------------
 
 # note: the first 13 attributes MUST be a primary key;
 #   author / timestamps don't differentiate
@@ -367,71 +384,18 @@ make_requests <- function(
     cat, row, col, sca, nor,
     emb, vis, com, dim, per, bat, thr, cha)
 
-  n_req <- nrow(requests)
-  stopifnot(is_str(aut, n_req))
-
   key_names <- make_key_names(requests) # still req_keys
-  stopifnot(is_unique(key_names))
+  stopifnot(!anyDuplicated(key_names))
 
   requests$AUTHOR <- aut
+  cur_time <- Sys.time()
+  requests$TIME_REQUESTED <- cur_time
   day_in_seconds <- 60 * 60 * 24
-  time_vec <- rep(Sys.time(), n_req)
-  requests$TIME_REQUESTED <- time_vec
-  requests$TIME_COMPLETED <- time_vec - day_in_seconds
+  requests$TIME_COMPLETED <- cur_time - day_in_seconds
   requests$FILE_LOCATION <- key_names
 
   requests
 }
-
-# ---------------
-# SYNTACTIC SUGAR
-# ---------------
-
-# pca, vae, umap
-make_pvu_requests <- function(
-    cat = character(), row = character(), col = character(), sca = character(),
-    nor = character(), emb = character(), vis = character(), com = numeric(),
-    dim = numeric(), per = numeric(), bat = numeric(), aut = character()
-)
-{
-  n_cat <- length(cat)
-
-  make_requests(
-    cat, row, col, sca, nor, emb, vis,
-    com, dim, per, bat, rep(num_d, n_cat), rep(chr_d, n_cat), aut)
-}
-
-# simplifies the generation of PHATE requests
-make_phate_requests <- function(
-    cat = character(), row = character(), col = character(), sca = character(),
-    nor = character(), com = numeric(), per = numeric(), aut = character()
-)
-{
-  n_cat <- length(cat)
-
-  make_requests(
-    cat, row, col, sca, nor, rep("PHATE", n_cat), rep(chr_d, n_cat), com,
-    rep(num_d, n_cat), per, rep(num_d, n_cat),
-    rep(num_d, n_cat), rep(chr_d, n_cat), aut)
-}
-
-# simplifies the generation of Sets requests
-make_sets_requests <- function(
-    cat = character(), sca = character(), thr = numeric(),
-    cha = character(), aut = character())
-{
-  n_cat <- length(cat)
-
-  make_requests(
-    cat, rep(chr_d, n_cat), rep(chr_d, n_cat), sca,
-    rep("Global Min-Max", n_cat), rep("Sets", n_cat), rep(chr_d, n_cat),
-    rep(num_d, n_cat), rep(num_d, n_cat), rep(num_d, n_cat),
-    rep(num_d, n_cat),thr, cha, aut)
-}
-
-# ---------------
-# REQUEST MERGING
-# ---------------
 
 # merges two sets of requests, assuming they are both valid individually.
 # If two requests have the same final location, we must choose which one to keep.
@@ -535,6 +499,52 @@ rbind_req <- function(...)
 
   rownames(result) <- NULL
   result
+}
+
+# ---------------
+# SYNTACTIC SUGAR
+# ---------------
+
+# pca, vae, umap
+make_pvu_requests <- function(
+    cat = character(), row = character(), col = character(), sca = character(),
+    nor = character(), emb = character(), vis = character(), com = numeric(),
+    dim = numeric(), per = numeric(), bat = numeric(), aut = character()
+)
+{
+  n_cat <- length(cat)
+
+  make_requests(
+    cat, row, col, sca, nor, emb, vis,
+    com, dim, per, bat, rep(num_d, n_cat), rep(chr_d, n_cat), aut)
+}
+
+# simplifies the generation of PHATE requests
+make_phate_requests <- function(
+    cat = character(), row = character(), col = character(), sca = character(),
+    nor = character(), com = numeric(), per = numeric(), aut = character()
+)
+{
+  n_cat <- length(cat)
+
+  make_requests(
+    cat, row, col, sca, nor, rep("PHATE", n_cat), rep(chr_d, n_cat), com,
+    rep(num_d, n_cat), per, rep(num_d, n_cat),
+    rep(num_d, n_cat), rep(chr_d, n_cat), aut)
+}
+
+# simplifies the generation of Sets requests
+make_sets_requests <- function(
+    cat = character(), sca = character(), thr = numeric(),
+    cha = character(), aut = character())
+{
+  n_cat <- length(cat)
+
+  make_requests(
+    cat, rep(chr_d, n_cat), rep(chr_d, n_cat), sca,
+    rep("Global Min-Max", n_cat), rep("Sets", n_cat), rep(chr_d, n_cat),
+    rep(num_d, n_cat), rep(num_d, n_cat), rep(num_d, n_cat),
+    rep(num_d, n_cat),thr, cha, aut)
 }
 
 # ----------------
