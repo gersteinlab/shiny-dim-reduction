@@ -24,15 +24,3 @@ reg_str <- function(x_stringi, pattern, replacement)
   stri_replace_all_regex(
     x_stringi, pattern = pattern, replacement = replacement, vectorize_all = FALSE)
 }
-
-# adds a percent sign to a string or number
-add_perc <- function(str)
-{
-  sprintf("%s%%", str)
-}
-
-# removes a percent sign from a string and converts to a number
-rem_perc <- function(str)
-{
-  as.numeric(rep_str(str, "%", ""))
-}
