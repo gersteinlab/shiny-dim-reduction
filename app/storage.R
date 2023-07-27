@@ -280,14 +280,15 @@ find_cloud <- function(file)
 #' note: modified from aws.s3::s3save
 #'
 #' @param file [string]
+my_amazon_obj <- NULL
 save_cloud <- function(data, file)
 {
   stopifnot(is_str(file))
   env_bucket <- Sys.getenv("AWS_ACCESS_BUCKET")
   tmp <- tempfile(fileext = ".rdata")
   on.exit(unlink(tmp))
-  amazon_object_data <- data
-  save(amazon_object_data, file = tmp)
+  my_amazon_obj <<- data
+  save(global_cloud_data, file = tmp, envir = .GlobalEnv)
   aws.s3::put_object(tmp, file, env_bucket)
 }
 
@@ -303,8 +304,8 @@ load_cloud <- function(file, default = NULL)
   tmp <- tempfile(fileext = ".rdata")
   on.exit(unlink(tmp))
   aws.s3::save_object(file, env_bucket, tmp)
-  load(tmp)
-  amazon_object_data
+  load(tmp, envir = .GlobalEnv)
+  my_amazon_obj
 }
 
 #' deletes file in the cloud_store
