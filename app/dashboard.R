@@ -18,14 +18,14 @@ app_requests <- load_store(
   "app_requests.rds",
   make_requests()
 )
-# clean_req_keys(app_requests[, 1:13])
+# clean_req_keys(app_requests)
 
 # create default user requests
 default_user_requests <- load_store(
   "Sessions/user_requests.rds",
   make_requests()
 )
-# clean_req_keys(default_user_requests[, 1:13])
+# clean_req_keys(default_user_requests)
 
 # ------------------------
 # INSTRUCTIONS / CITATIONS
@@ -83,7 +83,7 @@ for (row_axs in row_axs_names)
   rel_meta <- row_axis$rel_meta
 
   app_row_choices[[row_axs]] <- list(
-    "rowby" = get_opt_named(row_subset_lengths[[row_axs]]),
+    "rowby" = get_opt_named(row_sub_lengths[[row_axs]]),
     "full_chas" = names(row_meta),
     "safe_chas" = rel_meta,
     "selectby" = apply(row_meta[, rel_meta], 2, get_opt_chr)
@@ -95,7 +95,7 @@ app_col_choices <- empty_named_list(col_axs_names)
 for (col_axs in col_axs_names)
 {
   app_col_choices[[col_axs]] <- list(
-    "colby" = get_opt_named(col_subset_lengths[[col_axs]])
+    "colby" = get_opt_named(col_sub_lengths[[col_axs]])
   )
 }
 

@@ -327,8 +327,13 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
       for (id in bookmarkable_ids)
         iplot[[id]] <- input[[id]]
 
-      for (id in dynam_picker_input_ids)
-        iplot[[id]] <- app_state[[iplot$category]][[id]]
+      iplot$rowby <- app_state[[iplot$category]]$rowby
+      iplot$colby <- app_state[[iplot$category]]$colby
+      iplot$colorby <- app_state[[iplot$category]]$colorby
+      iplot$shapeby <- app_state[[iplot$category]]$shapeby
+      iplot$filterby <- app_state[[iplot$category]]$filterby
+      iplot$selectby <- app_state[[iplot$category]]$selectby
+      iplot$threby <- app_state[[iplot$category]]$threby[[iplot$scaling]]
     }
   })
 
@@ -544,15 +549,17 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   curr_adr <- reactiveVal("")
 
   cati <- reactive(iplot$category)
-  peri <- reactive(iplot$perplexity)
-  bati <- reactive(iplot$batch_size)
+  peri <- reactive(as.integer(iplot$perplexity))
+  bati <- reactive(as.integer(iplot$batch_size))
 
   # calculate which samples to keep after considering all metadata filters
   order <- reactive({
     get_row_axis(cati())$metadata
   })
   row_order <- reactive({
-    subset_by_row(order(), cati(), rowi())
+    if (rowi() == "Total")
+      return(order())
+    get_row_sub(cati(), rowi()) %>% subset_by_row(order(), .)
   })
   keep <- reactive({
     keep <- rep(TRUE, nrow(row_order()))
@@ -582,7 +589,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
 
   # the number of features before dimensionality reduction
   num_feat <- reactive({
-    get_col_subset_lengths(cati())[[coli()]]
+    get_col_sub_lengths(cati())[[coli()]]
   })
 
   # numeric data for displaying / downloading
@@ -687,12 +694,15 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
 
     if (iplot$embedding == "Sets")
     {
-      addr <- make_sets_name(cati(), iplot$scaling, thre(), filterby())
+      addr <- name_sets_file(cati(), iplot$scaling, thre(), filterby())
       curr_adr(addr)
       data <- load_store(addr)
       if (is.null(data))
         return(NULL)
-      data <- data[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), coli())
+      data <- data[, my_chars(), drop = FALSE]
+      if (coli() != "Total")
+        data <- get_col_sub_names(cati(), coli()) %>%
+        subset_by_row_names(data, .)
 
       num_data(data)
 
@@ -710,7 +720,8 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
 
     if (iplot$embedding == "PHATE")
     {
-      addr <- make_phate_name(cati(), rowi(), coli(), iplot$scaling, iplot$normalization, 2, peri())
+      addr <- name_phate_file(
+        cati(), rowi(), coli(), iplot$scaling, iplot$normalization, 2, peri())
       curr_adr(addr)
       data <- load_store(addr)
       data <- data[keep(), , drop = FALSE]
@@ -722,7 +733,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
         legend(), title_embed(), pc("1"), pc("2")))
     }
 
-    addr <- make_pvu_name(
+    addr <- name_pvu_file(
       cati(), rowi(), coli(), iplot$scaling, iplot$normalization,
       iplot$embedding, iplot$visualize,
       pc_cap, 2, peri(), bati())
@@ -771,12 +782,15 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
 
     if (iplot$embedding == "Sets")
     {
-      addr <- make_sets_name(cati(), iplot$scaling, thre(), filterby())
+      addr <- name_sets_file(cati(), iplot$scaling, thre(), filterby())
       curr_adr(addr)
       data <- load_store(addr)
       if (is.null(data))
         return(NULL)
-      data <- data[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), coli())
+      data <- data[, my_chars(), drop = FALSE]
+      if (coli() != "Total")
+        data <- get_col_sub_names(cati(), coli()) %>%
+        subset_by_row_names(data, .)
 
       num_data(data)
 
@@ -788,7 +802,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
 
     if (iplot$embedding == "PHATE")
     {
-      addr <- make_phate_name(cati(), rowi(), coli(), iplot$scaling, iplot$normalization, 2, peri())
+      addr <- name_phate_file(cati(), rowi(), coli(), iplot$scaling, iplot$normalization, 2, peri())
       curr_adr(addr)
       data <- load_store(addr)
       data <- data[keep(),,drop=FALSE]
@@ -800,7 +814,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
         FALSE, legend(), title_embed(), pc("1"), pc("2")))
     }
 
-    addr <- make_pvu_name(
+    addr <- name_pvu_file(
       cati(), rowi(), coli(), iplot$scaling, iplot$normalization, iplot$embedding, iplot$visualize,
       pc_cap, 2, peri(), bati())
     curr_adr(addr)
@@ -849,12 +863,15 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
 
     if (iplot$embedding == "Sets")
     {
-      addr <- make_sets_name(cati(), iplot$scaling, thre(), filterby())
+      addr <- name_sets_file(cati(), iplot$scaling, thre(), filterby())
       curr_adr(addr)
       data <- load_store(addr)
       if (is.null(data))
         return(NULL)
-      data <- data[,my_chars(),drop=FALSE] %>% get_row_sub(cati(), coli())
+      data <- data[, my_chars(), drop = FALSE]
+      if (coli() != "Total")
+        data <- get_col_sub_names(cati(), coli()) %>%
+        subset_by_row_names(data, .)
 
       num_data(data)
 
@@ -865,7 +882,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
 
     if (iplot$embedding == "PHATE")
     {
-      addr <- make_phate_name(cati(), rowi(), coli(), iplot$scaling, iplot$normalization, 3, peri())
+      addr <- name_phate_file(cati(), rowi(), coli(), iplot$scaling, iplot$normalization, 3, peri())
       curr_adr(addr)
       data <- load_store(addr)
       data <- data[keep(),,drop=FALSE]
@@ -877,7 +894,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
         legend(), title_embed(), pc("1"), pc("2"), pc("3")))
     }
 
-    addr <- make_pvu_name(
+    addr <- name_pvu_file(
       cati(), rowi(), coli(), iplot$scaling, iplot$normalization, iplot$embedding, iplot$visualize,
       pc_cap, 3, peri(), bati())
     curr_adr(addr)
@@ -926,7 +943,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     if (!(iplot$embedding %in% c('PCA', 'VAE', 'UMAP')))
       return(NULL)
 
-    addr <- make_pvu_name(
+    addr <- name_pvu_file(
       cati(), rowi(), coli(), iplot$scaling, iplot$normalization, iplot$embedding, "Explore",
       pc_cap, 3, peri(), bati())
     curr_adr(addr)

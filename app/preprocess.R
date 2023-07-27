@@ -95,10 +95,13 @@ assign_global("cat_names", names(categories))
 assign_global("groups", app_data[["groups"]])
 
 # set stores
-set_store_mode(
-  app_data[["local_store"]],
-  app_data[["cloud_store"]]
-)
+if (Sys.getenv("SDR_STORE_MODE") == "")
+  decide_store_mode(
+    app_data[["local_store"]],
+    app_data[["cloud_store"]]
+  ) %>% set_store_mode()
+
+cat_f("CURRENT STORE_MODE: %s\n", Sys.getenv("SDR_STORE_MODE"))
 
 # -----------------
 # ROW / COL SUBSETS
@@ -140,8 +143,11 @@ get_col_axis <- function(cat)
   col_axes[[get_col_axs(cat)]]
 }
 
-# summarizes an axis
-summarize_axis <- function(axis)
+#' gets the subset lengths of an axis
+#'
+#' @param axis [axis] not checked
+#' @returns [list] of subset lengths
+get_sub_lengths <- function(axis)
 {
   c(
     list("Total" = axis$length),
@@ -150,47 +156,117 @@ summarize_axis <- function(axis)
 }
 
 # precomputed row subset lengths
-row_subset_lengths <- empty_named_list(row_axs_names)
+row_sub_lengths <- empty_named_list(row_axs_names)
 for (row_axs in row_axs_names)
-  row_subset_lengths[[row_axs]] <- summarize_axis(row_axes[[row_axs]])
+  row_sub_lengths[[row_axs]] <- get_sub_lengths(
+    row_axes[[row_axs]])
 
 #' gets row subset lengths for a category
 #'
-#' @param cat [string]
-get_row_subset_lengths <- function(cat)
+#' @param cat [string] not checked
+#' @returns [list] of row subset lengths
+get_row_sub_lengths <- function(cat)
 {
-  row_subset_lengths[[get_row_axs(cat)]]
+  row_sub_lengths[[get_row_axs(cat)]]
 }
+
+# precomputed col subset lengths
+col_sub_lengths <- empty_named_list(col_axs_names)
+for (col_axs in col_axs_names)
+  col_sub_lengths[[col_axs]] <- get_sub_lengths(
+    col_axes[[col_axs]])
 
 #' gets col subset lengths for a category
 #'
-#'
-col_subset_lengths <- empty_named_list(col_axs_names)
-for (col_axs in col_axs_names)
-  col_subset_lengths[[col_axs]] <- summarize_axis(col_axes[[col_axs]])
-
-get_col_subset_lengths <- function(cat)
+#' @param cat [string] not checked
+#' @returns [list] of col subset lengths
+get_col_sub_lengths <- function(cat)
 {
-  col_subset_lengths[[get_col_axs(cat)]]
+  col_sub_lengths[[get_col_axs(cat)]]
 }
 
-# subsets data by a row subset
-subset_by_row <- function(data, cat, row)
+#' gets the row subset as row indices
+#'
+#' @param cat [string] not checked
+#' @param row [string] not checked, can't be 'Total'
+#' @returns [integer]
+get_row_sub <- function(cat, row)
+{
+  get_row_axis(cat)$subsets[[row]]
+}
+
+#' gets the row subset as rownames
+#'
+#' @param cat [string] not checked
+#' @param row [string] not checked, can't be 'Total'
+#' @returns [character]
+get_row_sub_names <- function(cat, row)
 {
   row_axis <- get_row_axis(cat)
-  stopifnot(nrow(data) == row_axis$length)
-  if (row == "Total")
-    return(data)
-  data[row_axis$subsets[[row]], , drop = FALSE]
+  indices <- row_axis$subsets[[row]]
+  row_axis$metadata[indices, 1]
 }
 
-# subsets data by a col subset
-subset_by_col <- function(data, cat, col)
+#' subsets data by row indices
+#'
+#' @param data [matrix, data.frame] not checked
+#' @param row_sub [integer] not checked
+#' @returns [matrix, data.frame]
+subset_by_row <- function(data, row_sub)
 {
-  if (col == "Total")
-    return(data)
+  data[row_sub, , drop = FALSE]
+}
+
+#' subsets data by rownames
+#'
+#' @param data [matrix, data.frame] not checked
+#' @param row_sub_names [character] not checked
+#' @returns [matrix, data.frame]
+subset_by_row_names <- function(data, row_sub_names)
+{
+  data[rownames(data) %in% row_sub_names, , drop = FALSE]
+}
+
+#' gets the col subset as indices
+#'
+#' @param cat [string] not checked
+#' @param col [string] not checked, can't be 'Total'
+#' @returns [integer]
+get_col_sub <- function(cat, col)
+{
+  get_col_axis(cat)$subsets[[col]]
+}
+
+#' gets the col subset as colnames
+#'
+#' @param cat [string] not checked
+#' @param col [string] not checked, can't be 'Total'
+#' @returns [character]
+get_col_sub_names <- function(cat, col)
+{
   col_axis <- get_col_axis(cat)
-  data[, col_axis$subsets[[col]], drop = FALSE]
+  indices <- col_axis$subsets[[col]]
+  col_axis$metadata[indices, 1]
+}
+
+#' subsets data by col indices
+#'
+#' @param data [matrix, data.frame] not checked
+#' @param col_sub [integer] not checked
+#' @returns [matrix, data.frame]
+subset_by_col <- function(data, col_sub)
+{
+  data[, col_sub, drop = FALSE]
+}
+
+#' subsets data by colnames
+#'
+#' @param data [matrix, data.frame] not checked
+#' @param col_sub_names [character] not checked
+#' @returns [matrix, data.frame]
+subset_by_col_names <- function(data, col_sub_names)
+{
+  data[, colnames(data) %in% col_sub_names, drop = FALSE]
 }
 
 cat_f("PREPROCESSING TIME: %.1f (sec)\n", net_time())

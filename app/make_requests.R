@@ -6,10 +6,6 @@ if (!exists("sdr_config"))
 
 source_app("preprocess.R")
 
-# ANATOMY OF A REQUEST:
-# - first 13 columns: request key (req_key)
-# - last 4 columns: file metadata (file_md)
-
 # ----------------
 # ANALYSIS OPTIONS
 # ----------------
@@ -20,6 +16,10 @@ sca_options <- c(
   "Linear"
 )
 
+#' gets the index of sca in sca_options
+#'
+#' @param sca [string]
+#' @returns [integer]
 get_sca_ind <- function(sca)
 {
   which(sca_options == sca)
@@ -34,6 +34,10 @@ nor_options <- c(
   "Quantile"
 )
 
+#' gets the index of nor in nor_options
+#'
+#' @param nor [string]
+#' @returns [integer]
 get_nor_ind <- function(nor)
 {
   which(nor_options == nor)
@@ -63,65 +67,58 @@ vis_options <- c(
 # and are transformed into the names of
 # all final analysis file locations
 req_key_members <- c(
-  # see install.R
-  "CATEGORIES" = "cat",
-  # see preprocess.R
-  "ROW_SUBSETS" = "row",
-  # see preprocess.R
-  "COL_SUBSETS" = "col",
-  # see sca_options
-  "SCALING" = "sca",
-  # see nor_options
-  "NORMALIZATION" = "nor",
-  # see red_methods.R
-  "EMBEDDING" = "emb",
-  # see red_methods.R
-  "VISUALIZATION" = "vis",
-  # com: components for first-round dimensionality reduction
-  # note: should be integer
-  "COMPONENT" = "com",
-  # dim: dimension for second-round dimensionality reduction
-  # note: should be integer
-  "DIMENSION" = "dim",
-  # see red_methods.R
-  # note: should be integer
-  "PERPLEXITY" = "per",
-  # see red_methods.R
-  # note: should be integer
-  "BATCH_SIZE" = "bat",
-  # see red_methods.R
-  "THRESHOLD" = "thr",
-  # see red_methods.R
-  "CHARACTERISTIC" = "cha"
+  "CATEGORIES",
+  "ROW_SUBSETS",
+  "COL_SUBSETS",
+  "SCALING",
+  "NORMALIZATION",
+  "EMBEDDING",
+  "VISUALIZATION",
+  "COMPONENT",
+  "DIMENSION",
+  "PERPLEXITY",
+  "BATCH_SIZE",
+  "THRESHOLD",
+  "CHARACTERISTIC"
 )
 
-# are these request keys?
+#' is the data.frame x a 'req_keys' object?
+#'
+#' @param x [data.frame] not checked
+#' @returns [boolean]
 are_req_keys <- function(x)
 {
-  is.data.frame(x) && identical(names(x), names(req_key_members)) &&
-    is.character(x$CATEGORIES) &&
+  is.character(x$CATEGORIES) &&
     is.character(x$ROW_SUBSETS) &&
     is.character(x$COL_SUBSETS) &&
     is.character(x$SCALING) &&
     is.character(x$NORMALIZATION) &&
     is.character(x$EMBEDDING) &&
     is.character(x$VISUALIZATION) &&
-    is.numeric(x$COMPONENT) &&
-    is.numeric(x$DIMENSION) &&
-    is.numeric(x$PERPLEXITY) &&
+    is.integer(x$COMPONENT) &&
+    is.integer(x$DIMENSION) &&
+    is.integer(x$PERPLEXITY) &&
+    is.integer(x$BATCH_SIZE) &&
     is.numeric(x$THRESHOLD) &&
     is.character(x$CHARACTERISTIC)
 }
 
-num_d <- -1       # default numeric value
-aut_d <- "ADMIN"  # default author value
-chr_d <- "-"      # default character value
+int_d <- -1L  # default integer value
+num_d <- -1   # default numeric value
+chr_d <- "-"  # default character value
 
-# cleans request keys, stopping if any error is encountered
-# note: should only be called through make_req_keys, assuming valid types
-# note: if an attribute is unused, we set it to the default value.
+#' cleans request keys, stopping on any inconsistency
+#' note: sets unused attributes to default values
+#'
+#' @param req_keys [req_keys]
+#' @returns [req_keys]
 clean_req_keys <- function(req_keys)
 {
+  stopifnot(
+    is.data.frame(req_keys),
+    are_req_keys(req_keys)
+  )
+
   # abbreviations
   cat_vec <- req_keys$CATEGORIES
   row_vec <- req_keys$ROW_SUBSETS
@@ -159,20 +156,25 @@ clean_req_keys <- function(req_keys)
   # (P)CA, (V)AE, (U)MAP
   is_pvu <- is_pca & is_vae & is_umap
 
+  n_req <- nrow(req_keys)
+  chr_n <- rep(chr_d, n_req)
+  int_n <- rep(int_d, n_req)
+  num_n <- rep(num_d, n_req)
+
   # set all unnecessary attributes to default values
-  req_keys$ROW_SUBSETS[is_sets] <- chr_d
-  req_keys$COL_SUBSETS[is_sets] <- chr_d
-  req_keys$VISUALIZATION[is_sets | is_phate] <- chr_d
-  req_keys$COMPONENT[is_sets] <- num_d
-  req_keys$BATCH_SIZE[!is_vae] <- num_d
-  req_keys$THRESHOLD[!is_sets] <- num_d
-  req_keys$CHARACTERISTIC[!is_sets] <- chr_d
+  req_keys$ROW_SUBSETS[is_sets] <- chr_n
+  req_keys$COL_SUBSETS[is_sets] <- chr_n
+  req_keys$VISUALIZATION[is_sets | is_phate] <- chr_n
+  req_keys$COMPONENT[is_sets] <- int_n
+  req_keys$BATCH_SIZE[!is_vae] <- int_n
+  req_keys$THRESHOLD[!is_sets] <- num_n
+  req_keys$CHARACTERISTIC[!is_sets] <- chr_n
 
   # do the same for the values that depend on earlier cleaning
   is_tsne <- (vis_vec == "tSNE")
   uses_per <- (is_umap | is_phate | is_tsne)
-  req_keys$DIMENSION[is_sets | is_phate | !is_tsne] <- num_d
-  req_keys$PERPLEXITY[!uses_per] <- num_d
+  req_keys$DIMENSION[is_sets | is_phate | !is_tsne] <- int_n
+  req_keys$PERPLEXITY[!uses_per] <- int_n
 
   # ----------
   # VALIDATION
@@ -208,11 +210,11 @@ clean_req_keys <- function(req_keys)
   {
     is_cat <- (cat_vec == cat)
 
-    row_sub_lens <- get_row_subset_lengths(cat)
+    row_sub_lens <- get_row_sub_lengths(cat)
     for (row in names(row_sub_lens))
       row_n_vec[is_cat & (row_vec == row)] <- row_sub_lens[[row]]
 
-    col_sub_lens <- get_col_subset_lengths(cat)
+    col_sub_lens <- get_col_sub_lengths(cat)
     for (col in names(col_sub_lens))
       col_n_vec[is_cat & (col_vec == col)] <- col_sub_lens[[col]]
   }
@@ -243,79 +245,148 @@ clean_req_keys <- function(req_keys)
   req_keys
 }
 
+#' creates req_keys from the input
+#'
+#' @returns [req_keys]
+make_req_keys <- function(
+    cat = character(), row = character(), col = character(), sca = character(),
+    nor = character(), emb = character(), vis = character(),
+    com = integer(), dim = integer(), per = integer(), bat = integer(),
+    thr = numeric(), cha = character()
+)
+{
+  clean_req_keys(data.frame(
+    "CATEGORIES" = cat,
+    "ROW_SUBSETS" = row, "COL_SUBSETS" = col,
+    "SCALING" = sca, "NORMALIZATION" = nor,
+    "EMBEDDING" = emb, "VISUALIZATION" = vis,
+    "COMPONENT" = com, "DIMENSION" = dim,
+    "PERPLEXITY" = per, "BATCH_SIZE" = bat,
+    "THRESHOLD" = thr,
+    "CHARACTERISTIC" = cha
+  ))
+}
+
 # ------------------
 # REQUEST KEY NAMING
 # ------------------
 
-make_sets_name <- function(cat, sca, thr, cha)
-{
-  sprintf("Sets/%s/S%s_%s_%s.rds", cat, get_sca_ind(sca), thr, cha)
-}
-
-make_phate_name <- function(cat, row, col, sca, nor, com, per)
-{
-  sprintf("PHATE/%s/%s_%s_S%s_N%s_%s_%s.rds",
-          cat, row, col, get_sca_ind(sca), get_nor_ind(nor), com, per)
-}
-
-make_pvu_name <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat)
+#' name the file where a PCA req_key is stored
+#'
+#' @returns [string]
+name_pca_file <- function(cat, row, col, sca, nor, vis, com, dim, per)
 {
   sca_ind <- get_sca_ind(sca)
   nor_ind <- get_nor_ind(nor)
 
-  if (emb == "PCA")
-  {
-    if (vis == "Explore")
-      return(sprintf("PCA_E/%s/%s_%s_S%s_N%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com))
-    if (vis == "Summarize")
-      return(sprintf("PCA_S/%s/%s_%s_S%s_N%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com))
-    if (vis == "tSNE")
-      return(sprintf("PCA_T/%s/%s_%s_S%s_N%s_%s_%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com, dim, per))
-  }
-
-  if (emb == "VAE")
-  {
-    if (vis == "Explore")
-      return(sprintf("VAE_E/%s/%s_%s_S%s_N%s_%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com, bat))
-    if (vis == "Summarize")
-      return(sprintf("VAE_S/%s/%s_%s_S%s_N%s_%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com, bat))
-    if (vis == "tSNE")
-      return(sprintf("VAE_T/%s/%s_%s_S%s_N%s_%s_%s_%s_%s.rds",
-                     cat, row, col, sca_ind, nor_ind, com, dim, per, bat))
-  }
-
-  # UMAP
   if (vis == "Explore")
-    return(sprintf("UMAP_E/%s/%s_%s_S%s_N%s_%s_%s.rds",
+    return(sprintf("PCA_E/%s/%s_%s_S%d_N%d_%d.rds",
+                   cat, row, col, sca_ind, nor_ind, com))
+  if (vis == "Summarize")
+    return(sprintf("PCA_S/%s/%s_%s_S%d_N%d_%d.rds",
+                   cat, row, col, sca_ind, nor_ind, com))
+  if (vis == "tSNE")
+    return(sprintf("PCA_T/%s/%s_%s_S%d_N%d_%d_%d_%d.rds",
+                   cat, row, col, sca_ind, nor_ind, com, dim, per))
+
+  stop_f("Visualization mode '%s' is invalid.", vis)
+}
+
+#' name the file where a VAE req_key is stored
+#'
+#' @returns [string]
+name_vae_file <- function(cat, row, col, sca, nor, vis, com, dim, per, bat)
+{
+  sca_ind <- get_sca_ind(sca)
+  nor_ind <- get_nor_ind(nor)
+
+  if (vis == "Explore")
+    return(sprintf("VAE_E/%s/%s_%s_S%d_N%d_%d_%d.rds",
+                   cat, row, col, sca_ind, nor_ind, com, bat))
+  if (vis == "Summarize")
+    return(sprintf("VAE_S/%s/%s_%s_S%d_N%d_%d_%d.rds",
+                   cat, row, col, sca_ind, nor_ind, com, bat))
+  if (vis == "tSNE")
+    return(sprintf("VAE_T/%s/%s_%s_S%d_N%d_%d_%d_%d_%d.rds",
+                   cat, row, col, sca_ind, nor_ind, com, dim, per, bat))
+
+  stop_f("Visualization mode '%s' is invalid.", vis)
+}
+
+#' name the file where a UMAP req_key is stored
+#'
+#' @returns [string]
+name_umap_file <- function(cat, row, col, sca, nor, vis, com, dim, per)
+{
+  sca_ind <- get_sca_ind(sca)
+  nor_ind <- get_nor_ind(nor)
+
+  if (vis == "Explore")
+    return(sprintf("UMAP_E/%s/%s_%s_S%d_N%d_%d_%d.rds",
                    cat, row, col, sca_ind, nor_ind, com, per))
   if (vis == "Summarize")
-    return(sprintf("UMAP_S/%s/%s_%s_S%s_N%s_%s_%s.rds",
+    return(sprintf("UMAP_S/%s/%s_%s_S%d_N%d_%d_%d.rds",
                    cat, row, col, sca_ind, nor_ind, com, per))
   if (vis == "tSNE")
-    return(sprintf("UMAP_T/%s/%s_%s_S%s_N%s_%s_%s_%s.rds",
+    return(sprintf("UMAP_T/%s/%s_%s_S%d_N%d_%d_%d_%d.rds",
                    cat, row, col, sca_ind, nor_ind, com, dim, per))
+
+  stop_f("Visualization mode '%s' is invalid.", vis)
 }
 
-make_sdr_name <- function(cat, row, col, sca, nor, emb, vis,
-                          com, dim, per, bat, thr, cha)
+#' name the file where a PCA / VAE / UMAP req_key is stored
+#'
+#' @returns [string]
+name_pvu_file <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat)
 {
-  if (emb == "Sets")
-    return(make_sets_name(cat, sca, thr, cha))
+  if (emb == "PCA")
+    return(name_pca_file(cat, row, col, sca, nor, vis, com, dim, per))
 
-  if (emb == "PHATE")
-    return(make_phate_name(cat, row, col, sca, nor, com, per))
+  if (emb == "VAE")
+    return(name_vae_file(cat, row, col, sca, nor, vis, com, dim, per, bat))
 
-  # PCA, VAE, UMAP
-  make_pvu_name(cat, row, col, sca, nor, emb, vis, com, dim, per, bat)
+  if (emb == "UMAP")
+    return(name_umap_file(cat, row, col, sca, nor, vis, com, dim, per))
+
+  stop_f("Embedding %s is not one of PCA, VAE, UMAP.", emb)
 }
 
-# converts request keys into the locations of their final files
-make_key_names <- function(req_keys)
+#' name the file where a Sets req_key is stored
+#'
+#' @returns [string]
+name_phate_file <- function(cat, row, col, sca, nor, com, per)
+{
+  sprintf("PHATE/%s/%s_%s_S%d_N%d_%d_%d.rds",
+          cat, row, col, get_sca_ind(sca), get_nor_ind(nor), com, per)
+}
+
+#' name the file where a Sets req_key is stored
+#'
+#' @returns [string]
+name_sets_file <- function(cat, sca, thr, cha)
+{
+  sprintf("Sets/%s/S%s_%.4f_%s.rds", cat, get_sca_ind(sca), thr, cha)
+}
+
+#' name the file where a req_key is stored
+#'
+#' @returns [string]
+name_req_key_file <- function(cat, row, col, sca, nor, emb, vis,
+                              com, dim, per, bat, thr, cha)
+{
+  if (emb == "PHATE")
+    return(name_phate_file(cat, row, col, sca, nor, com, per))
+
+  if (emb == "Sets")
+    return(name_sets_file(cat, sca, thr, cha))
+
+  name_pvu_file(cat, row, col, sca, nor, emb, vis, com, dim, per, bat)
+}
+
+#' names the files where req_keys are stored
+#'
+#' @returns [string]
+name_req_key_files <- function(req_keys)
 {
   stopifnot(are_req_keys(req_keys))
   n <- nrow(req_keys)
@@ -331,40 +402,38 @@ make_key_names <- function(req_keys)
   result
 }
 
-# if the inputs do not correspond to a valid set of requests, return NULL.
-# otherwise, return a set of requests in the appropriate form.
-make_req_keys <- function(
-    cat = character(), row = character(), col = character(), sca = character(),
-    nor = character(), emb = character(), vis = character(), com = numeric(),
-    dim = numeric(), per = numeric(), bat = numeric(), thr = numeric(),
-    cha = character()
-)
-{
-  clean_req_keys(data.frame(
-    "CATEGORIES" = cat,
-    "ROW_SUBSETS" = row, "COL_SUBSETS" = col,
-    "SCALING" = sca, "NORMALIZATION" = nor,
-    "EMBEDDING" = emb, "VISUALIZATION" = vis,
-    "COMPONENT" = com, "DIMENSION" = dim,
-    "PERPLEXITY" = per, "BATCH_SIZE" = bat,
-    "THRESHOLD" = thr,
-    "CHARACTERISTIC" = cha
-  ))
-}
-
-# -------------
-# FILE METADATA
-# -------------
-
-# whether x is a file_metadata object
-is_file_metadata <- function(x)
-{
-  is.data.frame(x)
-}
-
 # ------------------
 # REQUEST MANAGEMENT
 # ------------------
+
+#' Is x a 'requests' object?
+#'
+#' ANATOMY OF A REQUEST:
+#' --first 13 columns: request key (req_key)
+#' --last 4 columns:
+#' ----author
+#' ----time requested
+#' ----time completed
+#' ----file location
+#'
+#' @param x [object]
+#' @returns [boolean]
+are_requests <- function(x)
+{
+  members <- c(
+    req_key_members,
+    "AUTHOR",
+    "TIME_REQUESTED",
+    "TIME_COMPLETED",
+    "FILE_LOCATION"
+  )
+
+  is.data.frame(x) && identical(names(x), members) &&
+    is.character(x$AUTHOR) &&
+    is.POSIXct(x$TIME_REQUESTED) &&
+    is.POSIXct(x$TIME_COMPLETED) &&
+    is.character(x$FILE_LOCATION)
+}
 
 # note: the first 13 attributes MUST be a primary key;
 #   author / timestamps don't differentiate
@@ -372,11 +441,11 @@ is_file_metadata <- function(x)
 #   it hasn't been done yet!
 # note: a set of requests is valid ONLY IF it has a FILE_LOCATION field.
 #   This is because regular computation of the FILE_LOCATION field
-#   makes merging new requests difficult. Duplicate values are not allowed.
+#   makes merging new requests difficult. Duplicate locations are not allowed.
 make_requests <- function(
     cat = character(), row = character(), col = character(), sca = character(),
     nor = character(), emb = character(), vis = character(), com = numeric(),
-    dim = numeric(), per = numeric(), bat = numeric(), thr = numeric(),
+    dim = integer(), per = integer(), bat = integer(), thr = numeric(),
     cha = character(), aut = character()
 ){
   # it's not a valid request if the lengths of all attributes aren't equal
@@ -508,8 +577,8 @@ rbind_req <- function(...)
 # pca, vae, umap
 make_pvu_requests <- function(
     cat = character(), row = character(), col = character(), sca = character(),
-    nor = character(), emb = character(), vis = character(), com = numeric(),
-    dim = numeric(), per = numeric(), bat = numeric(), aut = character()
+    nor = character(), emb = character(), vis = character(), com = integer(),
+    dim = integer(), per = integer(), bat = integer(), aut = character()
 )
 {
   n_cat <- length(cat)
@@ -522,7 +591,7 @@ make_pvu_requests <- function(
 # simplifies the generation of PHATE requests
 make_phate_requests <- function(
     cat = character(), row = character(), col = character(), sca = character(),
-    nor = character(), com = numeric(), per = numeric(), aut = character()
+    nor = character(), com = integer(), per = integer(), aut = character()
 )
 {
   n_cat <- length(cat)
