@@ -256,7 +256,6 @@ list_cloud <- function(path = "")
 #' @returns [integer] status code
 summarize_bucket <- function()
 {
-  stopifnot(is_str(path))
   env_bucket <- Sys.getenv("AWS_ACCESS_BUCKET")
   # stopifnot(system2("aws", "--version") == 0)
   system2("aws", c("s3", "ls", env_bucket, "--summarize", "--recursive"))
@@ -281,15 +280,14 @@ find_cloud <- function(file)
 #' note: modified from aws.s3::s3save
 #'
 #' @param file [string]
-my_amazon_obj <- NULL
 save_cloud <- function(data, file)
 {
   stopifnot(is_str(file))
   env_bucket <- Sys.getenv("AWS_ACCESS_BUCKET")
   tmp <- tempfile(fileext = ".rdata")
   on.exit(unlink(tmp))
-  my_amazon_obj <<- data
-  save(my_amazon_obj, file = tmp, envir = .GlobalEnv)
+  amazon_object_data <- data
+  save(amazon_object_data, file = tmp)
   aws.s3::put_object(tmp, file, env_bucket)
 }
 
@@ -305,8 +303,8 @@ load_cloud <- function(file, default = NULL)
   tmp <- tempfile(fileext = ".rdata")
   on.exit(unlink(tmp))
   aws.s3::save_object(file, env_bucket, tmp)
-  load(tmp, envir = .GlobalEnv)
-  my_amazon_obj
+  load(tmp)
+  amazon_object_data
 }
 
 #' deletes file in the cloud_store
@@ -324,8 +322,33 @@ delete_cloud <- function(file)
 # GENERAL STORE FUNCTIONS
 # -----------------------
 
-# the mode currently being used ("local" or "cloud")
-assign_global("store_mode", "local")
+#' sets store_mode to x
+#'
+#' @param x [store_mode]
+set_store_mode <- function(x)
+{
+  stopifnot(x %in% c("local", "cloud"))
+  Sys.setenv("SDR_STORE_MODE" = x)
+}
+
+#' raises an error message for an invalid store_mode
+#'
+#' @param x [store_mode]
+stop_store_mode <- function(x)
+{
+  stop_f("Store mode '%s' is invalid!", x)
+}
+
+#' helper to swap store mode
+swap_store_mode <- function()
+{
+  store_mode <- Sys.getenv("SDR_STORE_MODE")
+  if (store_mode == "local")
+    set_store_mode("cloud")
+  if (store_mode == "cloud")
+    set_store_mode("local")
+  stop_store_mode(store_mode)
+}
 
 #' lists all files at the given path
 #'
@@ -333,11 +356,12 @@ assign_global("store_mode", "local")
 #' @returns [character] representing files
 list_store <- function(path)
 {
+  store_mode <- Sys.getenv("SDR_STORE_MODE")
   if (store_mode == "local")
     return(list_local(path))
   if (store_mode == "cloud")
     return(list_cloud(path))
-  stop("Invalid store_mode for list_store.")
+  stop_store_mode(store_mode)
 }
 
 #' whether file exists
@@ -346,11 +370,12 @@ list_store <- function(path)
 #' @returns [boolean]
 find_store <- function(file)
 {
+  store_mode <- Sys.getenv("SDR_STORE_MODE")
   if (store_mode == "local")
     return(find_local(file))
   if (store_mode == "cloud")
     return(find_cloud(file))
-  stop("Invalid store_mode for find_store.")
+  stop_store_mode(store_mode)
 }
 
 #' saves data to file
@@ -358,11 +383,12 @@ find_store <- function(file)
 #' @param file [string]
 save_store <- function(data, file)
 {
+  store_mode <- Sys.getenv("SDR_STORE_MODE")
   if (store_mode == "local")
     return(save_local(data, file))
   if (store_mode == "cloud")
     return(save_cloud(data, file))
-  stop("Invalid store_mode for find_store.")
+  stop_store_mode(store_mode)
 }
 
 #' reads data from file
@@ -372,11 +398,12 @@ save_store <- function(data, file)
 #' @returns [object]
 load_store <- function(file, default = NULL)
 {
+  store_mode <- Sys.getenv("SDR_STORE_MODE")
   if (store_mode == "local")
     return(load_local(file, default))
   if (store_mode == "cloud")
     return(load_cloud(file, default))
-  stop("Invalid store_mode for load_store.")
+  stop_store_mode(store_mode)
 }
 
 #' deletes file
@@ -385,11 +412,12 @@ load_store <- function(file, default = NULL)
 #' @returns [object]
 delete_store <- function(file)
 {
+  store_mode <- Sys.getenv("SDR_STORE_MODE")
   if (store_mode == "local")
     return(delete_local(file))
   if (store_mode == "cloud")
     return(delete_cloud(file))
-  stop("Invalid store_mode for delete_store.")
+  stop_store_mode(store_mode)
 }
 
 # -----------------
@@ -427,16 +455,6 @@ decide_store_mode <- function(local_store, cloud_store)
     if (cloud_connects(cloud_store))
       return("cloud")
     else
-      stop("Local / cloud connections failed.")
+      stop("Could not connect to local_store or cloud_store.")
   }
-}
-
-#' sets store_mode based on provided inputs
-#'
-#' @param local_store [local_store]
-#' @param cloud_store [cloud_store]
-set_store_mode <- function(local_store, cloud_store)
-{
-  assign_global("store_mode", decide_store_mode(
-    local_store, cloud_store))
 }

@@ -59,21 +59,24 @@ test_that("save_local(), load_local(), delete_local() works", {
   file <- "tests/test_data.rds"
   def_data <- matrix(runif(1000), nrow = 10) # 100 x 10
 
+  delete_local(file)
+  find_local(file) %>% expect_false()
+
   # saving
   save_start <- Sys.time()
-  save_cloud(data, file)
+  save_local(data, file)
   cat_f("LOCAL SAVE TIME: %.1f (sec)\n", time_diff(save_start))
 
-  find_cloud(file) %>% expect_true()
+  find_local(file) %>% expect_true()
 
   # loading
   load_start <- Sys.time()
-  data2 <- load_cloud(file)
+  data2 <- load_local(file)
   cat_f("LOCAL LOAD TIME: %.1f (sec)\n", time_diff(load_start))
 
   expect_identical(data, data2)
-  delete_cloud(file)
-  find_cloud(file) %>% expect_false()
+  delete_local(file)
+  find_local(file) %>% expect_false()
 
   load_local(NULL) %>% expect_error()
   data3 <- load_local("this_is_not_a_file", def_data)
@@ -121,13 +124,16 @@ test_that("list_cloud() works", {
   list_cloud(FALSE) %>% expect_error()
 })
 
-test_that("find_cloud(), save_cloud(), load_cloud(), delete_cloud() works", {
+test_that("find_cloud() works", {
   find_cloud(FALSE) %>% expect_error()
+})
 
+test_that("find_cloud(), save_cloud(), load_cloud(), delete_cloud() works", {
   data <- matrix(runif(100000), nrow = 1000) # 1000 x 100
   file <- "test_data.rds"
   def_data <- matrix(runif(100), nrow = 10) # 100 x 10
 
+  delete_cloud(file)
   find_cloud(file) %>% expect_false()
 
   # saving
@@ -155,7 +161,7 @@ test_that("find_cloud(), save_cloud(), load_cloud(), delete_cloud() works", {
 # COMBINED TESTS
 # --------------
 
-assign_global("store_mode", "local")
+set_store_mode("local")
 
 test_that("local store_mode works", {
   find_store(FALSE) %>% expect_error()
@@ -164,19 +170,22 @@ test_that("local store_mode works", {
   file <- "combined_test_data.rds"
   def_data <- matrix(runif(100), nrow = 10) # 100 x 10
 
+  delete_store(file)
   find_store(file) %>% expect_false()
 
   # saving
   save_start <- Sys.time()
   save_store(data, file)
-  cat_f("STORE SAVE TIME [%s]: %.1f (sec)\n", store_mode, time_diff(save_start))
+  cat_f("STORE SAVE TIME [%s]: %.1f (sec)\n",
+        Sys.getenv("SDR_STORE_MODE"), time_diff(save_start))
 
   find_store(file) %>% expect_true()
 
   # loading
   load_start <- Sys.time()
   data2 <- load_store(file)
-  cat_f("STORE LOAD TIME [%s]: %.1f (sec)\n", store_mode, time_diff(load_start))
+  cat_f("STORE LOAD TIME [%s]: %.1f (sec)\n",
+        Sys.getenv("SDR_STORE_MODE"), time_diff(load_start))
 
   expect_identical(data, data2)
   delete_store(file)
@@ -187,7 +196,7 @@ test_that("local store_mode works", {
   expect_identical(def_data, data3)
 })
 
-assign_global("store_mode", "cloud")
+set_store_mode("cloud")
 
 test_that("cloud store_mode works", {
   find_store(FALSE) %>% expect_error()
@@ -196,19 +205,22 @@ test_that("cloud store_mode works", {
   file <- "combined_test_data.rds"
   def_data <- matrix(runif(100), nrow = 10) # 100 x 10
 
+  delete_store(file)
   find_store(file) %>% expect_false()
 
   # saving
   save_start <- Sys.time()
   save_store(data, file)
-  cat_f("STORE SAVE TIME [%s]: %.1f (sec)\n", store_mode, time_diff(save_start))
+  cat_f("STORE SAVE TIME [%s]: %.1f (sec)\n",
+        Sys.getenv("SDR_STORE_MODE"), time_diff(save_start))
 
   find_store(file) %>% expect_true()
 
   # loading
   load_start <- Sys.time()
   data2 <- load_store(file)
-  cat_f("STORE LOAD TIME [%s]: %.1f (sec)\n", store_mode, time_diff(load_start))
+  cat_f("STORE LOAD TIME [%s]: %.1f (sec)\n",
+        Sys.getenv("SDR_STORE_MODE"), time_diff(load_start))
 
   expect_identical(data, data2)
   delete_store(file)
