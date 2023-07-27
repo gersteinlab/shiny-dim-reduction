@@ -94,15 +94,39 @@ all_fun_true <- function(X, FUN)
   all(vapply(X, FUN, FALSE))
 }
 
-#' whether x is a 'safe_names' object, aka
-#' a character with unique non-NA nonempty values
+#' whether x would contribute to unsafe file paths
+#' (see fs::path_sanitize for regex information)
+#'
+#' @param x [character] not checked
+#' @returns [boolean]
+makes_unsafe_paths <- function(x)
+{
+  regex_illegal <- "[/\\?<>\\:*|\":]"
+  regex_control <- "[[:cntrl:]]"
+  regex_reserved <- "^[.]+$"
+  regex_win_files <- "^(con|prn|aux|nul|com[0-9]|lpt[0-9])([.].*)?$"
+  regex_win_tails <- "[. ]+$"
+
+  any(
+    x == "",
+    grepl(regex_illegal, x),
+    grepl(regex_control, x),
+    grepl(regex_reserved, x),
+    grepl(regex_win_files, x, ignore.case = TRUE),
+    grepl(regex_win_tails, x)
+  )
+}
+
+#' whether x is a 'safe_names' object:
+#' a character with unique values that work
+#' as names (non-NA, nonempty) and in file paths
 #'
 #' @param x [object]
 #' @returns [boolean]
 are_safe_names <- function(x)
 {
   is.null(x) || (is.character(x) && !anyDuplicated(x) &&
-    !anyNA(x) && !any(x == ""))
+                   !anyNA(x) && !makes_unsafe_paths(x))
 }
 
 #' whether x has names that are safe
