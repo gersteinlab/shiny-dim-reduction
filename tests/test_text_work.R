@@ -13,3 +13,11 @@ if (!exists("ran_install"))
 }
 
 source_sdr("text_work.R")
+
+text_test <- function()
+{
+  print_clean("*** Functions Tested: rep_str, reg_str ***")
+  sprintf_clean("Replace 'A' in 'ABCAAAAA' with 'D': %s", rep_str("ABCAAAAA", "A", "D"))
+  sprintf_clean("Replace '.' in 'ABCDE' with 'F': %s", reg_str("ABCDE", ".", "F"))
+  print_clean()
+}

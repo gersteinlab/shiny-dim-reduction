@@ -1,4 +1,5 @@
-# This file tests install.R. Note: must be run from a clean session.
+# This file tests install.R.
+# Note: must be run from a clean session.
 # source("tests/test_install.R")
 
 # -----
@@ -9,11 +10,11 @@ source("app/install.R")
 if (!require(testthat))
   stop("Missing package: testthat")
 
+start_time <- Sys.time()
+
 # -----
 # TESTS
 # -----
-
-start_time <- Sys.time()
 
 test_that("is_int() works", {
   is_int(NA) %>% expect_false()
@@ -168,7 +169,7 @@ test_that("get_app_loc() works", {
   source("install.R")
   expect_identical(sdr_config$mode, "local")
   expect_null(sdr_config$path)
-  expect_identical(get_app_loc("find_replace.R"), "find_replace.R")
+  expect_identical(get_app_loc("app.R"), "app.R")
 
   # cloud
   Sys.setenv("SHINY_PORT" = 100)
@@ -193,6 +194,10 @@ test_that("get_app_loc() works", {
 
   expect_error(get_app_loc("nonexistent.R"))
 })
+
+# -------
+# CLEANUP
+# -------
 
 # tests the printing methods
 testing_time <- time_diff(start_time)

@@ -4,9 +4,12 @@
 # SETUP
 # -----
 
-source("install.R")
-source_sdr("red_methods.R")
-source_sdr("plotting.R")
+source("app/install.R")
+if (!require(testthat))
+  stop("Missing package: testthat")
+
+source("pipeline/red_methods.R")
+source("app/plotting.R")
 
 # ------
 # TESTER
@@ -32,11 +35,11 @@ source_sdr("plotting.R")
 # note: results$time returns the time elapsed in seconds
 all_reductions <- function(table, labels)
 {
-  start <- my_timer()
+  start <- Sys.time()
   results <- list()
-  stopifnot(valid_table(table))
+  stopifnot(is_table(table))
   stopifnot(length(labels) == nrow(table))
-  stopifnot(sum(is.na(labels)) == 0)
+  stopifnot(none_na(labels))
 
   # test tsne
   results$tsne <- table_to_tsne(table, 2, 10)
@@ -82,7 +85,7 @@ all_reductions <- function(table, labels)
   results$sets_p1 <- plotly_heatmap_variance(results$sets_frac)
   results$sets_p2 <- plotly_heatmap_dendrogram(results$sets_frac)
 
-  results$time <- my_timer(start)
+  results$time <- time_diff(start)
   results
 }
 
@@ -91,7 +94,7 @@ all_reductions <- function(table, labels)
 # -------
 
 tryCatch(all_reductions(data.frame(), NULL),
-         error = function(e){print_clean("Caught error!")})
+         error = function(e){cat("Caught error!\n")})
 
 # ------
 # RANDOM

@@ -5,7 +5,7 @@
 # SETUP
 # -----
 
-source("install.R")
+source("app/install.R")
 source_sdr("red_requests.R")
 
 # ----------------------
