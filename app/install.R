@@ -73,6 +73,15 @@ is_str <- function(x, n = 1L)
   is.character(x) && length(x) == n
 }
 
+#' whether x is a POSIXct object
+#'
+#' @param x [object]
+#' @returns [boolean]
+is.POSIXct <- function(x)
+{
+  "POSIXct" %in% class(x)
+}
+
 #' whether all elements of x are finite
 #' note: succeeds if x is length 0
 #'
@@ -372,15 +381,12 @@ num_unique <- function(x)
 
 #' returns (t2 - t1) in seconds
 #'
-#' @param t1 [POSIXct], such as from Sys.time()
-#' @param t2 [POSIXct], such as from Sys.time()
+#' @param t1 [POSIXct]
+#' @param t2 [POSIXct]
 #' @returns [numeric]
 time_diff <- function(t1, t2 = Sys.time())
 {
-  stopifnot(
-    "POSIXct" %in% class(t1),
-    "POSIXct" %in% class(t2)
-  )
+  stopifnot(is.POSIXct(t1), is.POSIXct(t2))
   as.numeric(t2 - t1)
 }
 
