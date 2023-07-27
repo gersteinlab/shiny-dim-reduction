@@ -288,7 +288,7 @@ save_cloud <- function(data, file)
   tmp <- tempfile(fileext = ".rdata")
   on.exit(unlink(tmp))
   my_amazon_obj <<- data
-  save(global_cloud_data, file = tmp, envir = .GlobalEnv)
+  save(my_amazon_obj, file = tmp, envir = .GlobalEnv)
   aws.s3::put_object(tmp, file, env_bucket)
 }
 
@@ -329,6 +329,7 @@ delete_cloud <- function(file)
 set_store_mode <- function(x)
 {
   stopifnot(x %in% c("local", "cloud"))
+  message_f("SETTING STORE MODE: %s", x)
   Sys.setenv("SDR_STORE_MODE" = x)
 }
 
@@ -345,9 +346,9 @@ swap_store_mode <- function()
 {
   store_mode <- Sys.getenv("SDR_STORE_MODE")
   if (store_mode == "local")
-    set_store_mode("cloud")
+    return(set_store_mode("cloud"))
   if (store_mode == "cloud")
-    set_store_mode("local")
+    return(set_store_mode("local"))
   stop_store_mode(store_mode)
 }
 
