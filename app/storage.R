@@ -345,9 +345,9 @@ swap_store_mode <- function()
 {
   store_mode <- Sys.getenv("SDR_STORE_MODE")
   if (store_mode == "local")
-    set_store_mode("cloud")
+    return(set_store_mode("cloud"))
   if (store_mode == "cloud")
-    set_store_mode("local")
+    return(set_store_mode("local"))
   stop_store_mode(store_mode)
 }
 
