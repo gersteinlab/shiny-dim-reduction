@@ -361,17 +361,11 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   })
 
   observeEvent(input$request_analysis, {
-    if (use_local_storage)
-    {
-      notif("Cannot make custom requests while offline.", "error")
-      return()
-    }
-
     showModal(modalDialog(
       title = HTML("<b>Request Custom Analysis</b>"), easyClose = TRUE,
       select_panel("req_emb", "Desired Embedding", emb_options),
       hr(style = "border-top: 1px solid #000000;"),
-      select_panel("req_cat", "Desired Category", name_cat),
+      select_panel("req_cat", "Desired Category", cat_names),
       conditionalPanel(
         condition = "input.req_emb != 'Sets'",
         select_panel("req_row", "Desired Sample Subset", NULL),
@@ -383,7 +377,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
         condition = "input.req_emb == 'PCA' || input.req_emb == 'VAE' || input.req_emb == 'UMAP'",
         select_panel("req_vis", "Desired Visualization", vis_options)
       ),
-      numericInput("req_com", "Desired Component", 10, min = 3, step = 1),
+      numericInput("req_com", "Desired Component", 10, min = 2, step = 1),
       conditionalPanel(
         condition = "(input.req_emb == 'PCA' || input.req_emb == 'VAE' || input.req_emb == 'UMAP') &&
         input.req_vis == 'tSNE'",
@@ -392,7 +386,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
       conditionalPanel(
         condition = "input.req_emb == 'PHATE' || input.req_vis == 'tSNE' ||
           (input.req_emb == 'UMAP' && input.req_vis != 'Summarize')",
-        numericInput("req_per", "Desired Perplexity", 10, min = 0, max = 100, step = 1)
+        numericInput("req_per", "Desired Perplexity", 10, min = 0, step = 1)
       ),
       conditionalPanel(
         condition = "input.req_emb == 'VAE'",
@@ -400,7 +394,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
       ),
       conditionalPanel(
         condition = "input.req_emb == 'Sets'",
-        numericInput("req_thr", "Desired Threshold", 0.5, min = 0, max = 1, step = 0.1^num_digits),
+        numericInput("req_thr", "Desired Threshold", 0.5, min = 0, max = 1, step = 0.1^4),
         select_panel("req_cha", "Desired Characteristic", NULL)
       ),
       textInput("req_aut", "Author Name"),
@@ -417,38 +411,38 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     updatePickerInput(session, "req_cha", choices = app_row_choices[[row_axs]]$safe_chas)
   })
 
-  user_requests <- reactiveVal(default_user_requests)
+  user_requests <- reactiveVal(get_requests(user_req_file))
 
   observeEvent(input$submit_request, {
-    test <- make_requests(
-      cat = input$req_cat, row = parse_opt(input$req_row),
-      col = parse_opt(input$req_col), sca = input$req_sca,
-      nor = input$req_nor, emb = input$req_emb, vis = input$req_vis, com = input$req_com,
-      dim = input$req_dim, per = input$req_per, bat = input$req_bat, thr = input$req_thr,
-      cha = parse_opt(input$req_cha), aut = input$req_aut
+    tryCatch({
+      test <- make_requests(
+        cat = input$req_cat, row = parse_opt(input$req_row),
+        col = parse_opt(input$req_col), sca = input$req_sca,
+        nor = input$req_nor, emb = input$req_emb, vis = input$req_vis, com = input$req_com,
+        dim = input$req_dim, per = input$req_per, bat = input$req_bat, thr = input$req_thr,
+        cha = parse_opt(input$req_cha), aut = input$req_aut
+      )
+    }, error = function(e){
+      notif("Failed to make request - check your inputs!", "error")
+    })
+
+    user_requests(get_requests(user_req_file))
+    u_requests <- user_requests()
+    all_prev_locations <- c(
+      app_requests$FILE_LOCATION,
+      u_requests$FILE_LOCATION
     )
 
-    if (length(test) > 0) # valid request!
-    {
-      u_requests <- make_requests()
-      if (find_aws_s3("Sessions/user_requests.rds"))
-        u_requests <- load_aws_s3("Sessions/user_requests.rds")
-
-      if (test$FILE_LOCATION %nin% u_requests$FILE_LOCATION &&
-          test$FILE_LOCATION %nin% app_requests$FILE_LOCATION)
-      {
-        test$REQUEST_ID <- get_request_id()
-        u_requests <- rbind_req(u_requests, test)
-        save_aws_s3(u_requests, "Sessions/user_requests.rds")
-        user_requests(u_requests)
-        notif("Your request has been submitted!", "message")
-      }
-      else
-        notif("Cannot make duplicate requests - please reach out to the ERCC
+    if (test$FILE_LOCATION %in% all_prev_locations)
+      notif("Cannot make duplicate requests - please reach out to the ERCC
               if you believe this message is in error.", "warning")
-    }
     else
-      notif("Failed to make request - check your inputs!", "error")
+    {
+      u_requests <- rbind_req2(u_requests, test)
+      save_store(u_requests, user_req_file)
+      user_requests(u_requests)
+      notif("Your request has been submitted!", "message")
+    }
   })
 
   observeEvent(input$instructions, {
@@ -462,8 +456,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   })
 
   observeEvent(input$refresh, {
-    if (!use_local_storage && find_aws_s3("Sessions/user_requests.rds"))
-      user_requests(load_aws_s3("Sessions/user_requests.rds"))
+    user_requests(get_requests(user_req_file))
   })
 
   # ----------------
@@ -607,7 +600,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
 
     nei <- ifelse(
       iplot$embedding == "UMAP" || iplot$embedding == "PHATE" ||
-         iplot$visualize == "tSNE",
+        iplot$visualize == "tSNE",
       sprintf(", %s Neighbors", iplot$perplexity), "")
 
     # make a noun for the visualization

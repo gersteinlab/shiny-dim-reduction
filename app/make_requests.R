@@ -107,6 +107,11 @@ int_d <- -1L  # default integer value
 num_d <- -1   # default numeric value
 chr_d <- "-"  # default character value
 
+rep_sum <- function(value, x)
+{
+  rep(value, sum(x))
+}
+
 #' cleans request keys, stopping on any inconsistency
 #' note: sets unused attributes to default values
 #'
@@ -155,26 +160,23 @@ clean_req_keys <- function(req_keys)
   is_sets <- (emb_vec == "Sets")
   # (P)CA, (V)AE, (U)MAP
   is_pvu <- is_pca & is_vae & is_umap
-
-  n_req <- nrow(req_keys)
-  chr_n <- rep(chr_d, n_req)
-  int_n <- rep(int_d, n_req)
-  num_n <- rep(num_d, n_req)
+  is_sp <- is_sets | is_phate
 
   # set all unnecessary attributes to default values
-  req_keys$ROW_SUBSETS[is_sets] <- chr_n
-  req_keys$COL_SUBSETS[is_sets] <- chr_n
-  req_keys$VISUALIZATION[is_sets | is_phate] <- chr_n
-  req_keys$COMPONENT[is_sets] <- int_n
-  req_keys$BATCH_SIZE[!is_vae] <- int_n
-  req_keys$THRESHOLD[!is_sets] <- num_n
-  req_keys$CHARACTERISTIC[!is_sets] <- chr_n
+  req_keys$ROW_SUBSETS[is_sets] <- chr_d %>% rep_sum(is_sets)
+  req_keys$COL_SUBSETS[is_sets] <- chr_d %>% rep_sum(is_sets)
+  req_keys$VISUALIZATION[is_sp] <- chr_d %>% rep_sum(is_sp)
+  req_keys$COMPONENT[is_sets] <- int_d %>% rep_sum(is_sets)
+  req_keys$BATCH_SIZE[!is_vae] <- int_d %>% rep_sum(!is_vae)
+  req_keys$THRESHOLD[!is_sets] <- num_d %>% rep_sum(!is_sets)
+  req_keys$CHARACTERISTIC[!is_sets] <- chr_d %>% rep_sum(!is_sets)
 
   # do the same for the values that depend on earlier cleaning
   is_tsne <- (vis_vec == "tSNE")
   uses_per <- (is_umap | is_phate | is_tsne)
-  req_keys$DIMENSION[is_sets | is_phate | !is_tsne] <- int_n
-  req_keys$PERPLEXITY[!uses_per] <- int_n
+  uses_dim <- (is_sets | is_phate | !is_tsne)
+  req_keys$DIMENSION[uses_dim] <- int_d %>% rep_sum(uses_dim)
+  req_keys$PERPLEXITY[!uses_per] <- int_d %>% rep_sum(!uses_per)
 
   # ----------
   # VALIDATION
@@ -395,8 +397,9 @@ name_req_key_files <- function(req_keys)
   for (i in seq_len(n))
   {
     args <- as.list(req_keys[i,])
-    names(args) <- as.character(req_key_members)
-    result[i] <- do.call(make_sdr_name, args)
+    names(args) <- c("cat", "row", "col", "sca", "nor", "emb", "vis",
+                     "com", "dim", "per", "bat", "thr", "cha")
+    result[i] <- do.call(name_req_key_file, args)
   }
 
   result
@@ -444,7 +447,7 @@ are_requests <- function(x)
 #   makes merging new requests difficult. Duplicate locations are not allowed.
 make_requests <- function(
     cat = character(), row = character(), col = character(), sca = character(),
-    nor = character(), emb = character(), vis = character(), com = numeric(),
+    nor = character(), emb = character(), vis = character(), com = integer(),
     dim = integer(), per = integer(), bat = integer(), thr = numeric(),
     cha = character(), aut = character()
 ){
@@ -453,7 +456,7 @@ make_requests <- function(
     cat, row, col, sca, nor,
     emb, vis, com, dim, per, bat, thr, cha)
 
-  key_names <- make_key_names(requests) # still req_keys
+  key_names <- name_req_key_files(requests) # still req_keys
   stopifnot(!anyDuplicated(key_names))
 
   requests$AUTHOR <- aut

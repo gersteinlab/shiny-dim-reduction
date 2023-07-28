@@ -14,18 +14,15 @@ source_app("plotting.R")
 source_app("ui_functions.R")
 source_app("make_requests.R")
 
-app_requests <- load_store(
-  "app_requests.rds",
-  make_requests()
-)
-# clean_req_keys(app_requests)
+get_requests <- function(file)
+{
+  load_store(file, make_requests())
+}
 
-# create default user requests
-default_user_requests <- load_store(
-  "Sessions/user_requests.rds",
-  make_requests()
-)
-# clean_req_keys(default_user_requests)
+user_req_file <- "Sessions/user_requests.rds"
+
+app_requests <- get_requests("app_requests.rds")
+stopifnot(are_requests(app_requests))
 
 # ------------------------
 # INSTRUCTIONS / CITATIONS
@@ -343,6 +340,7 @@ ui <- function(request){
         action("start", "Start Plotting", "chart-bar", "#FFF", "#0064C8", "#00356B"),
         action("stop", "Stop Plotting", "ban", "#FFF", "#C90016", "#00356B"),
         action("request_analysis", "Request", "user-edit", "#FFF", "#29AB87", "#00356B"),
+        action("refresh", "Refresh", "sync", "#FFF", "#29AB87", "#00356B"),
         bookmarkButton(),
         downloadButton("download_num_data", "Numeric Data"),
         downloadButton("download_metadata", "Metadata")
