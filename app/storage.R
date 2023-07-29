@@ -460,3 +460,5 @@ decide_store_mode <- function(local_store, cloud_store)
       stop("Could not connect to local_store or cloud_store.")
   }
 }
+
+cat_f("STORAGE MANAGER TIME: %.1f (sec)\n", net_time())
