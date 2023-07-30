@@ -494,7 +494,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     keep <- rep(TRUE, nrow(row_order()))
     row_axs <- get_row_axs(cati())
 
-    for (char in app_row_choices[[row_axs]]$safe_chas)
+    for (char in get_app_row_choices(cati())$safe_chas)
     {
       cur_filter <- row_order()[[char]] %in%
         parse_opt(iplot$selectby[[char]])
@@ -527,9 +527,11 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   title_text <- reactive({
     if (iplot$embedding == "Sets")
     {
+      row_opt <- get_opt(rowi(), nrow(num_data()))
+      col_opt <- get_opt(coli(), ncol(num_data()))
       return(sprintf(
-        "%s-Grouped Features on %s [%s (%s), %s (%s)]",
-        filterby(), cati(), rowi(), nrow(num_data()), coli(), ncol(num_data())
+        "%s-Grouped Features on %s [%s, %s]",
+        filterby(), cati(), row_opt, col_opt
       ))
     }
 
@@ -544,8 +546,10 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
       vis_as_noun <- rep_str(iplot$visualize, vis_options,
                              c("Exploration of ", "Summary of ", "tSNE of "))
 
-    sprintf("%s%s on %s [%s (%s), %s (%s)]%s", vis_as_noun,
-            iplot$embedding, cati(), rowi(), sum(keep()), coli(), num_feat(), nei)
+    row_opt <- get_opt(rowi(), sum(keep()))
+    col_opt <- get_opt(coli(), num_feat())
+    sprintf("%s%s on %s [%s, %s]%s", vis_as_noun,
+            iplot$embedding, cati(), row_opt, col_opt, nei)
   })
 
   title_embed <- reactive({
@@ -887,20 +891,6 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   # DOWNLOAD HANDLERS
   # -----------------
 
-  output$downloadInstructions <- downloadHandler(
-    filename = "instructions.txt",
-    content = function(file){
-      writeLines(print_instructions, file)
-    }
-  )
-
-  output$downloadCitations <- downloadHandler(
-    filename = "citations.txt",
-    content = function(file){
-      writeLines(print_citations, file)
-    }
-  )
-
   output$download_num_data <- downloadHandler(
     filename = function() {
       sprintf("num_data_%s.csv", rep_str(title_text(), " ", "_"))
@@ -955,20 +945,18 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
 
   output$console_out <- renderPrint({
     if ("address" %in% iplot$console)
-      sprintf_clean("address=%s", format_print_simple(curr_adr()))
+      cat_f("address: %s\n", format_print_simple(curr_adr()))
     if ("num_data" %in% iplot$console)
-      sprintf_clean("dim(num_data)=%s", format_print_simple(dim(num_data())))
+      cat_f("dim(num_data): %s\n", format_print_simple(dim(num_data())))
     if ("metadata" %in% iplot$console)
-      sprintf_clean("dim(metadata)=%s", format_print_simple(dim(metadata())))
+      cat_f("dim(metadata): %s\n", format_print_simple(dim(metadata())))
     if ("app_requests" %in% iplot$console)
-      sprintf_clean("dim(app_requests)=%s", format_print_simple(dim(app_requests)))
+      cat_f("dim(app_requests): %s\n", format_print_simple(dim(app_requests)))
     if ("user_requests" %in% iplot$console)
-      sprintf_clean("dim(user_requests)=%s", format_print_simple(dim(user_requests())))
+      cat_f("dim(user_requests): %s\n", format_print_simple(dim(user_requests())))
 
     for (id in intersect(setdiff(iplot$console, "console"), names(input)))
-    {
-      sprintf_clean("%s=%s", id, format_print_simple(input[[id]]))
-    }
+      cat_f("%s: %s\n", id, format_print_simple(input[[id]]))
   })
 
   # -----------------
