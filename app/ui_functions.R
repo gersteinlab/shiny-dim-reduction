@@ -184,9 +184,3 @@ generate_legend_table <- function(vec)
 
   data.frame("Number" = seq_along(unique_vals), "Value" = unique_vals)
 }
-
-# generates a box from shinydashboard but with certain features
-button_toolbox <- function(title, ...)
-{
-  box(title = title, collapsible = TRUE, collapsed = FALSE, width = "100%", ...)
-}

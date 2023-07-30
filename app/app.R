@@ -100,19 +100,178 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   })
 
   output$shape_opts_cond <- reactive({
-    input$plotPanels == "Static 2D" && sep_colors()
+    input$plotPanels == "Static 2D" &&
+      "Separate Colors" %in% input$sMenu
   })
 
   output$label_opts_cond <- reactive({
-    input$plotPanels %in% c("Interactive 2D", "Interactive 3D") && sep_colors()
+    input$plotPanels %in% c("Interactive 2D", "Interactive 3D") &&
+      "Separate Colors" %in% input$sMenu
   })
 
   for (cond in output_conditions)
     outputOptions(output, cond, suspendWhenHidden = FALSE)
 
-  # ---------------------
-  # HANDLE BUTTON PRESSES
-  # ---------------------
+  # ----------------------
+  # INPUT TO DYNAMIC STATE
+  # ----------------------
+
+  # dynamic input picker IDs
+  dynam_state <- do.call(reactiveValues, app_cat_selected)
+
+  # syntactic sugar
+  iso_cat <- function()
+  {
+    isolate(input$category)
+  }
+
+  observeEvent(input$rowby,
+               dynam_state$rowby[[iso_cat()]] <- input$rowby
+               , ignoreInit = TRUE)
+
+  observeEvent(input$colby, {
+    dynam_state$colby[[iso_cat()]] <- input$colby
+  }, ignoreInit = TRUE)
+
+  observeEvent(input$colorby, {
+    dynam_state$colorby[[iso_cat()]] <- input$colorby
+  }, ignoreInit = TRUE)
+
+  observeEvent(input$shapeby, {
+    dynam_state$shapeby[[iso_cat()]] <- input$shapeby
+  }, ignoreInit = TRUE)
+
+  observeEvent(input$labelby, {
+    dynam_state$labelby[[iso_cat()]] <- input$labelby
+  }, ignoreInit = TRUE)
+
+  observeEvent(input$filterby, {
+    dynam_state$filterby[iso_cat()] <- input$filterby
+  }, ignoreInit = TRUE)
+
+  observeEvent(input$selectby, {
+    cat <- iso_cat()
+    fil <- dynam_state$filterby[[cat]]
+    # handle NULL
+    safe_selectby <- as.character(input$selectby)
+    dynam_state$selectby[[cat]][[fil]] <- safe_selectby
+  }, ignoreNULL = FALSE, ignoreInit = TRUE)
+
+  observeEvent(input$threby, {
+    cat <- iso_cat()
+    sca <- isolate(input$scaling)
+    dynam_state$threby[[cat]][[sca]] <- input$threby
+  }, ignoreInit = TRUE)
+
+  # ----------------------
+  # DYNAMIC STATE TO INPUT
+  # ----------------------
+
+  # simplified version of updatePickerInput
+  simple_picker_update <- function(
+    inputId, label = NULL, selected = NULL, choices = NULL)
+  {
+    updatePickerInput(
+      session,
+      inputId = inputId,
+      label = label,
+      selected = selected,
+      choices = choices
+    )
+  }
+
+  # update input pickers
+  observeEvent(input$category, {
+    cat <- input$category
+    row_choices <- get_app_row_choices(cat)
+    filterby <- dynam_state$filterby[[cat]]
+
+    simple_picker_update(
+      "rowby",
+      sprintf("Sample Subset (%s)", cat),
+      selected = dynam_state$rowby[[cat]],
+      choices = row_choices$rowby
+    )
+
+    simple_picker_update(
+      "colby",
+      sprintf("Feature Subset (%s)", cat),
+      selected = dynam_state$colby[[cat]],
+      choices = get_app_col_choices(cat)$colby
+    )
+
+    simple_picker_update(
+      "colorby",
+      sprintf("Color By (%s)", cat),
+      selected = dynam_state$colorby[[cat]],
+      choices = row_choices$full_chas
+    )
+
+    simple_picker_update(
+      "shapeby",
+      sprintf("Shape By (%s)", cat),
+      selected = dynam_state$shapeby[[cat]],
+      choices = row_choices$full_chas
+    )
+
+    simple_picker_update(
+      "labelby",
+      sprintf("Label By (%s)", cat),
+      selected = dynam_state$labelby[[cat]],
+      choices = row_choices$full_chas
+    )
+
+    simple_picker_update(
+      "filterby",
+      sprintf("Filter By (%s)", cat),
+      selected = filterby,
+      choices = row_choices$safe_chas
+    )
+
+    simple_picker_update(
+      "selectby",
+      sprintf("Selections (%s, %s)", cat, filterby),
+      selected = dynam_state$selectby[[cat]][[filterby]],
+      choices = row_choices$selectby[[filterby]]
+    )
+
+    sca <- input$scaling
+    simple_picker_update(
+      "threby",
+      sprintf("Threshold (%s, %s)", cat, sca),
+      selected = dynam_state$threby[[cat]][[sca]],
+      choices = app_cat_choices[[cat]]$threby[[sca]]
+    )
+  })
+
+  observeEvent(input$scaling, {
+    cat <- input$category
+    sca <- input$scaling
+
+    simple_picker_update(
+      "threby",
+      sprintf("Threshold (%s, %s)", cat, sca),
+      selected = dynam_state$threby[[cat]][[sca]],
+      choices = app_cat_choices[[cat]]$threby[[sca]]
+    )
+  })
+
+  observeEvent(input$filterby, {
+    cat <- input$category
+    row_choices <- get_app_row_choices(cat)
+    filterby <- dynam_state$filterby[[cat]]
+
+    simple_picker_update(
+      "selectby",
+      sprintf("Selections (%s, %s)", cat, filterby),
+      selected = dynam_state$selectby[[cat]][[filterby]],
+      choices = row_choices$selectby[[filterby]]
+    )
+  })
+
+  # ----------------
+  # RUNNING PLOTTING
+  # ----------------
   running <- reactiveVal(run_default)
 
   observeEvent(input$start, {
@@ -127,222 +286,29 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     running(FALSE)
   })
 
-  # dynamic input picker IDs
-  app_state_selected <- reactiveVal(app_cat_selected)
-
-  # update app state
-  observeEvent(input$rowby, {
-    cat <- isolate(input$category)
-    app_state <- app_state_selected()
-    app_state[[cat]]$rowby <- input$rowby
-    app_state_selected(app_state)
-  }, ignoreInit = TRUE)
-
-  observeEvent(input$colby, {
-    cat <- isolate(input$category)
-    app_state <- app_state_selected()
-    app_state[[cat]]$colby <- input$colby
-    app_state_selected(app_state)
-  }, ignoreInit = TRUE)
-
-  observeEvent(input$colorby, {
-    cat <- isolate(input$category)
-    app_state <- app_state_selected()
-    app_state[[cat]]$colorby <- input$colorby
-    app_state_selected(app_state)
-  }, ignoreInit = TRUE)
-
-  observeEvent(input$shapeby, {
-    cat <- isolate(input$category)
-    app_state <- app_state_selected()
-    app_state[[cat]]$shapeby <- input$shapeby
-    app_state_selected(app_state)
-  }, ignoreInit = TRUE)
-
-  observeEvent(input$labelby, {
-    cat <- isolate(input$category)
-    app_state <- app_state_selected()
-    app_state[[cat]]$labelby <- input$labelby
-    app_state_selected(app_state)
-  }, ignoreInit = TRUE)
-
-  observeEvent(input$filterby, {
-    cat <- isolate(input$category)
-    app_state <- app_state_selected()
-    app_state[[cat]]$filterby <- input$filterby
-    app_state_selected(app_state)
-  }, ignoreInit = TRUE)
-
-  observeEvent(input$selectby, {
-    cat <- isolate(input$category)
-    app_state <- app_state_selected()
-    fil <- app_state[[cat]]$filterby
-    app_state[[cat]]$selectby[[fil]] <- as.character(input$selectby)
-    app_state_selected(app_state)
-    # NULL is a problem
-  }, ignoreNULL = FALSE, ignoreInit = TRUE)
-
-  observeEvent(input$threby, {
-    cat <- isolate(input$category)
-    sca <- isolate(input$scaling)
-    app_state <- app_state_selected()
-    app_state[[cat]]$threby[[sca]] <- input$threby
-    app_state_selected(app_state)
-  }, ignoreInit = TRUE)
-
-  update_dynam_picker <- function(inputId, label, selected, choices)
-  {
-    updatePickerInput(
-      session,
-      inputId = inputId,
-      label = label,
-      selected = selected,
-      choices = choices
-    )
-  }
-
-  # update input pickers
-  observeEvent(input$category, {
-    app_state <- app_state_selected()
-
-    cat <- input$category
-    sca <- input$scaling
-
-    row_axs <- get_row_axs(cat)
-    col_axs <- get_col_axs(cat)
-
-    row_choices <- app_row_choices[[row_axs]]
-    col_choices <- app_col_choices[[col_axs]]
-    cat_choices <- app_cat_choices[[cat]]
-
-    cat_selected <- app_state[[cat]]
-    filterby <- cat_selected$filterby
-
-    update_dynam_picker(
-      "rowby",
-      sprintf("Sample Subset (%s)", cat),
-      selected = cat_selected$rowby,
-      choices = row_choices$rowby
-    )
-
-    update_dynam_picker(
-      "colby",
-      sprintf("Feature Subset (%s)", cat),
-      selected = cat_selected$colby,
-      choices = col_choices$colby
-    )
-
-    update_dynam_picker(
-      "colorby",
-      sprintf("Color By (%s)", cat),
-      selected = cat_selected$colorby,
-      choices = row_choices$full_chas
-    )
-
-    update_dynam_picker(
-      "shapeby",
-      sprintf("Shape By (%s)", cat),
-      selected = cat_selected$shapeby,
-      choices = row_choices$full_chas
-    )
-
-    update_dynam_picker(
-      "labelby",
-      sprintf("Label By (%s)", cat),
-      selected = cat_selected$labelby,
-      choices = row_choices$full_chas
-    )
-
-    update_dynam_picker(
-      "filterby",
-      sprintf("Filter By (%s)", cat),
-      selected = filterby,
-      choices = row_choices$safe_chas
-    )
-
-    update_dynam_picker(
-      "selectby",
-      sprintf("Selections (%s, %s)", cat, filterby),
-      selected = cat_selected$selectby[[filterby]],
-      choices = row_choices$selectby[[filterby]]
-    )
-
-    update_dynam_picker(
-      "threby",
-      sprintf("Threshold (%s, %s)", cat, sca),
-      selected = cat_selected$threby[[sca]],
-      choices = cat_choices$threby[[sca]]
-    )
-  })
-
-  observeEvent(input$scaling, {
-    app_state <- app_state_selected()
-
-    cat <- input$category
-    sca <- input$scaling
-
-    cat_choices <- app_cat_choices[[cat]]
-
-    cat_selected <- app_state[[cat]]
-    filterby <- cat_selected$filterby
-
-    update_dynam_picker(
-      "threby",
-      sprintf("Threshold (%s, %s)", cat, sca),
-      selected = cat_selected$threby[[sca]],
-      choices = cat_choices$threby[[sca]]
-    )
-  })
-
-  observeEvent(input$filterby, {
-    app_state <- app_state_selected()
-
-    cat <- input$category
-    sca <- input$scaling
-
-    row_axs <- get_row_axs(cat)
-
-    row_choices <- app_row_choices[[row_axs]]
-    cat_choices <- app_cat_choices[[cat]]
-
-    cat_selected <- app_state[[cat]]
-    filterby <- cat_selected$filterby
-
-    update_dynam_picker(
-      "selectby",
-      sprintf("Selections (%s, %s)", cat, filterby),
-      selected = cat_selected$selectby[[filterby]],
-      choices = row_choices$selectby[[filterby]]
-    )
-  })
-
   # a copy of all reactives that can stop running
   iplot <- reactiveValues()
 
   observe({
     if (running())
     {
-      app_state <- app_state_selected()
-
       for (id in bookmarkable_ids)
         iplot[[id]] <- input[[id]]
 
-      iplot$rowby <- app_state[[iplot$category]]$rowby
-      iplot$colby <- app_state[[iplot$category]]$colby
-      iplot$colorby <- app_state[[iplot$category]]$colorby
-      iplot$shapeby <- app_state[[iplot$category]]$shapeby
-      iplot$filterby <- app_state[[iplot$category]]$filterby
-      iplot$selectby <- app_state[[iplot$category]]$selectby
-      iplot$threby <- app_state[[iplot$category]]$threby[[iplot$scaling]]
+      # dynamic input propagates too
+      cat <- iplot$category
+      iplot$rowby <- dynam_state$rowby[[cat]]
+      iplot$colby <- dynam_state$colby[[cat]]
+      iplot$colorby <- dynam_state$colorby[[cat]]
+      iplot$shapeby <- dynam_state$shapeby[[cat]]
+      iplot$filterby <- dynam_state$filterby[[cat]]
+      iplot$selectby <- dynam_state$selectby[[cat]]
+      iplot$threby <- dynam_state$threby[[cat]][[iplot$scaling]]
     }
   })
 
-  rowi <- reactive({
-    parse_opt(iplot$rowby)
-  })
-  coli <- reactive({
-    parse_opt(iplot$colby)
-  })
+  rowi <- reactive(parse_opt(iplot$rowby))
+  coli <- reactive(parse_opt(iplot$colby))
   thre <- reactive(as.numeric(iplot$threby))
 
   colorby <- reactive(iplot$colorby)
@@ -360,55 +326,23 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     iplot$filterby
   })
 
-  observeEvent(input$request_analysis, {
-    showModal(modalDialog(
-      title = HTML("<b>Request Custom Analysis</b>"), easyClose = TRUE,
-      select_panel("req_emb", "Desired Embedding", emb_options),
-      hr(style = "border-top: 1px solid #000000;"),
-      select_panel("req_cat", "Desired Category", cat_names),
-      conditionalPanel(
-        condition = "input.req_emb != 'Sets'",
-        select_panel("req_row", "Desired Sample Subset", NULL),
-        select_panel("req_col", "Desired Feature Subset", NULL),
-        select_panel("req_nor", "Desired Normalization", nor_options)
-      ),
-      select_panel("req_sca", "Desired Scaling", sca_options),
-      conditionalPanel(
-        condition = "input.req_emb == 'PCA' || input.req_emb == 'VAE' || input.req_emb == 'UMAP'",
-        select_panel("req_vis", "Desired Visualization", vis_options)
-      ),
-      numericInput("req_com", "Desired Component", 10, min = 2, step = 1),
-      conditionalPanel(
-        condition = "(input.req_emb == 'PCA' || input.req_emb == 'VAE' || input.req_emb == 'UMAP') &&
-        input.req_vis == 'tSNE'",
-        numericInput("req_dim", "Desired Dimension", 2, min = 2, max = 3, step = 1)
-      ),
-      conditionalPanel(
-        condition = "input.req_emb == 'PHATE' || input.req_vis == 'tSNE' ||
-          (input.req_emb == 'UMAP' && input.req_vis != 'Summarize')",
-        numericInput("req_per", "Desired Perplexity", 10, min = 0, step = 1)
-      ),
-      conditionalPanel(
-        condition = "input.req_emb == 'VAE'",
-        numericInput("req_bat", "Desired Batch Size", 64, min = 1, step = 1)
-      ),
-      conditionalPanel(
-        condition = "input.req_emb == 'Sets'",
-        numericInput("req_thr", "Desired Threshold", 0.5, min = 0, max = 1, step = 0.1^4),
-        select_panel("req_cha", "Desired Characteristic", NULL)
-      ),
-      textInput("req_aut", "Author Name"),
-      footer = tagList(
-        action("submit_request", "Submit", "cloud", "#FFF", "#0064C8", "#00356B"),
-        modalButton("Dismiss")
-      )
-    ))
+  # --------------
+  # PRESENT MODALS
+  # --------------
+  observeEvent(input$draft_request, {
+    showModal(draft_request_modal)
   })
 
   observeEvent(input$req_cat, {
-    updatePickerInput(session, "req_row", choices = app_row_choices[[row_axs]]$rowby)
-    updatePickerInput(session, "req_col", choices = app_col_choices[[col_axs]]$colby)
-    updatePickerInput(session, "req_cha", choices = app_row_choices[[row_axs]]$safe_chas)
+    updatePickerInput(
+      session, "req_row",
+      choices = app_row_choices[[row_axs]]$rowby)
+    updatePickerInput(
+      session, "req_col",
+      choices = app_col_choices[[col_axs]]$colby)
+    updatePickerInput(
+      session, "req_cha",
+      choices = app_row_choices[[row_axs]]$safe_chas)
   })
 
   user_requests <- reactiveVal(get_requests(user_req_file))
@@ -445,19 +379,17 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     }
   })
 
-  observeEvent(input$instructions, {
-    showModal(modalDialog(
-      title = HTML("<b>Instructions</b>"), easyClose = TRUE, HTML(instructions)))
-  })
-
-  observeEvent(input$citations, {
-    showModal(modalDialog(
-      title = HTML("<b>Citations</b>"), easyClose = TRUE, HTML(citations)))
-  })
-
   observeEvent(input$refresh, {
     user_requests(get_requests(user_req_file))
   })
+
+  observeEvent(input$notes, {
+    showModal(notes_modal)
+  })
+
+  output$cat_notes_text <- renderText(
+    categories[[input$cat_notes]]$note
+  )
 
   # ----------------
   # INPUT PROCESSING
@@ -575,8 +507,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   shapes <- reactive(metadata()[, shapeby()])
   labels <- reactive(sprintf("%s: %s", labelby(), metadata()[, labelby()]))
   my_chars <- reactive({
-    app_state <- app_state_selected()
-    x <- app_state[[cati()]]$selectby[[filterby()]]
+    x <- dynam_state$selectby[[cati()]][[filterby()]]
     parse_opt(x)
   })
 
@@ -674,7 +605,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
         return(6)
     }
 
-    length(unique(shapes()))
+    num_unique(shapes())
   })
 
   # ---------------
@@ -1088,8 +1019,14 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   })
   setBookmarkExclude(bookmark_exclude_vector)
 
-  onBookmark(function(state) {
-    session_data <- session_data_template
+  name_session <- function(id_n)
+  {
+    sprintf("Sessions/session_%s.rds", id_n)
+  }
+
+  get_session_data <- function()
+  {
+    session_data <- list()
 
     for (id in picker_input_ids)
       session_data[["pickerInput"]][[id]] <- input[[id]]
@@ -1106,36 +1043,15 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     for (id in tabset_panel_ids)
       session_data[["tabsetPanel"]][[id]] <- input[[id]]
 
-    # get the vector of all session IDs
-    num_sessions <- 0
-    if (find_store("Sessions/num_sessions.rds"))
-      num_sessions <- load_store("Sessions/num_sessions.rds")
+    session_data[["dynamInput"]] <- reactiveValuesToList(dynam_state)
 
-    # find a session ID that is not used
-    i <- smallest_missing(num_sessions)
+    session_data
+  }
 
-    # add the session ID to the list and save the session
-    save_store(c(num_sessions, i), "Sessions/num_sessions.rds")
-    save_store(session_data, sprintf("Sessions/session_%s.rds", i))
-
-    # the bookmark is simply the numerical ID for the session
-    state$values$user_id <- i
-  })
-
-  # restore compressed data when link is followed
-  onRestore(function(state) {
-    # get the vector of all session IDs
-    num_sessions <- 0
-    if (find_store("Sessions/num_sessions.rds"))
-      num_sessions <- load_store("Sessions/num_sessions.rds")
-
-    # if the ID is invalid, load nothing
-    id <- state$values$user_id
-    if (!(id %in% num_sessions))
+  set_session_data <- function(session_data)
+  {
+    if (is.null(session_data))
       return(NULL)
-
-    # otherwise, load the appropriate item
-    session_data <- load_store(sprintf("Sessions/session_%s.rds", id))
 
     # update all input types accordingly
     picker_input_data <- session_data[["pickerInput"]]
@@ -1157,6 +1073,35 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     tabset_panel_data <- session_data[["tabsetPanel"]]
     for (name in names(tabset_panel_data))
       updateTabsetPanel(session, name, selected = tabset_panel_data[[name]])
+
+    for (dynam_id in dynam_picker_input_ids)
+      dynam_state[[dynam_id]] <- session_data[["dynamInput"]][[dynam_id]]
+  }
+
+  onBookmark(function(state) {
+    # get the vector of all session IDs
+    num_sessions <- load_store("Sessions/num_sessions.rds", 0L)
+
+    # find a session ID that has not yet been used
+    id_n <- smallest_missing(num_sessions)
+
+    # add the session ID to the list and save the session
+    save_store(c(num_sessions, id_n), "Sessions/num_sessions.rds")
+    save_store(get_session_data(), name_session(id_n))
+
+    # the bookmark is simply the numerical ID for the session
+    state$values$user_id <- id_n
+  })
+
+  # restore compressed data when link is followed
+  onRestore(function(state) {
+    # get the vector of all session IDs
+    num_sessions <- load_store("Sessions/num_sessions.rds", 0L)
+
+    id_n <- state$values$user_id
+    # if the id is valid, load session data
+    if (id_n %in% num_sessions)
+      name_session(id_n) %>% load_store() %>% set_session_data()
   })
 }
 

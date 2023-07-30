@@ -24,13 +24,6 @@ user_req_file <- "Sessions/user_requests.rds"
 app_requests <- get_requests("app_requests.rds")
 stopifnot(are_requests(app_requests))
 
-# ------------------------
-# INSTRUCTIONS / CITATIONS
-# ------------------------
-
-citations <- make_citations(app_data$citations)
-print_citations <- rem_html_tags(citations)
-
 # ------------------
 # BROWSER PARAMETERS
 # ------------------
@@ -97,18 +90,32 @@ for (col_axs in col_axs_names)
 }
 
 # useful
-median_index <- function(x) {
+median_index <- function(x)
+{
   ceiling(length(x) / 2)
 }
 
-median_value <- function(x) {
+median_value <- function(x)
+{
   x[median_index(x)]
+}
+
+get_app_row_choices <- function(cat)
+{
+  app_row_choices[[get_row_axs(cat)]]
+}
+
+get_app_col_choices <- function(cat)
+{
+  app_col_choices[[get_col_axs(cat)]]
 }
 
 # specify choices unique to each category (threby) and
 # the selections for each category
 app_cat_choices <- empty_named_list(cat_names)
-app_cat_selected <- empty_named_list(cat_names)
+app_cat_selected <- empty_named_list(dynam_picker_input_ids)
+for (dynam_id in dynam_picker_input_ids)
+  app_cat_selected[[dynam_id]] <- empty_named_list(cat_names)
 
 # useful for thresholds
 is_sets <- (app_requests$EMBEDDING == "Sets")
@@ -118,8 +125,8 @@ thr_vec <- app_requests$THRESHOLD[is_sets]
 
 for (cat in cat_names)
 {
-  cat_row_choices <- app_row_choices[[get_row_axs(cat)]]
-  cat_col_choices <- app_col_choices[[get_col_axs(cat)]]
+  row_choices <- get_app_row_choices(cat)
+  col_choices <- get_app_col_choices(cat)
   thre_choices <- empty_named_list(sca_options)
   thre_selected <- empty_named_list(sca_options)
 
@@ -132,18 +139,16 @@ for (cat in cat_names)
   }
 
   app_cat_choices[[cat]] <- list("threby" = thre_choices)
-  safe_chas <- cat_row_choices$safe_chas
+  safe_chas <- row_choices$safe_chas
 
-  app_cat_selected[[cat]] <- list(
-    "rowby" = cat_row_choices$rowby[1],
-    "colby" = cat_col_choices$colby[1],
-    "colorby" = safe_chas[1],
-    "shapeby" = safe_chas[2],
-    "labelby" = safe_chas[1],
-    "filterby" = safe_chas[1],
-    "selectby" = cat_row_choices$selectby,
-    "threby" = thre_selected
-  )
+  app_cat_selected$rowby[[cat]] <- row_choices$rowby[1]
+  app_cat_selected$colby[[cat]] <- col_choices$colby[1]
+  app_cat_selected$colorby[[cat]] <- safe_chas[1]
+  app_cat_selected$shapeby[[cat]] <- safe_chas[2]
+  app_cat_selected$labelby[[cat]] <- safe_chas[1]
+  app_cat_selected$filterby[[cat]] <- safe_chas[1]
+  app_cat_selected$selectby[[cat]] <- row_choices$selectby
+  app_cat_selected$threby[[cat]] <- thre_selected
 }
 
 # -----------
@@ -166,7 +171,6 @@ console_ids <- c(
 
 bookmarkable_ids <- c(
   picker_input_ids,
-  # sprintf("%s_open", picker_input_ids),
   numeric_input_ids,
   numeric_range_input_ids,
   slider_input_ids,
@@ -176,6 +180,7 @@ bookmarkable_ids <- c(
 # the vector of all inputs to exclude from manual bookmarking
 bookmark_exclude_vector <- c(
   default_exclude_vector,
+  dynam_picker_input_ids,
   bookmarkable_ids
 )
 
@@ -190,7 +195,8 @@ output_conditions <- c(
   "pc_slider2_cond",
   "pc_slider3_cond",
   "shape_opts_cond",
-  "label_opts_cond")
+  "label_opts_cond"
+)
 
 # ---------------
 # ASSEMBLE THE UI
@@ -315,6 +321,91 @@ last_updated_text <- sprintf(
   format(max(app_requests$TIME_COMPLETED), "%b %d, %Y")
 )
 
+button_toolbox <-  box(
+  action("start", "Start Plotting", "chart-bar", "#FFF", "#0064C8", "#00356B"),
+  action("stop", "Stop Plotting", "ban", "#FFF", "#C90016", "#00356B"),
+  action("draft_request", "Request", "user-edit", "#FFF", "#29AB87", "#00356B"),
+  action("refresh", "Refresh", "sync", "#FFF", "#29AB87", "#00356B"),
+  bookmarkButton(),
+  downloadButton("download_num_data", "Numeric Data"),
+  downloadButton("download_metadata", "Metadata"),
+  action("notes", "Notes", "book", "#FFF", "#9400D3", "#00356B"),
+  title = "Controls",
+  collapsible = TRUE,
+  collapsed = FALSE,
+  width = "100%"
+)
+
+draft_request_modal <- modalDialog(
+  title = HTML("<b>Request Custom Analysis</b>"), easyClose = TRUE,
+  select_panel("req_emb", "Desired Embedding", emb_options),
+  hr(style = "border-top: 1px solid #000000;"),
+  select_panel("req_cat", "Desired Category", cat_names),
+  conditionalPanel(
+    condition = "input.req_emb != 'Sets'",
+    select_panel("req_row", "Desired Sample Subset"), # DYNAMIC
+    select_panel("req_col", "Desired Feature Subset"), # DYNAMIC
+    conditionalPanel(
+      condition = "input.req_emb == 'VAE'",
+      select_panel("req_nor", "Desired Normalization",
+                   c("Global Min-Max", "Local Min-Max"))
+    ),
+    conditionalPanel(
+      condition = "input.req_emb != 'Sets' && input.req_emb != 'VAE'",
+      select_panel("req_nor", "Desired Normalization", nor_options)
+    )
+  ),
+  select_panel("req_sca", "Desired Scaling", sca_options),
+  conditionalPanel(
+    condition = "input.req_emb == 'PCA' || input.req_emb == 'VAE' || input.req_emb == 'UMAP'",
+    select_panel("req_vis", "Desired Visualization", vis_options)
+  ),
+  numericInput("req_com", "Desired Component", 10, min = 2, step = 1),
+  conditionalPanel(
+    condition = "(input.req_emb == 'PCA' || input.req_emb == 'VAE' || input.req_emb == 'UMAP') &&
+        input.req_vis == 'tSNE'",
+    numericInput("req_dim", "Desired Dimension", 2, min = 2, max = 3, step = 1)
+  ),
+  conditionalPanel(
+    condition = "input.req_emb == 'PHATE' || input.req_vis == 'tSNE' ||
+          (input.req_emb == 'UMAP' && input.req_vis != 'Summarize')",
+    numericInput("req_per", "Desired Perplexity", 10, min = 1, step = 1)
+  ),
+  conditionalPanel(
+    condition = "input.req_emb == 'VAE'",
+    numericInput("req_bat", "Desired Batch Size", 64, min = 1, step = 1)
+  ),
+  conditionalPanel(
+    condition = "input.req_emb == 'Sets'",
+    numericInput("req_thr", "Desired Threshold", 0.5, min = 0, max = 1, step = 0.1^4),
+    select_panel("req_cha", "Desired Characteristic") # DYNAMIC
+  ),
+  textInput("req_aut", "Author Name"),
+  footer = tagList(
+    action("submit_request", "Submit", "cloud", "#FFF", "#0064C8", "#00356B"),
+    modalButton("Dismiss")
+  )
+)
+
+notes_modal <- modalDialog(
+  paste(
+    "Please visit our
+<a href='https://github.com/gersteinlab/shiny-dim-reduction/'
+target='_blank' rel='noopener noreferrer'>Github</a> for instructions and
+a full list of project contributors / references.
+The citations below are in the format requested by their respective creators.
+<br><br>
+<b>Data Sources</b>
+<br>",
+    app_data$citations,
+    sep = ""
+  ) %>% HTML(),
+  select_panel("cat_notes", "Category Notes", choices = cat_names),
+  textOutput("cat_notes_text"),
+  title = HTML("<b>Notes</b>"),
+  easyClose = TRUE
+)
+
 ui <- function(request){
   dashboardPage(
     skin="blue",
@@ -334,17 +425,8 @@ ui <- function(request){
     ),
     dashboardBody(
       shinyjs::useShinyjs(),
-      tags$head(tags$style(my_css_styling)),
-      button_toolbox(
-        title = "Controls",
-        action("start", "Start Plotting", "chart-bar", "#FFF", "#0064C8", "#00356B"),
-        action("stop", "Stop Plotting", "ban", "#FFF", "#C90016", "#00356B"),
-        action("request_analysis", "Request", "user-edit", "#FFF", "#29AB87", "#00356B"),
-        action("refresh", "Refresh", "sync", "#FFF", "#29AB87", "#00356B"),
-        bookmarkButton(),
-        downloadButton("download_num_data", "Numeric Data"),
-        downloadButton("download_metadata", "Metadata")
-      ),
+      tags$head(tags$style(HTML(my_css_styling))),
+      button_toolbox,
       htmlOutput("title_out"),
       tabBox(
         width="100%",
@@ -359,13 +441,6 @@ ui <- function(request){
         tabPanel("Metadata", uiOutput("metadataUI"))
       ),
       uiOutput("legendUI"),
-      button_toolbox(
-        title = "Documentation",
-        action("instructions", "Instructions", "book", "#FFF", "#9400D3", "#00356B"),
-        action("citations", "Citations", "book", "#FFF", "#9400D3", "#00356B"),
-        downloadButton('downloadInstructions', 'Instructions'),
-        downloadButton('downloadCitations', 'Citations')
-      ),
       verbatimTextOutput("console_out")
     )
   )
