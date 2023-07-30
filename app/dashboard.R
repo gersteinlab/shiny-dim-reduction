@@ -47,6 +47,136 @@ run_default <- TRUE
 # should server-side rendering be used for tables?
 table_server_render <- TRUE
 
+# -----------
+# BOOKMARKING
+# -----------
+
+dynam_picker_input_ids <- c(
+  "rowby",
+  "colby",
+  "colorby",
+  "shapeby",
+  "labelby",
+  "filterby",
+  "selectby",
+  "threby"
+)
+
+picker_input_ids <- c(
+  "sMenu",
+  "category",
+  "scaling",
+  "normalization",
+  "embedding",
+  "visualize",
+  "perplexity",
+  "batch_size",
+  "palette",
+  "console",
+
+  "req_cat",
+  "req_row",
+  "req_col",
+  "req_sca",
+  "req_nor",
+  "req_emb",
+  "req_vis",
+  "req_cha",
+
+  "cat_notes"
+)
+
+numeric_input_ids <- c(
+  "height",
+  "width",
+  "text_scale",
+  "notif_time",
+  "nintersect",
+  "bar_frac",
+  "set_feat_upse",
+  "set_feat_heat",
+  "set_feat_dend",
+
+  "req_com",
+  "req_dim",
+  "req_per",
+  "req_bat",
+  "req_thr"
+)
+
+numeric_range_input_ids <- c(
+  "set_f1",
+  "set_f2"
+)
+
+tabset_panel_ids <- c(
+  "plotPanels"
+)
+
+slider_input_ids <- c(
+  "pc1",
+  "pc2",
+  "pc3"
+)
+
+default_exclude_vector <- c(
+  ".clientValue-default-plotlyCrosstalkOpts",
+  "plotly_hover-A",
+  "plotly_afterplot-A",
+  "plotly_relayout-A",
+
+  "sidebarMenu",
+  "sidebarCollapsed",
+  "sidebarItemExpanded",
+
+  "start",
+  "stop",
+  "instructions",
+  "citations",
+  "randomize",
+  "refresh",
+  "draft_request",
+  "submit_request",
+  "notes",
+
+  "req_aut",
+
+  table_exclude_vector("num_data_table"),
+  table_exclude_vector("metadata_table"),
+  table_exclude_vector("legend_out")
+)
+
+console_ids <- c(
+  "address",
+  "num_data",
+  "metadata",
+  "app_requests",
+  "user_requests",
+  picker_input_ids,
+  dynam_picker_input_ids,
+  numeric_input_ids,
+  numeric_range_input_ids,
+  slider_input_ids,
+  tabset_panel_ids
+)
+
+bookmarkable_ids <- c(
+  picker_input_ids,
+  sprintf("%s_open", picker_input_ids),
+  numeric_input_ids,
+  numeric_range_input_ids,
+  slider_input_ids,
+  tabset_panel_ids
+)
+
+# the vector of all inputs to exclude from manual bookmarking
+bookmark_exclude_vector <- c(
+  default_exclude_vector,
+  dynam_picker_input_ids,
+  sprintf("%s_open", dynam_picker_input_ids),
+  bookmarkable_ids
+)
+
 # ----------------------------
 # DYNAMIC CHOICES / SELECTIONS
 # ----------------------------
@@ -151,38 +281,9 @@ for (cat in cat_names)
   app_cat_selected$threby[[cat]] <- thre_selected
 }
 
-# -----------
-# BOOKMARKING
-# -----------
-
-console_ids <- c(
-  "address",
-  "num_data",
-  "metadata",
-  "app_requests",
-  "user_requests",
-  picker_input_ids,
-  dynam_picker_input_ids,
-  numeric_input_ids,
-  numeric_range_input_ids,
-  slider_input_ids,
-  tabset_panel_ids
-)
-
-bookmarkable_ids <- c(
-  picker_input_ids,
-  numeric_input_ids,
-  numeric_range_input_ids,
-  slider_input_ids,
-  tabset_panel_ids
-)
-
-# the vector of all inputs to exclude from manual bookmarking
-bookmark_exclude_vector <- c(
-  default_exclude_vector,
-  dynam_picker_input_ids,
-  bookmarkable_ids
-)
+# ---------------
+# ASSEMBLE THE UI
+# ---------------
 
 output_conditions <- c(
   "visualize_cond",
@@ -197,10 +298,6 @@ output_conditions <- c(
   "shape_opts_cond",
   "label_opts_cond"
 )
-
-# ---------------
-# ASSEMBLE THE UI
-# ---------------
 
 # this is suspicious ... improve later to be like thresholds?
 perplexity_types <- setdiff(unique(app_requests$PERPLEXITY), num_d)
@@ -405,6 +502,82 @@ The citations below are in the format requested by their respective creators.
   title = HTML("<b>Notes</b>"),
   easyClose = TRUE
 )
+
+my_css_styling <- "
+/* Personal notification preferences */
+.shiny-notification {
+  border-color: #00356B !important;
+  opacity: 1 !important;
+}
+
+/* Increases text / icon visibility in selectors */
+[role=option] > .text, [role=option] > .glyphicon {
+  color: #000000 !important;
+}
+
+/* Better indicator of selected item */
+.dropdown-menu>.active>a,
+.dropdown-menu>.active>a:focus,
+.dropdown-menu>.active>a:hover {
+    background-color: #E0F0FF !important;
+}
+
+/* Yale Blue! */
+.skin-blue .main-header .logo {
+  background-color: #00356B !important;
+}
+
+/* Place sidebar toggle on right! */
+.sidebar-toggle {
+  float: right !important;
+}
+
+/* Prevents weird sidebar glitch */
+.wrapper {
+  height: auto !important;
+  position:relative;
+  overflow-x:hidden;
+  overflow-y:hidden
+}
+
+/* Prevents overflow from input pickers */
+.inner {
+  min-height: 0px !important;
+  max-height: 360px !important;
+}
+
+/* Prevents misfitting of dropdowns */
+.dropdown-menu {
+  min-height: 0px !important;
+}
+
+/* Wrap text to avoid overflowing selectors */
+.dropdown-menu > li > a {
+  white-space: normal !important;
+}
+
+/* Make password text invisible, but mark the caret */
+.my-hidden-text {
+  color: rgba(0,0,0,0) !important;
+  caret-color: rgba(0,0,0,1) !important;
+}
+
+/* Make password text same color as selection */
+.my-hidden-text::selection {
+  color: #3297FD !important;
+  background: #3297FD !important;
+}
+
+/* center selectors */
+.sidebar-menu .treeview-menu {
+  padding-left: 0px !important;
+}
+
+/* center title */
+#title_out {
+  text-align: center !important;
+}
+"
 
 ui <- function(request){
   dashboardPage(

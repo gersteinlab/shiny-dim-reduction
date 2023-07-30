@@ -3,10 +3,77 @@
 if (!exists("sdr_config"))
   source("app/install.R")
 
+library(stringi)
 library(shinycssloaders)
 library(shinyWidgets)
 
-source_app("text_work.R")
+# --------------
+# FIND / REPLACE
+# --------------
+
+# for each string in "x_stringi", replaces each element of "pattern" with the
+# corresponding element in "replacement" and returns an error if
+# "pattern" and "replacement" are of different lengths
+rep_str <- function(x_stringi, pattern, replacement)
+{
+  stopifnot(length(pattern) == length(replacement))
+  stri_replace_all_fixed(
+    x_stringi, pattern = pattern, replacement = replacement, vectorize_all = FALSE)
+}
+
+# for each string in "x_stringi" replaces each regex match of each element in
+# "pattern" with the corresponding element in "replacement" and returns an
+# error if "pattern" and "replacement" are of different lengths
+reg_str <- function(x_stringi, pattern, replacement)
+{
+  stopifnot(length(pattern) == length(replacement))
+  stri_replace_all_regex(
+    x_stringi, pattern = pattern, replacement = replacement, vectorize_all = FALSE)
+}
+
+# formats to "opt_name (opt_num)"
+get_opt <- function(opt_name, opt_num)
+{
+  sprintf("%s (%s)", opt_name, opt_num)
+}
+
+# Suppose we have a vector of strings of the form "A (B)",
+# where A is any string and B is a number. Then
+# return a vector containing for each string c("A", "B").
+sep_opt <- function(opt_str)
+{
+  stopifnot(is.character(opt_str))
+
+  n <- length(opt_str)
+  rev_str <- stri_reverse(opt_str) # reverse the string to use stri_split_fixed
+  result <- unlist(stri_split_fixed(rev_str,"( ", n = 2)) # split into two parts
+
+  for (i in seq_len(n))
+  {
+    b <- result[2*i - 1]
+    a <- result[2*i]
+    result[2*i - 1] <- stri_reverse(a)
+    result[2*i] <- stri_reverse(substring(b, 2))
+  }
+
+  result
+}
+
+# Formats a numeric or character vector for printing
+format_print_simple <- function(vec)
+{
+  if (is.character(vec))
+    vec <- sprintf("\"%s\"", vec)
+  if (length(vec) > 1)
+    return(sprintf("[%s]", paste(vec, collapse = ", ")))
+  vec
+}
+
+# Creates a label for the nth component
+pc <- function(name = "1")
+{
+  sprintf("Component %s", name)
+}
 
 # syntactic sugar if x is a named vector
 get_opt_named <- function(x)
@@ -32,6 +99,25 @@ parse_opt <- function(str, ind = 1)
 # -------------------
 # INTERFACE FUNCTIONS
 # -------------------
+
+#' creates a vector of inputs that should be excluded
+#' from bookmarking, based on the table's ID
+#' @param table_id [string] not checked
+#' @return [character]
+table_exclude_vector <- function(table_id)
+{
+  c(
+    sprintf("%s_search", table_id),
+    sprintf("%s_state", table_id),
+    sprintf("%s_cell_clicked", table_id),
+    sprintf("%s_search_columns", table_id),
+    sprintf("%s_rows_current", table_id),
+    sprintf("%s_rows_all", table_id),
+    sprintf("%s_rows_selected", table_id),
+    sprintf("%s_columns_selected", table_id),
+    sprintf("%s_cells_selected", table_id)
+  )
+}
 
 # adds a spinner to content that may need to be refreshed
 my_spin <- function(content)
@@ -103,33 +189,6 @@ action <- function(id, name, icon_name, color, bk, br)
       sprintf("color: %s; background-color: %s; border-color: %s", color, bk, br))
 }
 
-# creates a singular select panel that only appears given a certain category
-cat_select_panel <- function(cat, id, name, options, chosen)
-{
-  conditionalPanel(
-    condition = sprintf("input.category == '%s'",  cat),
-    select_panel(id, name, options, chosen)
-  )
-}
-
-# creates a check panel of selections for a given category and characteristic
-select_check_panel <- function(choices, cat, char)
-{
-  conditionalPanel(
-    sprintf("input.category == '%s' && input.%s == '%s'", cat, id_filter(cat), char),
-    check_panel(id_select(cat, char), sprintf("Filter By (%s)", cat), get_opts(choices))
-  )
-}
-
-# creates a select panel of thresholds for a given category and scale
-thre_select_panel <- function(choices, cat, sca)
-{
-  conditionalPanel(
-    condition = sprintf("input.category == '%s' && input.scaling == '%s'", cat, sca),
-    select_panel(id_thre(cat, sca), "Threshold", choices, ceiling(length(choices)/2))
-  )
-}
-
 # shows a notification (form can be default, message, warning, error)
 # in general: warnings and errors are self-explanatory, defaults are used
 # to begin actions, and messages are used to return results
@@ -137,12 +196,6 @@ notification <- function(message, time, form)
 {
   if (time > 0)
     showNotification(HTML(message), duration = time, closeButton = TRUE, type = form)
-}
-
-# picks a random option for an input picker that accepts only 1 option
-pick_random_input <- function(session, inputId, choices)
-{
-  updatePickerInput(session, inputId, selected = sample(choices, 1))
 }
 
 # checks if a value is invalid with respect to a range
@@ -153,16 +206,6 @@ range_invalid <- function(value, min, max)
     return(range_invalid(value[1], min, max) || range_invalid(value[2], min, max))
 
   length(value) != 1 || is.na(value) || is.nan(value) || value < min || value > max
-}
-
-# checks if every member of the vector colors is in the vector custom
-check_custom_colors <- function(colors, custom)
-{
-  for (color in colors)
-    if (!(color %in% custom))
-      return(FALSE)
-
-  TRUE
 }
 
 # find the smallest positive integer not in the vector (used for bookmarking)

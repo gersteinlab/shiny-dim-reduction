@@ -125,9 +125,9 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     isolate(input$category)
   }
 
-  observeEvent(input$rowby,
-               dynam_state$rowby[[iso_cat()]] <- input$rowby
-               , ignoreInit = TRUE)
+  observeEvent(input$rowby, {
+    dynam_state$rowby[[iso_cat()]] <- input$rowby
+  }, ignoreInit = TRUE)
 
   observeEvent(input$colby, {
     dynam_state$colby[[iso_cat()]] <- input$colby
@@ -333,17 +333,21 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     showModal(draft_request_modal)
   })
 
-  observeEvent(input$req_cat, {
+  observeEvent({list(input$draft_request, input$req_cat)}, {
+    if (is.null(input$req_cat))
+      return(NULL)
+    row_choices <- get_app_row_choices(input$req_cat)
+    col_choices <- get_app_col_choices(input$req_cat)
     updatePickerInput(
       session, "req_row",
-      choices = app_row_choices[[row_axs]]$rowby)
+      choices = row_choices$rowby)
     updatePickerInput(
       session, "req_col",
-      choices = app_col_choices[[col_axs]]$colby)
+      choices = col_choices$colby)
     updatePickerInput(
       session, "req_cha",
-      choices = app_row_choices[[row_axs]]$safe_chas)
-  })
+      choices = row_choices$safe_chas)
+  }, ignoreInit = TRUE)
 
   user_requests <- reactiveVal(get_requests(user_req_file))
 
@@ -562,7 +566,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
         {
           new <- custom_color_scales[[colorby()]]
 
-          if (check_custom_colors(colors(), names(new)))
+          if (all(colors() %in% names(new)))
             return(new)
         }
 
@@ -571,7 +575,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
         {
           new <- custom_color_scales[[filterby()]] %>% unlist()
 
-          if (check_custom_colors(colors(), names(new)))
+          if (all(colors() %in% names(new)))
             return(new)
         }
       }

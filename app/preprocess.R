@@ -69,7 +69,7 @@ if (!file.exists(app_data_loc))
   stop("The application data could not be found.")
 
 # only works in pipeline mode:
-# saveRDS(app_data, app_data_loc, compress = FALSE)
+# saveRDS(app_data, "~/shiny-dim-reduction/app/app_data.rds", compress = FALSE)
 
 # assign application data
 app_data <- readRDS(app_data_loc)
