@@ -24,9 +24,9 @@ test_that("reg_str() works", {
   expect_identical("FFFFF", reg_str("ABCDE", ".", "F"))
 })
 
-test_that("index_string() works", {
-  index_string("ABCD", 1) %>% expect_identical("A")
-  index_string("ABCD", 2) %>% expect_identical("B")
+test_that("str_ind() works", {
+  str_ind("ABCD", 1) %>% expect_identical("A")
+  str_ind("ABCD", 2) %>% expect_identical("B")
 })
 
 test_that("get_opt(), sep_opt() work", {

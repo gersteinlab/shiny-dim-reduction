@@ -94,7 +94,7 @@ get_opt_named_int <- function(x)
 get_opt_chr <- function(x)
 {
   stopifnot(is.character(x))
-  get_opt_int(table(x))
+  get_opt_named_int(table(x))
 }
 
 # From sep_opt, return all As if ind = 1 or all Bs if ind = 2.
@@ -113,10 +113,10 @@ parse_opt <- function(str, ind = 1)
 format_print_simple <- function(vec)
 {
   if (is.character(vec))
-    vec <- sprintf("\"%s\"", vec)
-  if (length(vec) > 1)
-    return(sprintf("[%s]", paste(vec, collapse = ", ")))
-  vec
+    vec <- sprintf("'%s'", vec)
+  if (length(vec) == 1)
+    return(vec)
+  sprintf("[%s]", vec_str(vec))
 }
 
 # Creates a label for the nth component
@@ -165,6 +165,17 @@ smallest_missing <- function(vec)
   while (small %in% vec)
     small <- small+1
   small
+}
+
+# useful
+median_index <- function(x)
+{
+  ceiling(length(x) / 2)
+}
+
+median_value <- function(x)
+{
+  x[median_index(x)]
 }
 
 # given a vector of values, generate a table for the legend

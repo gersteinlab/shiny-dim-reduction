@@ -221,17 +221,6 @@ for (col_axs in col_axs_names)
   )
 }
 
-# useful
-median_index <- function(x)
-{
-  ceiling(length(x) / 2)
-}
-
-median_value <- function(x)
-{
-  x[median_index(x)]
-}
-
 get_app_row_choices <- function(cat)
 {
   app_row_choices[[get_row_axs(cat)]]
