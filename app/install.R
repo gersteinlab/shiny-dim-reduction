@@ -185,6 +185,17 @@ is_metadata <- function(x)
     !anyDuplicated(x[, 1])
 }
 
+#' whether each member of x is a color, aka
+#' a hex string of length 6 (no transparency)
+#' or of length 8 (includes transparency)
+#'
+#' @param x [object]
+#' @returns [logical]
+are_colors <- function(x)
+{
+  grepl('^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$', x)
+}
+
 #' whether x is a 'color_scale' object, aka
 #' a named vector of hex values
 #'
@@ -192,8 +203,7 @@ is_metadata <- function(x)
 #' @returns [boolean]
 is_color_scale <- function(x)
 {
-  is.character(x)  && has_safe_names(x) &&
-    all(grepl('^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$', x))
+  is.character(x)  && has_safe_names(x) && all(are_colors(x))
 }
 
 #' whether x is a 'color_scales' object

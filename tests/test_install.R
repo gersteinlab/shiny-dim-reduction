@@ -104,6 +104,21 @@ test_that("is_metadata() works", {
   is_metadata(data.frame("LETTERS" = LETTERS)) %>% expect_true()
 })
 
+test_that("are_colors() works", {
+  are_colors(NULL) %>% expect_identical(logical())
+  are_colors(NaN) %>% expect_false()
+  "#######" %>% are_colors() %>% expect_false()
+  "#BCDEFG" %>% are_colors() %>% expect_false()
+  "ABCDEF" %>% are_colors() %>% expect_false()
+  "ABCDEFF" %>% are_colors() %>% expect_false()
+  "ABCDEFFF" %>% are_colors() %>% expect_false()
+  "#ABCDEF" %>% are_colors() %>% expect_true()
+  "#ABCDEG" %>% are_colors() %>% expect_false()
+  "#ABCDEFF" %>% are_colors() %>% expect_false()
+  "#ABCDEFFF" %>% are_colors() %>% expect_true()
+  "#ABCDEFFG" %>% are_colors() %>% expect_false()
+})
+
 test_that("are_axes() works", {
   are_axes(list()) %>% expect_true()
 })
