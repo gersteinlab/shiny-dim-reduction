@@ -297,6 +297,7 @@ batch_sizes <- setdiff(unique(app_requests$BATCH_SIZE), num_d)
 
 settings_menu <- menuItem(
   "Settings",
+  icon = icon("wrench"),
   check_panel("sMenu", "Settings",
               c("Embed Title", "Embed Legend", "Separate Colors",
                 "Boost Graphics", "Uninverted Colors")),
