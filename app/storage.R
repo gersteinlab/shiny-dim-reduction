@@ -2,9 +2,9 @@
 # For AWS S3, you may find it difficult to explore available files
 # with list_cloud because it retrieves all files with data.
 # Instead, you can use the AWS CLI with the system() command.
+# e.g. system("aws --version")
 # https://docs.aws.amazon.com/cli/latest/userguide/
 # note: you may need to reinstall RStudio to get the CLI to work
-# e.g. system("aws --version")
 
 # Goals for each store:
 # --is_store: is in correct format

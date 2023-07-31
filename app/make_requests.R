@@ -43,6 +43,21 @@ get_nor_ind <- function(nor)
   which(nor_options == nor)
 }
 
+#' gets the nor_options available to an embedding
+#'
+#' @param emb [string]
+#' @returns [character]
+nor_options_by_emb <- function(emb)
+{
+  # for Sets, Global Min-Max normalization is required
+  if (emb == "Sets")
+    return("Global Min-Max")
+  # for VAE, require normalizations that stay in [0, 1]
+  if (emb == "VAE")
+    return(c("Global Min-Max", "Local Min-Max"))
+  nor_options
+}
+
 # embedding options
 emb_options <- c(
   "PCA",
@@ -183,12 +198,10 @@ clean_req_keys <- function(req_keys)
   # ----------
 
   stopifnot(
-    # for Sets, Global Min-Max normalization is required
-    nor_vec[is_sets] == "Global Min-Max",
+    nor_vec[is_vae] %in% nor_options_by_emb("VAE"),
+    nor_vec[is_sets] %in% nor_options_by_emb("Sets"),
     # for Sets, thresholds between 0 and 1 are required
     vec_between(thr_vec[is_sets], 0, 1),
-    # for VAE, require normalizations that stay in [0, 1]
-    nor_vec[is_vae] %in% c("Global Min-Max", "Local Min-Max"),
     # for PVU, visualization options must be valid
     vis_vec[is_pvu] %in% vis_options,
     # for PHATE, the end result must be 2 or 3 dimensions

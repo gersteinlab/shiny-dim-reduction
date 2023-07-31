@@ -392,9 +392,10 @@ filters_1_menu <- menuItem(
   conditionalPanel(
     condition = "output.nintersect_cond",
     numericInput("nintersect", "Number of Columns",
-                 value=def_set_col_num, min=3, max=max_set_col_num),
-    numericInput("bar_frac", "Bar Plot Fraction", value=def_bar_frac, min=0, max=1),
-    numericInput("text_scale", "Text Scale", value=1, min=0.01, max = 100)
+                 value = def_set_col_num, min = 3, max=max_set_col_num),
+    numericInput("bar_frac", "Bar Plot Fraction",
+                 value = def_bar_frac, min = 0, max = 1),
+    numericInput("text_scale", "Text Scale", value = 1, min = 0.01, max = 100)
   ),
   conditionalPanel(
     condition = "input.embedding == 'Sets' ||
@@ -575,7 +576,7 @@ ui <- function(request){
     skin="blue",
     dashboardHeader(title = app_data$title, titleWidth="100%"),
     dashboardSidebar(
-      width=300,
+      width = 300,
       sidebarMenu(
         table_1_menu,
         analysis_1_menu,
@@ -589,7 +590,7 @@ ui <- function(request){
     ),
     dashboardBody(
       shinyjs::useShinyjs(),
-      tags$head(tags$style(HTML(my_css_styling))),
+      my_css_styling %>% HTML() %>% tags$style() %>% tags$head(),
       button_toolbox,
       htmlOutput("title_out"),
       tabBox(
