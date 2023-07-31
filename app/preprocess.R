@@ -224,7 +224,7 @@ subset_by_row <- function(data, row_sub)
 #' @returns [matrix, data.frame]
 subset_by_row_names <- function(data, row_sub_names)
 {
-  data[rownames(data) %in% row_sub_names, , drop = FALSE]
+  subset_by_row(data, rownames(data) %in% row_sub_names)
 }
 
 #' gets the col subset as indices
@@ -266,7 +266,7 @@ subset_by_col <- function(data, col_sub)
 #' @returns [matrix, data.frame]
 subset_by_col_names <- function(data, col_sub_names)
 {
-  data[, colnames(data) %in% col_sub_names, drop = FALSE]
+  subset_by_col(data, colnames(data) %in% col_sub_names)
 }
 
 cat_f("PREPROCESSING TIME: %.1f (sec)\n", net_time())

@@ -315,7 +315,7 @@ table_1_menu <- menuItem(
   select_panel("rowby", "Sample Subset"), # DYNAMIC
   select_panel("colby", "Feature Subset"), # DYNAMIC
   select_panel("scaling", "Scaling", sca_options),
-  select_panel("normalization", "Normalization", nor_options)
+  select_panel("normalization", "Normalization") # DYNAMIC
 )
 
 analysis_1_menu <- menuItem(
@@ -433,18 +433,10 @@ draft_request_modal <- modalDialog(
   conditionalPanel(
     condition = "input.req_emb != 'Sets'",
     select_panel("req_row", "Desired Sample Subset"), # DYNAMIC
-    select_panel("req_col", "Desired Feature Subset"), # DYNAMIC
-    conditionalPanel(
-      condition = "input.req_emb == 'VAE'",
-      select_panel("req_nor", "Desired Normalization",
-                   c("Global Min-Max", "Local Min-Max"))
-    ),
-    conditionalPanel(
-      condition = "input.req_emb != 'Sets' && input.req_emb != 'VAE'",
-      select_panel("req_nor", "Desired Normalization", nor_options)
-    )
+    select_panel("req_col", "Desired Feature Subset") # DYNAMIC
   ),
   select_panel("req_sca", "Desired Scaling", sca_options),
+  select_panel("req_nor", "Desired Normalization"), # DYNAMIC
   conditionalPanel(
     condition = "input.req_emb == 'PCA' || input.req_emb == 'VAE' || input.req_emb == 'UMAP'",
     select_panel("req_vis", "Desired Visualization", vis_options)

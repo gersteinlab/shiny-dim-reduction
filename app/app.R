@@ -269,6 +269,14 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     )
   })
 
+  # UPDATE NORMALIZATION
+  observeEvent(input$embedding, {
+    updatePickerInput(
+      session, "normalization",
+      choices = nor_options_by_emb(input$embedding)
+    )
+  })
+
   # ----------------
   # RUNNING PLOTTING
   # ----------------
@@ -347,6 +355,15 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     updatePickerInput(
       session, "req_cha",
       choices = row_choices$safe_chas)
+  }, ignoreInit = TRUE)
+
+  observeEvent({list(input$draft_request, input$req_emb)}, {
+    if (is.null(input$req_emb))
+      return(NULL)
+    updatePickerInput(
+      session, "req_nor",
+      choices = nor_options_by_emb(input$req_emb)
+    )
   }, ignoreInit = TRUE)
 
   user_requests <- reactiveVal(get_requests(user_req_file))
@@ -621,9 +638,6 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   # ---------------
 
   ggplot2_data <- reactive({
-    if (iplot$embedding == "VAE" && which(nor_options == iplot$normalization) > 2)
-      return(NULL)
-
     if (iplot$embedding == "Sets")
     {
       addr <- name_sets_file(cati(), iplot$scaling, thre(), filterby())
@@ -709,9 +723,6 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   })
 
   plotly2_data <- reactive({
-    if (iplot$embedding == "VAE" && which(nor_options == iplot$normalization) > 2)
-      return(NULL)
-
     if (iplot$embedding == "Sets")
     {
       addr <- name_sets_file(cati(), iplot$scaling, thre(), filterby())
@@ -790,17 +801,16 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
   })
 
   plotly3_data <- reactive({
-    if (iplot$embedding == "VAE" && which(nor_options == iplot$normalization) > 2)
-      return(NULL)
-
     if (iplot$embedding == "Sets")
     {
       addr <- name_sets_file(cati(), iplot$scaling, thre(), filterby())
       curr_adr(addr)
+
       data <- load_store(addr)
       if (is.null(data))
         return(NULL)
-      data <- data[, my_chars(), drop = FALSE]
+
+      data <- subset_by_col(data, my_chars())
       if (coli() != "Total")
         data <- get_col_sub_names(cati(), coli()) %>%
         subset_by_row_names(data, .)
@@ -814,9 +824,15 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
 
     if (iplot$embedding == "PHATE")
     {
-      addr <- name_phate_file(cati(), rowi(), coli(), iplot$scaling, iplot$normalization, 3, peri())
+      addr <- name_phate_file(
+        cati(), rowi(), coli(),
+        iplot$scaling, iplot$normalization, 3, peri())
       curr_adr(addr)
+
       data <- load_store(addr)
+      if (is.null(data))
+        return(NULL)
+
       data <- data[keep(),,drop=FALSE]
 
       num_data(data)
@@ -827,12 +843,12 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     }
 
     addr <- name_pvu_file(
-      cati(), rowi(), coli(), iplot$scaling, iplot$normalization, iplot$embedding, iplot$visualize,
+      cati(), rowi(), coli(), iplot$scaling,
+      iplot$normalization, iplot$embedding, iplot$visualize,
       pc_cap, 3, peri(), bati())
     curr_adr(addr)
 
     data <- load_store(addr)
-
     if (is.null(data))
       return(NULL)
 
@@ -851,7 +867,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
                                title_embed(), legend(), TRUE, boost()))
     }
 
-    data <- data[keep(),,drop=FALSE]
+    data <- subset_by_row(data, keep())
     num_data(data)
 
     if (iplot$visualize == "Explore")
@@ -876,7 +892,8 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
       return(NULL)
 
     addr <- name_pvu_file(
-      cati(), rowi(), coli(), iplot$scaling, iplot$normalization, iplot$embedding, "Explore",
+      cati(), rowi(), coli(), iplot$scaling,
+      iplot$normalization, iplot$embedding, "Explore",
       pc_cap, 3, peri(), bati())
     curr_adr(addr)
 
