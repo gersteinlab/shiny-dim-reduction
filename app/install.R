@@ -46,7 +46,7 @@ stop_f <- function(...)
 #' whether x is an integer of length n
 #'
 #' @param x [object]
-#' @param n [integer] not checked
+#' @param n [int] not checked
 #' @returns [boolean]
 is_int <- function(x, n = 1L)
 {
@@ -56,7 +56,7 @@ is_int <- function(x, n = 1L)
 #' whether x is a numeric of length n
 #'
 #' @param x [object]
-#' @param n [integer] not checked
+#' @param n [int] not checked
 #' @returns [boolean]
 is_num <- function(x, n = 1L)
 {
@@ -66,7 +66,7 @@ is_num <- function(x, n = 1L)
 #' whether x is a character of length n
 #'
 #' @param x [object]
-#' @param n [integer] not checked
+#' @param n [int] not checked
 #' @returns [boolean]
 is_str <- function(x, n = 1L)
 {
@@ -185,15 +185,14 @@ is_metadata <- function(x)
     !anyDuplicated(x[, 1])
 }
 
-#' whether each member of x is a color, aka
-#' a hex string of length 6 (no transparency)
-#' or of length 8 (includes transparency)
+#' whether each member of x is a hex string of
+#' length 6 (opaque) or 8 (transparent)
 #'
 #' @param x [object]
 #' @returns [logical]
-are_colors <- function(x)
+is_color_seq <- function(x)
 {
-  grepl('^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$', x)
+  all(grepl('^#([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$', x))
 }
 
 #' whether x is a 'color_scale' object, aka
@@ -203,7 +202,7 @@ are_colors <- function(x)
 #' @returns [boolean]
 is_color_scale <- function(x)
 {
-  is.character(x)  && has_safe_names(x) && all(are_colors(x))
+  is.character(x) && has_safe_names(x) && is_color_seq(x)
 }
 
 #' whether x is a 'color_scales' object
@@ -376,6 +375,15 @@ perplexity_is_valid <- function(per, n)
   vec_between(per, 1, (n - 1) / 3)
 }
 
+#' the median index of a vector of length n
+#'
+#' @param n [int] not checked
+#' @returns [int]
+median_index <- function(n)
+{
+  ceiling(n / 2) %>% as.integer()
+}
+
 # -----------------
 # UTILITY FUNCTIONS
 # -----------------
@@ -383,7 +391,7 @@ perplexity_is_valid <- function(per, n)
 #' the number of unique values in x
 #'
 #' @param x [object]
-#' @returns [integer]
+#' @returns [int]
 num_unique <- function(x)
 {
   length(unique(x))
@@ -412,7 +420,7 @@ vec_str <- function(v)
 
 #' creates an empty list of length n
 #'
-#' @param n [integer]
+#' @param n [int]
 #' @returns [list]
 len_n_list <- function(n)
 {

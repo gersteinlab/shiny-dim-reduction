@@ -19,68 +19,99 @@ library(DT)
 # COLOR SCALE FUNCTIONS
 # ---------------------
 
-# adds a transparency of alpha = 0.5 to a color
-make_transparent <- function(color)
-{
-  sprintf("%s44", substr(color, start = 1, stop = 7))
-}
+# the default color sequence (color_seq) for this project
+sdr_color_seq <- c("#00356B", "#C90016")
 
-# bulldog blue
-single_color_seq <- "#00356B"
-# adds harvard crimson
-double_color_seq <- function(reverse = FALSE)
-{
-  if (reverse)
-    return(c(single_color_seq, "#C90016"))
-  c("#C90016", single_color_seq)
-}
-
-# lists all color palette options
-color_palettes <- list(
+# lists all color sequence options
+color_seq_types <- list(
   "Custom" = c("Custom", "Grayscale", "None"),
   "Base" = c("Rainbow", "Heat", "Terrain", "Topography", "CM"),
   "Viridis" = c("Viridis", "Magma", "Plasma", "Inferno", "Cividis")
 )
 
-# Generates a color sequence of length n_colors with the given type
-# note: all palettes except for "Custom" are accepted
-color_seq <- function(n_colors, color_type = "Rainbow", reverse = FALSE)
+#' sets color_seq transparency to alpha = 0.25
+#'
+#' @param color_seq [color_seq] not checked
+#' @returns [color_seq]
+make_transparent <- function(color_seq)
 {
-  if (color_type == "None")
-    return(rep("#000000", n_colors))
+  sprintf("%s40", substr(color_seq, start = 1, stop = 7))
+}
 
-  # returns single color seq if only one color needed
-  if (n_colors < 2)
-    return(single_color_seq)
+#' cycles a color_seq forward
+#'
+#' @param color_seq [color_seq] not checked
+#' @param i [integer] not checked
+#' @returns [color_seq]
+cycle_color_seq <- function(color_seq, i = 1L)
+{
+  n <- length(color_seq)
+  i_seq <- seq_len(n) + (i %% n)
+  rep(color_seq, 2)[i_seq]
+}
+
+#' reverses a color_seq
+#'
+#' @param color_seq [color_seq] not checked
+#' @param reverse [boolean] not checked
+#' @returns [color_seq]
+rev_color_seq <- function(color_seq, reverse = TRUE)
+{
+  if (!reverse)
+    return(color_seq)
+  rev(color_seq)
+}
+
+#' alternates a color_seq
+#'
+#' @param color_seq [color_seq] not checked
+#' @param alternate [boolean] not checked
+#' @returns [color_seq]
+alt_color_seq <- function(color_seq, alternate = TRUE)
+{
+  if (!alternate)
+    return(color_seq)
+  n <- length(color_seq)
+  cycle_seq <- cycle_color_seq(color_seq, median_index(n))
+  rbind(color_seq, cycle_seq)[seq_len(n)]
+}
+
+#' Generates a color_seq of length n and type color_type
+#'
+#' @param [int]
+#' @param color_type [string]
+#' @returns [color_seq]
+make_color_seq <- function(n, color_type = "Rainbow")
+{
+  stopifnot(is_int(n), is_str(color_type))
+  if (color_type == "None")
+    return(rep("#000000", n))
+  if (n < 3L)
+    return(rep(sdr_color_seq, length.out = n))
 
   if (color_type == "Grayscale")
-    return(grey.colors(n_colors, rev = reverse))
+    return(grey.colors(n))
   if (color_type == "Heat")
-    return(heat.colors(n_colors, rev = reverse))
+    return(heat.colors(n))
   if (color_type == "Terrain")
-    return(terrain.colors(n_colors, rev = reverse))
+    return(terrain.colors(n))
   if (color_type == "Topography")
-    return(topo.colors(n_colors, rev = reverse))
+    return(topo.colors(n))
   if (color_type == "CM")
-    return(cm.colors(n_colors, rev = reverse))
+    return(cm.colors(n))
   if (color_type == "Viridis")
-    return(viridis::viridis(n_colors, direction = ifelse(reverse, -1, 1)))
+    return(viridis::viridis(n))
   if (color_type == "Magma")
-    return(viridis::magma(n_colors, direction = ifelse(reverse, -1, 1)))
+    return(viridis::magma(n))
   if (color_type == "Plasma")
-    return(plasma(n_colors, direction = ifelse(reverse, -1, 1)))
+    return(plasma(n))
   if (color_type == "Inferno")
-    return(inferno(n_colors, direction = ifelse(reverse, -1, 1)))
+    return(inferno(n))
   if (color_type == "Cividis")
-    return(cividis(n_colors, direction = ifelse(reverse, -1, 1)))
+    return(cividis(n))
   if (color_type == "Rainbow")
-  {
-    c_seq <- hcl(seq_len(n_colors) * (360/(n_colors+1))-15, 160, 60)
-    if (reverse)
-      return(rev(c_seq))
-    return(c_seq)
-  }
-  stop_f("Unsupported color_type: %s", color_type)
+    return(hcl(360 * 1:n / (n + 1) - 15, 160, 60))
+  stop_f("unsupported color_type: %s", color_type)
 }
 
 # ----------------------
@@ -114,7 +145,7 @@ boxplot_beeswarm <- function(data, colors, title = "", legend = TRUE)
   x_bins <- unique(data[,1])
 
   if (!legend)
-    x_bins <- seq_len(x_bins)
+    x_bins <- seq_along(x_bins)
 
   boxplot(rel, data = data, xlab = xlab, ylab = ylab, names = x_bins,
           col = make_transparent(colors), outline = FALSE, main = title) # transparency
@@ -142,7 +173,7 @@ ggplot2_2d <- function(x, y, color = NULL, shape = NULL,
     shape <- color
 
   if (length(color_seq) < 1)
-    color_seq <- color_seq(length(unique(color)))
+    color_seq <- make_color_seq(num_unique(color))
 
   df <- data.frame("x" = as.numeric(x), "y" = as.numeric(y),
                    "Color" = as.character(color), "Shape" = as.character(shape))
@@ -192,7 +223,7 @@ plotly_2d <- function(x, y, color = NULL, text = NULL,
     text <- color
 
   if (length(color_seq) < 1)
-    color_seq <- color_seq(length(unique(color)))
+    color_seq <- make_color_seq(num_unique(color))
 
   plot <- plot_ly(x = as.numeric(x), y = as.numeric(y),
                   color = as.character(color), text = as.character(text),
@@ -224,7 +255,7 @@ plotly_3d <- function(x, y, z, color = NULL, text = NULL,
     text <- color
 
   if (length(color_seq) < 1)
-    color_seq <- color_seq(length(unique(color)))
+    color_seq <- make_color_seq(num_unique(color))
 
   plot <- plot_ly(x = as.numeric(x), y = as.numeric(y), z = as.numeric(z),
                   color = as.character(color), text = as.character(text),
@@ -329,7 +360,7 @@ plotly_heatmap_variance <- function(binary, colors = NULL,
                                     title = "", legend = TRUE, smooth = FALSE)
 {
   if (length(colors) < 1)
-    colors <- color_seq(5, "Inferno")
+    colors <- make_color_seq(5, "Inferno")
 
   rows <- substring(rownames(binary), 0, 50)
   cols <- substring(colnames(binary), 0, 50)
@@ -350,7 +381,7 @@ plotly_heatmap_dendrogram <- function(binary, colors = NULL,
                                       title = "", legend = TRUE, dend = TRUE)
 {
   if (length(colors) < 1)
-    colors <- color_seq(5, "Inferno")
+    colors <- make_color_seq(5, "Inferno")
 
   if (nrow(binary) < 1 || ncol(binary) < 1)
     return(NULL)
@@ -411,7 +442,7 @@ ggplot2_pca_sum <- function(data, pc_cap, legend = TRUE, title = "")
   ggplot2_2d(
     data[,"Components"], data[,"Variance"],
     pca_var_metadata, pca_var_metadata,
-    single_color_seq, "log", legend,
+    sdr_color_seq[1], "log", legend,
     title, "Number of Components", "Variance Captured"
   )
 }
@@ -422,7 +453,7 @@ plotly_pca_sum <- function(data, pc_cap, lines = TRUE, legend = TRUE, title = ""
   plotly_2d(
     data[,"Components"], data[,"Variance"],
     pca_var_metadata, sprintf("%s: %s", "Variance", pca_var_metadata),
-    single_color_seq, lines, legend,
+    sdr_color_seq[1], lines, legend,
     title, "Number of Components", "Variance Captured"
   )
 }
@@ -432,7 +463,7 @@ ggplot2_vae_sum <- function(data, reverse = FALSE, legend = TRUE, title = "")
   ggplot2_2d(
     data[,"Training Iterations"], data[,"Loss Value"],
     data[,"Loss Type"], data[,"Loss Type"],
-    double_color_seq(reverse), "log", legend,
+    rev_color_seq(sdr_color_seq, reverse), "log", legend,
     title, "Number of Training Iterations", "Loss Function Output"
   )
 }
@@ -442,7 +473,7 @@ plotly_vae_sum <- function(data, lines = TRUE, reverse = FALSE, legend = TRUE, t
   plotly_2d(
     data[,"Training Iterations"], data[,"Loss Value"],
     data[,"Loss Type"], sprintf("%s: %s", "Loss Type", data[,"Loss Type"]),
-    double_color_seq(reverse), lines, legend,
+    rev_color_seq(sdr_color_seq, reverse), lines, legend,
     title, "Number of Training Iterations", "Loss Function Output"
   )
 }
@@ -486,7 +517,7 @@ first_over_total <- function(row){row[1] / sum(row)}
 ggplot2_umap_sum <- function(label_mat, color_seq = NULL, title = "")
 {
   if (length(color_seq) < 1)
-    color_seq <- color_seq(nrow(label_mat))
+    color_seq <- make_color_seq(nrow(label_mat))
 
   res <- data.frame("Sample_Group" = rownames(label_mat),
                     "Self_Neighbors" = apply(label_mat, 1, first_over_total))

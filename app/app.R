@@ -603,17 +603,20 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
 
       # if no custom palette works, do rainbow for scatterplots and inferno for sets
       if (iplot$embedding == "Sets")
-        return(color_seq(5, "Inferno", not_rev()))
-      return(color_seq(length(unique(colors())), "Rainbow", !not_rev()))
+        return(make_color_seq(5, "Inferno") %>%
+                 rev_color_seq(!not_rev()))
+
+      return(num_unique(colors()) %>%
+               make_color_seq("Rainbow") %>%
+               rev_color_seq(!not_rev()))
     }
 
-    # if a builtin palette is requested, just call color_seq
-    num <- length(unique(colors()))
-
+    # if a builtin palette is requested, just call make_color_seq
+    num <- colors() %>% num_unique()
     if (iplot$embedding == "Sets")
       num <- 5
 
-    color_seq(num, iplot$palette, !not_rev())
+    make_color_seq(num, iplot$palette) %>% rev_color_seq(!not_rev())
   })
 
   shape_num <- reactive({

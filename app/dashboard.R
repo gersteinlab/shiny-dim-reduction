@@ -301,7 +301,7 @@ settings_menu <- menuItem(
   check_panel("sMenu", "Settings",
               c("Embed Title", "Embed Legend", "Separate Colors",
                 "Boost Graphics", "Uninverted Colors")),
-  select_panel("palette", "Color Palette", color_palettes),
+  select_panel("palette", "Color Palette", color_seq_types),
   numericInput("width", "Graph Width", value=NULL, min=1, max=4000),
   numericInput("height", "Graph Height", value=graph_height, min=1, max=4000),
   numericInput("notif_time", "Notification Time", value=6),

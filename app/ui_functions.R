@@ -167,15 +167,9 @@ smallest_missing <- function(vec)
   small
 }
 
-# useful
-median_index <- function(x)
-{
-  ceiling(length(x) / 2)
-}
-
 median_value <- function(x)
 {
-  x[median_index(x)]
+  x[median_index(length(x))]
 }
 
 # given a vector of values, generate a table for the legend
