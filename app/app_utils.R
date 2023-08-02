@@ -1,4 +1,5 @@
-# The purpose of this file is to store various UI-related functions for the app.
+# The purpose of this file is to store various utility functions for the app.
+# Essentially, this is every part of the application that can be unit tested.
 
 if (!exists("sdr_config"))
   source("app/install.R")
