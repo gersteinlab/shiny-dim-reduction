@@ -9,6 +9,8 @@ if (!exists("sdr_config"))
 
 library(shinydashboard)
 library(shinyjs)
+library(shinycssloaders)
+library(shinyWidgets)
 
 source_app("plotting.R")
 source_app("ui_functions.R")
@@ -23,6 +25,89 @@ user_req_file <- "Sessions/user_requests.rds"
 
 app_requests <- get_requests("app_requests.rds")
 stopifnot(are_requests(app_requests))
+
+# -------------------
+# INTERFACE FUNCTIONS
+# -------------------
+
+# adds a spinner to content that may need to be refreshed
+my_spin <- function(content)
+{
+  withSpinner(content, type = 6)
+}
+
+# makes a slider for the nth principal component
+pc_slider <- function(n, pc_cap)
+{
+  sliderInput(sprintf("pc%s", n), sprintf("Displayed Component %s", n),
+              min=1, max=pc_cap, value=n, step=1, ticks = FALSE)
+}
+
+# Creates a selectizeInput panel with only one option allowed.
+select_panel <- function(inputId, label, choices = NULL, selected = NULL)
+{
+  result <- pickerInput(
+    inputId = inputId, label = label, choices = choices,
+    selected = selected, multiple = FALSE,
+    options = list(
+      `live-search` = TRUE,
+      `live-search-placeholder` = "Search for a phrase ..."
+    )
+  )
+
+  if (is.list(options))
+  {
+    for (cg in names(options))
+    {
+      opt <- options[[cg]]
+
+      if (length(opt) < 2)
+      {
+        result$children[[2]]$children[[1]] <- HTML(reg_str(
+          result$children[[2]]$children[[1]],
+          sprintf("<option value=\"%s\">%s</option>", opt, cg),
+          sprintf("<optgroup label=\"%s\">
+<option value=\"%s\">%s</option>
+</optgroup>", cg, opt, opt)
+        ))
+      }
+    }
+  }
+
+  result
+}
+
+# Creates a group of checked boxes with the given id, name, and inputs
+check_panel <- function(inputId, label, choices = NULL, selected = choices)
+{
+  pickerInput(
+    inputId = inputId, label = label,
+    choices = choices, selected = selected, multiple = TRUE,
+    options = list(
+      `actions-box` = TRUE,
+      `selected-text-format` = "count > 1",
+      `live-search` = TRUE,
+      `live-search-placeholder` = "Search for a phrase ...")
+  )
+}
+
+# Creates an action button with the given id, name, icon name,
+# color, background color, and border color.
+action <- function(id, name, icon_name, color, bk, br)
+{
+  actionButton(
+    inputId = id, label = name, icon = icon(icon_name), style =
+      sprintf("color: %s; background-color: %s; border-color: %s", color, bk, br))
+}
+
+# shows a notification (form can be default, message, warning, error)
+# in general: warnings and errors are self-explanatory, defaults are used
+# to begin actions, and messages are used to return results
+notification <- function(message, time, form)
+{
+  if (time > 0)
+    showNotification(HTML(message), duration = time, closeButton = TRUE, type = form)
+}
 
 # ------------------
 # BROWSER PARAMETERS
