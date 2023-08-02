@@ -384,6 +384,16 @@ median_index <- function(n)
   ceiling(n / 2) %>% as.integer()
 }
 
+#' the top n columns of data in decreasing standard deviation
+#'
+#' @param data [array, matrix] not checked
+#' @param n [int] not checked
+#' @returns [integer]
+ind_sd_top <- function(data, n)
+{
+  head(order(apply(data, 2, sd), decreasing = TRUE), n)
+}
+
 # -----------------
 # UTILITY FUNCTIONS
 # -----------------

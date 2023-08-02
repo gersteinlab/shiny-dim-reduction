@@ -153,12 +153,6 @@ local_bind <- function(data, num = 20)
   chunk_bind_rows(data, num) %>% chunk_bind_rows()
 }
 
-# the top num column indices of data in decreasing standard deviation
-ind_sd_top <- function(data, num)
-{
-  head(order(apply(data, 2, sd), decreasing = TRUE), num)
-}
-
 # given a list representing a table, remove the preamble
 # (such as the exRNA data access policy) and make a data frame
 # the preamble is identified by not having at least min_size entries
