@@ -1,5 +1,5 @@
-# This file tests ui_functions.R.
-# source("tests/test_ui_functions.R")
+# This file tests app_utils.R.
+# source("tests/test_app_utils.R")
 
 # -----
 # SETUP
@@ -9,7 +9,7 @@ source("app/install.R")
 if (!require(testthat))
   stop("Missing package: testthat")
 
-source("app/ui_functions.R")
+source("app/app_utils.R")
 start_time <- Sys.time()
 
 # -----

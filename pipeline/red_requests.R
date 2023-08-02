@@ -6,10 +6,24 @@ if (!exists("sdr_config") || sdr_config$mode != "pipeline")
   source("app/install.R")
 stopifnot(sdr_config$mode == "pipeline")
 
-source_sdr("sca_nor_fun.R")
-source_sdr("red_methods.R")
-source_sdr("make_requests.R")
-source_sdr("workflows.R")
+source("pipeline/sca_nor_fun.R")
+source("pipeline/red_methods.R")
+source("app/make_requests.R")
+source("pipeline/workflows.R")
+
+#' whether table has corresponding row / col counts
+#'
+#' @param table [table] not checked
+#' @param cat An integer (not checked).
+#' @param col_n An integer (not checked).
+#' @returns TRUE or FALSE.
+category_has_table <- function(cat)
+{
+  table <- read_table(category)
+  nrow(table) == row_n && ncol(table) == col_n
+}
+
+
 
 # create categories and subsets
 init_cat()

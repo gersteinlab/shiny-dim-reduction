@@ -13,7 +13,7 @@ library(shinycssloaders)
 library(shinyWidgets)
 
 source_app("plotting.R")
-source_app("ui_functions.R")
+source_app("app_utils.R")
 source_app("make_requests.R")
 
 get_requests <- function(file)
