@@ -295,33 +295,16 @@ perplexity_types <- setdiff(unique(app_requests$PERPLEXITY), num_d)
 pc_cap <- max(app_requests$COMPONENT)
 batch_sizes <- setdiff(unique(app_requests$BATCH_SIZE), num_d)
 
-settings_menu <- menuItem(
-  "Settings",
-  icon = icon("wrench"),
-  check_panel("sMenu", "Settings",
-              c("Embed Title", "Embed Legend", "Separate Colors",
-                "Boost Graphics", "Uninverted Colors")),
-  select_panel("palette", "Color Palette", color_seq_types),
-  numericInput("width", "Graph Width", value=NULL, min=1, max=4000),
-  numericInput("height", "Graph Height", value=graph_height, min=1, max=4000),
-  numericInput("notif_time", "Notification Time", value=6),
-  check_panel("console", "Console Output", console_ids, NULL)
-)
-
-table_1_menu <- menuItem(
-  "Table Selection",
+parameters_menu <- menuItem(
+  "Parameters",
   startExpanded = TRUE,
-  icon = icon("table"),
+  # icon = icon("table"),
+  icon = icon("calculator"),
   select_panel("category", "Category", groups),
   select_panel("rowby", "Sample Subset"), # DYNAMIC
   select_panel("colby", "Feature Subset"), # DYNAMIC
   select_panel("scaling", "Scaling", sca_options),
-  select_panel("normalization", "Normalization") # DYNAMIC
-)
-
-analysis_1_menu <- menuItem(
-  "Analysis Selection",
-  icon = icon("calculator"),
+  select_panel("normalization", "Normalization"), # DYNAMIC
   select_panel("embedding", "Method of Dimensionality Reduction", emb_options),
   conditionalPanel(
     condition = "output.visualize_cond",
@@ -335,25 +318,33 @@ analysis_1_menu <- menuItem(
                    median_value(perplexity_types))
     ),
     conditionalPanel(
-      condition = "output.pc_sliders_cond",
-      pc_slider(1, pc_cap),
-      conditionalPanel(
-        condition = "output.pc_slider2_cond",
-        pc_slider(2, pc_cap)
-      ),
-      conditionalPanel(
-        condition = "output.pc_slider3_cond",
-        pc_slider(3, pc_cap)
-      )
-    ),
-    conditionalPanel(
       condition = "input.embedding == 'VAE'",
       select_panel("batch_size", "Batch Size", batch_sizes)
     )
   ),
   conditionalPanel(
     condition = "input.embedding == 'Sets'",
-    select_panel("threby", "Threshold"),
+    select_panel("threby", "Threshold")
+  )
+)
+
+filters_menu <- menuItem(
+  "Filters",
+  icon = icon("filter"),
+  conditionalPanel(
+    condition = "input.embedding != 'Sets' && output.pc_sliders_cond",
+    pc_slider(1, pc_cap),
+    conditionalPanel(
+      condition = "output.pc_slider2_cond",
+      pc_slider(2, pc_cap)
+    ),
+    conditionalPanel(
+      condition = "output.pc_slider3_cond",
+      pc_slider(3, pc_cap)
+    )
+  ),
+  conditionalPanel(
+    condition = "input.embedding == 'Sets'",
     numericRangeInput("set_f1", "Fraction of Samples", c(0.5, 1)),
     numericRangeInput("set_f2", "Number of Characteristics", c(1, 60)),
     conditionalPanel(
@@ -371,12 +362,7 @@ analysis_1_menu <- menuItem(
       numericInput("set_feat_dend", "Maximum Features",
                    value=max_dend, min=pc_cap, max=2^24)
     )
-  )
-)
-
-filters_1_menu <- menuItem(
-  "Filter Set Selection",
-  icon = icon("filter"),
+  ),
   conditionalPanel(
     condition = "input.embedding != 'Sets' &&
     (input.visualize != 'Summarize' || input.embedding == 'PHATE')",
@@ -404,6 +390,19 @@ filters_1_menu <- menuItem(
     select_panel("filterby", "Filter By"), # DYNAMIC
     check_panel("selectby", "Selections") # DYNAMIC
   )
+)
+
+settings_menu <- menuItem(
+  "Settings",
+  icon = icon("wrench"),
+  check_panel("sMenu", "Settings",
+              c("Embed Title", "Embed Legend", "Separate Colors",
+                "Boost Graphics", "Uninverted Colors")),
+  select_panel("palette", "Color Palette", color_seq_types),
+  numericInput("width", "Graph Width", value=NULL, min=1, max=4000),
+  numericInput("height", "Graph Height", value=graph_height, min=1, max=4000),
+  numericInput("notif_time", "Notification Time", value=6),
+  check_panel("console", "Console Output", console_ids, NULL)
 )
 
 last_updated_text <- sprintf(
@@ -571,9 +570,8 @@ ui <- function(request){
     dashboardSidebar(
       width = 300,
       sidebarMenu(
-        table_1_menu,
-        analysis_1_menu,
-        filters_1_menu,
+        parameters_menu,
+        filters_menu,
         settings_menu,
         div(
           style = "margin: 10px",
