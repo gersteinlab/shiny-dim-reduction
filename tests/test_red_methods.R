@@ -1,4 +1,5 @@
 # This file tests red_methods.R.
+# source("tests/test_red_methods.R")
 
 # -----
 # SETUP
@@ -10,10 +11,6 @@ if (!require(testthat))
 
 source("pipeline/red_methods.R")
 source("app/plotting.R")
-
-# ------
-# TESTER
-# ------
 
 # from a table, generates a list of reductions (and plots),
 # raising an error if the original table is not valid.
@@ -33,13 +30,18 @@ source("app/plotting.R")
 # -- phate (phate_p)
 # -- sets, sets_labels, sets_frac (sets_p1, sets_p2)
 # note: results$time returns the time elapsed in seconds
-all_reductions <- function(table, labels)
+all_reductions <- function(table, labels, test_phate = FALSE)
 {
+  stopifnot(
+    is_table(table),
+    vec_between(table, 0, 1),
+    is_str(labels, nrow(table)),
+    !anyNA(labels),
+    is_str(colnames(table), ncol(table))
+  )
+
   start <- Sys.time()
   results <- list()
-  stopifnot(is_table(table))
-  stopifnot(length(labels) == nrow(table))
-  stopifnot(none_na(labels))
 
   # test tsne
   results$tsne <- table_to_tsne(table, 2, 10)
@@ -55,7 +57,7 @@ all_reductions <- function(table, labels)
   results$pca_t_p <- plotly_2d(results$pca_t[,1], results$pca_t[,2], labels)
 
   # test vae
-  results$vae <- table_to_vae(table, 2, 20) # batch size 20
+  results$vae <- table_to_vae(table, 10, 20) # batch size 20
   results$vae_e <- vae_to_explore(results$vae)
   results$vae_s <- vae_to_summary(results$vae)
   results$vae_t <- vae_to_tsne(results$vae, 2, 10)
@@ -64,7 +66,7 @@ all_reductions <- function(table, labels)
   results$vae_t_p <- plotly_2d(results$vae_t[,1], results$vae_t[,2], labels)
 
   # test umap
-  results$umap <- table_to_umap(table, 2, 10)
+  results$umap <- table_to_umap(table, 10, 10)
   results$umap_e <- umap_to_explore(results$umap)
   results$umap_s <- umap_to_summary(results$umap)
   results$umap_t <- umap_to_tsne(results$umap, 2)
@@ -73,15 +75,18 @@ all_reductions <- function(table, labels)
   results$umap_s_p2 <- plotly_heatmap_dendrogram(knn_label_matrix(results$umap_s, labels))
   results$umap_t_p <- plotly_2d(results$umap_t[,1], results$umap_t[,2], labels)
 
-  # test phate
-  results$phate <- table_to_phate(table, 2, 10)
-  results$phate_p <- plotly_2d(results$phate[,1], results$phate[,2], labels)
+  # test phate (very slow)
+  if (test_phate)
+  {
+    results$phate <- table_to_phate(table, 2, 10)
+    results$phate_p <- plotly_2d(results$phate[,1], results$phate[,2], labels)
+  }
 
   # test sets
-  results$sets <- table_to_sets(table, 0.4)
+  results$sets <- table_to_sets(table, mean(table))
   results$sets_labels <- set_label_matrix(results$sets, labels)
   results$sets_frac <- results$sets_labels %>% truncate_rows() %>%
-    sort_row_sums() %>% set_f1_f2(c(0, 1), c(0, 5))
+    sort_row_sums() %>% set_f1_f2(c(0.1, 1), c(2, 1000))
   results$sets_p1 <- plotly_heatmap_variance(results$sets_frac)
   results$sets_p2 <- plotly_heatmap_dendrogram(results$sets_frac)
 
@@ -89,16 +94,18 @@ all_reductions <- function(table, labels)
   results
 }
 
-# -------
-# INVALID
-# -------
+# -----------
+# TEST RANDOM
+# -----------
 
-tryCatch(all_reductions(data.frame(), NULL),
-         error = function(e){cat("Caught error!\n")})
+test_that("perturb_if_dup() works", {
+  matrix(c(1, 1), nrow = 2) %>% perturb_if_dup() %>% sum() %>% identical(2) %>% expect_false()
+  matrix(c(1, 1), nrow = 2) %>% sum() %>% identical(2) %>% expect_true()
+})
 
-# ------
-# RANDOM
-# ------
+test_that("error_catching works", {
+  all_reductions(data.frame(), NULL) %>% expect_error()
+})
 
 # get random data
 test_table <- matrix(0, nrow = 400, ncol = 20)
@@ -111,11 +118,11 @@ for (i in 1:nrow(test_table))
 colnames(test_table) <- sprintf("Component %s", 1:20)
 
 # test random data
-test_red <- all_reductions(test_table, test_labels)
+test_red <- all_reductions(test_table, test_labels, TRUE)
 
-# -----------
-# DUPLICATION
-# -----------
+# ----------------
+# TEST DUPLICATION
+# ----------------
 
 dup_table <- matrix(c(rep(0, 6000), runif(2000, min = 0, max = 1)),
                     nrow = 400, ncol = 20, byrow = TRUE)
@@ -123,43 +130,53 @@ dup_labels <- as.character(rep(1:8, each = 50))
 colnames(dup_table) <- sprintf("Component %s", 1:20)
 dup_red <- all_reductions(dup_table, dup_labels)
 
-# ----------
-# ALL ZEROES
-# ----------
+# -------------
+# TEST ALL SAME
+# -------------
 
-zero_table <- matrix(0, nrow = 400, ncol = 20)
-zero_labels <- as.character(rep(1:8, each = 50))
-colnames(zero_table) <- sprintf("Component %s", 1:20)
-zero_red <- all_reductions(zero_table, zero_labels)
+same_table <- matrix(0.5, nrow = 400, ncol = 20)
+same_labels <- as.character(rep(1:8, each = 50))
+colnames(same_table) <- sprintf("Component %s", 1:20)
+same_red <- all_reductions(same_table, same_labels)
 
-# -----------
-# MIRNA / RBP
-# -----------
+# -----
+# TIMES
+# -----
 
-source_sdr("sca_nor_fun.R")
-workflow_name <- "exRNA"
-source_sdr("converter.R")
+cat_f("Time elapsed: %.1f (random)\n", test_red$time)
+cat_f("Time elapsed: %.1f (dup)\n", dup_red$time)
+cat_f("Time elapsed: %.1f (same)\n", same_red$time)
 
-setwd(dep_loc)
-order_total <- readRDS("order_total.rds")
+# ---------------
+# TEST CATEGORIES
+# ---------------
 
-mirna_labels <- order_total$miRNA$CONDITION
-rbp_labels <- order_total$RNA_binding_proteins$CONDITION
+source("pipeline/sca_nor_fun.R")
+source("app/preprocess.R")
 
-setwd(com_loc)
+name_cat_table_file <- function(cat)
+{
+  sprintf("~/DataR/sdr_workflows/exRNA/sdr_tables/combined_%s.rds", cat)
+}
 
-combined_miRNA <- readRDS("combined_miRNA.rds")
-scaled_miRNA <- combined_miRNA[,ind_sd_top(combined_miRNA, 100),drop=FALSE]
-mirna_table <- norm_min_max(log_scale(scaled_miRNA))
+get_labels <- function(cat, cha)
+{
+  get_row_axis(cat)$metadata[[cha]]
+}
 
-combined_RBP <- readRDS("combined_RNA_binding_proteins.rds")
-rbp_table <- norm_min_max(log_scale(combined_RBP))
+reduce_category <- function(cat, cha = "CONDITION", sca = "Logarithmic")
+{
+  combined <- name_cat_table_file(cat) %>% readRDS()
+  labels <- get_labels(cat, cha)
+  col_sub <- combined[, ind_sd_top(combined, 200), drop = FALSE]
+  scaled <- do_scal(sca, col_sub)
+  table <- norm_min_max(scaled)
+  all_reductions(table, labels)
+}
 
-# test miRNA data
-mirna_red <- all_reductions(mirna_table, mirna_labels)
-
-# test RBP data
-rbp_red <- all_reductions(rbp_table, rbp_labels)
+mirna_red <- reduce_category("miRNA", "CONDITION")
+com_rbp_red <- reduce_category("RNA_binding_proteins", "BIOFLUID")
+one_rbp_red <- reduce_category("ZRANB2_K562", "CONDITION")
 
 # test <- table_to_vae(rbp_table, 2, 20, verbose = 2)
 # test <- table_to_tsne(rbp_table, 2, 20)
@@ -167,13 +184,9 @@ rbp_red <- all_reductions(rbp_table, rbp_labels)
 # rbp_sum <- umap_to_summary(test)
 # hmm <- knn_label_matrix(rbp_sum, rbp_labels)
 
-# -----
-# TIMES
-# -----
-
-sprintf_clean("Time elapsed: %s (random)", test_red$time)
-sprintf_clean("Time elapsed: %s (mirna)", mirna_red$time)
-sprintf_clean("Time elapsed: %s (rbp)", rbp_red$time)
+cat_f("Time elapsed: %.1f (mirna)\n", mirna_red$time)
+cat_f("Time elapsed: %.1f (com_rbp)\n", com_rbp_red$time)
+cat_f("Time elapsed: %.1f (one_rbp)\n", one_rbp_red$time)
 
 # ----------------
 # SETS SCRATCHWORK
@@ -196,7 +209,7 @@ sprintf_clean("Time elapsed: %s (rbp)", rbp_red$time)
 # test1 <- sample(1:100, 10000000, replace = TRUE)
 # system.time(tab1(test1, 102))
 # system.time(tab2(test1, 102))
-# sprintf_clean("Are they the same? %s", all.equal(tab1(test1, 102), tab2(test1, 102)))
+# cat_f("Are they the same? %s\n", all.equal(tab1(test1, 102), tab2(test1, 102)))
 #
 # # clearly summary(Matrix()) is faster than which()
 # sets_mat <- table_to_sets(mirna_table, 0.4)
@@ -204,18 +217,4 @@ sprintf_clean("Time elapsed: %s (rbp)", rbp_red$time)
 # smm <- rbind(sm, sm, sm, sm)
 # system.time(d1 <- summary(Matrix(smm, sparse = TRUE)))
 # system.time(d2 <- which(smm == 1, arr.ind = TRUE))
-
-workflow_name <- "exRNA"
-source_sdr("converter.R")
-source_sdr("sca_nor_fun.R")
-
-setwd(raw_loc)
-setwd("RBP_S2")
-test <- readRDS("com_ZRANB2_K562.rds")
-get_dependency("order_total")
-rbp_order <- match_metadata_to_samples(sprintf("%s.metadata.tsv", test[,1]), order_total$miRNA, "DOWNLOAD_NAME")
-hmm <- norm_min_max(log_scale(apply(test[,-1], 2, as.numeric)))
-hmm2 <- hmm[,ind_sd_top(hmm, 100)]
-valid_inds <- !grepl(".tsv", rbp_order$CONDITION)
-result <- all_reductions(hmm2[valid_inds,], rbp_order$CONDITION[valid_inds])
 
