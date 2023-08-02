@@ -401,7 +401,7 @@ plotly_heatmap_variance <- function(binary, colors = NULL,
                                     title = "", legend = TRUE, smooth = FALSE)
 {
   if (length(colors) < 1)
-    colors <- make_color_seq(5, "Inferno")
+    colors <- make_color_seq(5L, "Inferno")
 
   rows <- substring(rownames(binary), 0, 50)
   cols <- substring(colnames(binary), 0, 50)
@@ -424,7 +424,7 @@ plotly_heatmap_dendrogram <- function(binary, colors = NULL,
                                       title = "", legend = TRUE, dend = TRUE)
 {
   if (length(colors) < 1)
-    colors <- make_color_seq(5, "Inferno")
+    colors <- make_color_seq(5L, "Inferno")
 
   if (nrow(binary) < 1 || ncol(binary) < 1)
     return(NULL)

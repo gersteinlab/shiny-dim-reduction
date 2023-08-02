@@ -603,7 +603,7 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
 
       # if no custom palette works, do rainbow for scatterplots and inferno for sets
       if (iplot$embedding == "Sets")
-        return(make_color_seq(5, "Inferno") %>%
+        return(make_color_seq(5L, "Inferno") %>%
                  rev_color_seq(!not_rev()))
 
       return(num_unique(colors()) %>%
