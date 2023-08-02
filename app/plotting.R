@@ -592,3 +592,5 @@ plotly_umap_sum <- function(label_mat, paint, title = "", legend = TRUE, three =
     label_mat, paint, title = title, legend = legend, smooth = boost
   )
 }
+
+cat_f("PLOTTING SETUP TIME: %.1f (sec)\n", net_time())

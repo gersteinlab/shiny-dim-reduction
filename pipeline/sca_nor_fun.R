@@ -107,3 +107,5 @@ do_scal <- function(sca, data)
     return(log_scale(data))
   stop_f("Invalid normalization mode: %s", sca)
 }
+
+cat_f("SCA / NOR SETUP TIME: %.1f (sec)\n", net_time())
