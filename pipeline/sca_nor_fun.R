@@ -11,7 +11,10 @@ library(limma)
 # NORMALIZATION
 # -------------
 
-# normalizes a vector or matrix to [0,1]
+#' normalizes data to have a minimum of 0 and a maximum of 1
+#'
+#' @param data [vector, matrix, data.frame] not checked
+#' @returns [vector, matrix, data.frame]
 norm_min_max <- function(data)
 {
   data_max <- max(data)
@@ -24,7 +27,10 @@ norm_min_max <- function(data)
   (data - data_min) / (data_max - data_min)
 }
 
-# normalizes a vector or matrix to have a mean of 0 and a variance of 1
+#' normalizes data to have a mean of 0 and a standard deviation of 1
+#'
+#' @param data [vector, matrix, data.frame] not checked
+#' @returns [vector, matrix, data.frame]
 norm_z_score <- function(data)
 {
   data_mean <- mean(data)
@@ -37,47 +43,67 @@ norm_z_score <- function(data)
   (data - data_mean) / data_sd
 }
 
-# normalizes each feature with min-max
+#' normalizes each feature of data with norm_min_max
+#'
+#' @param data [vector, matrix, data.frame] not checked
+#' @returns [vector, matrix, data.frame]
 local_min_max <- function(data)
 {
   apply(data, 2, norm_min_max)
 }
 
-# normalizes each feature with z-score
+#' normalizes each feature of data with norm_z_score
+#'
+#' @param data [vector, matrix, data.frame] not checked
+#' @returns [vector, matrix, data.frame]
 local_z_score <- function(data)
 {
   apply(data, 2, norm_z_score)
 }
 
-# performs normalization
-do_norm <- function(nor, scaled)
+#' performs normalization
+#'
+#' @param nor [string]
+#' @param data [vector, matrix, data.frame] not checked
+#' @returns [vector, matrix, data.frame]
+do_norm <- function(nor, data)
 {
   if (nor == "Global Min-Max")
-    return(norm_min_max(scaled))
+    return(norm_min_max(data))
   if (nor == "Local Min-Max")
-    return(local_min_max(scaled))
+    return(local_min_max(data))
   if (nor ==  "Global Z-Score")
-    return(norm_z_score(scaled))
+    return(norm_z_score(data))
   if (nor == "Local Z-Score")
-    return(local_z_score(scaled))
+    return(local_z_score(data))
   if (nor == "Quantile")
-    return(t(limma::normalizeQuantiles(t(scaled))))
+    return(t(limma::normalizeQuantiles(t(data))))
+  stop_f("Invalid normalization mode: %s", nor)
 }
 
 # -------
 # SCALING
 # -------
 
-# logarithmically scales data
+#' logarithmically scales data
+#'
+#' @param data [vector, matrix, data.frame] not checked
+#' @returns [vector, matrix, data.frame]
 log_scale <- function(data)
 {
-  log2(data+1)
+  log2(data + 1)
 }
 
-# performs scaling
-do_scal <- function(sca, scaled)
+#' performs scaling
+#'
+#' @param sca [string]
+#' @param data [vector, matrix, data.frame] not checked
+#' @returns [vector, matrix, data.frame]
+do_scal <- function(sca, data)
 {
+  if (sca == "Linear")
+    return(data)
   if (sca == "Logarithmic")
-    return(log_scale(scaled))
-  return(scaled)
+    return(log_scale(data))
+  stop_f("Invalid normalization mode: %s", sca)
 }

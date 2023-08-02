@@ -1,18 +1,12 @@
 # This file tests sca_nor_fun.R.
+# source("tests/test_sca_nor_fun.R")
 
 # -----
 # SETUP
 # -----
 
-if (!exists("ran_install"))
-{
-  if (file.exists("install.R"))
-    source("install.R")
-  else
-    stop("Could not confirm installation. Please source install.R manually.")
-}
-
-source_sdr("sca_nor_fun.R")
+source("app/install.R")
+source("pipeline/sca_nor_fun.R")
 
 # scale options
 sca_options <- c("Logarithmic", "Linear")
@@ -20,6 +14,10 @@ sca_options <- c("Logarithmic", "Linear")
 nor_options <- c("Global Min-Max", "Local Min-Max",
                  "Global Z-Score", "Local Z-Score",
                  "Quantile")
+
+# -----
+# TESTS
+# -----
 
 test_sca_nor <- function(mat)
 {
@@ -32,18 +30,15 @@ test_sca_nor <- function(mat)
 
     for (nor in nor_options)
     {
-      results[[sca]][[nor]] <- do_norm(nor, sca_mat)
-      sprintf_clean("For %s Scaling and %s Normalization: Mean = %0.3f, SD = %0.3f",
-                    sca, nor, mean(results[[sca]][[nor]]), sd(results[[sca]][[nor]]))
+      data <- do_norm(nor, sca_mat)
+      results[[sca]][[nor]] <- data
+      cat_f("For %s Scaling and %s Normalization: Mean = %0.3f, SD = %0.3f\n",
+                    sca, nor, mean(data), sd(data))
     }
   }
 
   results
 }
-
-# -----
-# TESTS
-# -----
 
 test_matrix <- matrix(1:200, nrow = 20)
 test_result <- test_sca_nor(test_matrix)
