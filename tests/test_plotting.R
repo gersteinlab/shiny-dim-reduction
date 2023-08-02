@@ -38,6 +38,10 @@ test_that("make_color_seq() works", {
   expect_identical(make_color_seq(2L), sdr_color_seq)
 })
 
+test_that("ggplot2_shape_seq() works", {
+  ggplot2_shape_seq(1000) %>% is.integer() %>% expect_true()
+})
+
 show_color_seqs <- function()
 {
   cat("Showing color sequences ...\n")
@@ -107,7 +111,7 @@ stop("Automated testing complete! All subsequent functions have to be run manual
 # DEMONSTRATIONS
 # --------------
 
-ggplot2_null()
+default_plot
 show_color_seqs()
 show_boxplot_beeswarm()
 test_ggplot2_2d()
@@ -139,3 +143,6 @@ upset_custom_data %>% truncate_rows(500) %>% sort_row_sums() %>%
 my_datatable()
 
 my_datatable(data.frame(cbind(upset_custom_data[1:100,], rep(LETTERS[1:10], 10))))
+
+dev.off()
+venn1_custom(100, "test")

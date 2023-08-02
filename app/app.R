@@ -47,13 +47,13 @@ finish before attempting a new configuration.", num), "default")
     {
       notif("Plot generation failed.<br>
 Possible reasons:<br>
-(1) invalid configuration<br>
-(2) empty dataset", "error")
-      return(ggplot2_null())
+(1) invalid parameters<br>
+(2) nonexistent analysis", "error")
+      return(default_plot)
     }
 
     notif(sprintf("Plot generation was successful.<br>
-Seconds elapsed: %.2f", time_diff(start)), "message")
+Seconds elapsed: %.1f", time_diff(start)), "message")
 
     target
   }
@@ -659,7 +659,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
         set_f1_f2(iplot$set_f1, iplot$set_f2) %>% num_nan_binary()
 
       if (ncol(data) == 1)
-        return(venn1_custom(data, legend()))
+        return(venn1_custom(nrow(data), ifelse(legend(), colnames(data)[1], "")))
 
       if (!legend())
         colnames(data) <- seq_len(ncol(data))
@@ -678,7 +678,7 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
       num_data(data)
 
       return(ggplot2_2d(
-        data[,1], data[,2], colors(), shapes(), paint(), NULL,
+        data[,1], data[,2], colors(), shapes(), paint(),
         legend(), title_embed(), pc("1"), pc("2")))
     }
 
@@ -713,14 +713,14 @@ Seconds elapsed: %.2f", time_diff(start)), "message")
     if (iplot$visualize == "Explore")
     {
       return(ggplot2_2d(
-        data[,iplot$pc1], data[,iplot$pc2], colors(), shapes(), paint(), NULL,
+        data[,iplot$pc1], data[,iplot$pc2], colors(), shapes(), paint(),
         legend(), title_embed(), pc(iplot$pc1), pc(iplot$pc2)))
     }
 
     if (iplot$visualize == "tSNE")
     {
       return(ggplot2_2d(
-        data[,1], data[,2], colors(), shapes(), paint(), NULL,
+        data[,1], data[,2], colors(), shapes(), paint(),
         legend(), title_embed(), pc("1"), pc("2")))
     }
   })

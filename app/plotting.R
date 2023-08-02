@@ -15,9 +15,9 @@ library(beeswarm)
 library(heatmaply)
 library(DT)
 
-# ---------------------
-# COLOR SCALE FUNCTIONS
-# ---------------------
+# ---------------
+# COLOR SEQUENCES
+# ---------------
 
 # the default color sequence (color_seq) for this project
 sdr_color_seq <- c("#00356B", "#C90016")
@@ -114,60 +114,94 @@ make_color_seq <- function(n, color_type = "Rainbow")
   stop_f("unsupported color_type: %s", color_type)
 }
 
-# ----------------------
-# GENERAL GRAPHS / TOOLS
-# ----------------------
+# ------------------
+# BOXPLOT + BEESWARM
+# ------------------
 
-# Generates a shape sequence of length n for ggplot2.
-ggplot2_shape_seq <- function(n)
-{
-  # my favorite ordering of the 25 default R plot shapes
-  rep(c(15:25, 0:2, 5:6, 3:4, 8, 7, 9:14), length.out = n)
-}
-
-# Displays a default graph, which is accepted by ggplot2 and plotly.
-ggplot2_null <- function()
-{
-  df <- data.frame()
-  ggplot(df) + geom_point() +
-    ggtitle("This plot cannot be displayed.") +
-    xlim(0, 1) + ylim(0, 1)
-}
-
-# Boxplot + Beeswarm, with partially transparent boxplot
-# data: a data frame where each row represents a dot,
-# column 1 stores the label, and column 2 stores the y-coord
-boxplot_beeswarm <- function(data, colors, title = "", legend = TRUE)
+#' boxplot + beeswarm with partially transparent boxplot
+#'
+#' @param data [data.frame] with two
+#'    columns (labels / values), not checked
+#' @param color_seq [color_seq, NULL] not checked
+#' @param title [string] not checked
+#' @param legend [boolean] not checked
+#' @returns [object] plot
+boxplot_beeswarm <- function(data, color_seq = NULL, title = "", legend = TRUE)
 {
   xlab <- colnames(data)[1]
   ylab <- colnames(data)[2]
   rel <- get(ylab) ~ get(xlab)
-  x_bins <- unique(data[,1])
+  x_bins <- unique(data[, 1])
+
+  if (is.null(color_seq))
+    color_seq <- make_color_seq(length(x_bins))
 
   if (!legend)
     x_bins <- seq_along(x_bins)
 
-  boxplot(rel, data = data, xlab = xlab, ylab = ylab, names = x_bins,
-          col = make_transparent(colors), outline = FALSE, main = title) # transparency
+  graphics::boxplot(
+    rel, data = data, xlab = xlab, ylab = ylab, names = x_bins,
+    col = make_transparent(color_seq), outline = FALSE, main = title
+  ) # transparency
 
-  beeswarm(rel, data = data, xlab = xlab, ylab = ylab, labels = x_bins,
-           col = colors, corral = "random", main = title, pch = 16, add = TRUE) # filled circles
+  beeswarm::beeswarm(
+    rel, data = data, xlab = xlab, ylab = ylab, labels = x_bins,
+    col = color_seq, corral = "random", main = title, pch = 16, add = TRUE
+  ) # filled circles
 }
 
 # -------------------
 # SCATTER PLOT GRAPHS
 # -------------------
 
-# Plots all data points at (x,y) ...
-# ... with appropriate colors in cq, symbols in sq.
-# The graph will have features (x_axis, y_axis, title), with legend
-# determining whether a legend will be displayed.
+# ggplot2 common theme
+ggplot2_theme <- theme(
+  plot.title = element_text(size = 22, face = "bold"),
+  axis.title.x = element_text(size = 16, margin = margin(t = 10)),
+  axis.title.y = element_text(size = 16, margin = margin(r = 10)),
+  axis.text = element_text(size = 12),
+  legend.title = element_text(size = 16),
+  legend.text = element_text(size = 10),
+  plot.margin = margin(0.5, 0, 0, 0, "cm"),
+  panel.background = element_blank(),
+  panel.grid.major = element_line(
+    size = 0.1, linetype = 'solid', colour = "gray")
+)
+
+# a default plot accepted by ggplot2 and plotly
+default_plot <- ggplot(data.frame()) + ggplot2_theme +
+  geom_point() + ggtitle("This plot cannot be displayed.") +
+  xlim(0, 1) + ylim(0, 1)
+
+#' Generates a shape sequence of length n for ggplot2
+#'
+#' @param n [int] not checked
+#' @returns [integer]
+ggplot2_shape_seq <- function(n)
+{
+  # my favorite ordering of the 26 default R plot shapes
+  c(15L:25L, 0L, 1L, 2L, 5L, 6L, 3L, 4L, 8L, 7L, 9L:14L) %>%
+    rep(length.out = n)
+}
+
+#' Plots 2D data points with colors, shapes, axes, title, and legend.
+#'
+#' @param x [numeric]
+#' @param y [numeric]
+#' @param color [character, NULL]
+#' @param shape [character, NULL]
+#' @param color_seq [color_seq, NULL] not checked
+#' @param legend [boolean] whether a legend is displayed
+#' @param title [string] not checked
+#' @param x_axis [string] not checked
+#' @param y_axis [string] not checked
+#' @returns [object] plot
 ggplot2_2d <- function(x, y, color = NULL, shape = NULL,
-                       color_seq = NULL, mode = NULL, legend = TRUE,
+                       color_seq = NULL, legend = TRUE,
                        title = "", x_axis = "", y_axis = "")
 {
   if (length(color) < 1)
-    color <- rep("Unknown", length(x))
+    color <- rep("Unknown", n)
 
   if (length(shape) < 1)
     shape <- color
@@ -175,24 +209,12 @@ ggplot2_2d <- function(x, y, color = NULL, shape = NULL,
   if (length(color_seq) < 1)
     color_seq <- make_color_seq(num_unique(color))
 
-  df <- data.frame("x" = as.numeric(x), "y" = as.numeric(y),
-                   "Color" = as.character(color), "Shape" = as.character(shape))
+  df <- data.frame("xx" = x, "yy" = y, "cc" = color, "ss" = shape)
+  shape_seq <- num_unique(shape) %>% ggplot2_shape_seq()
+  theme <- ggplot2_theme
+  theme[["legend.position"]] <- ifelse(legend, "right", "none")
 
-  shape_seq <- ggplot2_shape_seq(length(unique(shape)))
-
-  theme <- theme(
-    plot.title = element_text(size = 22, face = "bold"),
-    axis.title.x = element_text(size = 16, margin = margin(t = 10)),
-    axis.title.y = element_text(size = 16, margin = margin(r = 10)),
-    axis.text = element_text(size = 12),
-    legend.title = element_text(size = 16),
-    legend.text = element_text(size = 10),
-    legend.position = ifelse(legend, "right", "none"),
-    plot.margin = margin(0.5, 0, 0, 0, "cm"),
-    panel.background = element_blank(),
-    panel.grid.major = element_line(size = 0.1, linetype = 'solid', colour = "gray"))
-
-  plot <- ggplot(df, aes(x = x, y = y, color = Color, shape = Shape)) +
+  ggplot(df, aes(x = xx, y = yy, color = cc, shape = ss)) +
     theme + ggtitle(title) + xlab(x_axis) + ylab(y_axis) +
     scale_color_manual(values = color_seq) +
     scale_shape_manual(values = shape_seq) +
@@ -200,18 +222,21 @@ ggplot2_2d <- function(x, y, color = NULL, shape = NULL,
     geom_vline(aes(xintercept = 0), size = 0.5) +
     geom_point(size = 2.4) +
     guides(color = guide_legend(order = 1))
-
-  if (is.null(mode))
-    return(plot)
-  if (mode == "log")
-    return(plot + geom_smooth(se = FALSE, method = "gam", formula = y ~ s(log(x))))
-  return(plot + geom_line())
 }
 
-# Plots all data points at (x,y) ...
-# ... with appropriate colors in colors in c_seq, text.
-# The graph will have features (x_axis, y_axis, title), with legend
-# determining whether a legend will be displayed.
+#' Plots 2D data points with colors, text, axes, title, and legend.
+#'
+#' @param x [numeric]
+#' @param y [numeric]
+#' @param color [character, NULL]
+#' @param text [character, NULL]
+#' @param color_seq [color_seq, NULL] not checked
+#' @param lines [boolean] whether to connect points by lines
+#' @param legend [boolean] whether a legend is displayed
+#' @param title [string] not checked
+#' @param x_axis [string] not checked
+#' @param y_axis [string] not checked
+#' @returns [object] plot
 plotly_2d <- function(x, y, color = NULL, text = NULL,
                       color_seq = NULL, lines = FALSE, legend = TRUE,
                       title = "", x_axis = "", y_axis = "")
@@ -225,25 +250,34 @@ plotly_2d <- function(x, y, color = NULL, text = NULL,
   if (length(color_seq) < 1)
     color_seq <- make_color_seq(num_unique(color))
 
-  plot <- plot_ly(x = as.numeric(x), y = as.numeric(y),
-                  color = as.character(color), text = as.character(text),
-                  colors = color_seq, mode = ifelse(lines, "lines+markers", "markers"),
-                  marker = list(size = 6, symbol = 'circle'),
-                  hovertemplate = paste(
-                    "<b>%{text}</b>",
-                    "<br>(%{x:.4f}, %{y:.4f})",
-                    "<extra></extra>"), type="scatter")
-  layout(plot,
-         title = title,
-         xaxis = list(title = x_axis),
-         yaxis = list(title = y_axis),
-         showlegend = legend)
+  ht_text <- "<b>%{text}</b><br>(%{x:.4f}, %{y:.4f})<extra></extra>"
+  plotly::plot_ly(
+    x = x, y = y, color = color, text = text, colors = color_seq,
+    mode = ifelse(lines, "lines+markers", "markers"),
+    marker = list(size = 6, symbol = 'circle'),
+    hovertemplate = ht_text, type = "scatter"
+  ) %>% plotly::layout(
+    title = title,
+    xaxis = list("title" = x_axis),
+    yaxis = list("title" = y_axis),
+    showlegend = legend
+  )
 }
 
-# Plots all data points at (x,y,z) ...
-# ... with appropriate colors in c_seq, text.
-# The graph will have features (x_axis, y_axis, z_axis, title), with legend
-# determining whether a legend will be displayed.
+#' Plots 3D data points with colors, text, axes, title, and legend.
+#'
+#' @param x [numeric]
+#' @param y [numeric]
+#' @param z [numeric]
+#' @param color [character, NULL]
+#' @param text [character, NULL]
+#' @param color_seq [color_seq, NULL] not checked
+#' @param legend [boolean] whether a legend is displayed
+#' @param title [string] not checked
+#' @param x_axis [string] not checked
+#' @param y_axis [string] not checked
+#' @param z_axis [string] not checked
+#' @returns [object] plot
 plotly_3d <- function(x, y, z, color = NULL, text = NULL,
                       color_seq = NULL, legend = TRUE,
                       title = "", x_axis = "", y_axis = "", z_axis = "")
@@ -257,20 +291,22 @@ plotly_3d <- function(x, y, z, color = NULL, text = NULL,
   if (length(color_seq) < 1)
     color_seq <- make_color_seq(num_unique(color))
 
-  plot <- plot_ly(x = as.numeric(x), y = as.numeric(y), z = as.numeric(z),
-                  color = as.character(color), text = as.character(text),
-                  colors = color_seq, mode = "markers",
-                  marker = list(size = 4, symbol = 'circle'),
-                  hovertemplate = paste(
-                    "<b>%{text}</b>",
-                    "<br>(%{x:.4f}, %{y:.4f}, %{z:.4f})",
-                    "<extra></extra>"), type="scatter3d")
-  layout(plot,
-         title = title,
-         scene = list(xaxis = list(title = x_axis),
-                      yaxis = list(title = y_axis),
-                      zaxis = list(title = z_axis)),
-         showlegend = legend)
+  ht_text <- "<b>%{text}</b><br>(%{x:.4f}, %{y:.4f}, %{z:.4f})<extra></extra>"
+  plotly::plot_ly(
+    x = x, y = y, z = z, color = color, text = text, colors = color_seq,
+    mode = "markers",
+    marker = list(size = 4, symbol = 'circle'),
+    hovertemplate = ht_text,
+    type = "scatter3d"
+  ) %>% plotly::layout(
+    title = title,
+    scene = list(
+      "xaxis" = list("title" = x_axis),
+      "yaxis" = list("title" = y_axis),
+      "zaxis" = list("title" = z_axis)
+    ),
+    showlegend = legend
+  )
 }
 
 # -----------------------
@@ -300,23 +336,24 @@ set_f1_f2 <- function(data, f1, f2)
 # all non-NaN entries become 1 and all NaN entries become 0
 num_nan_binary <- function(data)
 {
-  data[!is.nan(data)] <- 1
-  data[is.nan(data)] <- 0
+  nan_map <- is.nan(data)
+  data[!nan_map] <- 1
+  data[nan_map] <- 0
   data.frame(data)
 }
 
 # returns the first m rows of data unless m is too big
 truncate_rows <- function(data, m = .Machine$double.xmax)
 {
-  if (m < nrow(data))
-    return(data[1:m,,drop=FALSE])
-  data
+  if (m >= nrow(data))
+    return(data)
+  data[seq_len(m), , drop = FALSE]
 }
 
 # sort the rows of data by their sums in decreasing order
 sort_row_sums <- function(data)
 {
-  data[base::order(rowSums(data),decreasing=T),,drop=FALSE]
+  data[base::order(rowSums(data), decreasing = TRUE), , drop = FALSE]
 }
 
 # Creates an UpSetR plot with nintersects columns, the provided height ratio of the
@@ -338,11 +375,15 @@ upset_custom <- function(data, nintersects, ratio, keep_order, text_scale = 1,
         sets.bar.color = solid, shade.color = shade)
 }
 
-# Draws a single set venn diagram, where data is a one-column matrix / data frame
-venn1_custom <- function(data, legend = TRUE)
+#' Draws a Venn diagram with one circle
+#'
+#' @param area [int] not checked
+#' @param category [string] the name of the circle
+#' @returns [object] plot
+venn1_custom <- function(area, category = "")
 {
-  draw.single.venn(
-    nrow(data), category = ifelse(legend, colnames(data)[1], ""),
+  VennDiagram::draw.single.venn(
+    area, category = category,
     lwd = 2, lty = "solid", cex = 1,
     fill = "#0064c8", alpha = 0.5,
 
@@ -367,13 +408,15 @@ plotly_heatmap_variance <- function(binary, colors = NULL,
   rownames(binary) <- NULL
   colnames(binary) <- NULL
 
-  plot <- plot_ly(x = rows, y = cols, z = t(binary),
-                  type="heatmap",
-                  zsmooth = ifelse(smooth, "best", "false"),
-                  colors=colors)
-  layout(plot,
-         title = title,
-         showlegend = legend)
+  plot_ly(
+    x = rows, y = cols, z = t(binary),
+    type = "heatmap",
+    zsmooth = ifelse(smooth, "best", "false"),
+    colors = colors
+  ) %>% layout(
+    title = title,
+    showlegend = legend
+  )
 }
 
 # creates a correlation-based heatmap for sets on plotly
@@ -404,7 +447,8 @@ plotly_heatmap_dendrogram <- function(binary, colors = NULL,
 
 can_be_numeric <- function(vec)
 {
-  sum(is.na(suppressWarnings(as.character(vec)))) == sum(is.na(suppressWarnings(as.numeric(vec))))
+  sum(is.na(suppressWarnings(as.character(vec)))) ==
+    sum(is.na(suppressWarnings(as.numeric(vec))))
 }
 
 empty_df <- data.frame("Unknown" = numeric())
@@ -440,11 +484,11 @@ ggplot2_pca_sum <- function(data, pc_cap, legend = TRUE, title = "")
 {
   pca_var_metadata <- rep("Cumulative Variance", pc_cap)
   ggplot2_2d(
-    data[,"Components"], data[,"Variance"],
+    data[, "Components"], data[, "Variance"],
     pca_var_metadata, pca_var_metadata,
-    sdr_color_seq[1], "log", legend,
-    title, "Number of Components", "Variance Captured"
-  )
+    sdr_color_seq[1], legend, title,
+    "Number of Components", "Variance Captured"
+  ) + geom_line()
 }
 
 plotly_pca_sum <- function(data, pc_cap, lines = TRUE, legend = TRUE, title = "")
@@ -452,7 +496,7 @@ plotly_pca_sum <- function(data, pc_cap, lines = TRUE, legend = TRUE, title = ""
   pca_var_metadata <- rep("Cumulative Variance", pc_cap)
   plotly_2d(
     data[,"Components"], data[,"Variance"],
-    pca_var_metadata, sprintf("%s: %s", "Variance", pca_var_metadata),
+    pca_var_metadata, sprintf("Variance: %s", pca_var_metadata),
     sdr_color_seq[1], lines, legend,
     title, "Number of Components", "Variance Captured"
   )
@@ -463,8 +507,10 @@ ggplot2_vae_sum <- function(data, reverse = FALSE, legend = TRUE, title = "")
   ggplot2_2d(
     data[,"Training Iterations"], data[,"Loss Value"],
     data[,"Loss Type"], data[,"Loss Type"],
-    rev_color_seq(sdr_color_seq, reverse), "log", legend,
-    title, "Number of Training Iterations", "Loss Function Output"
+    rev_color_seq(sdr_color_seq, reverse), legend, title,
+    "Number of Training Iterations", "Loss Function Output"
+  ) + geom_smooth(
+    se = FALSE, method = "gam", formula = y ~ s(log(x))
   )
 }
 
