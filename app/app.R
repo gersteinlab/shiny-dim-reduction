@@ -204,14 +204,14 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
       "colorby",
       sprintf("Color By (%s)", cat),
       selected = dynam_state$colorby[[cat]],
-      choices = row_choices$full_chas
+      choices = row_choices$safe_chas
     )
 
     simple_picker_update(
       "shapeby",
       sprintf("Shape By (%s)", cat),
       selected = dynam_state$shapeby[[cat]],
-      choices = row_choices$full_chas
+      choices = row_choices$safe_chas
     )
 
     simple_picker_update(
@@ -309,6 +309,7 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
       iplot$colby <- dynam_state$colby[[cat]]
       iplot$colorby <- dynam_state$colorby[[cat]]
       iplot$shapeby <- dynam_state$shapeby[[cat]]
+      iplot$labelby <- dynam_state$labelby[[cat]]
       iplot$filterby <- dynam_state$filterby[[cat]]
       iplot$selectby <- dynam_state$selectby[[cat]]
       iplot$threby <- dynam_state$threby[[cat]][[iplot$scaling]]
