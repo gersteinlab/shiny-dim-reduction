@@ -156,12 +156,15 @@ range_invalid <- function(value, min, max)
   length(value) != 1 || !all_fin(value) || value < min || value > max
 }
 
-# find the smallest positive integer not in the vector (used for bookmarking)
+#' find the smallest positive integer not in v
+#'
+#' @param vec [vector] not checked
+#' @returns [int]
 smallest_missing <- function(vec)
 {
-  small <- 1
+  small <- 1L
   while (small %in% vec)
-    small <- small+1
+    small <- small + 1L
   small
 }
 
