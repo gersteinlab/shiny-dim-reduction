@@ -5,7 +5,6 @@
 # SETUP
 # -----
 
-source("app/install.R")
 source("pipeline/sca_nor_fun.R")
 
 # scale options

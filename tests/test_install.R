@@ -6,10 +6,9 @@
 # SETUP
 # -----
 
-source("app/install.R")
-if (!require(testthat))
-  stop("Missing package: testthat")
+library(testthat)
 
+source("app/install.R")
 start_time <- Sys.time()
 
 # -----

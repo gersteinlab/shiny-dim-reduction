@@ -5,9 +5,7 @@
 # SETUP
 # -----
 
-source("app/install.R")
-if (!require(testthat))
-  stop("Missing package: testthat")
+library(testthat)
 
 source("pipeline/red_methods.R")
 source("app/plotting.R")
