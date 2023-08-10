@@ -138,9 +138,9 @@ are_safe_names <- function(x)
                    !anyNA(x) && !makes_unsafe_paths(x))
 }
 
-#' whether x has names that are safe
+#' wrapper for are_safe_names
 #'
-#' @param x [object], e.g. vector, data.frame
+#' @param x [object], e.g. vector, list, data.frame
 #' @returns [boolean]
 has_safe_names <- function(x)
 {

@@ -1,193 +1,225 @@
-# The purpose of this file is to assign a workflow for the given
-# session and manipulate / create directories for the assigned workflow.
+# The purpose of this file is to manage workflows and indicate
+# a current workflow (while reasoning about its directories).
 
 if (!exists("sdr_config") || sdr_config$mode != "pipeline")
   source("app/install.R")
 stopifnot(sdr_config$mode == "pipeline")
 
-# -----------------
-# SET WORKFLOW ROOT
-# -----------------
-
-if (!exists("wf_config"))
-  wf_config <- list()
-
-wf_config$root_storage_loc <- get_project_loc("sdr_workflow_root.rds")
-
-# displays the current workflow root (aka workflows folder)
-display_workflow_root <- function()
+#' whether R would accept x as variable names
+#'
+#' @param x [object]
+#' @returns [boolean]
+are_var_names <- function(x)
 {
-  if (is.null(wf_config$root))
-    cat("Workflows Folder: NULL (unspecified)\n")
-  else
-    cat_f("Workflows Folder: %s\n", wf_config$root)
+  all(make.names(x) == x)
 }
 
-# interactive prompt to set the location of the workflow root
-set_workflow_root <- function()
+#' wrapper for are_var_names
+#'
+#' @param x [object], e.g. vector, list, data.frame
+#' @returns [boolean]
+has_var_names <- function(x)
 {
-  while (TRUE)
-  {
-    cat("\n")
-    display_workflow_root()
-    confirm_loc <- readline(
-      prompt = "To assign all future workflows to an (ideally empty) folder,
-type the folder's path and press enter.
-To quit, type 'q()' and press enter.")
-
-    if (confirm_loc == "q()")
-    {
-      if (is.null(wf_config$root))
-        stop("Workflows folder not specified!")
-      else
-      {
-        message("Workflows folder unchanged!")
-        break
-      }
-    }
-
-    if (dir.exists(confirm_loc))
-    {
-      wf_config$root <- confirm_loc
-      saveRDS(confirm_loc, wf_config$root_storage_loc)
-      break
-    }
-  }
+  are_var_names(names(x))
 }
 
-# loads the workflow root or sets its location
-if (file.exists(wf_config$root_storage_loc))
+#' whether x is a 'wf_data' object
+#' note: workflow data can be valid without
+#' the folders of that workflow existing
+#'
+#' @param x [object]
+#' @returns [boolean]
+is_wf_data <- function(x)
 {
-  cand_root <- readRDS(wf_config$root_storage_loc)
-  if (!dir.exists(cand_root))
-    set_workflow_root()
-  else
-    wf_config$root <- cand_root
-  rm(cand_root)
-} else
-{
-  set_workflow_root()
+  is.list(x) && all_fun_true(x, is_str) &&
+    has_safe_names(x) &&
+    has_var_names(x)
 }
 
-# NOTE: past this point, we assume a valid wf_config$root
-
-# gets the absolute path of a file given its relative path to the workflow root
-get_workflow_loc <- function(file)
+#' whether x is a 'wf_config' object
+#'
+#' @param x [object]
+#' @returns [boolean]
+is_wf_config <- function(x)
 {
-  stopifnot(is_str(file))
-  sprintf("%s/%s", wf_config$root, file)
+  members <- c("data", "history")
+  is.list(x) && identical(names(x), members) &&
+    is_wf_data(x$data) &&
+    all(x$history %in% names(x$data))
 }
 
-# creates a directory if it does not exist
-safe_dir <- function(path)
+# default wf_config
+wf_config <- list(
+  "data" = list(),
+  "history" = character()
+)
+
+#' sets wf_config to wf_cfg
+#'
+#' @param wf_cfg [wf_config]
+update_wf_config <- function(wf_cfg)
 {
-  if (!dir.exists(path))
-    dir.create(path)
+  stopifnot(is_wf_config(wf_cfg))
+  wf_config <<- wf_cfg
 }
 
-# have the user enter the workflow name
-while (is.null(wf_config$workflow))
+#' whether the workflow history is empty
+#'
+#' @returns [boolean]
+history_is_empty <- function()
 {
-  display_workflow_root()
-  workflow_names <- list.dirs(wf_config$root, full.names = FALSE, recursive = FALSE)
-  cat_f("Available Workflows: %s\n", paste(workflow_names, collapse = ", "))
-  confirm_wf <- readline(
-    prompt = "To quit, type 'q()' and press enter.
-To change the workflows folder, type 'root()' and press enter.
-To open an available workflow, type its name and press enter.
-To create a new workflow, type its name and press enter.")
-
-  if (confirm_wf == "q()")
-    stop("Section workflow not specified.")
-
-  if (confirm_wf == "root()")
-    set_workflow_root()
-  else
-  {
-    if (confirm_wf != make.names(confirm_wf))
-      message("This workflow name is not valid (see base::make.names).")
-    else
-    {
-      if (confirm_wf %in% workflow_names)
-      {
-        wf_config$workflow <- confirm_wf
-        message("Your workflow has been assigned.
-The R session must be restarted to change your workflow.")
-      }
-      else
-      {
-        confirm_create_wf <- readline(
-          prompt = sprintf("Are you sure you want to create the workflow '%s'?
-To proceed, type 'Y' and press enter.
-Type anything else and press enter to quit.",
-                           confirm_wf))
-
-        if (confirm_create_wf == "Y")
-        {
-          safe_dir(get_workflow_loc(confirm_wf))
-          wf_config$workflow <- confirm_wf
-          message("Your workflow has been assigned.
-The R session must be restarted to change your workflow.")
-        }
-
-        rm(confirm_create_wf)
-      }
-    }
-  }
-
-  rm(workflow_names, confirm_wf)
+  length(wf_config$history) < 1
 }
 
-# roo (root)
-# -- raw (raw) [can be edited by the user]
-# -- pro (processing)
-# -- -- com (combined)
-# -- -- int (inter)
-# -- -- req (requests) [can be edited by the user]
-# -- ref (reference)
-# -- app (app)
-# -- -- dep (dependencies)
-wf_config$roo_loc <- file.path(wf_config$root, wf_config$workflow)
-safe_dir(wf_config$roo_loc)
-wf_config$raw_loc <- file.path(wf_config$roo_loc, "raw")
-safe_dir(wf_config$raw_loc)
-wf_config$pro_loc <- file.path(wf_config$roo_loc, "processing")
-safe_dir(wf_config$pro_loc)
-wf_config$com_loc <- file.path(wf_config$pro_loc, "combined")
-safe_dir(wf_config$com_loc)
-wf_config$int_loc <- file.path(wf_config$pro_loc, "inter")
-safe_dir(wf_config$int_loc)
-wf_config$req_loc <- file.path(wf_config$pro_loc, "requests")
-safe_dir(wf_config$req_loc)
-wf_config$ref_loc <- file.path(wf_config$roo_loc, "reference")
-safe_dir(wf_config$ref_loc)
+#' indicates the current workflow
+#'
+#' @returns [string]
+get_current_workflow <- function()
+{
+  if (history_is_empty())
+    stop("No workflow history!")
+  tail(wf_config$history, 1)
+}
 
-# --------------------
-# DEPLOYMENT FUNCTIONS
-# --------------------
+#' sets the current workflow
+#'
+#' @param wf_name [string] not checked
+set_current_workflow <- function(wf_name)
+{
+  wf_cfg <- wf_config
+  wf_cfg$history <- c(wf_cfg$history, wf_name)
+  update_wf_config(wf_cfg)
+}
 
-# source_sdr("storage.R")
-# query_storage(wf_config$ref_loc)
-# app_requests <- load_store("app_requests.rds")
-# supported_cats <- unique(app_requests$CATEGORIES)
-# get_dependency("categories_full")
-#
-# for (group in names(categories_full))
-#   for (cat in names(categories_full[[group]]))
-#     if (!(cat %in% supported_cats))
-#       categories_full[[group]][[cat]] <- NULL
-#
-# set_dependency("categories_full")
+#' indicator for the current workflow
+#'
+#' @param wf_name [string] not checked
+#' @returns [string]
+star_current <- function(wf_name)
+{
+  if (!history_is_empty() &&
+      wf_name == get_current_workflow())
+    return("*")
+  "-"
+}
 
-# app_data <- list(
-#   "amazon_keys" = amazon_keys,
-#   "app_citations" = app_citations,
-#   "app_title" = app_title,
-#   "categories_full" = categories_full,
-#   "custom_color_scales" = custom_color_scales,
-#   "decorations" = decorations,
-#   "order_total" = order_total,
-#   "user_credentials" = user_credentials
-# )
-#
-# saveRDS(app_data, "app/app_data.rds")
+#' helpful printing of all workflows
+list_workflows <- function()
+{
+  wf_data <- wf_config$data
+  for (wf_name in names(wf_data))
+    message_f("%s %s: %s", star_current(wf_name),
+              wf_name, wf_data[[wf_name]])
+}
+
+#' gets the location of the current workflow
+#'
+#' @returns [string]
+get_loc_wf <- function()
+{
+  wf_config$data[[get_current_workflow()]]
+}
+
+#' gets the default wf_dir
+#'
+#' @returns [string]
+def_wf_dir <- function()
+{
+  if (history_is_empty())
+    return(getwd())
+  dirname(get_loc_wf())
+}
+
+#' updates / inserts a workflow with the given name;
+#' a folder with that name will be created in dirpath
+#'
+#' @param wf_name [string]
+#' @param dirpath [string or NULL] representing a directory
+upsert_workflow <- function(wf_name, wf_dir = def_wf_dir())
+{
+  stopifnot(
+    is_str(wf_name),
+    are_safe_names(wf_name),
+    are_var_names(wf_name),
+    is_str(wf_dir),
+    dir.exists(wf_dir)
+  )
+
+  wf_cfg <- wf_config
+  wf_cfg$data[[wf_name]] <- file.path(wf_dir, wf_name) %>% path.expand()
+  wf_cfg$history <- c(wf_cfg$history, wf_name)
+  update_wf_config(wf_cfg)
+}
+
+#' attempts to delete a workflow by name
+#' note: deleting a nonexistent workflow succeeds
+#' note: deleting a workflow does not immediately
+#' delete the corresponding files for that workflow
+#'
+#' @param wf_name [string]
+unlink_workflow <- function(wf_name)
+{
+  wf_cfg <- wf_config
+  wf_cfg$data[[wf_name]] <- NULL
+  h_vec <- wf_cfg$history
+  wf_cfg$history <- h_vec[h_vec != wf_name]
+  update_wf_config(wf_cfg)
+}
+
+# loc_wf (workflow)
+# -- loc_table (tables)
+# -- loc_inter (intermediates)
+# -- loc_store (local store)
+# -- loc_reque (request queue)
+
+#' see above
+#'
+#' @returns [string]
+get_loc_table <- function()
+{
+  file.path(get_loc_wf(), "sdr_tables")
+}
+
+#' see above
+#'
+#' @returns [string]
+get_loc_inter <- function()
+{
+  file.path(get_loc_wf(), "sdr_intermediates")
+}
+
+#' see above
+#'
+#' @returns [string]
+get_loc_store <- function()
+{
+  file.path(get_loc_wf(), "sdr_local_store")
+}
+
+#' see above
+#'
+#' @returns [string]
+get_loc_reque <- function()
+{
+  file.path(get_loc_wf(), "sdr_requests")
+}
+
+# ----------------
+# SAVING / LOADING
+# ----------------
+
+# where to save / load wf_config
+wf_config_loc <- get_project_loc("sdr_wf_config.rds")
+
+#' attempts to load wf_config
+load_wf_config <- function()
+{
+  readRDS(wf_config_loc) %>% update_wf_config()
+}
+
+#' attempts to save wf_config
+save_wf_config <- function()
+{
+  stopifnot(is_wf_config(wf_config))
+  saveRDS(wf_config, wf_config_loc)
+}

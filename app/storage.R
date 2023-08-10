@@ -110,6 +110,7 @@ find_local <- function(file)
 #' @param path [string], usually a directory
 ensure_dir <- function(path)
 {
+  stopifnot(is_str(path))
   if (!dir.exists(path))
     dir.create(path, recursive = TRUE)
 }
