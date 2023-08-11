@@ -164,7 +164,9 @@ are_subsets <- function(x, n)
   }
 
   is.list(x) && has_safe_names(x) &&
-    all_fun_true(x, len_n_subset)
+    all_fun_true(x, len_n_subset) &&
+    # reserved for whole set
+    !any(names(x) == "Total")
 }
 
 #' whether x is a 'metadata' object with row_n rows
