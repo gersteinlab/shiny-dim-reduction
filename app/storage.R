@@ -324,12 +324,22 @@ delete_cloud <- function(file)
 # GENERAL STORE FUNCTIONS
 # -----------------------
 
+all_store_modes <- c("local", "cloud")
+
+#' gets store_mode
+#'
+#' @returns [store_mode]
+get_store_mode <- function()
+{
+  Sys.getenv("SDR_STORE_MODE")
+}
+
 #' sets store_mode to x
 #'
 #' @param x [store_mode]
 set_store_mode <- function(x)
 {
-  stopifnot(x %in% c("local", "cloud"))
+  stopifnot(x %in% all_store_modes)
   message_f("SETTING STORE MODE: %s", x)
   Sys.setenv("SDR_STORE_MODE" = x)
 }
@@ -345,7 +355,7 @@ stop_store_mode <- function(x)
 #' helper to swap store mode
 swap_store_mode <- function()
 {
-  store_mode <- Sys.getenv("SDR_STORE_MODE")
+  store_mode <- get_store_mode()
   if (store_mode == "local")
     return(set_store_mode("cloud"))
   if (store_mode == "cloud")
@@ -359,7 +369,7 @@ swap_store_mode <- function()
 #' @returns [character] representing files
 list_store <- function(path)
 {
-  store_mode <- Sys.getenv("SDR_STORE_MODE")
+  store_mode <- get_store_mode()
   if (store_mode == "local")
     return(list_local(path))
   if (store_mode == "cloud")
@@ -373,7 +383,7 @@ list_store <- function(path)
 #' @returns [boolean]
 find_store <- function(file)
 {
-  store_mode <- Sys.getenv("SDR_STORE_MODE")
+  store_mode <- get_store_mode()
   if (store_mode == "local")
     return(find_local(file))
   if (store_mode == "cloud")
@@ -386,7 +396,7 @@ find_store <- function(file)
 #' @param file [string]
 save_store <- function(data, file)
 {
-  store_mode <- Sys.getenv("SDR_STORE_MODE")
+  store_mode <- get_store_mode()
   if (store_mode == "local")
     return(save_local(data, file))
   if (store_mode == "cloud")
@@ -401,7 +411,7 @@ save_store <- function(data, file)
 #' @returns [object]
 load_store <- function(file, default = NULL)
 {
-  store_mode <- Sys.getenv("SDR_STORE_MODE")
+  store_mode <- get_store_mode()
   if (store_mode == "local")
     return(load_local(file, default))
   if (store_mode == "cloud")
@@ -415,7 +425,7 @@ load_store <- function(file, default = NULL)
 #' @returns [object]
 delete_store <- function(file)
 {
-  store_mode <- Sys.getenv("SDR_STORE_MODE")
+  store_mode <- get_store_mode()
   if (store_mode == "local")
     return(delete_local(file))
   if (store_mode == "cloud")
@@ -427,39 +437,31 @@ delete_store <- function(file)
 # DECIDE STORE MODE
 # -----------------
 
-#' asks the user whether to use local or cloud storage
+#' whether the user prefers local storage over cloud storage
 #'
 #' @returns [string]
-get_user_store_mode <- function()
+user_prefers_local_store <- function()
 {
-  if (readline("Type 'y' and press enter to use local storage.
-Type anything else and press enter to use cloud (AWS S3) storage."
-  ) == "y")
-    return("local")
-  "cloud"
+  "y" == readline("Type 'y' and press enter to use local storage.
+Type anything else and press enter to use cloud (AWS S3) storage.")
 }
 
-#' decides whether to use local or cloud storage
+#' attempts to set up each store mode and returns available modes
 #'
 #' @param local_store [local_store]
 #' @param cloud_store [cloud_store]
-#' @returns [string]
-decide_store_mode <- function(local_store, cloud_store)
+#' @returns [character]
+check_store_modes <- function(local_store, cloud_store)
 {
+  available <- character()
+
   if (local_connects(local_store))
-  {
-    if (cloud_connects(cloud_store))
-      return(get_user_store_mode())
-    else
-      return("local")
-  }
-  else
-  {
-    if (cloud_connects(cloud_store))
-      return("cloud")
-    else
-      stop("Could not connect to local_store or cloud_store.")
-  }
+    available <- c(available, "local")
+
+  if (cloud_connects(cloud_store))
+    available <- c(available, "cloud")
+
+  available
 }
 
 cat_f("STORAGE MANAGER TIME: %.1f (sec)\n", net_time())

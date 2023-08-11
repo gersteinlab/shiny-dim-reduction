@@ -95,13 +95,10 @@ assign_global("cat_names", names(categories))
 assign_global("groups", app_data[["groups"]])
 
 # set stores
-if (Sys.getenv("SDR_STORE_MODE") == "")
-  decide_store_mode(
-    app_data[["local_store"]],
-    app_data[["cloud_store"]]
-  ) %>% set_store_mode()
-
-cat_f("CURRENT STORE_MODE: %s\n", Sys.getenv("SDR_STORE_MODE"))
+assign_global("store_modes", check_store_modes(
+  app_data[["local_store"]],
+  app_data[["cloud_store"]]
+))
 
 # -----------------
 # ROW / COL SUBSETS

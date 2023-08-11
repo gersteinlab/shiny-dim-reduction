@@ -16,6 +16,32 @@ source_app("plotting.R")
 source_app("app_utils.R")
 source_app("make_requests.R")
 
+# handles setting the store mode
+if (!(get_store_mode() %in% all_store_modes))
+{
+  if ("local" %in% store_modes)
+  {
+    if ("cloud" %in% store_modes)
+    {
+      if (user_prefers_local_store())
+        set_store_mode("local")
+      else
+        set_store_mode("cloud")
+    }
+    else
+      set_store_mode("local")
+  }
+  else
+  {
+    if (cloud_connects(cloud_store))
+      set_store_mode("cloud")
+    else
+      stop("Could not connect to local_store or cloud_store.")
+  }
+}
+
+cat_f("STORE MODE: %s\n", get_store_mode())
+
 get_requests <- function(file)
 {
   load_store(file, make_requests())
