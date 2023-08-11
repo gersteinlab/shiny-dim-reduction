@@ -58,3 +58,31 @@ example_func <- function(a = 1, b = 2)
 # -e: Specifies a search pattern.
 # -i: Be case-insensitive for letters.
 # -F: Treat patterns as literal strings instead of regexes.
+
+# -------------------
+# COUNT LINES OF CODE
+# -------------------
+
+msg_code_com <- function(src, n_code, n_com)
+{
+  cat(sprintf("%27s >%5d code +%5d com =%5d\n", src,
+              n_code, n_com, n_code + n_com))
+}
+
+total_code <- 0
+total_comment <- 0
+for (file in list.files(path = ".", recursive = TRUE))
+{
+  if (grepl("[.][R]$", file))
+  {
+    all_file_lines <- readLines(file)
+    is_blank <- grepl("^\\s*$", all_file_lines)
+    is_comment <- grepl("^\\s*#.*$", all_file_lines)
+    num_comment <- sum(is_comment)
+    num_code <- sum(!is_blank) - num_comment
+    total_comment <- total_comment + num_comment
+    total_code <- total_code + num_code
+    msg_code_com(file, num_code, num_comment)
+  }
+}
+msg_code_com("TOTAL COUNT", total_code, total_comment)
