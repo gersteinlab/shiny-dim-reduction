@@ -667,6 +667,13 @@ net_time <- function() {
   time_diff(sdr_config$start_time)
 }
 
+
+#' reset after app launch
+sdr_reset <- function()
+{
+  rm(sdr_config, envir = .GlobalEnv)
+}
+
 message("\n--- SHINY DIMENSIONALITY REDUCTION ---")
 message("DEVELOPER: Justin Chang @ Gerstein Lab")
 message("ALL R PACKAGES INSTALLED; CHECK README")

@@ -1,4 +1,5 @@
-# This file tests workflows.R by creating demo workflows and inspecting the paths made.
+# This file tests workflows.R by creating demo workflows and
+# inspecting the paths made.
 
 # -----
 # SETUP
@@ -68,9 +69,9 @@ unlink_workflow("temp")
 list_workflows()
 test_workflow_locs()
 
-# save_wf_config()
-
+# see what load_wf_config yields
 load_wf_config()
 list_workflows()
 test_workflow_locs()
 
+# save_wf_config()
