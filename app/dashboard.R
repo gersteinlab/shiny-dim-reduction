@@ -15,10 +15,10 @@ library(shinyWidgets)
 source_app("plotting.R")
 source_app("app_utils.R")
 source_app("make_requests.R")
-
 source_app("storage.R")
-load_store_mode()
 
+# sets up all storage
+load_store_mode()
 cat_f("STORE MODE: %s\n", get_store_mode())
 
 get_requests <- function(file)

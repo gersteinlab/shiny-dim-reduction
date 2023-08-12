@@ -145,6 +145,9 @@ test_that("make_requests() fails for invalid input", {
 # TEST CLEAN TIME
 # ---------------
 
+source_app("storage.R")
+set_store_mode("local")
+app_requests <- load_store("app_requests.rds")
 print(system.time({
   clean_req_keys(app_requests)
 }))
