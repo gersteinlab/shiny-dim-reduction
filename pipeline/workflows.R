@@ -107,6 +107,7 @@ star_current <- function(wf_name)
 list_workflows <- function()
 {
   wf_data <- wf_config$data
+  message_f("--- WORKFLOWS ---")
   for (wf_name in names(wf_data))
     message_f("%s %s: %s", star_current(wf_name),
               wf_name, wf_data[[wf_name]])
@@ -129,10 +130,10 @@ get_loc_rel_wf <- function(file)
   file.path(get_loc_wf(), file)
 }
 
-#' gets the default wf_dir
+#' gets the default wf_loc
 #'
 #' @returns [string]
-def_wf_dir <- function()
+def_wf_loc <- function()
 {
   if (history_is_empty())
     return(getwd())
@@ -140,22 +141,25 @@ def_wf_dir <- function()
 }
 
 #' updates / inserts a workflow with the given name;
-#' a folder with that name will be created in dirpath
+#' a folder with that name will be created in wf_loc
 #'
 #' @param wf_name [string]
-#' @param dirpath [string or NULL] representing a directory
-upsert_workflow <- function(wf_name, wf_dir = def_wf_dir())
+#' @param wf_loc [string or NULL] representing a directory
+upsert_workflow <- function(wf_name, wf_loc = def_wf_loc(), mkdir = FALSE)
 {
   stopifnot(
     is_str(wf_name),
     are_safe_names(wf_name),
     are_var_names(wf_name),
-    is_str(wf_dir),
-    dir.exists(wf_dir)
+    is_str(wf_loc),
+    dir.exists(wf_loc)
   )
 
   wf_cfg <- wf_config
-  wf_cfg$data[[wf_name]] <- file.path(wf_dir, wf_name) %>% path.expand()
+  wf_dir <- file.path(wf_loc, wf_name)
+  if (mkdir)
+    ensure_dir(wf_dir)
+  wf_cfg$data[[wf_name]] <- path.expand(wf_dir)
   wf_cfg$history <- c(wf_cfg$history, wf_name)
   update_wf_config(wf_cfg)
 }
@@ -180,37 +184,51 @@ unlink_workflow <- function(wf_name)
 # -- loc_inter (intermediates)
 # -- loc_store (local store)
 # -- loc_reque (request queue)
+# -- loc_app_d (app data)
 
 #' see above
 #'
-#' @returns [string]
-get_loc_table <- function()
+#' @param file [character] not checked
+#' @returns [character]
+prepend_table <- function(file)
 {
-  get_loc_rel_wf("sdr_tables")
+  file.path("sdr_tables", file)
 }
 
 #' see above
 #'
-#' @returns [string]
-get_loc_inter <- function()
+#' @param file [character] not checked
+#' @returns [character]
+prepend_inter <- function(file)
 {
-  get_loc_rel_wf("sdr_intermediates")
+  file.path("sdr_intermediates", file)
 }
 
 #' see above
 #'
-#' @returns [string]
-get_loc_store <- function()
+#' @param file [character] not checked
+#' @returns [character]
+prepend_store <- function(file)
 {
-  get_loc_rel_wf("sdr_local_store")
+  file.path("sdr_local_store", file)
 }
 
 #' see above
 #'
-#' @returns [string]
-get_loc_reque <- function()
+#' @param file [character] not checked
+#' @returns [character]
+prepend_reque <- function(file)
 {
-  get_loc_rel_wf("sdr_requests")
+  file.path("sdr_requests", file)
+}
+
+#' see above
+#'
+#' @param file [character] not checked
+#' @returns [character]
+prepend_app_d <- function(file)
+{
+  file.path("sdr_app_data", file)
 }
 
 # ----------------
@@ -233,26 +251,31 @@ save_wf_config <- function()
   saveRDS(wf_config, wf_config_loc)
 }
 
+# expected files to copy between app / workflows
+app_wf_files <- c("app_data.rds", "local_store.rds", "cloud_store.rds")
+
 #' copies files from app folder to workflow folder
 #'
 #' @param file [character] not checked
-copy_app_to_wf <- function(file)
+copy_app_to_wf <- function(file = app_wf_files)
 {
-  file.copy(get_app_loc(file), get_loc_rel_wf(file), overwrite = TRUE)
+  file.copy(get_app_loc(file), prepend_app_d(file) %>%
+              get_loc_rel_wf(), overwrite = TRUE)
 }
 
 #' copies files from workflow folder to app folder
 #'
 #' @param file [character] not checked
-copy_wf_to_app <- function(file)
+copy_wf_to_app <- function(file = app_wf_files)
 {
-  file.copy(get_loc_rel_wf(file), get_app_loc(file), overwrite = TRUE)
+  file.copy(prepend_app_d(file) %>% get_loc_rel_wf(),
+            get_app_loc(file), overwrite = TRUE)
 }
 
 #' copy_app_to_wf with a message
 #'
 #' @param file [character] not checked
-copy_app_to_wf_msg <- function(file)
+copy_app_to_wf_msg <- function(file = app_wf_files)
 {
   message_f("app to %s: %s", get_current_workflow(),
             vec_str(file[copy_app_to_wf(file)]))
@@ -261,7 +284,7 @@ copy_app_to_wf_msg <- function(file)
 #' copy_wf_to_app with a message
 #'
 #' @param file [character] not checked
-copy_wf_to_app_msg <- function(file)
+copy_wf_to_app_msg <- function(file = app_wf_files)
 {
   message_f("APP TO WF: %s", get_current_workflow(),
             vec_str(file[copy_wf_to_app(file)]))
@@ -272,12 +295,12 @@ copy_wf_to_app_msg <- function(file)
 #' @param wf_name [string] not checked
 mount_current_workflow <- function(wf_name)
 {
-  app_files <- c("app_data.rds", "local_store.rds", "cloud_store.rds")
+  stop("NOT YET TESTED.")
   # save the current data if needed
   if (!history_is_empty())
-    copy_app_to_wf_msg(app_files)
+    copy_app_to_wf_msg()
   # swap to new workflow and copy over app files
   set_current_workflow(wf_name)
-  copy_wf_to_app_msg(app_files)
+  copy_wf_to_app_msg()
 }
 
