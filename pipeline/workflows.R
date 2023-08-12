@@ -120,6 +120,15 @@ get_loc_wf <- function()
   wf_config$data[[get_current_workflow()]]
 }
 
+#' gets a location relative to the current workflow
+#'
+#' @param [character] not checked
+#' @returns [string]
+get_loc_rel_wf <- function(file)
+{
+  file.path(get_loc_wf(), file)
+}
+
 #' gets the default wf_dir
 #'
 #' @returns [string]
@@ -177,7 +186,7 @@ unlink_workflow <- function(wf_name)
 #' @returns [string]
 get_loc_table <- function()
 {
-  file.path(get_loc_wf(), "sdr_tables")
+  get_loc_rel_wf("sdr_tables")
 }
 
 #' see above
@@ -185,7 +194,7 @@ get_loc_table <- function()
 #' @returns [string]
 get_loc_inter <- function()
 {
-  file.path(get_loc_wf(), "sdr_intermediates")
+  get_loc_rel_wf("sdr_intermediates")
 }
 
 #' see above
@@ -193,7 +202,7 @@ get_loc_inter <- function()
 #' @returns [string]
 get_loc_store <- function()
 {
-  file.path(get_loc_wf(), "sdr_local_store")
+  get_loc_rel_wf("sdr_local_store")
 }
 
 #' see above
@@ -201,7 +210,7 @@ get_loc_store <- function()
 #' @returns [string]
 get_loc_reque <- function()
 {
-  file.path(get_loc_wf(), "sdr_requests")
+  get_loc_rel_wf("sdr_requests")
 }
 
 # ----------------
