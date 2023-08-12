@@ -151,6 +151,7 @@ app_requests <- load_store("app_requests.rds")
 print(system.time({
   clean_req_keys(app_requests)
 }))
+test <- name_req_key_files(app_requests[, 1:13])
 
 # -------
 # CLEANUP

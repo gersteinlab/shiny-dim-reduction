@@ -356,10 +356,8 @@ name_pvu_file <- function(cat, row, col, sca, nor, emb, vis, com, dim, per, bat)
 {
   if (emb == "PCA")
     return(name_pca_file(cat, row, col, sca, nor, vis, com, dim, per))
-
   if (emb == "VAE")
     return(name_vae_file(cat, row, col, sca, nor, vis, com, dim, per, bat))
-
   if (emb == "UMAP")
     return(name_umap_file(cat, row, col, sca, nor, vis, com, dim, per))
 
@@ -391,7 +389,6 @@ name_req_key_file <- function(cat, row, col, sca, nor, emb, vis,
 {
   if (emb == "PHATE")
     return(name_phate_file(cat, row, col, sca, nor, com, per))
-
   if (emb == "Sets")
     return(name_sets_file(cat, sca, thr, cha))
 
@@ -400,7 +397,7 @@ name_req_key_file <- function(cat, row, col, sca, nor, emb, vis,
 
 #' names the files where req_keys are stored
 #'
-#' @returns [string]
+#' @returns [character]
 name_req_key_files <- function(req_keys)
 {
   stopifnot(are_req_keys(req_keys))
