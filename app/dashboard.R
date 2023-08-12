@@ -589,8 +589,7 @@ The citations below are in the format requested by their respective creators.
   easyClose = TRUE
 )
 
-app_css_data <- tags$head(tags$link(
-  rel = "stylesheet", type = "text/css", href = "app_styling.css"))
+app_css_data <- tags$head(includeCSS("app_styling.css"))
 
 ui <- function(request){
   dashboardPage(

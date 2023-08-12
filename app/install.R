@@ -623,6 +623,7 @@ suppressPackageStartupMessages({
 
 #' gets the location of a project file
 #' note: can ONLY be used in pipeline mode
+#' note: does NOT check if output files exist
 #'
 #' @param file [string] not checked
 #' @returns [string]
@@ -631,22 +632,19 @@ get_project_loc <- function(file)
   file.path(sdr_config$path, file)
 }
 
-#' gets the location of an application file,
+#' gets the locations of an application file,
 #' accounting for differences in sdr_config$mode
+#' note: does NOT check if output files exist
 #'
-#' @param file [string]
-#' @returns [string]
+#' @param file [character]
+#' @returns [character]
 get_app_loc <- function(file)
 {
-  stopifnot(is_str(file))
+  stopifnot(is.character(file))
 
-  if (sdr_config$mode == "pipeline")
-    file <- file.path("app", file) %>% get_project_loc()
-
-  if (!file.exists(file))
-    stop_f("Source file could not be found: %s", file)
-
-  file
+  if (sdr_config$mode != "pipeline")
+    return(file)
+  get_project_loc(file.path("app", file))
 }
 
 #' sources an application file
