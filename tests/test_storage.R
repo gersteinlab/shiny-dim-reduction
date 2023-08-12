@@ -231,7 +231,7 @@ test_that("cloud store_mode works", {
   expect_identical(def_data, data3)
 })
 
-load_store_mode()
+load_stores()
 
 # -------
 # CLEANUP

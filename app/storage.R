@@ -162,6 +162,13 @@ delete_local <- function(file)
   unlink(file)
 }
 
+#' saves local_store
+save_local_store <- function()
+{
+  stopifnot(sdr_config$mode == "pipeline")
+  saveRDS(local_store, get_app_loc("local_store.rds"))
+}
+
 # -------------
 # CLOUD STORAGE
 # -------------
@@ -328,6 +335,13 @@ delete_cloud <- function(file)
   aws.s3::delete_object(file, env_bucket)
 }
 
+#' saves cloud_store
+save_cloud_store <- function()
+{
+  stopifnot(sdr_config$mode == "pipeline")
+  saveRDS(cloud_store, get_app_loc("cloud_store.rds"))
+}
+
 # -----------------------
 # GENERAL STORE FUNCTIONS
 # -----------------------
@@ -464,11 +478,11 @@ get_user_store_mode <- function()
   "cloud"
 }
 
-#' attempts to set up stores and determine the store_mode
+#' attempts to connect stores and determine the store_mode
 #'
 #' @param local_store [local_store]
 #' @param cloud_store [cloud_store]
-decide_store_mode <- function(local_store, cloud_store)
+connect_stores <- function(local_store, cloud_store)
 {
   # handles setting the store mode
   if (local_connects(local_store))
@@ -487,8 +501,8 @@ decide_store_mode <- function(local_store, cloud_store)
   }
 }
 
-#' attempts decide_store_mode from store files
-load_store_mode <- function()
+#' attempts connect_stores from store files
+load_stores <- function()
 {
   local_path <- get_app_loc("local_store.rds")
   local_store <- w_def_readRDS(local_path)
@@ -496,7 +510,7 @@ load_store_mode <- function()
   cloud_path <- get_app_loc("cloud_store.rds")
   cloud_store <- w_def_readRDS(cloud_path)
 
-  decide_store_mode(local_store, cloud_store)
+  connect_stores(local_store, cloud_store)
 }
 
 cat_f("STORAGE MANAGER TIME: %.1f (sec)\n", net_time())

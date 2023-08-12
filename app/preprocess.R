@@ -58,14 +58,9 @@ is_app_data <- function(x) {
 }
 
 # ensure the data for the application is valid
-app_data_loc <- get_app_loc("app_data.rds")
-
-# assign application data
-app_data <- readRDS(app_data_loc)
+app_data <- readRDS(get_app_loc("app_data.rds"))
 if (!is_app_data(app_data))
-  stop("The application data ('app_data.rds') is invalid.
-Please delete 'app_data.rds' and rerun the application.")
-assign_global("app_data", app_data)
+  stop("The application data ('app_data.rds') is invalid.")
 cat_f("APP_DATA LOAD TIME: %.1f (sec)\n", net_time())
 
 # set row axes
@@ -82,6 +77,13 @@ assign_global("cat_names", names(categories))
 
 # set groups
 assign_global("groups", app_data[["groups"]])
+
+#' saves current application data
+save_app_data <- function()
+{
+  stopifnot(sdr_config$mode == "pipeline")
+  saveRDS(app_data, get_app_loc("app_data.rds"))
+}
 
 # -----------------
 # ROW / COL SUBSETS
