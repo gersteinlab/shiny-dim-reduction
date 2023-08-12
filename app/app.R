@@ -445,7 +445,7 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
   upse_feat <- reactive({
     if (range_invalid(iplot$set_feat_upse, pc_cap, 2^24))
     {
-      range_invalid_notif("Number of Features for Sets", pc_cap, 2^24)
+      range_invalid_notif("Number of Features for UpSet", pc_cap, 2^24)
       return(max_upse)
     }
     round(iplot$set_feat_upse, digits=0)
@@ -454,7 +454,7 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
   heat_feat <- reactive({
     if (range_invalid(iplot$set_feat_heat, pc_cap, 2^24))
     {
-      range_invalid_notif("Number of Features for Sets", pc_cap, 2^24)
+      range_invalid_notif("Number of Features for Heatmap", pc_cap, 2^24)
       return(max_heat)
     }
     round(iplot$set_feat_heat, digits=0)
@@ -463,7 +463,7 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
   dend_feat <- reactive({
     if (range_invalid(iplot$set_feat_dend, pc_cap, 2^24))
     {
-      range_invalid_notif("Number of Features for Sets", pc_cap, 2^24)
+      range_invalid_notif("Number of Features for Dendrogram", pc_cap, 2^24)
       return(max_dend)
     }
     round(iplot$set_feat_dend, digits=0)
@@ -625,14 +625,7 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
       return(NULL)
 
     if (iplot$visualize == "Summarize")
-    {
-      if (iplot$embedding == "PCA")
-        return(1)
-      if (iplot$embedding == "VAE")
-        return(2)
-      if (iplot$embedding == "UMAP")
-        return(6)
-    }
+      return(summarize_shape_num(iplot$embedding))
 
     num_unique(shapes())
   })
@@ -749,7 +742,8 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
 
     if (iplot$embedding == "PHATE")
     {
-      addr <- name_phate_file(cati(), rowi(), coli(), iplot$scaling, iplot$normalization, 2, peri())
+      addr <- name_phate_file(cati(), rowi(), coli(),
+                              iplot$scaling, iplot$normalization, 2, peri())
       curr_adr(addr)
       data <- load_store(addr)
       data <- data[keep(),,drop=FALSE]
@@ -762,7 +756,8 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
     }
 
     addr <- name_pvu_file(
-      cati(), rowi(), coli(), iplot$scaling, iplot$normalization, iplot$embedding, iplot$visualize,
+      cati(), rowi(), coli(), iplot$scaling,
+      iplot$normalization, iplot$embedding, iplot$visualize,
       pc_cap, 2, peri(), bati())
     curr_adr(addr)
 
@@ -1039,7 +1034,9 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
 
   get_session_data <- function()
   {
-    session_data <- list()
+    session_data <- list(
+      "dynamState" = reactiveValuesToList(dynam_state)
+    )
 
     for (id in picker_input_ids)
       session_data[["pickerInput"]][[id]] <- input[[id]]
@@ -1056,8 +1053,6 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
     for (id in tabset_panel_ids)
       session_data[["tabsetPanel"]][[id]] <- input[[id]]
 
-    session_data[["dynamInput"]] <- reactiveValuesToList(dynam_state)
-
     session_data
   }
 
@@ -1065,6 +1060,10 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
   {
     if (is.null(session_data))
       return(NULL)
+
+    # update dynamic state
+    for (dynam_id in names(session_data[["dynamState"]]))
+      dynam_state[[dynam_id]] <- session_data[["dynamState"]][[dynam_id]]
 
     # update all input types accordingly
     picker_input_data <- session_data[["pickerInput"]]
@@ -1086,9 +1085,6 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
     tabset_panel_data <- session_data[["tabsetPanel"]]
     for (name in names(tabset_panel_data))
       updateTabsetPanel(session, name, selected = tabset_panel_data[[name]])
-
-    for (dynam_id in dynam_picker_input_ids)
-      dynam_state[[dynam_id]] <- session_data[["dynamInput"]][[dynam_id]]
   }
 
   onBookmark(function(state) {

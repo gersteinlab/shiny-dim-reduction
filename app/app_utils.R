@@ -184,3 +184,14 @@ generate_legend_table <- function(vec)
 
   data.frame("Number" = seq_along(unique_vals), "Value" = unique_vals)
 }
+
+summarize_shape_num <- function(emb)
+{
+  if (emb == "PCA")
+    return(1)
+  if (emb == "VAE")
+    return(2)
+  if (emb == "UMAP")
+    return(6)
+  stop_f("summarize_shape_num failed for emb %s", emb)
+}
