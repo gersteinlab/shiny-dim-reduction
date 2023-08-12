@@ -18,7 +18,8 @@ source_app("make_requests.R")
 source_app("storage.R")
 
 # sets up all storage
-load_store_mode()
+if (!(get_store_mode() %in% all_store_modes))
+  load_store_mode()
 cat_f("STORE MODE: %s\n", get_store_mode())
 
 get_requests <- function(file)
@@ -225,8 +226,8 @@ default_exclude_vector <- c(
   "citations",
   "randomize",
   "refresh",
-  "draft_request",
-  "submit_request",
+  "req_draft",
+  "req_submit",
   "notes",
 
   "req_aut",
@@ -514,7 +515,7 @@ last_updated_text <- sprintf(
 button_toolbox <-  box(
   action("start", "Start Plotting", "chart-bar", "#FFF", "#0064C8", "#00356B"),
   action("stop", "Stop Plotting", "ban", "#FFF", "#C90016", "#00356B"),
-  action("draft_request", "Request", "user-edit", "#FFF", "#29AB87", "#00356B"),
+  action("req_draft", "Request", "user-edit", "#FFF", "#29AB87", "#00356B"),
   action("refresh", "Refresh", "sync", "#FFF", "#29AB87", "#00356B"),
   bookmarkButton(),
   downloadButton("download_num_data", "Numeric Data"),
@@ -526,7 +527,7 @@ button_toolbox <-  box(
   width = "100%"
 )
 
-draft_request_modal <- modalDialog(
+req_draft_modal <- modalDialog(
   title = HTML("<b>Request Custom Analysis</b>"), easyClose = TRUE,
   select_panel("req_emb", "Desired Embedding", emb_options),
   hr(style = "border-top: 1px solid #000000;"),
@@ -564,7 +565,7 @@ draft_request_modal <- modalDialog(
   ),
   textInput("req_aut", "Author Name"),
   footer = tagList(
-    action("submit_request", "Submit", "cloud", "#FFF", "#0064C8", "#00356B"),
+    action("req_submit", "Submit", "cloud", "#FFF", "#0064C8", "#00356B"),
     modalButton("Dismiss")
   )
 )

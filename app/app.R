@@ -338,11 +338,11 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
   # --------------
   # PRESENT MODALS
   # --------------
-  observeEvent(input$draft_request, {
-    showModal(draft_request_modal)
+  observeEvent(input$req_draft, {
+    showModal(req_draft_modal)
   })
 
-  observeEvent({list(input$draft_request, input$req_cat)}, {
+  observeEvent({list(input$req_draft, input$req_cat)}, {
     if (is.null(input$req_cat))
       return(NULL)
     row_choices <- get_app_row_choices(input$req_cat)
@@ -358,7 +358,7 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
       choices = row_choices$safe_chas)
   }, ignoreInit = TRUE)
 
-  observeEvent({list(input$draft_request, input$req_emb)}, {
+  observeEvent({list(input$req_draft, input$req_emb)}, {
     if (is.null(input$req_emb))
       return(NULL)
     updatePickerInput(
@@ -369,7 +369,8 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
 
   user_requests <- reactiveVal(get_requests(user_req_file))
 
-  observeEvent(input$submit_request, {
+  observeEvent(input$req_submit, {
+    test <- NULL
     tryCatch({
       test <- make_requests(
         cat = input$req_cat, row = parse_opt(input$req_row),
@@ -381,6 +382,9 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
     }, error = function(e){
       notif("Failed to make request - check your inputs!", "error")
     })
+
+    if (is.null(test))
+      return()
 
     user_requests(get_requests(user_req_file))
     u_requests <- user_requests()
