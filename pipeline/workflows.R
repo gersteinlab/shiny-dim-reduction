@@ -223,3 +223,9 @@ save_wf_config <- function()
   stopifnot(is_wf_config(wf_config))
   saveRDS(wf_config, wf_config_loc)
 }
+
+# only works in pipeline mode:
+# saveRDS(app_data, "~/shiny-dim-reduction/app/app_data.rds", compress = FALSE)
+# saveRDS(app_data$local_store, "app/local_store.rds", compress = FALSE)
+# saveRDS(app_data$cloud_store, "app/cloud_store.rds", compress = FALSE)
+

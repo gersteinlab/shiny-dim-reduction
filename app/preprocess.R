@@ -4,8 +4,6 @@
 if (!exists("sdr_config"))
   source("app/install.R")
 
-source_app("storage.R")
-
 # ---------------
 # IMPORT APP DATA
 # ---------------
@@ -47,9 +45,7 @@ is_app_data <- function(x) {
     "row_axes",
     "col_axes",
     "categories",
-    "groups",
-    "local_store",
-    "cloud_store"
+    "groups"
   )
 
   is.list(x) && identical(names(x), members) &&
@@ -58,18 +54,11 @@ is_app_data <- function(x) {
     are_categories(x$categories) &&
     categories_match_axes(x$categories, x$row_axes, x$col_axes) &&
     are_groups(x$groups) &&
-    groups_match_categories(x$groups, x$categories) &&
-    is_local_store(x$local_store) &&
-    is_cloud_store(x$cloud_store)
+    groups_match_categories(x$groups, x$categories)
 }
 
 # ensure the data for the application is valid
 app_data_loc <- get_app_loc("app_data.rds")
-if (!file.exists(app_data_loc))
-  stop("The application data could not be found.")
-
-# only works in pipeline mode:
-# saveRDS(app_data, "~/shiny-dim-reduction/app/app_data.rds", compress = FALSE)
 
 # assign application data
 app_data <- readRDS(app_data_loc)
@@ -93,12 +82,6 @@ assign_global("cat_names", names(categories))
 
 # set groups
 assign_global("groups", app_data[["groups"]])
-
-# set stores
-assign_global("store_modes", check_store_modes(
-  app_data[["local_store"]],
-  app_data[["cloud_store"]]
-))
 
 # -----------------
 # ROW / COL SUBSETS

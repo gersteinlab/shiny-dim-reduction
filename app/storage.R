@@ -124,6 +124,16 @@ mkdir_saveRDS <- function(data, file, compress = TRUE)
   saveRDS(data, file, compress = compress)
 }
 
+#' readRDS with a handy default
+#'
+#' @param file [string]
+w_def_readRDS <- function(file, default = NULL)
+{
+  if (!file.exists(file))
+    return(default)
+  readRDS(file)
+}
+
 #' saves data to file in the local_store
 #'
 #' @param file [string]
@@ -139,9 +149,7 @@ save_local <- function(data, file)
 #' @returns [object]
 load_local <- function(file, default = NULL)
 {
-  if (!find_local(file))
-    return(default)
-  readRDS(prefix_local(file))
+  w_def_readRDS(prefix_local(file), default)
 }
 
 #' deletes file in the local_store
@@ -446,22 +454,49 @@ user_prefers_local_store <- function()
 Type anything else and press enter to use cloud (AWS S3) storage.")
 }
 
-#' attempts to set up each store mode and returns available modes
+#' determine the user's preferred store mode
+#'
+#' @returns [string]
+get_user_store_mode <- function()
+{
+  if (user_prefers_local_store())
+    return("local")
+  "cloud"
+}
+
+#' attempts to set up stores and determine the store_mode
 #'
 #' @param local_store [local_store]
 #' @param cloud_store [cloud_store]
-#' @returns [character]
-check_store_modes <- function(local_store, cloud_store)
+decide_store_mode <- function(local_store, cloud_store)
 {
-  available <- character()
-
+  # handles setting the store mode
   if (local_connects(local_store))
-    available <- c(available, "local")
+  {
+    if (cloud_connects(cloud_store))
+      set_store_mode(get_user_store_mode())
+    else
+      set_store_mode("local")
+  }
+  else
+  {
+    if (cloud_connects(cloud_store))
+      set_store_mode("cloud")
+    else
+      stop("Could not connect to local_store or cloud_store.")
+  }
+}
 
-  if (cloud_connects(cloud_store))
-    available <- c(available, "cloud")
+#' attempts decide_store_mode from store files
+load_store_mode <- function()
+{
+  local_path <- get_app_loc("local_store.rds")
+  local_store <- w_def_readRDS(local_path)
 
-  available
+  cloud_path <- get_app_loc("cloud_store.rds")
+  cloud_store <- w_def_readRDS(cloud_path)
+
+  decide_store_mode(local_store, cloud_store)
 }
 
 cat_f("STORAGE MANAGER TIME: %.1f (sec)\n", net_time())
