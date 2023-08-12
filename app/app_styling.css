@@ -1,0 +1,73 @@
+/* Personal notification preferences */
+.shiny-notification {
+  border-color: #00356B !important;
+  opacity: 1 !important;
+}
+
+/* Increases text / icon visibility in selectors */
+[role=option] > .text, [role=option] > .glyphicon {
+  color: #000000 !important;
+}
+
+/* Better indicator of selected item */
+.dropdown-menu>.active>a,
+.dropdown-menu>.active>a:focus,
+.dropdown-menu>.active>a:hover {
+    background-color: #E0F0FF !important;
+}
+
+/* Yale Blue! */
+.skin-blue .main-header .logo {
+  background-color: #00356B !important;
+}
+
+/* Place sidebar toggle on right! */
+.sidebar-toggle {
+  float: right !important;
+}
+
+/* Prevents weird sidebar glitch */
+.wrapper {
+  height: auto !important;
+  position:relative;
+  overflow-x:hidden;
+  overflow-y:hidden
+}
+
+/* Prevents overflow from input pickers */
+.inner {
+  min-height: 0px !important;
+  max-height: 360px !important;
+}
+
+/* Prevents misfitting of dropdowns */
+.dropdown-menu {
+  min-height: 0px !important;
+}
+
+/* Wrap text to avoid overflowing selectors */
+.dropdown-menu > li > a {
+  white-space: normal !important;
+}
+
+/* Make password text invisible, but mark the caret */
+.my-hidden-text {
+  color: rgba(0,0,0,0) !important;
+  caret-color: rgba(0,0,0,1) !important;
+}
+
+/* Make password text same color as selection */
+.my-hidden-text::selection {
+  color: #3297FD !important;
+  background: #3297FD !important;
+}
+
+/* center selectors */
+.sidebar-menu .treeview-menu {
+  padding-left: 0px !important;
+}
+
+/* center title */
+#title_out {
+  text-align: center !important;
+}

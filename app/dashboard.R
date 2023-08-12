@@ -311,11 +311,19 @@ for (col_axs in col_axs_names)
   )
 }
 
+#' wrapper for app_row_choices by cat
+#'
+#' @param cat [string] not checked
+#' @returns [list]
 get_app_row_choices <- function(cat)
 {
   app_row_choices[[get_row_axs(cat)]]
 }
 
+#' wrapper for app_col_choices by cat
+#'
+#' @param cat [string] not checked
+#' @returns [list]
 get_app_col_choices <- function(cat)
 {
   app_col_choices[[get_col_axs(cat)]]
@@ -352,6 +360,9 @@ for (cat in cat_names)
   app_cat_choices[[cat]] <- list("threby" = thre_choices)
   safe_chas <- row_choices$safe_chas
 
+  # note that choices and selected are accessed differently:
+  # choices is [[cat]][[inputId]]
+  # selected is [[inputId]][[cat]]
   app_cat_selected$rowby[[cat]] <- row_choices$rowby[1]
   app_cat_selected$colby[[cat]] <- col_choices$colby[1]
   app_cat_selected$colorby[[cat]] <- safe_chas[1]
@@ -577,86 +588,13 @@ The citations below are in the format requested by their respective creators.
   easyClose = TRUE
 )
 
-my_css_styling <- "
-/* Personal notification preferences */
-.shiny-notification {
-  border-color: #00356B !important;
-  opacity: 1 !important;
-}
-
-/* Increases text / icon visibility in selectors */
-[role=option] > .text, [role=option] > .glyphicon {
-  color: #000000 !important;
-}
-
-/* Better indicator of selected item */
-.dropdown-menu>.active>a,
-.dropdown-menu>.active>a:focus,
-.dropdown-menu>.active>a:hover {
-    background-color: #E0F0FF !important;
-}
-
-/* Yale Blue! */
-.skin-blue .main-header .logo {
-  background-color: #00356B !important;
-}
-
-/* Place sidebar toggle on right! */
-.sidebar-toggle {
-  float: right !important;
-}
-
-/* Prevents weird sidebar glitch */
-.wrapper {
-  height: auto !important;
-  position:relative;
-  overflow-x:hidden;
-  overflow-y:hidden
-}
-
-/* Prevents overflow from input pickers */
-.inner {
-  min-height: 0px !important;
-  max-height: 360px !important;
-}
-
-/* Prevents misfitting of dropdowns */
-.dropdown-menu {
-  min-height: 0px !important;
-}
-
-/* Wrap text to avoid overflowing selectors */
-.dropdown-menu > li > a {
-  white-space: normal !important;
-}
-
-/* Make password text invisible, but mark the caret */
-.my-hidden-text {
-  color: rgba(0,0,0,0) !important;
-  caret-color: rgba(0,0,0,1) !important;
-}
-
-/* Make password text same color as selection */
-.my-hidden-text::selection {
-  color: #3297FD !important;
-  background: #3297FD !important;
-}
-
-/* center selectors */
-.sidebar-menu .treeview-menu {
-  padding-left: 0px !important;
-}
-
-/* center title */
-#title_out {
-  text-align: center !important;
-}
-"
+app_css_data <- tags$head(tags$link(
+  rel = "stylesheet", type = "text/css", href = "app_styling.css"))
 
 ui <- function(request){
   dashboardPage(
     skin="blue",
-    dashboardHeader(title = app_data$title, titleWidth="100%"),
+    dashboardHeader(title = app_data$title, titleWidth = "100%"),
     dashboardSidebar(
       width = 300,
       sidebarMenu(
@@ -671,7 +609,7 @@ ui <- function(request){
     ),
     dashboardBody(
       shinyjs::useShinyjs(),
-      my_css_styling %>% HTML() %>% tags$style() %>% tags$head(),
+      app_css_data,
       button_toolbox,
       htmlOutput("title_out"),
       tabBox(
