@@ -233,8 +233,51 @@ save_wf_config <- function()
   saveRDS(wf_config, wf_config_loc)
 }
 
-# only works in pipeline mode:
-# saveRDS(app_data, "~/shiny-dim-reduction/app/app_data.rds", compress = FALSE)
-# saveRDS(app_data$local_store, "app/local_store.rds", compress = FALSE)
-# saveRDS(app_data$cloud_store, "app/cloud_store.rds", compress = FALSE)
+#' copies files from app folder to workflow folder
+#'
+#' @param file [character] not checked
+copy_app_to_wf <- function(file)
+{
+  file.copy(get_app_loc(file), get_loc_rel_wf(file), overwrite = TRUE)
+}
+
+#' copies files from workflow folder to app folder
+#'
+#' @param file [character] not checked
+copy_wf_to_app <- function(file)
+{
+  file.copy(get_loc_rel_wf(file), get_app_loc(file), overwrite = TRUE)
+}
+
+#' copy_app_to_wf with a message
+#'
+#' @param file [character] not checked
+copy_app_to_wf_msg <- function(file)
+{
+  message_f("app to %s: %s", get_current_workflow(),
+            vec_str(file[copy_app_to_wf(file)]))
+}
+
+#' copy_wf_to_app with a message
+#'
+#' @param file [character] not checked
+copy_wf_to_app_msg <- function(file)
+{
+  message_f("APP TO WF: %s", get_current_workflow(),
+            vec_str(file[copy_wf_to_app(file)]))
+}
+
+#' sets the current workflow while mounting files
+#'
+#' @param wf_name [string] not checked
+mount_current_workflow <- function(wf_name)
+{
+  app_files <- c("app_data.rds", "local_store.rds", "cloud_store.rds")
+  # save the current data if needed
+  if (!history_is_empty())
+    copy_app_to_wf_msg(app_files)
+  # swap to new workflow and copy over app files
+  set_current_workflow(wf_name)
+  copy_wf_to_app_msg(app_files)
+}
 
