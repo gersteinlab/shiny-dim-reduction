@@ -513,4 +513,13 @@ load_stores <- function()
   connect_stores(local_store, cloud_store)
 }
 
+#' load_stores wrapper that only runs once
+ensure_stores <- function()
+{
+  if (get_store_mode() %in% all_store_modes)
+    cat_f("STORE MODE: %s\n", get_store_mode())
+  else
+    load_stores()
+}
+
 cat_f("STORAGE MANAGER TIME: %.1f (sec)\n", net_time())

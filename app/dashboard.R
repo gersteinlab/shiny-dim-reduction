@@ -18,9 +18,7 @@ source_app("make_requests.R")
 source_app("storage.R")
 
 # sets up all storage
-if (!(get_store_mode() %in% all_store_modes))
-  load_stores()
-cat_f("STORE MODE: %s\n", get_store_mode())
+ensure_stores()
 
 get_requests <- function(file)
 {
