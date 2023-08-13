@@ -117,6 +117,7 @@ colnames(test_table) <- sprintf("Component %s", 1:20)
 
 # test random data
 test_red <- all_reductions(test_table, test_labels, TRUE)
+# test_irreg <- table_to_vae(test_table, batch_size = 7)
 
 # ----------------
 # TEST DUPLICATION

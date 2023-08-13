@@ -1,6 +1,4 @@
-# The purpose of this file is to perform a set of requested reduction analyses.
-# Intermediate-level files will be saved in pro_loc/inter
-# Final-level files will be saved in ref_loc
+# The purpose of this file is to perform requested analyses.
 
 if (!exists("sdr_config") || sdr_config$mode != "pipeline")
   source("app/install.R")
@@ -8,77 +6,126 @@ stopifnot(sdr_config$mode == "pipeline")
 
 source("pipeline/sca_nor_fun.R")
 source("pipeline/red_methods.R")
-source("app/make_requests.R")
 source("pipeline/workflows.R")
+source("app/make_requests.R")
+source("app/storage.R")
 
-#' whether table has corresponding row / col counts
+# remember user's previous work
+ensure_stores()
+load_wf_config()
+list_workflows()
+
+#' gets the table name for a category
 #'
-#' @param table [table] not checked
-#' @param cat An integer (not checked).
-#' @param col_n An integer (not checked).
-#' @returns TRUE or FALSE.
-category_has_table <- function(cat)
+#' @param cat [string] not checked
+#' @returns [string]
+get_cat_table_name <- function(cat)
 {
-  table <- read_table(category)
-  nrow(table) == row_n && ncol(table) == col_n
+  sprintf("combined_%s.rds", cat) %>% prepend_table() %>% get_loc_rel_wf()
+}
+
+#' stop if table does not align with cat
+#'
+#' @param cat [string] not checked
+validate_cat_table <- function(cat_table, cat)
+{
+  stopifnot(
+    is_table(cat_table),
+    nrow(cat_table) == get_row_sub_lengths(cat)$Total,
+    ncol(cat_table) == get_col_sub_lengths(cat)$Total
+  )
+}
+
+#' validates that all tables are correctly sized
+#' system.time({validate_cat_tables()})
+validate_cat_tables <- function()
+{
+  for (cat in cat_names)
+    readRDS(get_cat_table_name(cat)) %>% validate_cat_table(cat)
+  cat_f("Validated tables for %s categories.\n", length(cat_names))
+}
+
+# ----------------------
+# INTERMEDIATE FILENAMES
+# ----------------------
+
+#' name the file where a PCA intermediate analysis is stored
+#'
+#' @returns [string]
+name_pca_inter <- function(cat, row, col, sca, nor, com)
+{
+  sprintf("PCA/%s/%s_%s_S%s_N%s_%s.rds",
+          cat, row, col, get_sca_ind(sca), get_nor_ind(nor), com)
+}
+
+#' name the file where a VAE intermediate analysis is stored
+#'
+#' @returns [string]
+name_vae_inter <- function(cat, row, col, sca, nor, com, bat)
+{
+  sprintf("VAE/%s/%s_%s_S%s_N%s_%s_%s.rds",
+          cat, row, col, get_sca_ind(sca), get_nor_ind(nor), com, bat)
+}
+
+#' name the file where a UMAP intermediate analysis is stored
+#'
+#' @returns [string]
+name_umap_inter <- function(cat, row, col, sca, nor, com, per)
+{
+  sprintf("UMAP/%s/%s_%s_S%s_N%s_%s_%s.rds",
+          cat, row, col, get_sca_ind(sca), get_nor_ind(nor), com, per)
 }
 
 
-
-# create categories and subsets
-init_cat()
-init_sub(names)
-
-get_dependency("order_total", empty_named_list(name_cat))
-
-get_dependency("amazon_keys")
-set_working_key(amazon_keys)
-
-# -----------------------------
-# REQUEST FULFILLMENT / STORAGE
-# -----------------------------
-
-# note: only used for PCA, VAE, UMAP (anything else gets the default value)
-make_inter_name <- function(cat, row, col, sca, nor, emb, com, per, bat)
+#' name the file where an intermediate analysis is stored
+#'
+#' @returns [string]
+name_req_key_inter <- function(cat, row, col, sca, nor, emb, com, per, bat)
 {
-  sca_ind <- which(sca_options == sca)
-  nor_ind <- which(nor_options == nor)
-
   if (emb == "PCA")
-  {
-    return(sprintf("PCA/%s/%s_%s_S%s_N%s_%s.rds",
-                   cat, row, col, sca_ind, nor_ind, com))
-  }
-
+    return(name_pca_inter(cat, row, col, sca, nor, com))
   if (emb == "VAE")
-  {
-    return(sprintf("VAE/%s/%s_%s_S%s_N%s_%s_%s.rds",
-                   cat, row, col, sca_ind, nor_ind, com, bat))
-  }
-
-  # UMAP
+    return(name_vae_inter(cat, row, col, sca, nor, com, bat))
   if (emb == "UMAP")
-  {
-    return(sprintf("UMAP/%s/%s_%s_S%s_N%s_%s_%s.rds",
-                   cat, row, col, sca_ind, nor_ind, com, per))
-  }
+    return(name_umap_inter(cat, row, col, sca, nor, com, per))
 
-  chr_d()
+  chr_d # for PHATE, Sets
 }
 
-# converts a request into the locations of their intermediate files
-requests_to_inter <- function(requests)
+#' names the files where intermediate analyses are stored
+#'
+#' @param req_keys [req_keys]
+#' @returns [character]
+name_req_key_inters <- function(req_keys)
 {
-  result <- character()
+  stopifnot(are_req_keys(req_keys))
+  n <- nrow(req_keys)
+  result <- character(n)
 
-  for (i in seq_len(nrow(requests)))
+  key_args <- c("cat", "row", "col", "sca", "nor",
+                "emb", "com", "per", "bat")
+
+  for (i in seq_len(n))
   {
-    args <- as.list(requests[i,])
-    names(args) <- NULL
-    result <- c(result, do.call(make_inter_name, args[c(1:6, 8, 10:11)]))
+    args <- as.list(req_keys[i,])
+    names(args) <- c("cat", "row", "col", "sca", "nor", "emb", "vis",
+                     "com", "dim", "per", "bat", "thr", "cha")
+    result[i] <- do.call(name_req_key_inter, args[key_args])
   }
 
   result
+}
+
+# -------------------
+# REQUEST FULFILLMENT
+# -------------------
+
+# n_cur: number of analyses currently begun (including the one that just started)
+# n_fin: total number of analyses to be done
+# filename: the name of the analysis file
+red_update_msg <- function(n_cur, n_fin, filename)
+{
+  cat_f("request %s/%s: %s\n", n_cur, n_fin, filename)
 }
 
 # readRDS but return NULL if force_inter
@@ -89,47 +136,41 @@ inter_readRDS <- function(force, int_loc)
   return(NULL)
 }
 
-# n_cur: number of analyses currently begun (including the one that just started)
-# n_fin: total number of analyses to be done
-# filename: the name of the analysis file
-red_update_msg <- function(n_cur, n_fin, filename)
+#' gets time last modified (aka TIME_COMPLETED) for files
+#'
+#' @param file [character] not checked
+#' @returns [POSIXct]
+get_time_completed <- function(file)
 {
-  sprintf_clean("Begin %s/%s: %s", n_cur, n_fin, filename)
+  file.info(file)$mtime
 }
 
-# performs reduction on a group of valid requests,
-# parsing requests in a non-sequential order to maximize speed.
-# force = 0: if a final-level file already exists, do nothing
-# force = 1: override the final-level file
-# force = 2: override all intermediate files and the final-level file
-# returns the completed version of requests, with TIME_COMPLETED updated.
-# note: you can control how a subset of reductions are performed like so:
-# subset <- (requests$EMBEDDING == "PCA")
-# requests[subset,] <- perform_reduction(requests[subset,], force)
-# example:
-#     test <- data.frame(matrix(1:25, nrow = 5))
-#     subset <- (test$X1 < 4) & (test$X4 %% 2 == 0)
-#     test[subset,] <- data.frame(matrix(1:10, nrow = 2))
-perform_reduction <- function(requests, force = 0)
+#' performs reduction on a group of valid requests,
+#' parsing requests in a non-sequential order to maximize speed
+#' note: completion status can be determined by file.exists()
+#'    and completion time can be determined by get_time_completed()
+#' note: you can run perform_reduction on any row subset of requests,
+#'    e.g perform_requests(requests[requests$CATEGORY == "miRNA", ])
+#'
+#' @param requests [requests]
+#' @param force [integer]
+#'    force = 0: if final file exists, do nothing
+#'    force = 1: if inter file exists, only redo final file
+#'    force = 2: redo inter file and final file
+perform_reduction <- function(requests, force = 0L)
 {
-  # used to make intermediate files easily
-  inter_locs <- sprintf("%s/%s", wf_config$int_loc, requests_to_inter(requests))
-  # used to make final files easily
+  stopifnot(are_requests(requests), force %in% 0:2)
+
+  # intermediate file locations
+  rel_inter_locs <- name_req_key_inters(requests[, 1:13])
+  inter_locs <- rel_inter_locs %>% prepend_inter() %>% get_loc_rel_wf()
+
+  # final file locations
   rel_fin_locs <- requests$FILE_LOCATION
-  final_locs <- sprintf("%s/%s", wf_config$ref_loc, rel_fin_locs)
-  # used to easily edit completion timestamps
-  times_done <- requests$TIME_COMPLETED
+  final_locs <- rel_fin_locs %>% prepend_store() %>% get_loc_rel_wf()
 
   # a true-false vector determining if an analysis should be performed
-  i_fin <- !file.exists(final_locs) | rep(force > 0, nrow(requests))
-
-  # a true-false vector determining if TIME_COMPLETED < TIME_REQUESTED
-  i_not_done <- times_done < requests$TIME_REQUESTED
-
-  # if an analysis is complete (!i_fin) but requests is not updated (i_not_done),
-  # simply update the time the analysis was done to the current time.
-  touch_times <- !i_fin & i_not_done
-  times_done[touch_times] <- rep(Sys.time(), sum(touch_times))
+  i_fin <- (!file.exists(final_locs) | rep(force > 0, nrow(requests)))
 
   # used to show progress
   n_fin <- sum(i_fin)
@@ -138,13 +179,12 @@ perform_reduction <- function(requests, force = 0)
   # select the category
   for (cat in unique(requests$CATEGORIES[i_fin]))
   {
-    cat_table <- readRDS(sprintf("%s/combined/combined_%s.rds", wf_config$pro_loc, cat))
-    # if the opened table is not valid, you have a problem
-    stopifnot(valid_table(cat_table))
-
+    cat_table <- readRDS(get_cat_table_name(cat))
+    validate_cat_table(cat_table, cat)
     i_cat <- i_fin & (requests$CATEGORIES == cat)
+
     # used for sets
-    short_order <- select_chars(order_total[[cat]])
+    row_meta <- get_row_axis(cat)$metadata
 
     # perform scaling
     for (sca in unique(requests$SCALING[i_cat]))
@@ -176,19 +216,26 @@ perform_reduction <- function(requests, force = 0)
             red_update_msg(n_cur, n_fin, rel_fin_locs[i])
 
             set_label_matrix(
-              set_result, short_order[[r$CHARACTERISTIC]]) %>% mkdir_saveRDS(f_loc)
-            times_done[i] <- Sys.time()
+              set_result, row_meta[[r$CHARACTERISTIC]]) %>% mkdir_saveRDS(f_loc)
           }
         }
 
         for (row in unique(requests$ROW_SUBSETS[i_nor]))
         {
-          row_table <- get_row_sub(nor_table, cat, row)
+          if (row == "Total")
+            row_table <- nor_table
+          else
+            row_table <- subset_by_row(nor_table, get_row_sub(cat, row))
+
           i_row <- i_nor & (requests$ROW_SUBSETS == row)
 
           for (col in unique(requests$COL_SUBSETS[i_row]))
           {
-            col_table <- get_col_sub(row_table, cat, col)
+            if (col == "Total")
+              col_table <- row_table
+            else
+              col_table <- subset_by_col(row_table, get_col_sub(cat, col))
+
             i_col <- i_row & (requests$COL_SUBSETS == col)
 
             for (com in unique(requests$COMPONENT[i_col]))
@@ -202,14 +249,15 @@ perform_reduction <- function(requests, force = 0)
               # ---
               # PCA
               # ---
-              if (sum(i_pca) > 0) # only attributes left: vis [dim] [per]
+              i_pca_first <- match(TRUE, i_pca)
+              if (!is.na(i_pca_first)) # only attributes left: vis [dim] [per]
               {
                 # make the intermediate file
-                pca_loc <- inter_locs[match(TRUE, i_pca)]
+                pca_loc <- inter_locs[i_pca_first]
                 pca_result <- inter_readRDS(force, pca_loc)
                 if (is.null(pca_result))
                 {
-                  sprintf_clean("Generating PCA INTER: %s", pca_loc)
+                  cat_f("Generating PCA INTER: %s\n", rel_inter_locs[i_pca_first])
                   pca_result <- table_to_pca(col_table, com)
                   mkdir_saveRDS(pca_result, pca_loc)
                 }
@@ -231,8 +279,6 @@ perform_reduction <- function(requests, force = 0)
 
                   if (r$VISUALIZATION == "tSNE")
                     pca_to_tsne(pca_result, r$DIMENSION, r$PERPLEXITY) %>% mkdir_saveRDS(f_loc)
-
-                  times_done[i] <- Sys.time()
                 }
               }
 
@@ -242,15 +288,16 @@ perform_reduction <- function(requests, force = 0)
               for (bat in unique(requests$BATCH_SIZE[i_vae]))
               {
                 i_bat <- i_vae & (requests$BATCH_SIZE == bat)
+                i_bat_first <- match(TRUE, i_bat)
 
-                if (sum(i_bat) > 0) # only attributes left: vis [dim] [per]
+                if (!is.na(i_bat_first)) # only attributes left: vis [dim] [per]
                 {
                   # make the intermediate file
-                  vae_loc <- inter_locs[match(TRUE, i_bat)]
+                  vae_loc <- inter_locs[i_bat_first]
                   vae_result <- inter_readRDS(force, vae_loc)
                   if (is.null(vae_result))
                   {
-                    sprintf_clean("Generating VAE INTER: %s", vae_loc)
+                    cat_f("Generating VAE INTER: %s\n", rel_inter_locs[i_bat_first])
                     vae_result <- table_to_vae(col_table, com, bat)
                     mkdir_saveRDS(vae_result, vae_loc)
                   }
@@ -272,8 +319,6 @@ perform_reduction <- function(requests, force = 0)
 
                     if (r$VISUALIZATION == "tSNE")
                       vae_to_tsne(vae_result, r$DIMENSION, r$PERPLEXITY) %>% mkdir_saveRDS(f_loc)
-
-                    times_done[i] <- Sys.time()
                   }
                 }
               }
@@ -284,15 +329,16 @@ perform_reduction <- function(requests, force = 0)
               for (per in unique(requests$PERPLEXITY[i_umap]))
               {
                 i_per <- i_umap & (requests$PERPLEXITY == per)
+                i_per_first <- match(TRUE, i_per)
 
-                if (sum(i_per) > 0) # only attributes left: [dim]
+                if (!is.na(i_per_first)) # only attributes left: [dim]
                 {
                   # make the intermediate file
-                  umap_loc <- inter_locs[match(TRUE, i_per)]
+                  umap_loc <- inter_locs[i_per_first]
                   umap_result <- inter_readRDS(force, umap_loc)
                   if (is.null(umap_result))
                   {
-                    sprintf_clean("Generating UMAP INTER: %s", umap_loc)
+                    cat_f("Generating UMAP INTER: %s\n", rel_inter_locs[i_per_first])
                     umap_result <- table_to_umap(col_table, com, per)
                     mkdir_saveRDS(umap_result, umap_loc)
                   }
@@ -314,8 +360,6 @@ perform_reduction <- function(requests, force = 0)
 
                     if (r$VISUALIZATION == "tSNE")
                       umap_to_tsne(umap_result, r$DIMENSION) %>% mkdir_saveRDS(f_loc)
-
-                    times_done[i] <- Sys.time()
                   }
                 }
               }
@@ -332,7 +376,6 @@ perform_reduction <- function(requests, force = 0)
                 red_update_msg(n_cur, n_fin, rel_fin_locs[i])
 
                 table_to_phate(col_table, com, r$PERPLEXITY) %>% mkdir_saveRDS(f_loc)
-                times_done[i] <- Sys.time()
               }
             }
           }
@@ -340,8 +383,5 @@ perform_reduction <- function(requests, force = 0)
       }
     }
   }
-
-  requests$TIME_COMPLETED <- times_done
-  requests
 }
 

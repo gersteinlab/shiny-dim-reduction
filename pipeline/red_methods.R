@@ -334,7 +334,7 @@ vae_to_summary <- function(vae_result)
   num_val_losses <- length(val_loss)
 
   # ensure you have even divisibility
-  stopifnot(num_losses > 0, num_losses %% num_val_losses == 0)
+  stopifnot(num_losses > 0, num_val_losses > 0, num_losses %% num_val_losses == 0)
 
   # note: colnames are not as safe as one might hope
   data.frame(
