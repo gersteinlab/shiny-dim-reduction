@@ -397,6 +397,7 @@ name_req_key_file <- function(cat, row, col, sca, nor, emb, vis,
 
 #' names the files where req_keys are stored
 #'
+#' @param req_keys [req_keys]
 #' @returns [character]
 name_req_key_files <- function(req_keys)
 {

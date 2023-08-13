@@ -149,9 +149,11 @@ source_app("storage.R")
 set_store_mode("local")
 app_requests <- load_store("app_requests.rds")
 print(system.time({
-  clean_req_keys(app_requests)
+  test1 <- clean_req_keys(app_requests)
 }))
-test <- name_req_key_files(app_requests[, 1:13])
+print(system.time({
+  test2 <- name_req_key_files(app_requests[, 1:13])
+}))
 
 # -------
 # CLEANUP
