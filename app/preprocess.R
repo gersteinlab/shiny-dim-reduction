@@ -57,10 +57,36 @@ is_app_data <- function(x) {
     groups_match_categories(x$groups, x$categories)
 }
 
-# ensure the data for the application is valid
-app_data <- readRDS(get_app_loc("app_data.rds"))
-if (!is_app_data(app_data))
-  stop("The application data ('app_data.rds') is invalid.")
+# default application data
+app_data <- list(
+  "title" = "Shiny Dimensionality Reduction",
+  "citations" = "",
+  "row_axes" = list(),
+  "col_axes" = list(),
+  "categories" = list(),
+  "groups" = list()
+)
+
+# where to save / load app_data
+app_data_loc <- get_app_loc("app_data.rds")
+
+#' sets app_data to a_data
+#'
+#' @param a_data [app_data]
+update_app_data <- function(a_data)
+{
+  stopifnot(is_app_data(a_data))
+  app_data <<- a_data
+}
+
+#' attempts to load app_data
+load_app_data <- function(file)
+{
+  readRDS(app_data_loc) %>% update_app_data()
+}
+
+# test the application with this line commented out
+load_app_data()
 cat_f("APP_DATA LOAD TIME: %.1f (sec)\n", net_time())
 
 # set row axes
@@ -81,8 +107,8 @@ assign_global("groups", app_data[["groups"]])
 #' saves current application data
 save_app_data <- function()
 {
-  stopifnot(sdr_config$mode == "pipeline")
-  saveRDS(app_data, get_app_loc("app_data.rds"))
+  stopifnot(is_app_data(app_data), sdr_config$mode == "pipeline")
+  saveRDS(app_data, app_data_loc)
 }
 
 # -----------------
