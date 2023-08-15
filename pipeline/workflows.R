@@ -304,3 +304,11 @@ mount_current_workflow <- function(wf_name)
   copy_wf_to_app_msg()
 }
 
+#' the location of the administrative cloud_store
+#'
+#' @returns [string]
+cloud_store_admin_loc <- function()
+{
+  get_loc_rel_wf("sdr_cloud_store_admin.rds")
+}
+

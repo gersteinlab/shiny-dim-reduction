@@ -356,14 +356,29 @@ get_store_mode <- function()
   Sys.getenv("SDR_STORE_MODE")
 }
 
+#' whether x is a 'store_mode' object
+#'
+#' @param x [object]
+#' @return [boolean]
+is_store_mode <- function(x)
+{
+  is_str(x) && (x %in% all_store_modes)
+}
+
 #' sets store_mode to x
 #'
 #' @param x [store_mode]
 set_store_mode <- function(x)
 {
-  stopifnot(x %in% all_store_modes)
+  stopifnot(is_store_mode(x))
   message_f("SETTING STORE MODE: %s", x)
   Sys.setenv("SDR_STORE_MODE" = x)
+}
+
+#' resets store_mode
+reset_store_mode <- function()
+{
+  Sys.unsetenv("SDR_STORE_MODE")
 }
 
 #' raises an error message for an invalid store_mode
@@ -482,13 +497,19 @@ get_user_store_mode <- function()
 #'
 #' @param local_store [local_store]
 #' @param cloud_store [cloud_store]
-connect_stores <- function(local_store, cloud_store)
+#' @param prefer [NULL, store_mode]
+connect_stores <- function(local_store, cloud_store, prefer = NULL)
 {
   # handles setting the store mode
   if (local_connects(local_store))
   {
     if (cloud_connects(cloud_store))
-      set_store_mode(get_user_store_mode())
+    {
+      if (is.null(prefer))
+        set_store_mode(get_user_store_mode())
+      else
+        set_store_mode(prefer)
+    }
     else
       set_store_mode("local")
   }
@@ -502,7 +523,9 @@ connect_stores <- function(local_store, cloud_store)
 }
 
 #' attempts connect_stores from store files
-load_stores <- function()
+#'
+#' @param prefer [NULL, store_mode]
+load_stores <- function(prefer = NULL)
 {
   local_path <- get_app_loc("local_store.rds")
   local_store <- w_def_readRDS(local_path)
@@ -510,16 +533,18 @@ load_stores <- function()
   cloud_path <- get_app_loc("cloud_store.rds")
   cloud_store <- w_def_readRDS(cloud_path)
 
-  connect_stores(local_store, cloud_store)
+  connect_stores(local_store, cloud_store, prefer)
 }
 
 #' load_stores wrapper that only runs once
-ensure_stores <- function()
+#'
+#' @param prefer [NULL, store_mode]
+ensure_stores <- function(prefer = NULL)
 {
   if (get_store_mode() %in% all_store_modes)
     cat_f("STORE MODE: %s\n", get_store_mode())
   else
-    load_stores()
+    load_stores(prefer)
 }
 
 cat_f("STORAGE MANAGER TIME: %.1f (sec)\n", net_time())
