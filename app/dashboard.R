@@ -28,6 +28,8 @@ get_requests <- function(file)
 user_req_file <- "Sessions/user_requests.rds"
 
 app_requests <- get_requests("app_requests.rds")
+# test the application with no available requests
+# app_requests <- make_requests()
 stopifnot(are_requests(app_requests))
 
 # -------------------
@@ -392,7 +394,7 @@ output_conditions <- c(
 
 # this is suspicious ... improve later to be like thresholds?
 perplexity_types <- setdiff(unique(app_requests$PERPLEXITY), num_d)
-pc_cap <- max(app_requests$COMPONENT)
+pc_cap <- max(c(app_requests$COMPONENT, 3L)) # needs to be at least 3
 batch_sizes <- setdiff(unique(app_requests$BATCH_SIZE), num_d)
 
 parameters_menu <- menuItem(
@@ -505,10 +507,11 @@ settings_menu <- menuItem(
   check_panel("console", "Console Output", console_ids, NULL)
 )
 
-last_updated_text <- sprintf(
-  "  <b>Last Updated:</b> %s",
-  format(max(app_requests$TIME_COMPLETED), "%b %d, %Y")
-)
+last_updated_time <- "Unknown"
+if (nrow(app_requests) > 0)
+  last_updated_time <- format(max(app_requests$TIME_COMPLETED), "%b %d, %Y")
+
+last_updated_text <- paste("  <b>Last Updated:</b>", last_updated_time)
 
 button_toolbox <-  box(
   action("start", "Start Plotting", "chart-bar", "#FFF", "#0064C8", "#00356B"),
@@ -587,7 +590,7 @@ The citations below are in the format requested by their respective creators.
   easyClose = TRUE
 )
 
-app_css_data <- tags$head(includeCSS("app_styling.css"))
+app_css_data <- tags$head(includeCSS(get_app_loc("app_styling.css")))
 
 ui <- function(request){
   dashboardPage(

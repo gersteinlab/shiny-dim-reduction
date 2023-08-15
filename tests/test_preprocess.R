@@ -22,3 +22,7 @@ test_that("are_groups() works", {
 test_that("groups_match_categories() works", {
   groups_match_categories(list(), list()) %>% expect_true()
 })
+
+test_that("is_app_data() works", {
+  is_app_data(app_data) %>% expect_true()
+})
