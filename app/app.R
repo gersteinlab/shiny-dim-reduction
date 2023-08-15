@@ -668,7 +668,7 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
     if (iplot$embedding == "PHATE")
     {
       addr <- name_phate_file(
-        cati(), rowi(), coli(), iplot$scaling, iplot$normalization, 2, peri())
+        cati(), rowi(), coli(), iplot$scaling, iplot$normalization, 2L, peri())
       curr_adr(addr)
       data <- load_store(addr)
       data <- data[keep(), , drop = FALSE]
@@ -683,7 +683,7 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
     addr <- name_pvu_file(
       cati(), rowi(), coli(), iplot$scaling, iplot$normalization,
       iplot$embedding, iplot$visualize,
-      pc_cap, 2, peri(), bati())
+      pc_cap, 2L, peri(), bati())
     curr_adr(addr)
 
     data <- load_store(addr)
@@ -747,7 +747,7 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
     if (iplot$embedding == "PHATE")
     {
       addr <- name_phate_file(cati(), rowi(), coli(),
-                              iplot$scaling, iplot$normalization, 2, peri())
+                              iplot$scaling, iplot$normalization, 2L, peri())
       curr_adr(addr)
       data <- load_store(addr)
       data <- data[keep(),,drop=FALSE]
@@ -762,7 +762,7 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
     addr <- name_pvu_file(
       cati(), rowi(), coli(), iplot$scaling,
       iplot$normalization, iplot$embedding, iplot$visualize,
-      pc_cap, 2, peri(), bati())
+      pc_cap, 2L, peri(), bati())
     curr_adr(addr)
 
     data <- load_store(addr)
@@ -829,7 +829,7 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
     {
       addr <- name_phate_file(
         cati(), rowi(), coli(),
-        iplot$scaling, iplot$normalization, 3, peri())
+        iplot$scaling, iplot$normalization, 3L, peri())
       curr_adr(addr)
 
       data <- load_store(addr)
@@ -848,7 +848,7 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
     addr <- name_pvu_file(
       cati(), rowi(), coli(), iplot$scaling,
       iplot$normalization, iplot$embedding, iplot$visualize,
-      pc_cap, 3, peri(), bati())
+      pc_cap, 3L, peri(), bati())
     curr_adr(addr)
 
     data <- load_store(addr)
@@ -897,7 +897,7 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
     addr <- name_pvu_file(
       cati(), rowi(), coli(), iplot$scaling,
       iplot$normalization, iplot$embedding, "Explore",
-      pc_cap, 3, peri(), bati())
+      pc_cap, 3L, peri(), bati())
     curr_adr(addr)
 
     data <- load_store(addr)[keep(),iplot$pc1]
