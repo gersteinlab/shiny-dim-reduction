@@ -190,7 +190,7 @@ unlink_workflow <- function(wf_name)
 #'
 #' @param file [character] not checked
 #' @returns [character]
-prepend_table <- function(file)
+prepend_table <- function(file = "")
 {
   file.path("sdr_tables", file)
 }
@@ -199,7 +199,7 @@ prepend_table <- function(file)
 #'
 #' @param file [character] not checked
 #' @returns [character]
-prepend_inter <- function(file)
+prepend_inter <- function(file = "")
 {
   file.path("sdr_intermediates", file)
 }
@@ -208,7 +208,7 @@ prepend_inter <- function(file)
 #'
 #' @param file [character] not checked
 #' @returns [character]
-prepend_store <- function(file)
+prepend_store <- function(file = "")
 {
   file.path("sdr_local_store", file)
 }
@@ -217,7 +217,7 @@ prepend_store <- function(file)
 #'
 #' @param file [character] not checked
 #' @returns [character]
-prepend_reque <- function(file)
+prepend_reque <- function(file = "")
 {
   file.path("sdr_requests", file)
 }
@@ -226,7 +226,7 @@ prepend_reque <- function(file)
 #'
 #' @param file [character] not checked
 #' @returns [character]
-prepend_app_d <- function(file)
+prepend_app_d <- function(file = "")
 {
   file.path("sdr_app_data", file)
 }
