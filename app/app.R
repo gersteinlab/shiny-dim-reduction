@@ -4,6 +4,8 @@
 source("install.R")
 source_app("dashboard.R")
 
+no_cats <- (length(cat_names) < 1)
+
 server <- function(input, output, session) {
   if (run_default)
     shinyjs::hide("start")
@@ -126,30 +128,44 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
   }
 
   observeEvent(input$rowby, {
+    if (no_cats)
+      return()
     dynam_state$rowby[[iso_cat()]] <- input$rowby
   }, ignoreInit = TRUE)
 
   observeEvent(input$colby, {
+    if (no_cats)
+      return()
     dynam_state$colby[[iso_cat()]] <- input$colby
   }, ignoreInit = TRUE)
 
   observeEvent(input$colorby, {
+    if (no_cats)
+      return()
     dynam_state$colorby[[iso_cat()]] <- input$colorby
   }, ignoreInit = TRUE)
 
   observeEvent(input$shapeby, {
+    if (no_cats)
+      return()
     dynam_state$shapeby[[iso_cat()]] <- input$shapeby
   }, ignoreInit = TRUE)
 
   observeEvent(input$labelby, {
+    if (no_cats)
+      return()
     dynam_state$labelby[[iso_cat()]] <- input$labelby
   }, ignoreInit = TRUE)
 
   observeEvent(input$filterby, {
-    dynam_state$filterby[iso_cat()] <- input$filterby
+    if (no_cats)
+      return()
+    dynam_state$filterby[[iso_cat()]] <- input$filterby
   }, ignoreInit = TRUE)
 
   observeEvent(input$selectby, {
+    if (no_cats)
+      return()
     cat <- iso_cat()
     fil <- dynam_state$filterby[[cat]]
     # handle NULL
@@ -158,6 +174,8 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
   }, ignoreNULL = FALSE, ignoreInit = TRUE)
 
   observeEvent(input$threby, {
+    if (no_cats)
+      return()
     cat <- iso_cat()
     sca <- isolate(input$scaling)
     dynam_state$threby[[cat]][[sca]] <- input$threby
@@ -182,6 +200,9 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
 
   # update input pickers
   observeEvent(input$category, {
+    if (no_cats)
+      return()
+
     cat <- input$category
     row_choices <- get_app_row_choices(cat)
     filterby <- dynam_state$filterby[[cat]]
@@ -245,6 +266,9 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
   })
 
   observeEvent(input$scaling, {
+    if (no_cats)
+      return()
+
     cat <- input$category
     sca <- input$scaling
 
@@ -257,6 +281,9 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
   })
 
   observeEvent(input$filterby, {
+    if (no_cats)
+      return()
+
     cat <- input$category
     row_choices <- get_app_row_choices(cat)
     filterby <- dynam_state$filterby[[cat]]
@@ -304,6 +331,9 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
         iplot[[id]] <- input[[id]]
 
       # dynamic input propagates too
+      if (no_cats)
+        return()
+
       cat <- iplot$category
       iplot$rowby <- dynam_state$rowby[[cat]]
       iplot$colby <- dynam_state$colby[[cat]]
@@ -639,6 +669,9 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
   # ---------------
 
   ggplot2_data <- reactive({
+    if (no_cats)
+      return(NULL)
+
     if (iplot$embedding == "Sets")
     {
       addr <- name_sets_file(cati(), iplot$scaling, thre(), filterby())
@@ -724,6 +757,9 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
   })
 
   plotly2_data <- reactive({
+    if (no_cats)
+      return(NULL)
+
     if (iplot$embedding == "Sets")
     {
       addr <- name_sets_file(cati(), iplot$scaling, thre(), filterby())
@@ -804,6 +840,9 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
   })
 
   plotly3_data <- reactive({
+    if (no_cats)
+      return(NULL)
+
     if (iplot$embedding == "Sets")
     {
       addr <- name_sets_file(cati(), iplot$scaling, thre(), filterby())
