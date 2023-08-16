@@ -285,6 +285,22 @@ bookmark_exclude_vector <- c(
 #     threby per scaling option
 #         one of obtained thresholds
 
+#' same as apply(metadata[, rel_meta], 2, get_opt_chr)
+#' but it does not drop when rel_meta is of length 1
+#'
+#' @param metadata [metadata]
+#' @param rel_meta [character]
+#' @returns [list]
+get_opt_metadata <- function(metadata, rel_meta)
+{
+  opt_metadata <- empty_named_list(rel_meta)
+
+  for (cha in rel_meta)
+    opt_metadata[[cha]] <- get_opt_chr(metadata[[cha]])
+
+  opt_metadata
+}
+
 # specify choices unique to each row axis
 app_row_choices <- empty_named_list(row_axs_names)
 for (row_axs in row_axs_names)
@@ -298,7 +314,7 @@ for (row_axs in row_axs_names)
       unlist() %>% get_opt_named_int(),
     "full_chas" = names(row_meta),
     "safe_chas" = rel_meta,
-    "selectby" = apply(row_meta[, rel_meta], 2, get_opt_chr)
+    "selectby" = get_opt_metadata(row_meta, rel_meta)
   )
 }
 
