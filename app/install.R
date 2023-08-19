@@ -670,10 +670,11 @@ net_time <- function() {
 }
 
 
-#' reset after app launch
+#' reset after app launch to pipeline mode
 sdr_reset <- function()
 {
   rm(sdr_config, envir = .GlobalEnv)
+  source("app/install.R")
 }
 
 message("\n--- SHINY DIMENSIONALITY REDUCTION ---")
