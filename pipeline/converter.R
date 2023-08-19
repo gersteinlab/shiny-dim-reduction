@@ -36,7 +36,7 @@ set_self_rds <- function(name)
 # reads tsv text
 read_tsv_text <- function(filename)
 {
-  strsplit(readLines(filename), split='\t', fixed=TRUE)
+  strsplit(readLines(filename), split = '\t', fixed = TRUE)
 }
 
 # converts a matrix to a numeric matrix,

@@ -263,13 +263,15 @@ is_axis <- function(x)
 #' @param subsets [subsets]
 #' @param color_scales [color_scales]
 #' @returns [axis]
-make_axis <- function(metadata, subsets, color_scales)
+make_axis <- function(metadata, subsets = list(),
+                      color_scales = list(), rel_meta = names(metadata))
 {
   result <- list(
     "length" = nrow(metadata),
     "metadata" = metadata,
     "subsets" = subsets,
-    "color_scales" = color_scales
+    "color_scales" = color_scales,
+    "rel_meta" = rel_meta
   )
 
   stopifnot(is_axis(result))

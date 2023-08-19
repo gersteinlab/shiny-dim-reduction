@@ -555,7 +555,7 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
 
     keep
   })
-  metadata <- reactive(row_order()[keep(),,drop=FALSE])
+  metadata <- reactive(row_order()[keep(), , drop=FALSE])
 
   colors <- reactive({
     metadata()[, colorby()]
