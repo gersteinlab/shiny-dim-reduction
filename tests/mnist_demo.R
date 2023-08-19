@@ -58,11 +58,7 @@ mkdir_saveRDS(cloud_store_admin, cloud_store_admin_loc())
 
 local_store <- get_loc_rel_wf(prepend_store())
 
-cloud_store <- list(
-  "id" = "AKIAVI2HZGPOMRT4LPHZ",
-  "secret" = "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",
-  "bucket" = "shiny-app-data-justin-mnist"
-)
+cloud_store <- make_cloud_store()
 
 save_local_store()
 save_cloud_store()
