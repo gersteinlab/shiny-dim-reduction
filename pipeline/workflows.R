@@ -259,6 +259,8 @@ app_wf_files <- c("app_data.rds", "local_store.rds", "cloud_store.rds")
 #' @param file [character] not checked
 copy_app_to_wf <- function(file = app_wf_files)
 {
+  wf_dir <- get_loc_rel_wf(prepend_app_d())
+  ensure_dir(wf_dir)
   file.copy(get_app_loc(file), prepend_app_d(file) %>%
               get_loc_rel_wf(), overwrite = TRUE)
 }
@@ -286,7 +288,7 @@ copy_app_to_wf_msg <- function(file = app_wf_files)
 #' @param file [character] not checked
 copy_wf_to_app_msg <- function(file = app_wf_files)
 {
-  message_f("APP TO WF: %s", get_current_workflow(),
+  message_f("%s to app: %s", get_current_workflow(),
             vec_str(file[copy_wf_to_app(file)]))
 }
 
@@ -295,7 +297,6 @@ copy_wf_to_app_msg <- function(file = app_wf_files)
 #' @param wf_name [string] not checked
 mount_current_workflow <- function(wf_name)
 {
-  stop("NOT YET TESTED.")
   # save the current data if needed
   if (!history_is_empty())
     copy_app_to_wf_msg()
