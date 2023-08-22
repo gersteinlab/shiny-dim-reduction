@@ -65,7 +65,7 @@ example_func <- function(a = 1, b = 2)
 
 msg_code_com <- function(src, n_code, n_com)
 {
-  cat(sprintf("%27s >%5d code +%5d com =%5d\n", src,
+  cat(sprintf("%27s >%5d code +%5d com = %5d\n", src,
               n_code, n_com, n_code + n_com))
 }
 

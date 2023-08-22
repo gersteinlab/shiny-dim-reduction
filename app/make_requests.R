@@ -526,7 +526,6 @@ make_umap_req_keys <- function(
 )
 {
   n_cat <- length(cat)
-
   make_pvu_req_keys(
     cat, row, col, sca, nor, emb = rep("UMAP", n_cat),
     vis, com, dim, per, bat = rep(int_d, n_cat)
@@ -541,7 +540,6 @@ make_umap_e_req_keys <- function(
 )
 {
   n_cat <- length(cat)
-
   make_umap_req_keys(
     cat, row, col, sca, nor, vis = rep("Explore", n_cat),
     com, dim = rep(int_d, n_cat), per
@@ -556,7 +554,6 @@ make_umap_s_req_keys <- function(
 )
 {
   n_cat <- length(cat)
-
   make_umap_req_keys(
     cat, row, col, sca, nor, vis = rep("Summarize", n_cat),
     com, dim = rep(int_d, n_cat), per
@@ -571,7 +568,6 @@ make_phate_req_keys <- function(
 )
 {
   n_cat <- length(cat)
-
   make_req_keys(
     cat, row, col, sca, nor, emb = rep("PHATE", n_cat),
     vis = rep(chr_d, n_cat), com,
@@ -587,7 +583,6 @@ make_sets_req_keys <- function(
 )
 {
   n_cat <- length(cat)
-
   make_req_keys(
     cat, rep(chr_d, n_cat), rep(chr_d, n_cat), sca,
     rep("Global Min-Max", n_cat), rep("Sets", n_cat), rep(chr_d, n_cat),
