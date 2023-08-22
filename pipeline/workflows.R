@@ -259,6 +259,7 @@ app_wf_files <- c("app_data.rds", "local_store.rds", "cloud_store.rds")
 #' @param file [character] not checked
 copy_app_to_wf <- function(file = app_wf_files)
 {
+  stopifnot(sdr_config$mode == "pipeline")
   wf_dir <- get_loc_rel_wf(prepend_app_d())
   ensure_dir(wf_dir)
   file.copy(get_app_loc(file), prepend_app_d(file) %>%
@@ -270,6 +271,7 @@ copy_app_to_wf <- function(file = app_wf_files)
 #' @param file [character] not checked
 copy_wf_to_app <- function(file = app_wf_files)
 {
+  stopifnot(sdr_config$mode == "pipeline")
   file.copy(prepend_app_d(file) %>% get_loc_rel_wf(),
             get_app_loc(file), overwrite = TRUE)
 }
@@ -290,19 +292,6 @@ copy_wf_to_app_msg <- function(file = app_wf_files)
 {
   message_f("%s to app: %s", get_current_workflow(),
             vec_str(file[copy_wf_to_app(file)]))
-}
-
-#' sets the current workflow while mounting files
-#'
-#' @param wf_name [string] not checked
-mount_current_workflow <- function(wf_name)
-{
-  # save the current data if needed
-  if (!history_is_empty())
-    copy_app_to_wf_msg()
-  # swap to new workflow and copy over app files
-  set_current_workflow(wf_name)
-  copy_wf_to_app_msg()
 }
 
 #' the location of the administrative cloud_store
