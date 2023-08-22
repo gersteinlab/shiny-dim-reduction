@@ -416,6 +416,186 @@ name_req_key_files <- function(req_keys)
   result
 }
 
+# -------------------
+# REQUEST KEY HELPERS
+# -------------------
+
+# pca, vae, umap req_keys
+make_pvu_req_keys <- function(
+    cat = character(), row = character(), col = character(),
+    sca = character(), nor = character(), emb = character(),
+    vis = character(), com = integer(), dim = integer(),
+    per = integer(), bat = integer()
+)
+{
+  n_cat <- length(cat)
+  make_req_keys(
+    cat, row, col, sca, nor, emb, vis, com, dim, per, bat,
+    thr = rep(num_d, n_cat), cha = rep(chr_d, n_cat)
+  )
+}
+
+# simplifies the generation of PCA req_keys
+make_pca_req_keys <- function(
+    cat = character(), row = character(), col = character(),
+    sca = character(), nor = character(), vis = character(),
+    com = integer(), dim = integer(), per = integer()
+)
+{
+  n_cat <- length(cat)
+  make_pvu_req_keys(
+    cat, row, col, sca, nor, emb = rep("PCA", n_cat),
+    vis, com, dim, per, bat = rep(int_d, n_cat)
+  )
+}
+
+# simplifies the generation of PCA explore req_keys
+make_pca_e_req_keys <- function(
+    cat = character(), row = character(), col = character(),
+    sca = character(), nor = character(), com = integer()
+)
+{
+  n_cat <- length(cat)
+  make_pca_req_keys(
+    cat, row, col, sca, nor, vis = rep("Explore", n_cat),
+    com, dim = rep(int_d, n_cat), per = rep(int_d, n_cat)
+  )
+}
+
+# simplifies the generation of PCA summarize req_keys
+make_pca_s_req_keys <- function(
+    cat = character(), row = character(), col = character(),
+    sca = character(), nor = character(), com = integer()
+)
+{
+  n_cat <- length(cat)
+  make_pca_req_keys(
+    cat, row, col, sca, nor, vis = rep("Summarize", n_cat),
+    com, dim = rep(int_d, n_cat), per = rep(int_d, n_cat)
+  )
+}
+
+# simplifies the generation of VAE req_keys
+make_vae_req_keys <- function(
+    cat = character(), row = character(), col = character(),
+    sca = character(), nor = character(), vis = character(),
+    com = integer(), dim = integer(),
+    per = integer(), bat = integer()
+)
+{
+  n_cat <- length(cat)
+  make_pvu_req_keys(
+    cat, row, col, sca, nor, emb = rep("VAE", n_cat),
+    vis, com, dim, per, bat
+  )
+}
+
+# simplifies the generation of VAE explore req_keys
+make_vae_e_req_keys <- function(
+    cat = character(), row = character(), col = character(),
+    sca = character(), nor = character(),
+    com = integer(), bat = integer()
+)
+{
+  n_cat <- length(cat)
+  make_vae_req_keys(
+    cat, row, col, sca, nor, vis = rep("Explore", n_cat),
+    com, dim = rep(int_d, n_cat), per = rep(int_d, n_cat), bat
+  )
+}
+
+# simplifies the generation of VAE summarize req_keys
+make_vae_s_req_keys <- function(
+    cat = character(), row = character(), col = character(),
+    sca = character(), nor = character(),
+    com = integer(), bat = integer()
+)
+{
+  n_cat <- length(cat)
+  make_vae_req_keys(
+    cat, row, col, sca, nor, vis = rep("Summarize", n_cat),
+    com, dim = rep(int_d, n_cat), per = rep(int_d, n_cat), bat
+  )
+}
+
+# simplifies the generation of UMAP req_keys
+make_umap_req_keys <- function(
+    cat = character(), row = character(), col = character(),
+    sca = character(), nor = character(), vis = character(),
+    com = integer(), dim = integer(), per = integer()
+)
+{
+  n_cat <- length(cat)
+
+  make_pvu_req_keys(
+    cat, row, col, sca, nor, emb = rep("UMAP", n_cat),
+    vis, com, dim, per, bat = rep(int_d, n_cat)
+  )
+}
+
+# simplifies the generation of UMAP explore req_keys
+make_umap_e_req_keys <- function(
+    cat = character(), row = character(), col = character(),
+    sca = character(), nor = character(),
+    com = integer(), per = integer()
+)
+{
+  n_cat <- length(cat)
+
+  make_umap_req_keys(
+    cat, row, col, sca, nor, vis = rep("Explore", n_cat),
+    com, dim = rep(int_d, n_cat), per
+  )
+}
+
+# simplifies the generation of UMAP summarize req_keys
+make_umap_s_req_keys <- function(
+    cat = character(), row = character(), col = character(),
+    sca = character(), nor = character(),
+    com = integer(), per = integer()
+)
+{
+  n_cat <- length(cat)
+
+  make_umap_req_keys(
+    cat, row, col, sca, nor, vis = rep("Summarize", n_cat),
+    com, dim = rep(int_d, n_cat), per
+  )
+}
+
+# simplifies the generation of PHATE req_keys
+make_phate_req_keys <- function(
+    cat = character(), row = character(), col = character(),
+    sca = character(), nor = character(), com = integer(),
+    per = integer()
+)
+{
+  n_cat <- length(cat)
+
+  make_req_keys(
+    cat, row, col, sca, nor, emb = rep("PHATE", n_cat),
+    vis = rep(chr_d, n_cat), com,
+    dim = rep(int_d, n_cat), per, bat = rep(num_d, n_cat),
+    thr = rep(num_d, n_cat), cha = rep(chr_d, n_cat)
+  )
+}
+
+# simplifies the generation of Sets req_keys
+make_sets_req_keys <- function(
+    cat = character(), sca = character(),
+    thr = numeric(), cha = character()
+)
+{
+  n_cat <- length(cat)
+
+  make_req_keys(
+    cat, rep(chr_d, n_cat), rep(chr_d, n_cat), sca,
+    rep("Global Min-Max", n_cat), rep("Sets", n_cat), rep(chr_d, n_cat),
+    rep(num_d, n_cat), rep(num_d, n_cat), rep(num_d, n_cat),
+    rep(num_d, n_cat),thr, cha
+  )
+}
+
 # ------------------
 # REQUEST MANAGEMENT
 # ------------------
@@ -573,115 +753,6 @@ rbind_req <- function(...)
 
   rownames(result) <- NULL
   result
-}
-
-# ---------------
-# SYNTACTIC SUGAR
-# ---------------
-
-# pca, vae, umap
-make_pvu_requests <- function(
-    cat = character(), row = character(), col = character(), sca = character(),
-    nor = character(), emb = character(), vis = character(), com = integer(),
-    dim = integer(), per = integer(), bat = integer(), aut = character()
-)
-{
-  n_cat <- length(cat)
-
-  make_requests(
-    cat, row, col, sca, nor, emb, vis, com, dim, per, bat,
-    thr = rep(num_d, n_cat), cha = rep(chr_d, n_cat), aut)
-}
-
-# simplifies the generation of PCA requests
-make_pca_requests <- function(
-    cat = character(), row = character(), col = character(), sca = character(),
-    nor = character(), vis = character(), com = integer(),
-    dim = integer(), per = integer(), aut = character()
-)
-{
-  n_cat <- length(cat)
-
-  make_pvu_requests(cat, row, col, sca, nor, emb = rep("PCA", n_cat),
-                    vis, com, dim, per, bat = rep(int_d, n_cat), aut)
-}
-
-# simplifies the generation of PCA explore requests
-make_pca_e_requests <- function(
-    cat = character(), row = character(), col = character(), sca = character(),
-    nor = character(), com = integer(), aut = character()
-)
-{
-  n_cat <- length(cat)
-
-  make_pca_requests(cat, row, col, sca, nor, vis = rep("Explore", n_cat),
-                    com, dim = rep(int_d, n_cat), per = rep(int_d, n_cat), aut)
-}
-
-# simplifies the generation of PCA summarize requests
-make_pca_s_requests <- function(
-    cat = character(), row = character(), col = character(), sca = character(),
-    nor = character(), com = integer(), aut = character()
-)
-{
-  n_cat <- length(cat)
-
-  make_pca_requests(cat, row, col, sca, nor, vis = rep("Summarize", n_cat),
-                    com, dim = rep(int_d, n_cat), per = rep(int_d, n_cat), aut)
-}
-
-# simplifies the generation of VAE requests
-make_vae_requests <- function(
-    cat = character(), row = character(), col = character(), sca = character(),
-    nor = character(), vis = character(), com = integer(),
-    dim = integer(), per = integer(), bat = integer(), aut = character()
-)
-{
-  n_cat <- length(cat)
-
-  make_pvu_requests(cat, row, col, sca, nor, emb = rep("VAE", n_cat),
-                    vis, com, dim, per, bat, aut)
-}
-
-# simplifies the generation of UMAP requests
-make_umap_requests <- function(
-    cat = character(), row = character(), col = character(), sca = character(),
-    nor = character(), vis = character(), com = integer(),
-    dim = integer(), per = integer(), aut = character()
-)
-{
-  n_cat <- length(cat)
-
-  make_pvu_requests(cat, row, col, sca, nor, emb = rep("UMAP", n_cat),
-                    vis, com, dim, per, bat = rep(int_d, n_cat), aut)
-}
-
-# simplifies the generation of PHATE requests
-make_phate_requests <- function(
-    cat = character(), row = character(), col = character(), sca = character(),
-    nor = character(), com = integer(), per = integer(), aut = character()
-)
-{
-  n_cat <- length(cat)
-
-  make_requests(
-    cat, row, col, sca, nor, rep("PHATE", n_cat), rep(chr_d, n_cat), com,
-    rep(num_d, n_cat), per, rep(num_d, n_cat),
-    rep(num_d, n_cat), rep(chr_d, n_cat), aut)
-}
-
-# simplifies the generation of Sets requests
-make_sets_requests <- function(
-    cat = character(), sca = character(), thr = numeric(),
-    cha = character(), aut = character())
-{
-  n_cat <- length(cat)
-
-  make_requests(
-    cat, rep(chr_d, n_cat), rep(chr_d, n_cat), sca,
-    rep("Global Min-Max", n_cat), rep("Sets", n_cat), rep(chr_d, n_cat),
-    rep(num_d, n_cat), rep(num_d, n_cat), rep(num_d, n_cat),
-    rep(num_d, n_cat),thr, cha, aut)
 }
 
 # ----------------

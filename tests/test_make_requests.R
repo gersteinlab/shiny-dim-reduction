@@ -141,12 +141,55 @@ test_that("make_requests() fails for invalid input", {
   ) %>% make_requests("ADMIN") %>% expect_error()
 })
 
+# --------------------
+# TEST REQ_KEY HELPERS
+# --------------------
+
+test_that("req_key helpers work", {
+  make_pca_e_req_keys(
+    "miRNA", "Total", "Total", "Linear",
+    "Global Min-Max", com = 10L
+  ) %>% clean_req_keys() %>%
+    are_req_keys() %>% expect_true()
+
+  make_pca_s_req_keys(
+    "miRNA", "Total", "Total", "Linear",
+    "Global Min-Max", com = 10L
+  ) %>% clean_req_keys() %>%
+    are_req_keys() %>% expect_true()
+
+  make_vae_e_req_keys(
+    "miRNA", "Total", "Total", "Linear",
+    "Global Min-Max", com = 10L, bat = 10L
+  ) %>% clean_req_keys() %>%
+    are_req_keys() %>% expect_true()
+
+  make_vae_s_req_keys(
+    "miRNA", "Total", "Total", "Linear",
+    "Global Min-Max", com = 10L, bat = 10L
+  ) %>% clean_req_keys() %>%
+    are_req_keys() %>% expect_true()
+
+  make_umap_e_req_keys(
+    "miRNA", "Total", "Total", "Linear",
+    "Global Min-Max", com = 10L, per = 10L
+  ) %>% clean_req_keys() %>%
+    are_req_keys() %>% expect_true()
+
+  make_umap_s_req_keys(
+    "miRNA", "Total", "Total", "Linear",
+    "Global Min-Max", com = 10L, per = 10L
+  ) %>% clean_req_keys() %>%
+    are_req_keys() %>% expect_true()
+})
+
 # ---------------
 # TEST CLEAN TIME
 # ---------------
 
 source_app("storage.R")
 set_store_mode("local")
+load_all_stores()
 app_requests <- load_store("app_requests.rds")
 print(system.time({
   test1 <- clean_req_keys(app_requests)
