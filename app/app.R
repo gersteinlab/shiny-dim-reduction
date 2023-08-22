@@ -939,8 +939,11 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
       pc_cap, 3L, peri(), bati())
     curr_adr(addr)
 
-    data <- load_store(addr)[keep(),iplot$pc1]
-    data <- cbind.data.frame(colors(), data)
+    data <- load_store(addr)
+    if (is.null(data))
+      return(NULL)
+
+    data <- cbind.data.frame(colors(), data[keep(), iplot$pc1])
     colnames(data) <- c(colorby(), pc(iplot$pc1))
 
     boxplot_beeswarm(data, paint(), title_embed(), legend())
