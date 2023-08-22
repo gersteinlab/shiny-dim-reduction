@@ -279,7 +279,8 @@ perform_reduction <- function(requests, force = 0L)
                     pca_to_summary(pca_result) %>% mkdir_saveRDS(f_loc)
 
                   if (r$VISUALIZATION == "tSNE")
-                    pca_to_tsne(pca_result, r$DIMENSION, r$PERPLEXITY) %>% mkdir_saveRDS(f_loc)
+                    pca_to_tsne(pca_result, r$DIMENSION, r$PERPLEXITY) %>%
+                    mkdir_saveRDS(f_loc)
                 }
               }
 
@@ -319,7 +320,8 @@ perform_reduction <- function(requests, force = 0L)
                       vae_to_summary(vae_result) %>% mkdir_saveRDS(f_loc)
 
                     if (r$VISUALIZATION == "tSNE")
-                      vae_to_tsne(vae_result, r$DIMENSION, r$PERPLEXITY) %>% mkdir_saveRDS(f_loc)
+                      vae_to_tsne(vae_result, r$DIMENSION, r$PERPLEXITY) %>%
+                      mkdir_saveRDS(f_loc)
                   }
                 }
               }
