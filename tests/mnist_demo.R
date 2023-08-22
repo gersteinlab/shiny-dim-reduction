@@ -43,7 +43,8 @@ source("app/storage.R")
 source("pipeline/workflows.R")
 load_wf_config()
 list_workflows()
-ensure_stores("local")
+set_store_mode("local")
+load_all_stores()
 
 # upsert_workflow("MNIST", "C:/Users/justin/Desktop/CodeR/DataR/sdr_workflows")
 

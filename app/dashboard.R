@@ -18,7 +18,7 @@ source_app("make_requests.R")
 source_app("storage.R")
 
 # sets up all storage
-ensure_stores()
+load_all_stores()
 
 get_requests <- function(file)
 {

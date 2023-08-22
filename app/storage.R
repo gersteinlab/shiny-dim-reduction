@@ -365,13 +365,21 @@ is_store_mode <- function(x)
   is_str(x) && (x %in% all_store_modes)
 }
 
+#' cat store_mode to console
+#'
+#' @param store_mode [store_mode]
+cat_store_mode <- function(store_mode)
+{
+  cat_f("STORE MODE: %s\n", store_mode)
+}
+
 #' sets store_mode to x
 #'
 #' @param x [store_mode]
 set_store_mode <- function(x)
 {
   stopifnot(is_store_mode(x))
-  message_f("SETTING STORE MODE: %s", x)
+  cat_store_mode(x)
   Sys.setenv("SDR_STORE_MODE" = x)
 }
 
@@ -498,17 +506,18 @@ get_user_store_mode <- function()
 #' @param local_store [local_store]
 #' @param cloud_store [cloud_store]
 #' @param prefer [NULL, store_mode]
-connect_stores <- function(local_store, cloud_store, prefer = NULL)
+connect_all_stores <- function(local_store, cloud_store)
 {
   # handles setting the store mode
   if (local_connects(local_store))
   {
     if (cloud_connects(cloud_store))
     {
-      if (is.null(prefer))
-        set_store_mode(get_user_store_mode())
+      store_mode <- get_store_mode()
+      if (is_store_mode(store_mode))
+        cat_store_mode(store_mode)
       else
-        set_store_mode(prefer)
+        set_store_mode(get_user_store_mode())
     }
     else
       set_store_mode("local")
@@ -523,9 +532,7 @@ connect_stores <- function(local_store, cloud_store, prefer = NULL)
 }
 
 #' attempts connect_stores from store files
-#'
-#' @param prefer [NULL, store_mode]
-load_stores <- function(prefer = NULL)
+load_all_stores <- function()
 {
   local_path <- get_app_loc("local_store.rds")
   local_store <- w_def_readRDS(local_path)
@@ -533,18 +540,7 @@ load_stores <- function(prefer = NULL)
   cloud_path <- get_app_loc("cloud_store.rds")
   cloud_store <- w_def_readRDS(cloud_path)
 
-  connect_stores(local_store, cloud_store, prefer)
-}
-
-#' load_stores wrapper that only runs once
-#'
-#' @param prefer [NULL, store_mode]
-ensure_stores <- function(prefer = NULL)
-{
-  if (get_store_mode() %in% all_store_modes)
-    cat_f("STORE MODE: %s\n", get_store_mode())
-  else
-    load_stores(prefer)
+  connect_all_stores(local_store, cloud_store)
 }
 
 cat_f("STORAGE MANAGER TIME: %.1f (sec)\n", net_time())
