@@ -11,7 +11,8 @@ source("app/make_requests.R")
 source("app/storage.R")
 
 # remember user's previous work
-ensure_stores("local")
+set_store_mode("local")
+load_all_stores()
 load_wf_config()
 list_workflows()
 
