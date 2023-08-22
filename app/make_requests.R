@@ -615,6 +615,30 @@ make_pca_requests <- function(
                     vis, com, dim, per, bat = rep(int_d, n_cat), aut)
 }
 
+# simplifies the generation of PCA explore requests
+make_pca_e_requests <- function(
+    cat = character(), row = character(), col = character(), sca = character(),
+    nor = character(), com = integer(), aut = character()
+)
+{
+  n_cat <- length(cat)
+
+  make_pca_requests(cat, row, col, sca, nor, vis = rep("Explore", n_cat),
+                    com, dim = rep(int_d, n_cat), per = rep(int_d, n_cat), aut)
+}
+
+# simplifies the generation of PCA summarize requests
+make_pca_s_requests <- function(
+    cat = character(), row = character(), col = character(), sca = character(),
+    nor = character(), com = integer(), aut = character()
+)
+{
+  n_cat <- length(cat)
+
+  make_pca_requests(cat, row, col, sca, nor, vis = rep("Summarize", n_cat),
+                    com, dim = rep(int_d, n_cat), per = rep(int_d, n_cat), aut)
+}
+
 # simplifies the generation of VAE requests
 make_vae_requests <- function(
     cat = character(), row = character(), col = character(), sca = character(),
