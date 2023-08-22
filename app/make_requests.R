@@ -262,7 +262,7 @@ clean_req_keys <- function(req_keys)
 
 #' creates req_keys from the input
 #'
-#' @returns [req_keys]
+#' @returns [req_keys], may not be clean
 make_req_keys <- function(
     cat = character(), row = character(), col = character(), sca = character(),
     nor = character(), emb = character(), vis = character(),
@@ -270,7 +270,7 @@ make_req_keys <- function(
     thr = numeric(), cha = character()
 )
 {
-  clean_req_keys(data.frame(
+  data.frame(
     "CATEGORIES" = cat,
     "ROW_SUBSETS" = row, "COL_SUBSETS" = col,
     "SCALING" = sca, "NORMALIZATION" = nor,
@@ -279,7 +279,7 @@ make_req_keys <- function(
     "PERPLEXITY" = per, "BATCH_SIZE" = bat,
     "THRESHOLD" = thr,
     "CHARACTERISTIC" = cha
-  ))
+  )
 }
 
 # ------------------
@@ -443,30 +443,27 @@ are_requests <- function(x)
   )
 
   is.data.frame(x) && identical(names(x), members) &&
+    are_req_keys(x) &&
     is.character(x$AUTHOR) &&
     is.POSIXct(x$TIME_REQUESTED) &&
     is.POSIXct(x$TIME_COMPLETED) &&
     is.character(x$FILE_LOCATION)
 }
 
-# note: the first 13 attributes MUST be a primary key;
-#   author / timestamps don't differentiate
-# note: if the TIME_COMPLETED field is before the TIME_REQUESTED field,
-#   it hasn't been done yet!
-# note: a set of requests is valid ONLY IF it has a FILE_LOCATION field.
-#   This is because regular computation of the FILE_LOCATION field
-#   makes merging new requests difficult. Duplicate locations are not allowed.
-make_requests <- function(
-    cat = character(), row = character(), col = character(), sca = character(),
-    nor = character(), emb = character(), vis = character(), com = integer(),
-    dim = integer(), per = integer(), bat = integer(), thr = numeric(),
-    cha = character(), aut = character()
-){
-  # it's not a valid request if the lengths of all attributes aren't equal
-  requests <- make_req_keys(
-    cat, row, col, sca, nor,
-    emb, vis, com, dim, per, bat, thr, cha)
-
+#' note: the first 13 attributes MUST be a primary key;
+#'   author / timestamps don't differentiate
+#' note: if the TIME_COMPLETED field is before the TIME_REQUESTED field,
+#'   it hasn't been done yet!
+#' note: a set of requests is valid ONLY IF it has a FILE_LOCATION field.
+#'   This is because regular computation of the FILE_LOCATION field
+#'   makes merging new requests difficult. Duplicate locations are not allowed.
+#'
+#' @param req_keys [req_keys] can be unclean
+#' @param aut [character] author name(s)
+#' @returns [requests]
+make_requests <- function(req_keys, aut = character())
+{
+  requests <- clean_req_keys(req_keys)
   key_names <- name_req_key_files(requests) # still req_keys
   stopifnot(!anyDuplicated(key_names))
 
