@@ -562,20 +562,14 @@ rbind_req2 <- function(requests1, requests2)
 # vectorization of rbind_req
 rbind_req <- function(...)
 {
-  list_of_requests <- list(...)
-  n <- length(list_of_requests)
-  if (n < 1)
-    return(NULL)
+  reqs_list <- list(...)
+  n <- length(reqs_list)
+  stopifnot(n >= 1L)
 
-  result <- NULL
+  result <- reqs_list[[1]]
 
-  for (requests in list_of_requests)
-  {
-    if (is.null(result))
-      result <- requests
-    else
-      result <- rbind_req2(result, requests)
-  }
+  for (i in seq_len(n - 1))
+    result <- rbind_req2(result, reqs_list[[i + 1]])
 
   rownames(result) <- NULL
   result
