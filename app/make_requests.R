@@ -598,8 +598,47 @@ make_pvu_requests <- function(
   n_cat <- length(cat)
 
   make_requests(
-    cat, row, col, sca, nor, emb, vis,
-    com, dim, per, bat, rep(num_d, n_cat), rep(chr_d, n_cat), aut)
+    cat, row, col, sca, nor, emb, vis, com, dim, per, bat,
+    thr = rep(num_d, n_cat), cha = rep(chr_d, n_cat), aut)
+}
+
+# simplifies the generation of PCA requests
+make_pca_requests <- function(
+    cat = character(), row = character(), col = character(), sca = character(),
+    nor = character(), vis = character(), com = integer(),
+    dim = integer(), per = integer(), aut = character()
+)
+{
+  n_cat <- length(cat)
+
+  make_pvu_requests(cat, row, col, sca, nor, emb = rep("PCA", n_cat),
+                    vis, com, dim, per, bat = rep(int_d, n_cat), aut)
+}
+
+# simplifies the generation of VAE requests
+make_vae_requests <- function(
+    cat = character(), row = character(), col = character(), sca = character(),
+    nor = character(), vis = character(), com = integer(),
+    dim = integer(), per = integer(), bat = integer(), aut = character()
+)
+{
+  n_cat <- length(cat)
+
+  make_pvu_requests(cat, row, col, sca, nor, emb = rep("VAE", n_cat),
+                    vis, com, dim, per, bat, aut)
+}
+
+# simplifies the generation of UMAP requests
+make_umap_requests <- function(
+    cat = character(), row = character(), col = character(), sca = character(),
+    nor = character(), vis = character(), com = integer(),
+    dim = integer(), per = integer(), aut = character()
+)
+{
+  n_cat <- length(cat)
+
+  make_pvu_requests(cat, row, col, sca, nor, emb = rep("UMAP", n_cat),
+                    vis, com, dim, per, bat = rep(int_d, n_cat), aut)
 }
 
 # simplifies the generation of PHATE requests
