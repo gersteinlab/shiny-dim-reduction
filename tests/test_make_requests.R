@@ -15,7 +15,7 @@ start_time <- Sys.time()
 # -------------------
 
 test_that("make_requests() works for default input", {
-  default_requests <- make_req_keys() %>% make_requests()
+  default_requests <- make_requests()
 
   cat("This is what a default request looks like:\n")
   print(default_requests)

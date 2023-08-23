@@ -636,7 +636,7 @@ are_requests <- function(x)
 #' @param req_keys [req_keys] can be unclean
 #' @param aut [character] author name(s)
 #' @returns [requests]
-make_requests <- function(req_keys, aut = character())
+make_requests <- function(req_keys = make_req_keys(), aut = character())
 {
   requests <- clean_req_keys(req_keys)
   key_names <- name_req_key_files(requests) # still req_keys
