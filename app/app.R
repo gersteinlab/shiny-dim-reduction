@@ -402,17 +402,20 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
   observeEvent(input$req_submit, {
     test <- NULL
     tryCatch({
-      test <- make_requests(
+      test_keys <- make_req_keys(
         cat = input$req_cat, row = parse_opt(input$req_row),
         col = parse_opt(input$req_col), sca = input$req_sca,
-        nor = input$req_nor, emb = input$req_emb, vis = input$req_vis, com = input$req_com,
-        dim = input$req_dim, per = input$req_per, bat = input$req_bat, thr = input$req_thr,
-        cha = parse_opt(input$req_cha), aut = input$req_aut
+        nor = input$req_nor, emb = input$req_emb,
+        vis = input$req_vis, com = input$req_com,
+        dim = input$req_dim, per = input$req_per,
+        bat = input$req_bat, thr = input$req_thr,
+        cha = input$req_cha
       )
+
+      test <- make_requests(test_keys, aut = input$req_aut)
     }, error = function(e){
       notif("Failed to make request - check your inputs!", "error")
     })
-
     if (is.null(test))
       return()
 
