@@ -122,19 +122,23 @@ app_data$citations <- ""
 app_data$row_axes <- list(
   "Train" = make_axis(
     row_meta_train,
-    subsets = list(
-      "Mini" = 1:600
-    ),
+    subsets = list(),
     rel_meta = "Number"
   ),
   "Test" = make_axis(
     row_meta_test,
-    subsets = list(
-      "Mini" = 1:600
-    ),
+    subsets = list(),
     rel_meta = "Number"
   )
 )
+
+for (i in as.character(0:9))
+{
+  app_data$row_axes$Train$subsets[[i]] <- which(
+    app_data$row_axes$Train$metadata$Number == i)
+  app_data$row_axes$Test$subsets[[i]] <- which(
+    app_data$row_axes$Test$metadata$Number == i)
+}
 
 app_data$col_axes <- list(
   "Train" = make_axis(col_meta_train, rel_meta = character()),
