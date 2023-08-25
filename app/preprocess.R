@@ -67,9 +67,6 @@ app_data <- list(
   "groups" = list()
 )
 
-# where to save / load app_data
-app_data_loc <- get_app_loc("app_data.rds")
-
 #' sets app_data to a_data
 #'
 #' @param a_data [app_data]
@@ -82,7 +79,7 @@ update_app_data <- function(a_data)
 #' attempts to load app_data
 load_app_data <- function(file)
 {
-  readRDS(app_data_loc) %>% update_app_data()
+   readRDS(get_app_loc("app_data.rds")) %>% update_app_data()
 }
 
 # test the application with this line commented out
@@ -108,7 +105,7 @@ assign_global("groups", app_data[["groups"]])
 save_app_data <- function()
 {
   stopifnot(is_app_data(app_data), sdr_config$mode == "pipeline")
-  saveRDS(app_data, app_data_loc)
+  saveRDS(app_data, get_app_loc("app_data.rds"))
 }
 
 # -----------------
