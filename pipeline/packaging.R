@@ -1,22 +1,44 @@
-# The goal of this script is to convert vis data to packaged data.
-# The purpose of this file is to generate the base set of requests.
+# The purpose of this file is to give examples for request management.
 
-# record: all data uploaded for the first time on v6, Feb 5, 2022.
-# updating Ran's data: Feb X, 2022.
+if (!exists("sdr_config") || sdr_config$mode != "pipeline")
+  source("app/install.R")
+stopifnot(sdr_config$mode == "pipeline")
 
-if (!exists("sdr_config") || sdr_config$mode != "workflow")
-  source("install.R")
-stopifnot(sdr_config$mode == "workflow")
+source("pipeline/red_requests.R")
 
-wf_config <- list("workflow" = "exRNA")
-source_sdr("red_requests.R")
+# ---------------
+# UPLOAD TO CLOUD
+# ---------------
+
+cloud_store_admin <- readRDS(cloud_store_admin_loc())
+stopifnot(cloud_connects(cloud_store_admin))
+
+#' uploads a file vector to the cloud
+#'
+#' @param file_vec [character] of existing tables
+upload_to_cloud <- function(file_vec, each = 100)
+{
+  # require that all files exist before proceeding
+  stopifnot(is.character(file_vec))
+  file_n <- length(file_vec)
+
+  for (i in seq_len(file_n))
+  {
+    file <- file_vec[i]
+    data <- load_local(file)
+    stopifnot(is_table(as.matrix(data)))
+    save_cloud(data, file)
+    if (i %% each == 1 || i == file_n)
+      cat_f("uploaded %s/%s: %s\n", i, file_n, file)
+  }
+}
+
+# ------------------
+# REQ_KEY GENERATION
+# ------------------
 
 # simplifying perplexity for now
-perplexity_types <- c(10, 50)
-# setwd(dep_loc)
-# saveRDS(perplexity_types, "perplexity_types.rds")
-
-setwd(pro_loc)
+perplexity_types <- c(10L, 50L)
 
 # searches for a threshold to num_digits precision such that
 # ncol(table_to_sets(data, thre)) approximates target
@@ -25,7 +47,7 @@ binary_search <- function(data, target, num_digits)
   precision <- 0.1^num_digits
   lower <- precision
   upper <- 1
-  while (upper-lower >= precision)
+  while (upper - lower >= precision)
   {
     mid <- (lower + upper)/2
 
@@ -35,7 +57,7 @@ binary_search <- function(data, target, num_digits)
       lower <- mid
   }
 
-  round((lower+upper)/2,num_digits)
+  round((lower + upper)/2, num_digits)
 }
 
 # temporarily reduce number of normalizations
@@ -45,43 +67,61 @@ temp_nor <- nor_options[1:2]
 # name_cat <- "piRNA"
 # name_cat <- "RNA_binding_proteins"
 # t_col <- "Unique150"
-name_cat <- c("DROSHA_HepG2", "DROSHA_HepG2+K562", "DROSHA_K562",
-                "DGCR8_HepG2", "DGCR8_HepG2+K562", "DGCR8_K562")
+# name_cat <- c("DROSHA_HepG2", "DROSHA_HepG2+K562", "DROSHA_K562",
+#               "DGCR8_HepG2", "DGCR8_HepG2+K562", "DGCR8_K562")
+name_cat <- setdiff(cat_names, unique(app_requests$CATEGORIES))
 
 # ------------
 # PCA REQUESTS
 # ------------
 
-pca_requests <- make_requests()
+pca_req_list <- list()
+pca_req_append <- function(item)
+{
+  pca_req_list[[length(pca_req_list) + 1]] <<- item
+}
 
 for (cat in name_cat)
 {
-  for (row in sub_row_groups[[cat]])
+  # cat <- name_cat[100]
+  cat_row_sub_lengths <- get_row_sub_lengths(cat)
+  row_opts <- names(cat_row_sub_lengths)
+  # row_opts <- "Total"
+  for (row in row_opts)
   {
-    for (col in sub_col_groups[[cat]])
+    cat_col_sub_lengths <- get_col_sub_lengths(cat)
+    col_opts <- names(cat_col_sub_lengths)
+    # col_opts <- "Total"
+    for (col in col_opts)
     {
+      red_com <- min(10L, cat_col_sub_lengths[[col]])
+
       for (sca in sca_options)
       {
         for (nor in temp_nor)
         {
           # explore
-          pca_e <- make_pvu_requests(cat, row, col, sca, nor, "PCA", "Explore",
-                                     10, num_d(), num_d(), num_d(), aut_d())
-          pca_requests <- rbind(pca_requests, pca_e)
+          pca_e <- make_pca_e_req_keys(
+            cat, row, col, sca, nor, com = red_com)
+          pca_req_append(pca_e)
 
           # summarize
-          pca_s <- make_pvu_requests(cat, row, col, sca, nor, "PCA", "Summarize",
-                                     10, num_d(), num_d(), num_d(), aut_d())
-          pca_requests <- rbind(pca_requests, pca_s)
+          pca_s <- make_pca_s_req_keys(
+            cat, row, col, sca, nor, com = red_com)
+          pca_req_append(pca_s)
 
           # tsne
           for (per in perplexity_types)
           {
-            for (dim in c(2,3))
+            if (perplexity_is_valid(per, cat_row_sub_lengths[[row]]))
             {
-              pca_t <- make_pvu_requests(cat, row, col, sca, nor, "PCA", "tSNE",
-                                         10, dim, per, num_d(), aut_d())
-              pca_requests <- rbind(pca_requests, pca_t)
+              for (dim in c(2L, 3L))
+              {
+                pca_t <- make_pca_req_keys(
+                  cat, row, col, sca, nor,
+                  vis = "tSNE", com = red_com, dim, per)
+                pca_req_append(pca_t)
+              }
             }
           }
         }
@@ -89,9 +129,26 @@ for (cat in name_cat)
     }
   }
 }
-rm(pca_e, pca_s, pca_t)
 
-saveRDS(pca_requests, "pca_requests.rds")
+pca_req_keys <- do.call(rbind, pca_req_list)
+pca_requests <- make_requests(pca_req_keys, "ADMIN")
+# saveRDS(pca_requests, "pca_requests.rds")
+pca_rbp2_loc <- prepend_reque("new_rbp_requests.rds") %>% get_loc_rel_wf()
+# saveRDS(pca_requests, pca_rbp2_loc)
+pca_rbp2_requests <- readRDS(pca_rbp2_loc)
+pca_rbp2_req_short <- pca_rbp2_requests[
+  pca_rbp2_requests$VISUALIZATION != "tSNE" &
+    pca_rbp2_requests$SCALING == sca_options[1] &
+    pca_rbp2_requests$NORMALIZATION == nor_options[1],
+]
+perform_reduction(pca_rbp2_req_short)
+
+pca_rbp2_requests_done <- pca_rbp2_requests[
+  pca_rbp2_requests$FILE_LOCATION %in% list_local(),
+]
+upload_to_cloud(pca_rbp2_requests_done$FILE_LOCATION)
+pca_rbp2_requests_done$TIME_COMPLETED <- get_time_completed(
+  pca_rbp2_requests_done$FILE_LOCATION)
 
 # ------------
 # VAE REQUESTS
@@ -111,12 +168,12 @@ for (cat in name_cat)
         {
           # explore
           vae_e <- make_pvu_requests(cat, row, col, sca, nor, "VAE", "Explore",
-                                     10, num_d(), num_d(), 64, aut_d())
+                                     10, num_d, num_d, 64, aut_d())
           vae_requests <- rbind(vae_requests, vae_e)
 
           # summarize
           vae_s <- make_pvu_requests(cat, row, col, sca, nor, "VAE", "Summarize",
-                                     10, num_d(), num_d(), 64, aut_d())
+                                     10, num_d, num_d, 64, aut_d())
           vae_requests <- rbind(vae_requests, vae_s)
 
           # tsne
@@ -159,19 +216,19 @@ for (cat in name_cat)
           {
             # explore
             umap_e <- make_pvu_requests(cat, row, col, sca, nor, "UMAP", "Explore",
-                                        10, num_d(), per, num_d(), aut_d())
+                                        10, num_d, per, num_d, aut_d())
             umap_requests <- rbind(umap_requests, umap_e)
 
             # summarize
             umap_s <- make_pvu_requests(cat, row, col, sca, nor, "UMAP", "Summarize",
-                                        10, num_d(), per, num_d(), aut_d())
+                                        10, num_d, per, num_d, aut_d())
             umap_requests <- rbind(umap_requests, umap_s)
 
             # tsne
             for (dim in c(2,3))
             {
               umap_t <- make_pvu_requests(cat, row, col, sca, nor, "UMAP", "tSNE",
-                                          10, dim, per, num_d(), aut_d())
+                                          10, dim, per, num_d, aut_d())
               umap_requests <- rbind(umap_requests, umap_t)
             }
           }
@@ -656,8 +713,6 @@ setwd(ref_loc)
 saveRDS(app_requests_11_25, "app_requests.rds")
 
 # syncs a set of requests from reference to AWS
-sudo_working_key(amazon_keys)
-setwd(ref_loc)
 app_requests <- readRDS("app_requests.rds")
 existing_files <- list_aws_s3()
 request_files <- app_requests$FILE_LOCATION
@@ -670,23 +725,6 @@ files_to_be_uploaded <- app_requests$FILE_LOCATION[
 n <- length(files_to_be_uploaded)
 
 my_range <- seq_len(n)
-set_working_ref(ref_loc)
-# my_range <- 39401:n
-# my_range <- 62021:n
-
-for (i in my_range)
-{
-  if (i %% 100 == 0 || i == n)
-  {
-    sprintf_clean("Synced %s out of %s", i, n)
-  }
-  single_file <- files_to_be_uploaded[i]
-  data <- load_local(single_file)
-  if (is.null(data))
-    stop(sprintf("Cannot load data entry %s to sync!", i))
-  save_aws_s3(data, single_file)
-}
-
 save_aws_s3(app_requests, "app_requests.rds")
 
 
