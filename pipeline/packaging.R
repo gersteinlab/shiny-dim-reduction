@@ -147,8 +147,13 @@ pca_rbp2_requests_done <- pca_rbp2_requests[
   pca_rbp2_requests$FILE_LOCATION %in% list_local(),
 ]
 upload_to_cloud(pca_rbp2_requests_done$FILE_LOCATION)
-pca_rbp2_requests_done$TIME_COMPLETED <- get_time_completed(
-  pca_rbp2_requests_done$FILE_LOCATION)
+pca_rbp2_requests_done$TIME_COMPLETED <- pca_rbp2_requests_done$FILE_LOCATION %>%
+  prepend_store() %>% get_loc_rel_wf() %>% get_time_completed()
+
+app_requests <- load_local("app_requests.rds")
+app_requests <- rbind_req2(app_requests, pca_rbp2_requests_done)
+save_local(app_requests, "app_requests.rds")
+save_cloud(app_requests, "app_requests.rds")
 
 # ------------
 # VAE REQUESTS
