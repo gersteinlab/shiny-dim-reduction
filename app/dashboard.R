@@ -383,7 +383,7 @@ for (cat in cat_names)
   app_cat_selected$rowby[[cat]] <- row_choices$rowby[1]
   app_cat_selected$colby[[cat]] <- col_choices$colby[1]
   app_cat_selected$colorby[[cat]] <- safe_chas[1]
-  app_cat_selected$shapeby[[cat]] <- safe_chas[2]
+  app_cat_selected$shapeby[[cat]] <- safe_chas[min(2, length(safe_chas))]
   app_cat_selected$labelby[[cat]] <- safe_chas[1]
   app_cat_selected$filterby[[cat]] <- safe_chas[1]
   app_cat_selected$selectby[[cat]] <- row_choices$selectby
