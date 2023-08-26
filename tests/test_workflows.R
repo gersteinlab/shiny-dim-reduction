@@ -9,16 +9,17 @@ source("pipeline/workflows.R")
 
 test_workflow_locs <- function()
 {
-  cat_f("Workflow Location: %s\n", get_loc_wf())
-  cat_f("-> Table Location: %s\n", get_loc_table())
-  cat_f("-> Inter Location: %s\n", get_loc_inter())
-  cat_f("-> Store Location: %s\n", get_loc_store())
-  cat_f("-> Reque Location: %s\n", get_loc_reque())
+  cat_f("%s.Workflow: %s\n", get_workflow(), get_loc_wf())
+  cat_f("-> %s.Table: %s\n", get_workflow(), get_loc_table())
+  cat_f("-> %s.Inter: %s\n", get_workflow(), get_loc_inter())
+  cat_f("-> %s.Store: %s\n", get_workflow(), get_loc_store())
+  cat_f("-> %s.Reque: %s\n", get_workflow(), get_loc_reque())
+  cat_f("-> %s.App-D: %s\n\n", get_workflow(), get_loc_app_d())
 }
 
-# -----
-# TESTS
-# -----
+# --------------
+# TEST WF CONFIG
+# --------------
 
 stopifnot(is_wf_config(wf_config))
 
@@ -26,52 +27,52 @@ stopifnot(is_wf_config(wf_config))
 # note: if location is not specified and
 # no current workflow exists, it will be
 # created in the current working directory
-upsert_workflow("exRNA")
-list_workflows()
+upsert_workflow("exRNA", getwd())
+set_workflow("exRNA")
+cat_wf_config()
 test_workflow_locs()
 
 # change the location of the exRNA workflow
 upsert_workflow("exRNA", "~/DataR/sdr_workflows/exRNA")
-list_workflows()
+cat_wf_config()
 test_workflow_locs()
 
 # change the location again
 upsert_workflow("exRNA", "~/DataR/sdr_workflows")
-list_workflows()
+cat_wf_config()
 test_workflow_locs()
 
-# if no location is specified, it will be
-# created in the same folder as the current
-# workflow ... note that upsert_workflow
-# conveniently sets the current workflow too
-upsert_workflow("MNIST")
-list_workflows()
-test_workflow_locs()
-
-# you can set a workflow as well
-set_current_workflow("exRNA")
-list_workflows()
+# create another workflow
+upsert_workflow("MNIST", "~/DataR/sdr_workflows")
+cat_wf_config()
+set_workflow("MNIST")
 test_workflow_locs()
 
 # you can delete workflows that don't exist
 unlink_workflow("does_not_exist")
-list_workflows()
-test_workflow_locs()
+cat_wf_config()
 
-# if you make a workflow and delete it,
-# the current workflow will go back to the
-# non-deleted workflow used most recently
-upsert_workflow("temp")
-list_workflows()
-test_workflow_locs()
+# you can also make a workflow and delete it
+upsert_workflow("temp", "~")
+cat_wf_config()
 
 unlink_workflow("temp")
-list_workflows()
-test_workflow_locs()
+cat_wf_config()
 
 # see what load_wf_config yields
 load_wf_config()
-list_workflows()
+cat_wf_config()
 test_workflow_locs()
 
 # save_wf_config()
+
+# --------------
+# TEST WORKFLOWS
+# --------------
+
+set_workflow("exRNA")
+test_workflow_locs()
+
+set_workflow("MNIST")
+test_workflow_locs()
+

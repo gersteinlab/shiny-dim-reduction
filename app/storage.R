@@ -357,12 +357,12 @@ is_store_mode <- function(x)
   is_str(x) && (x %in% all_store_modes)
 }
 
-#' cat store_mode to console
+#' cat store_mode sm to console
 #'
-#' @param store_mode [store_mode]
-cat_store_mode <- function(store_mode)
+#' @param sm [store_mode] not checked
+cat_store_mode <- function(sm)
 {
-  cat_f("STORE MODE: %s\n", store_mode)
+  cat_f("STORE MODE: %s\n", sm)
 }
 
 #' gets store_mode

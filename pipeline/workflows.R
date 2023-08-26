@@ -5,6 +5,10 @@ if (!exists("sdr_config") || sdr_config$mode != "pipeline")
   source("app/install.R")
 stopifnot(sdr_config$mode == "pipeline")
 
+# ---------------
+# WORKFLOW CONFIG
+# ---------------
+
 #' whether R would accept x as variable names
 #'
 #' @param x [object]
@@ -23,36 +27,32 @@ has_var_names <- function(x)
   are_var_names(names(x))
 }
 
-#' whether x is a 'wf_data' object
+#' whether x is a 'wf_config' object, where
+#' each element of wf_config is the directory
+#' of that workflow accessed by workflow name
 #' note: workflow data can be valid without
 #' the folders of that workflow existing
 #'
 #' @param x [object]
 #' @returns [boolean]
-is_wf_data <- function(x)
+is_wf_config <- function(x)
 {
   is.list(x) && all_fun_true(x, is_str) &&
     has_safe_names(x) &&
     has_var_names(x)
 }
 
-#' whether x is a 'wf_config' object
-#'
-#' @param x [object]
-#' @returns [boolean]
-is_wf_config <- function(x)
-{
-  members <- c("data", "history")
-  is.list(x) && identical(names(x), members) &&
-    is_wf_data(x$data) &&
-    all(x$history %in% names(x$data))
-}
-
 # default wf_config
-wf_config <- list(
-  "data" = list(),
-  "history" = character()
-)
+wf_config <- list()
+
+#' cat wf_config to console
+cat_wf_config <- function()
+{
+  cat_f("--- WORKFLOWS ---\n")
+  for (wf in names(wf_config))
+    cat_f("%s: %s\n", wf, wf_config[[wf]])
+  cat_f("\n")
+}
 
 #' sets wf_config to wf_cfg
 #'
@@ -63,121 +63,56 @@ update_wf_config <- function(wf_cfg)
   wf_config <<- wf_cfg
 }
 
-#' whether the workflow history is empty
+#' updates / inserts workflow wf into wf_config by path
+#' (when needed, a folder for wf will be created in path)
 #'
-#' @returns [boolean]
-history_is_empty <- function()
-{
-  length(wf_config$history) < 1
-}
-
-#' indicates the current workflow
-#'
-#' @returns [string]
-get_current_workflow <- function()
-{
-  if (history_is_empty())
-    stop("No workflow history!")
-  tail(wf_config$history, 1)
-}
-
-#' sets the current workflow
-#'
-#' @param wf_name [string] not checked
-set_current_workflow <- function(wf_name)
-{
-  wf_cfg <- wf_config
-  wf_cfg$history <- c(wf_cfg$history, wf_name)
-  update_wf_config(wf_cfg)
-}
-
-#' indicator for the current workflow
-#'
-#' @param wf_name [string] not checked
-#' @returns [string]
-star_current <- function(wf_name)
-{
-  if (!history_is_empty() &&
-      wf_name == get_current_workflow())
-    return("*")
-  "-"
-}
-
-#' helpful printing of all workflows
-list_workflows <- function()
-{
-  wf_data <- wf_config$data
-  message_f("--- WORKFLOWS ---")
-  for (wf_name in names(wf_data))
-    message_f("%s %s: %s", star_current(wf_name),
-              wf_name, wf_data[[wf_name]])
-}
-
-#' gets the location of the current workflow
-#'
-#' @returns [string]
-get_loc_wf <- function()
-{
-  wf_config$data[[get_current_workflow()]]
-}
-
-#' gets a location relative to the current workflow
-#'
-#' @param [character] not checked
-#' @returns [string]
-get_loc_rel_wf <- function(file)
-{
-  file.path(get_loc_wf(), file)
-}
-
-#' gets the default wf_loc
-#'
-#' @returns [string]
-def_wf_loc <- function()
-{
-  if (history_is_empty())
-    return(getwd())
-  dirname(get_loc_wf())
-}
-
-#' updates / inserts a workflow with the given name;
-#' a folder with that name will be created in wf_loc
-#'
-#' @param wf_name [string]
+#' @param wf [workflow]
 #' @param wf_loc [string or NULL] representing a directory
-upsert_workflow <- function(wf_name, wf_loc = def_wf_loc(), mkdir = FALSE)
+upsert_workflow <- function(wf, path)
 {
   stopifnot(
-    is_str(wf_name),
-    are_safe_names(wf_name),
-    are_var_names(wf_name),
-    is_str(wf_loc),
-    dir.exists(wf_loc)
+    is_str(wf),
+    is_str(path),
+    dir.exists(path) # ensure the directory exists
   )
 
   wf_cfg <- wf_config
-  wf_dir <- file.path(wf_loc, wf_name)
-  if (mkdir)
-    ensure_dir(wf_dir)
-  wf_cfg$data[[wf_name]] <- path.expand(wf_dir)
-  wf_cfg$history <- c(wf_cfg$history, wf_name)
+  wf_cfg[[wf]] <- path.expand(file.path(path, wf))
   update_wf_config(wf_cfg)
 }
 
-#' attempts to delete a workflow by name
+#' attempts to delete a workflow wf by name
 #' note: deleting a nonexistent workflow succeeds
 #' note: deleting a workflow does not immediately
 #' delete the corresponding files for that workflow
 #'
-#' @param wf_name [string]
-unlink_workflow <- function(wf_name)
+#' @param wf [string]
+unlink_workflow <- function(wf)
 {
-  wf_cfg <- wf_config
-  wf_cfg$data[[wf_name]] <- NULL
-  h_vec <- wf_cfg$history
-  wf_cfg$history <- h_vec[h_vec != wf_name]
-  update_wf_config(wf_cfg)
+  stopifnot(is_str(wf))
+  wf_config[[wf]] <<- NULL
 }
+
+#' attempts to load wf_config
+load_wf_config <- function()
+{
+  stopifnot(sdr_config$mode == "pipeline")
+  readRDS(get_project_loc("sdr_wf_config.rds")
+          ) %>% update_wf_config()
+}
+
+#' attempts to save wf_config
+save_wf_config <- function()
+{
+  stopifnot(is_wf_config(wf_config),
+            sdr_config$mode == "pipeline")
+  saveRDS(wf_config,
+          get_project_loc("sdr_wf_config.rds"))
+}
+
+# --------------------
+# NAVIGATING WORKFLOWS
+# --------------------
 
 # loc_wf (workflow)
 # -- loc_table (tables)
@@ -186,70 +121,106 @@ unlink_workflow <- function(wf_name)
 # -- loc_reque (request queue)
 # -- loc_app_d (app data)
 
+#' whether a string is a workflow
+#'
+#' @param x [object]
+#' @returns [boolean]
+is_workflow <- function(x)
+{
+  is_str(x) && (x %in% names(wf_config))
+}
+
+#' cat workflow wf to console
+#'
+#' @param wf [workflow] not checked
+cat_workflow <- function(wf)
+{
+  cat_f("WORKFLOW: %s\n", wf)
+}
+
+#' gets workflow
+#'
+#' @returns [workflow]
+get_workflow <- function()
+{
+  Sys.getenv("SDR_WORKFLOW")
+}
+
+#' sets workflow to x
+#'
+#' @param x [workflow]
+set_workflow <- function(x)
+{
+  stopifnot(is_workflow(x))
+  cat_workflow(x)
+  Sys.setenv("SDR_WORKFLOW" = x)
+}
+
+#' gets a relative location in the active workflow
+#'
+#' @param file [character]
+#' @returns [string]
+get_loc_wf <- function(file = "")
+{
+  stopifnot(is.character(file))
+  workflow <- get_workflow()
+  stopifnot(is_workflow(workflow))
+  file.path(wf_config[[workflow]], file)
+}
+
+#' prepend a tables folder to file
+#'
+#' @param file [character]
+#' @returns [character]
+get_loc_table <- function(file = "")
+{
+  stopifnot(is.character(file))
+  file.path("sdr_tables", file) %>% get_loc_wf()
+}
+
 #' see above
 #'
 #' @param file [character] not checked
 #' @returns [character]
-prepend_table <- function(file = "")
+get_loc_inter <- function(file = "")
 {
-  file.path("sdr_tables", file)
+  stopifnot(is.character(file))
+  file.path("sdr_intermediates", file) %>% get_loc_wf()
 }
 
 #' see above
 #'
 #' @param file [character] not checked
 #' @returns [character]
-prepend_inter <- function(file = "")
+get_loc_store <- function(file = "")
 {
-  file.path("sdr_intermediates", file)
+  stopifnot(is.character(file))
+  file.path("sdr_local_store", file) %>% get_loc_wf()
 }
 
 #' see above
 #'
 #' @param file [character] not checked
 #' @returns [character]
-prepend_store <- function(file = "")
+get_loc_reque <- function(file = "")
 {
-  file.path("sdr_local_store", file)
+  stopifnot(is.character(file))
+  file.path("sdr_requests", file) %>% get_loc_wf()
 }
 
 #' see above
 #'
 #' @param file [character] not checked
 #' @returns [character]
-prepend_reque <- function(file = "")
+get_loc_app_d <- function(file = "")
 {
-  file.path("sdr_requests", file)
+  stopifnot(is.character(file))
+  file.path("sdr_app_data", file) %>% get_loc_wf()
 }
 
-#' see above
-#'
-#' @param file [character] not checked
-#' @returns [character]
-prepend_app_d <- function(file = "")
-{
-  file.path("sdr_app_data", file)
-}
-
-# ----------------
-# SAVING / LOADING
-# ----------------
-
-# where to save / load wf_config
-wf_config_loc <- get_project_loc("sdr_wf_config.rds")
-
-#' attempts to load wf_config
-load_wf_config <- function()
-{
-  readRDS(wf_config_loc) %>% update_wf_config()
-}
-
-#' attempts to save wf_config
-save_wf_config <- function()
-{
-  stopifnot(is_wf_config(wf_config))
-  saveRDS(wf_config, wf_config_loc)
-}
+# ---------------------
+# SYNC APPS / WORKFLOWS
+# ---------------------
 
 # expected files to copy between app / workflows
 app_wf_files <- c("app_data.rds", "local_store.rds", "cloud_store.rds")
@@ -281,7 +252,7 @@ copy_wf_to_app <- function(file = app_wf_files)
 #' @param file [character] not checked
 copy_app_to_wf_msg <- function(file = app_wf_files)
 {
-  message_f("app to %s: %s", get_current_workflow(),
+  message_f("app to %s: %s", get_workflow(),
             vec_str(file[copy_app_to_wf(file)]))
 }
 
@@ -290,7 +261,7 @@ copy_app_to_wf_msg <- function(file = app_wf_files)
 #' @param file [character] not checked
 copy_wf_to_app_msg <- function(file = app_wf_files)
 {
-  message_f("%s to app: %s", get_current_workflow(),
+  message_f("%s to app: %s", get_workflow(),
             vec_str(file[copy_wf_to_app(file)]))
 }
 
@@ -299,6 +270,7 @@ copy_wf_to_app_msg <- function(file = app_wf_files)
 # ------------------
 
 #' the location of the administrative cloud_store
+#' (administrative means read/write capabilities)
 #'
 #' @returns [string]
 cloud_store_admin_loc <- function()
@@ -313,7 +285,6 @@ cloud_store_admin_loc <- function()
 copy_local_to_cloud <- function(files, each = 100)
 {
   # require that an administrative store is available
-  # (administrative means read/write capabilities)
   cloud_store_admin <- readRDS(cloud_store_admin_loc())
   stopifnot(cloud_connects(cloud_store_admin))
 
@@ -338,7 +309,6 @@ copy_local_to_cloud <- function(files, each = 100)
 copy_cloud_to_local <- function(files, each = 100)
 {
   # require that an administrative store is available
-  # (administrative means read/write capabilities)
   cloud_store_admin <- readRDS(cloud_store_admin_loc())
   stopifnot(cloud_connects(cloud_store_admin))
 
