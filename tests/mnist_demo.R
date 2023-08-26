@@ -1,5 +1,22 @@
-# The goal of this script is to convert test numerical data
-# into numeric data and metadata.
+# The goal of this file is to build an application using MNIST data.
+
+source("app/storage.R")
+source("app/preprocess.R")
+source("pipeline/workflows.R")
+
+# upsert_workflow("MNIST", "C:/Users/justin/Desktop/CodeR/DataR/sdr_workflows")
+load_wf_config()
+cat_wf_config()
+set_workflow("MNIST")
+
+# cloud_store, cloud_store_admin must be stored separately
+save_local_store(get_loc_store())
+set_store_mode("local")
+load_all_stores()
+
+# -------------
+# DOWNLOAD DATA
+# -------------
 
 sources <- list(
   train = list(
@@ -39,32 +56,7 @@ read_idx <- function(file) {
   matrix(converted, nrow = dims[1], ncol = prod(dims[-1]), byrow = TRUE)
 }
 
-source("app/storage.R")
-source("pipeline/workflows.R")
-load_wf_config()
-list_workflows()
-set_store_mode("local")
-load_all_stores()
-
-# upsert_workflow("MNIST", "C:/Users/justin/Desktop/CodeR/DataR/sdr_workflows")
-
-set_current_workflow("exRNA")
-cloud_store_admin <- readRDS(cloud_store_admin_loc())
-cloud_store_admin$bucket <- "shiny-app-data-justin-mnist"
-copy_app_to_wf_msg()
-
-set_current_workflow("MNIST")
-list_workflows()
-mkdir_saveRDS(cloud_store_admin, cloud_store_admin_loc())
-
-local_store <- get_loc_rel_wf(prepend_store())
-
-cloud_store <- make_cloud_store()
-
-save_local_store()
-save_cloud_store()
-
-raw_loc <- get_loc_rel_wf("raw")
+raw_loc <- get_loc_wf("raw")
 ensure_dir(raw_loc)
 
 mnist <- rapply(sources, classes = "character", how = "list", function(url) {
@@ -102,22 +94,22 @@ stopifnot(
   is_metadata(col_meta_test)
 )
 
-#' gets the table name for a category
-#'
-#' @param cat [string] not checked
-#' @returns [string]
-get_cat_table_name <- function(cat)
-{
-  sprintf("combined_%s.rds", cat) %>% prepend_table() %>% get_loc_rel_wf()
-}
-
 mkdir_saveRDS(combined_train, get_cat_table_name("Train"))
 mkdir_saveRDS(combined_test, get_cat_table_name("Test"))
 
-source("app/preprocess.R")
-
 app_data$title <- "Dimensionality Reduction Tool for MNIST"
-app_data$citations <- ""
+app_data$citations <- "
+Train Images: <a href=\"https://storage.googleapis.com/cvdf-datasets/mnist/train-images-idx3-ubyte.gz\" target=\"_blank\">
+https://storage.googleapis.com/cvdf-datasets/mnist/train-images-idx3-ubyte.gz</a>
+<br>
+Train Labels: <a href=\"https://storage.googleapis.com/cvdf-datasets/mnist/train-labels-idx1-ubyte.gz\" target=\"_blank\">
+https://storage.googleapis.com/cvdf-datasets/mnist/train-labels-idx1-ubyte.gz</a>
+<br>
+Test Images: <a href=\"https://storage.googleapis.com/cvdf-datasets/mnist/t10k-images-idx3-ubyte.gz\" target=\"_blank\">
+https://storage.googleapis.com/cvdf-datasets/mnist/t10k-images-idx3-ubyte.gz</a>
+<br>
+Test Labels: <a href=\"https://storage.googleapis.com/cvdf-datasets/mnist/t10k-labels-idx1-ubyte.gz\" target=\"_blank\">
+https://storage.googleapis.com/cvdf-datasets/mnist/t10k-labels-idx1-ubyte.gz</a><br><br>"
 
 app_data$row_axes <- list(
   "Train" = make_axis(
@@ -156,4 +148,4 @@ app_data$groups <- list(
 
 stopifnot(is_app_data(app_data))
 save_app_data()
-
+copy_app_to_wf_msg()
