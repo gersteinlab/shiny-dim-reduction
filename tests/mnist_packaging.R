@@ -6,34 +6,6 @@ stopifnot(sdr_config$mode == "pipeline")
 
 source("pipeline/red_requests.R")
 
-# ---------------
-# UPLOAD TO CLOUD
-# ---------------
-
-#' uploads a file vector to the cloud
-#'
-#' @param file_vec [character] of existing tables
-upload_to_cloud <- function(file_vec, each = 100)
-{
-  # check that an administrative store is available
-  cloud_store_admin <- readRDS(cloud_store_admin_loc())
-  stopifnot(cloud_connects(cloud_store_admin))
-
-  # require that all files exist before proceeding
-  stopifnot(is.character(file_vec))
-  file_n <- length(file_vec)
-
-  for (i in seq_len(file_n))
-  {
-    file <- file_vec[i]
-    data <- load_local(file)
-    stopifnot(is_table(as.matrix(data)))
-    save_cloud(data, file)
-    if (i %% each == 1 || i == file_n)
-      cat_f("uploaded %s/%s: %s\n", i, file_n, file)
-  }
-}
-
 # ------------------
 # REQ_KEY GENERATION
 # ------------------

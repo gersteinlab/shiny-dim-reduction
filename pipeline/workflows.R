@@ -294,11 +294,65 @@ copy_wf_to_app_msg <- function(file = app_wf_files)
             vec_str(file[copy_wf_to_app(file)]))
 }
 
+# ------------------
+# SYNC LOCAL / CLOUD
+# ------------------
+
 #' the location of the administrative cloud_store
 #'
 #' @returns [string]
 cloud_store_admin_loc <- function()
 {
   get_loc_rel_wf("sdr_cloud_store_admin.rds")
+}
+
+#' copies files from the local store to the cloud store
+#'
+#' @param files [character] of existing files
+copy_local_to_cloud <- function(files, each = 100)
+{
+  # require that an administrative store is available
+  # (administrative means read/write capabilities)
+  cloud_store_admin <- readRDS(cloud_store_admin_loc())
+  stopifnot(cloud_connects(cloud_store_admin))
+
+  # require that all files exist before proceeding
+  stopifnot(is.character(files))
+  file_n <- length(files)
+
+  for (i in seq_len(file_n))
+  {
+    file <- files[i]
+    load_local(
+      file, stop_f("missing %s", file)
+    ) %>% save_cloud(file)
+    if (i %% each == 1 || i == file_n)
+      cat_f("uploaded %s/%s: %s\n", i, file_n, file)
+  }
+}
+
+#' copies files from the cloud store to the local store
+#'
+#' @param files [character] of existing files
+copy_cloud_to_local <- function(files, each = 100)
+{
+  # require that an administrative store is available
+  # (administrative means read/write capabilities)
+  cloud_store_admin <- readRDS(cloud_store_admin_loc())
+  stopifnot(cloud_connects(cloud_store_admin))
+
+  # require that all files exist before proceeding
+  stopifnot(is.character(files))
+  file_n <- length(files)
+
+  for (i in seq_len(file_n))
+  {
+    file <- files[i]
+    load_cloud(
+      file, stop_f("missing %s", file)
+    ) %>% save_local(file)
+    if (i %% each == 1 || i == file_n)
+      cat_f("uploaded %s/%s: %s\n", i, file_n, file)
+  }
 }
 
