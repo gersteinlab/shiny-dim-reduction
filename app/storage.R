@@ -153,7 +153,9 @@ delete_local <- function(file)
 }
 
 #' saves local_store
-save_local_store <- function()
+#'
+#' @param local_store [local_store]
+save_local_store <- function(local_store)
 {
   stopifnot(sdr_config$mode == "pipeline")
   saveRDS(local_store, get_app_loc("local_store.rds"))
@@ -326,7 +328,9 @@ delete_cloud <- function(file)
 }
 
 #' saves cloud_store
-save_cloud_store <- function()
+#'
+#' @param cloud_store [cloud_store]
+save_cloud_store <- function(cloud_store)
 {
   stopifnot(sdr_config$mode == "pipeline")
   saveRDS(cloud_store, get_app_loc("cloud_store.rds"))
