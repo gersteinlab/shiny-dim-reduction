@@ -1,5 +1,5 @@
-# The purpose of this file is to store functions related to scaling and normalization.
-# Note: all functions take a matrix as input and return a matrix as output.
+# The purpose of this file is to do common matrix transformations.
+# Note: all functions have matrix inputs / outputs.
 
 if (!exists("sdr_config") || sdr_config$mode != "pipeline")
   source("app/install.R")

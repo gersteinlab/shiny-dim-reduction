@@ -4,7 +4,7 @@ if (!exists("sdr_config") || sdr_config$mode != "pipeline")
   source("app/install.R")
 stopifnot(sdr_config$mode == "pipeline")
 
-source("pipeline/sca_nor_fun.R")
+source("pipeline/transforms.R")
 source("pipeline/red_methods.R")
 source("pipeline/workflows.R")
 source("app/make_requests.R")

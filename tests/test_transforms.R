@@ -1,11 +1,11 @@
-# This file tests sca_nor_fun.R.
-# source("tests/test_sca_nor_fun.R")
+# This file tests transforms.R.
+# source("tests/test_transforms.R")
 
 # -----
 # SETUP
 # -----
 
-source("pipeline/sca_nor_fun.R")
+source("pipeline/transforms.R")
 
 # scale options
 sca_options <- c("Logarithmic", "Linear")
