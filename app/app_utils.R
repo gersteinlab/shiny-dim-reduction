@@ -188,10 +188,10 @@ generate_legend_table <- function(vec)
 summarize_shape_num <- function(emb)
 {
   if (emb == "PCA")
-    return(1)
+    return(1L)
   if (emb == "VAE")
-    return(2)
+    return(2L)
   if (emb == "UMAP")
-    return(6)
+    return(6L)
   stop_f("summarize_shape_num failed for emb %s", emb)
 }

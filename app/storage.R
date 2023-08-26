@@ -348,14 +348,6 @@ save_cloud_store <- function()
 
 all_store_modes <- c("local", "cloud")
 
-#' gets store_mode
-#'
-#' @returns [store_mode]
-get_store_mode <- function()
-{
-  Sys.getenv("SDR_STORE_MODE")
-}
-
 #' whether x is a 'store_mode' object
 #'
 #' @param x [object]
@@ -371,6 +363,14 @@ is_store_mode <- function(x)
 cat_store_mode <- function(store_mode)
 {
   cat_f("STORE MODE: %s\n", store_mode)
+}
+
+#' gets store_mode
+#'
+#' @returns [store_mode]
+get_store_mode <- function()
+{
+  Sys.getenv("SDR_STORE_MODE")
 }
 
 #' sets store_mode to x
