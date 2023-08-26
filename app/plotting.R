@@ -201,7 +201,7 @@ ggplot2_2d <- function(x, y, color = NULL, shape = NULL,
                        title = "", x_axis = "", y_axis = "")
 {
   if (length(color) < 1)
-    color <- rep("Unknown", n)
+    color <- rep("Unknown", length(x))
 
   if (length(shape) < 1)
     shape <- color
@@ -209,12 +209,12 @@ ggplot2_2d <- function(x, y, color = NULL, shape = NULL,
   if (length(color_seq) < 1)
     color_seq <- make_color_seq(num_unique(color))
 
-  df <- data.frame("xx" = x, "yy" = y, "cc" = color, "ss" = shape)
+  df <- data.frame("xx" = x, "yy" = y, "Color" = color, "Shape" = shape)
   shape_seq <- num_unique(shape) %>% ggplot2_shape_seq()
   theme <- ggplot2_theme
   theme[["legend.position"]] <- ifelse(legend, "right", "none")
 
-  ggplot(df, aes(x = xx, y = yy, color = cc, shape = ss)) +
+  ggplot(df, aes(x = xx, y = yy, color = Color, shape = Shape)) +
     theme + ggtitle(title) + xlab(x_axis) + ylab(y_axis) +
     scale_color_manual(values = color_seq) +
     scale_shape_manual(values = shape_seq) +
