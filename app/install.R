@@ -388,6 +388,16 @@ median_index <- function(n)
   ceiling(n / 2) %>% as.integer()
 }
 
+#' ensures the existence of a directory
+#'
+#' @param path [string], usually a directory
+ensure_dir <- function(path)
+{
+  stopifnot(is_str(path))
+  if (!dir.exists(path))
+    dir.create(path, recursive = TRUE)
+}
+
 #' the top n columns of data in decreasing standard deviation
 #'
 #' @param data [array, matrix] not checked

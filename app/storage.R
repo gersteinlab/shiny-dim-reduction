@@ -105,16 +105,6 @@ find_local <- function(file)
   file.exists(prefix_local(file))
 }
 
-#' ensures the existence of a directory
-#'
-#' @param path [string], usually a directory
-ensure_dir <- function(path)
-{
-  stopifnot(is_str(path))
-  if (!dir.exists(path))
-    dir.create(path, recursive = TRUE)
-}
-
 #' saveRDS but ensure the directory first
 #'
 #' @param file [string]
