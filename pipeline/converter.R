@@ -9,7 +9,6 @@ stopifnot(sdr_config$mode == "pipeline")
 source("app/app_utils.R")
 source("app/storage.R")
 source("pipeline/workflows.R")
-source("pipeline/validation.R")
 
 # ---------
 # FUNCTIONS

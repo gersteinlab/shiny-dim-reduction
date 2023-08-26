@@ -168,7 +168,7 @@ get_loc_wf <- function(file = "")
   file.path(wf_config[[workflow]], file)
 }
 
-#' prepend a tables folder to file
+#' location of file found in sdr_tables
 #'
 #' @param file [character]
 #' @returns [character]
@@ -178,7 +178,7 @@ get_loc_table <- function(file = "")
   file.path("sdr_tables", file) %>% get_loc_wf()
 }
 
-#' see above
+#' location of file found in sdr_intermediates
 #'
 #' @param file [character] not checked
 #' @returns [character]
@@ -188,7 +188,7 @@ get_loc_inter <- function(file = "")
   file.path("sdr_intermediates", file) %>% get_loc_wf()
 }
 
-#' see above
+#' location of file found in sdr_local_store
 #'
 #' @param file [character] not checked
 #' @returns [character]
@@ -198,7 +198,7 @@ get_loc_store <- function(file = "")
   file.path("sdr_local_store", file) %>% get_loc_wf()
 }
 
-#' see above
+#' location of file found in sdr_requests
 #'
 #' @param file [character] not checked
 #' @returns [character]
@@ -208,7 +208,7 @@ get_loc_reque <- function(file = "")
   file.path("sdr_requests", file) %>% get_loc_wf()
 }
 
-#' see above
+#' location of file found in sdr_app_data
 #'
 #' @param file [character] not checked
 #' @returns [character]
@@ -216,6 +216,15 @@ get_loc_app_d <- function(file = "")
 {
   stopifnot(is.character(file))
   file.path("sdr_app_data", file) %>% get_loc_wf()
+}
+
+#' gets the table name for a category
+#'
+#' @param cat [string] not checked
+#' @returns [string]
+get_cat_table_name <- function(cat)
+{
+  sprintf("combined_%s.rds", cat) %>% get_loc_table()
 }
 
 # ---------------------

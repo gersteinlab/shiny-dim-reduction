@@ -16,15 +16,6 @@ load_all_stores()
 load_wf_config()
 cat_wf_config()
 
-#' gets the table name for a category
-#'
-#' @param cat [string] not checked
-#' @returns [string]
-get_cat_table_name <- function(cat)
-{
-  sprintf("combined_%s.rds", cat) %>% get_loc_table()
-}
-
 #' stop if table does not align with cat
 #'
 #' @param cat [string] not checked
