@@ -571,7 +571,7 @@ make_phate_req_keys <- function(
   make_req_keys(
     cat, row, col, sca, nor, emb = rep("PHATE", n_cat),
     vis = rep(chr_d, n_cat), com,
-    dim = rep(int_d, n_cat), per, bat = rep(num_d, n_cat),
+    dim = rep(int_d, n_cat), per, bat = rep(int_d, n_cat),
     thr = rep(num_d, n_cat), cha = rep(chr_d, n_cat)
   )
 }
@@ -584,10 +584,10 @@ make_sets_req_keys <- function(
 {
   n_cat <- length(cat)
   make_req_keys(
-    cat, rep(chr_d, n_cat), rep(chr_d, n_cat), sca,
-    rep("Global Min-Max", n_cat), rep("Sets", n_cat), rep(chr_d, n_cat),
-    rep(num_d, n_cat), rep(num_d, n_cat), rep(num_d, n_cat),
-    rep(num_d, n_cat),thr, cha
+    cat, row = rep(chr_d, n_cat), col = rep(chr_d, n_cat), sca,
+    nor = rep("Global Min-Max", n_cat), emb = rep("Sets", n_cat),
+    vis = rep(chr_d, n_cat), com = rep(int_d, n_cat), dim = rep(int_d, n_cat),
+    per = rep(int_d, n_cat), bat = rep(int_d, n_cat), thr, cha
   )
 }
 
