@@ -146,6 +146,19 @@ get_time_completed <- function(file)
   file.info(file)$mtime
 }
 
+#' applies get_time_completed to requests$TIME_COMPLETED
+#'
+#' @param requests [requests] not checked
+#' @returns [requests]
+req_label_times <- function(requests)
+{
+  rel_files <- requests$FILE_LOCATION
+  is_done <- rel_files %in% list_local()
+  requests$TIME_COMPLETED[is_done] <- get_loc_store(
+    rel_files[is_done]) %>% get_time_completed()
+  requests
+}
+
 #' performs reduction on a group of valid requests,
 #' parsing requests in a non-sequential order to maximize speed
 #' note: completion status can be determined by file.exists()
