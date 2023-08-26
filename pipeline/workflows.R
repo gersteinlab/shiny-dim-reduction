@@ -231,10 +231,8 @@ app_wf_files <- c("app_data.rds", "local_store.rds", "cloud_store.rds")
 copy_app_to_wf <- function(file = app_wf_files)
 {
   stopifnot(sdr_config$mode == "pipeline")
-  wf_dir <- get_loc_rel_wf(prepend_app_d())
-  ensure_dir(wf_dir)
-  file.copy(get_app_loc(file), prepend_app_d(file) %>%
-              get_loc_rel_wf(), overwrite = TRUE)
+  ensure_dir(get_loc_app_d())
+  file.copy(get_app_loc(file), get_loc_app_d(file), overwrite = TRUE)
 }
 
 #' copies files from workflow folder to app folder
@@ -243,8 +241,7 @@ copy_app_to_wf <- function(file = app_wf_files)
 copy_wf_to_app <- function(file = app_wf_files)
 {
   stopifnot(sdr_config$mode == "pipeline")
-  file.copy(prepend_app_d(file) %>% get_loc_rel_wf(),
-            get_app_loc(file), overwrite = TRUE)
+  file.copy(get_loc_app_d(file), get_app_loc(file), overwrite = TRUE)
 }
 
 #' copy_app_to_wf with a message
@@ -276,7 +273,7 @@ copy_wf_to_app_msg <- function(file = app_wf_files)
 cloud_store_admin_loc <- function()
 {
   stopifnot(sdr_config$mode == "pipeline")
-  get_loc_rel_wf("sdr_cloud_store_admin.rds")
+  get_loc_wf("sdr_cloud_store_admin.rds")
 }
 
 #' copies files from the local store to the cloud store

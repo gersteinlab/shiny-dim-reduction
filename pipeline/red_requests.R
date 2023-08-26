@@ -14,7 +14,7 @@ source("app/storage.R")
 set_store_mode("local")
 load_all_stores()
 load_wf_config()
-list_workflows()
+cat_wf_config()
 
 #' gets the table name for a category
 #'
@@ -22,7 +22,7 @@ list_workflows()
 #' @returns [string]
 get_cat_table_name <- function(cat)
 {
-  sprintf("combined_%s.rds", cat) %>% prepend_table() %>% get_loc_rel_wf()
+  sprintf("combined_%s.rds", cat) %>% get_loc_table()
 }
 
 #' stop if table does not align with cat
@@ -164,11 +164,11 @@ perform_reduction <- function(requests, force = 0L)
 
   # intermediate file locations
   rel_inter_locs <- name_req_key_inters(requests[, 1:13])
-  inter_locs <- rel_inter_locs %>% prepend_inter() %>% get_loc_rel_wf()
+  inter_locs <- get_loc_inter(rel_inter_locs)
 
   # final file locations
   rel_fin_locs <- requests$FILE_LOCATION
-  final_locs <- rel_fin_locs %>% prepend_store() %>% get_loc_rel_wf()
+  final_locs <- get_loc_store(rel_fin_locs)
 
   # a true-false vector determining if an analysis should be performed
   i_fin <- (!file.exists(final_locs) | rep(force > 0, nrow(requests)))
