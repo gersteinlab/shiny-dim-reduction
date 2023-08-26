@@ -508,7 +508,7 @@ table_to_sets <- function(table, threshold) {
     vec_between(table, 0, 1),
     vec_between(threshold, 0, 1)
   )
-  cat_f("Sets: (%d, %d) >= %f\n", nrow(table), ncol(table), threshold)
+  cat_f("Sets: (%d, %d) >= %.4f\n", nrow(table), ncol(table), threshold)
 
   target <- matrix(as.numeric(table >= threshold),
                    nrow = nrow(table),

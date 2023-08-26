@@ -203,10 +203,13 @@ perform_reduction <- function(requests, force = 0L)
         # ----
         # SETS
         # ----
+        sets_table <- nor_table # ensure columns are available for labeling
+        colnames(sets_table) <- get_col_axis(cat)$metadata[[1]]
+
         for (thr in unique(requests$THRESHOLD[i_sets]))
         {
           i_thr <- i_sets & (requests$THRESHOLD == thr)
-          set_result <- table_to_sets(nor_table, thr)
+          set_result <- table_to_sets(sets_table, thr)
 
           for (i in which(i_thr)) # only attributes left: characteristic
           {
