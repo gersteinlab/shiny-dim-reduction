@@ -208,7 +208,12 @@ test_that("get_app_loc() works", {
     expect_match(get_app_loc(file), a_loc, fixed = TRUE)
   }
 
-  expect_error(get_app_loc("nonexistent.R"))
+  get_app_loc("nonexistent.R") %>% file.exists() %>% expect_false()
+})
+
+test_that("ind_sd_top() works", {
+  ex_df <- data.frame("A" = 1:100, "B" = 1:100 / 2, "C" = 1:100 / 3)
+  ind_sd_top(ex_df, 2) %>% expect_equal(1:2)
 })
 
 # -------
