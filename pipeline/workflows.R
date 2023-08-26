@@ -303,6 +303,7 @@ copy_wf_to_app_msg <- function(file = app_wf_files)
 #' @returns [string]
 cloud_store_admin_loc <- function()
 {
+  stopifnot(sdr_config$mode == "pipeline")
   get_loc_rel_wf("sdr_cloud_store_admin.rds")
 }
 
