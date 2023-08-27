@@ -118,8 +118,8 @@ save_wf_config <- function()
 # -- loc_table (tables)
 # -- loc_inter (intermediates)
 # -- loc_store (local store)
+# -- -- loc_app_d (app data)
 # -- loc_reque (request queue)
-# -- loc_app_d (app data)
 
 #' whether a string is a workflow
 #'
@@ -215,7 +215,7 @@ get_loc_reque <- function(file = "")
 get_loc_app_d <- function(file = "")
 {
   stopifnot(is.character(file))
-  file.path("sdr_app_data", file) %>% get_loc_wf()
+  file.path("sdr_app_data", file) %>% get_loc_store()
 }
 
 #' gets the table name for a category

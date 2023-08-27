@@ -14,11 +14,12 @@ library(shinyWidgets)
 
 source_app("plotting.R")
 source_app("app_utils.R")
-source_app("make_requests.R")
-source_app("storage.R")
 
 # sets up all storage
+source_app("storage.R")
 load_all_stores()
+
+source_app("make_requests.R")
 
 get_requests <- function(file)
 {

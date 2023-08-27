@@ -502,16 +502,28 @@ get_user_store_mode <- function()
 #' prompts the user for a valid local_store in the app
 user_input_local_store <- function()
 {
+  # we assume the app is being run locally
   while (!local_connected())
   {
-    local_store <- readline(prompt ="
+    local_store <- readline("
 Please type the location of a valid local store and press enter. ")
-
-    if (local_connects(local_store))
-      save_local_store(local_store, force = TRUE)
+    set_local_store(local_store)
   }
 
   set_store_mode("local")
+  save_local_store(local_store, force = TRUE)
+
+  # copy app_data if available
+  app_data_loc <- get_app_loc("app_data.rds")
+  app_data_ref <- prefix_local("sdr_app_data/app_data.rds")
+  if (file.exists(app_data_ref) && !file.exists(app_data_loc))
+    file.copy(app_data_ref, app_data_loc)
+
+  # copy cloud_store if available
+  cloud_store_loc <- get_app_loc("cloud_store.rds")
+  cloud_store_ref <- prefix_local("sdr_app_data/cloud_store.rds")
+  if (file.exists(cloud_store_ref) && !file.exists(cloud_store_loc))
+    file.copy(cloud_store_ref, cloud_store_loc)
 }
 
 #' attempts to connect stores and determine the store_mode
@@ -541,10 +553,10 @@ connect_all_stores <- function(local_store, cloud_store)
       set_store_mode("cloud")
     else
     {
-      if (sdr_config$mode == "cloud")
-        stop("Could not connect to local_store or cloud_store.")
-      else
+      if (sdr_config$mode == "local")
         user_input_local_store()
+      else
+        stop("Could not connect to local_store or cloud_store.")
     }
   }
 }

@@ -302,12 +302,12 @@ mnist_requests <- rbind_req(
 # save_local(mnist_requests, "app_requests.rds")
 mnist_requests <- load_local("app_requests.rds")
 include <- (
-  mnist_requests$SCALING != "Linear" &
-  mnist_requests$EMBEDDING != "PHATE"
+  mnist_requests$EMBEDDING %in% c("PCA", "VAE", "UMAP", "Sets")
 )
 perform_reduction(mnist_requests[include, ])
 mnist_requests_fin <- req_label_times(mnist_requests)
 # save_local(mnist_requests_fin, "app_requests.rds")
 # save_cloud(mnist_requests_fin, "app_requests.rds")
-include_sync <- mnist_requests_fin$FILE_LOCATION %in% list_local()
+include_sync <- mnist_requests_fin$FILE_LOCATION %in% list_local() &
+  !(mnist_requests_fin$FILE_LOCATION %in% list_cloud())
 # copy_local_to_cloud(mnist_requests_fin$FILE_LOCATION[include_sync])

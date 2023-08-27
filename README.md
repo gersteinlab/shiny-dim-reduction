@@ -38,7 +38,7 @@ This shiny dimensionality reduction (SDR) project performs dimensionality reduct
 There are several ways to use this project, each with varying system requirements:
 
 * <b>Online App:</b> If you received a URL, no downloads are necessary - visit the provided link with any browser.
-* <b>Local App: </b> If you received a zipped file representing a Store (the stored data for an SDR application), you will need a way to unzip files (e.g. 7Zip) and R >= 4.0.0 (see [Installing R](#installing-r)). Begin by unzipping the Store and obtaining this repository locally by downloading / unzipping, using "git clone", or using RStudio's "Create Project (Version Control)" functionality. Then follow the instructions in [Running App Code](#running-app-code).
+* <b>Local App: </b> If you received a ZIP representing an application's Store, you will need a way to unzip files (e.g. 7Zip) and R >= 4.0.0 (see [Installing R](#installing-r)). First, unzip the Store. Second, obtain this repository locally by downloading / unzipping, using "git clone", or using RStudio's "Create Project (Version Control)" functionality. Third, follow the instructions in [Running App Code](#running-app-code).
 * <b>Pipeline:</b> If you intend to run a dimensionality reduction pipeline on tabular data, please read the rest of this document before proceeding.  
 
 <a name="installing-r"/>
@@ -65,7 +65,7 @@ You can customize your home / library locations with the environmental variables
 
 ## Running App Code
 
-In the received Store folder, you will see a file called "app_data.rds". Copy it into the "app" folder of this repository. Then run the application code. In R, set the working directory to the "app" folder in the repo and run the following code to install necessary packages for the app:
+In R, set the working directory to the "app" folder in the repo and run the following code to install necessary packages for the app:
 
 ```R
 source("install.R")
@@ -76,6 +76,8 @@ The above code does not need to be run on subsequent app launches. To launch the
 ```R
 shiny::runApp()
 ```
+
+The application data file ("app_data.rds") and a store file ("local_store.rds" or "cloud_store.rds") is required for the application to run properly. If the application is run locally and no store files are present, you will be prompted to specify the store location. Relevant files will then be copied over.
 
 <a name="app-instructions"/>
 
