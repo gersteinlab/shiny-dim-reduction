@@ -59,6 +59,10 @@ example_func <- function(a = 1, b = 2)
 # -i: Be case-insensitive for letters.
 # -F: Treat patterns as literal strings instead of regexes.
 
+# SEE COMMIT STATS
+# git log --author="justinchang1124" --pretty=tformat: --numstat > commit_stats.txt
+# perl -ane'$i += $F[0]; $d += $F[1]; END{ print "added: $i removed: $d\n"}' < commit_stats.txt
+
 # -------------------
 # COUNT LINES OF CODE
 # -------------------
