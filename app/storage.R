@@ -155,9 +155,11 @@ delete_local <- function(file)
 #' saves local_store
 #'
 #' @param local_store [local_store]
-save_local_store <- function(local_store)
+#' @param force [boolean] whether to proceed in app mode
+save_local_store <- function(local_store, force = FALSE)
 {
-  stopifnot(sdr_config$mode == "pipeline")
+  if (!force)
+    stopifnot(sdr_config$mode == "pipeline")
   saveRDS(local_store, get_app_loc("local_store.rds"))
 }
 
@@ -330,9 +332,11 @@ delete_cloud <- function(file)
 #' saves cloud_store
 #'
 #' @param cloud_store [cloud_store]
-save_cloud_store <- function(cloud_store)
+#' @param force [boolean] whether to proceed in app mode
+save_cloud_store <- function(cloud_store, force = FALSE)
 {
-  stopifnot(sdr_config$mode == "pipeline")
+  if (!force)
+    stopifnot(sdr_config$mode == "pipeline")
   saveRDS(cloud_store, get_app_loc("cloud_store.rds"))
 }
 
@@ -495,6 +499,21 @@ get_user_store_mode <- function()
   "cloud"
 }
 
+#' prompts the user for a valid local_store in the app
+user_input_local_store <- function()
+{
+  while (!local_connected())
+  {
+    local_store <- readline(prompt ="
+Please type the location of a valid local store and press enter. ")
+
+    if (local_connects(local_store))
+      save_local_store(local_store, force = TRUE)
+  }
+
+  set_store_mode("local")
+}
+
 #' attempts to connect stores and determine the store_mode
 #'
 #' @param local_store [local_store]
@@ -521,7 +540,12 @@ connect_all_stores <- function(local_store, cloud_store)
     if (cloud_connects(cloud_store))
       set_store_mode("cloud")
     else
-      stop("Could not connect to local_store or cloud_store.")
+    {
+      if (sdr_config$mode == "cloud")
+        stop("Could not connect to local_store or cloud_store.")
+      else
+        user_input_local_store()
+    }
   }
 }
 
