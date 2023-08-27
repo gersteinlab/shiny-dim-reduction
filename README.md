@@ -305,42 +305,33 @@ We thank the following contributors:
 
 Additionally, the following R packages were used:
 
-* <u>Rtsne:</u> Jesse H. Krijthe (2015). Rtsne: T-Distributed Stochastic Neighbor
+* **Rtsne:** Jesse H. Krijthe (2015). Rtsne: T-Distributed Stochastic Neighbor
 Embedding using a Barnes-Hut Implementation, URL:
-<a href=\"https://github.com/jkrijthe/Rtsne\" target=\"_blank\">
-https://github.com/jkrijthe/Rtsne</a>
-*  <u>Keras:</u> Keras, (2018), GitHub repository,
-https://github.com/charlespwd/project-title
-<a href=\"https://github.com/keras-team/keras\" target=\"_blank\">
-https://github.com/keras-team/keras</a>
-*  <u>UMAP:</u> McInnes et al., (2018). UMAP: Uniform Manifold Approximation and
+[https://github.com/jkrijthe/Rtsne](https://github.com/jkrijthe/Rtsne)
+*  **Keras:** Keras, (2018), GitHub repository,
+[https://github.com/keras-team/keras](https://github.com/keras-team/keras)
+*  **UMAP:** McInnes et al., (2018). UMAP: Uniform Manifold Approximation and
 Projection. Journal of Open Source Software, 3(29), 861,
-<a href=\"https://doi.org/10.21105/joss.00861\" target=\"_blank\">
-https://doi.org/10.21105/joss.00861</a>
-* <u>PHATE:</u> Moon, K.R., van Dijk, D., Wang, Z. et al.
+[https://doi.org/10.21105/joss.00861](https://doi.org/10.21105/joss.00861)
+* **PHATE:** Moon, K.R., van Dijk, D., Wang, Z. et al.
 Visualizing structure and transitions in high-dimensional biological data.
 Nat Biotechnol 37, 1482-1492 (2019).
-<a href=\"https://doi.org/10.1038/s41587-019-0336-3\" target=\"_blank\">
-https://doi.org/10.1038/s41587-019-0336-3</a>
-* <u>UpSetR:</u> Jake R Conway, Alexander Lex, Nils Gehlenborg UpSetR: An R Package
+[https://doi.org/10.1038/s41587-019-0336-3](https://doi.org/10.1038/s41587-019-0336-3)
+* **UpSetR:** Jake R Conway, Alexander Lex, Nils Gehlenborg UpSetR: An R Package
 for the Visualization of Intersecting Sets and their Properties doi:
-<a href=\"https://doi.org/10.1093/bioinformatics/btx364\" target=\"_blank\">
-https://doi.org/10.1093/bioinformatics/btx364</a>
-* <u>heatmaply:</u> Galili, Tal, O'Callaghan, Alan, Sidi, Jonathan, Sievert,
+[https://doi.org/10.1093/bioinformatics/btx364](https://doi.org/10.1093/bioinformatics/btx364)
+* **heatmaply:** Galili, Tal, O'Callaghan, Alan, Sidi, Jonathan, Sievert,
 Carson (2017). \"heatmaply: an R package for creating interactive cluster heatmaps
 for online publishing.\" Bioinformatics. doi:
-<a href=\"http://dx.doi.org/10.1093/bioinformatics/btx657\" target=\"_blank\">
-http://dx.doi.org/10.1093/bioinformatics/btx657</a>
-* <u>Cividis:</u> Nuñez, Jamie R., Christopher R. Anderton, and Ryan S. Renslow.
-\"Optimizing colormaps with consideration for color vision deficiency to enable
-accurate interpretation of scientific data.\" PloS one 13.7 (2018): e0199239.
+[http://dx.doi.org/10.1093/bioinformatics/btx657](http://dx.doi.org/10.1093/bioinformatics/btx657)
+* **Cividis:** Nuñez, Jamie R., Christopher R. Anderton, and Ryan S. Renslow.
+"Optimizing colormaps with consideration for color vision deficiency to enable
+accurate interpretation of scientific data." PloS one 13.7 (2018): e0199239.
 
 Further Reading:
 
-* <u>Optimizing tSNE:</u> Wattenberg, et al., \"How to Use t-SNE Effectively\",
-Distill, 2016. <a href=\"http://doi.org/10.23915/distill.00002\" target=\"_blank\">
-http://doi.org/10.23915/distill.00002</a>
-* <u>James Diao's ERCC Plotting Tool:</u>
-<a href=\"https://github.com/jamesdiao/ERCC-Plotting-Tool\" target=\"_blank\">
-https://github.com/jamesdiao/ERCC-Plotting-Tool</a>
+* **Optimizing tSNE:** Wattenberg, et al., \"How to Use t-SNE Effectively\",
+Distill, 2016. [http://doi.org/10.23915/distill.00002](http://doi.org/10.23915/distill.00002)
+* **James Diao's ERCC Plotting Tool:**
+[https://github.com/jamesdiao/ERCC-Plotting-Tool](https://github.com/jamesdiao/ERCC-Plotting-Tool)
 
