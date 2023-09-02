@@ -15,6 +15,8 @@ system.time({
   test3 <- name_req_key_inters(app_requests[, 1:13])
 })
 
+set_workflow("exRNA")
+perform_reduction(val_req)
 perform_reduction(val_req, 0)
 # perform_reduction(val_req, 1)
 # perform_reduction(val_req, 2)
