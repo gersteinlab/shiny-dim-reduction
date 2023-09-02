@@ -27,6 +27,7 @@
 # if wrapping an expression is necessary, end lines on an operator (like +)
 # using "T", "F" as abbreviations for "TRUE", "FALSE" is strictly avoided
 # booleans refer to TRUE or FALSE, not including NA.
+# when partial matching is not needed, use "[[.]]" over "$" for accession
 
 # functions with comments should obey roxygen2 conventions
 # --if the returned value will not be used, do not specify @returns
