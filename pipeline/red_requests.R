@@ -23,8 +23,8 @@ validate_cat_table <- function(cat_table, cat)
 {
   stopifnot(
     is_table(cat_table),
-    nrow(cat_table) == get_row_sub_lengths(cat)$Total,
-    ncol(cat_table) == get_col_sub_lengths(cat)$Total
+    nrow(cat_table) == cat_to_row_axis_summary(cat)[["Total"]],
+    ncol(cat_table) == cat_to_col_axis_summary(cat)[["Total"]]
   )
 }
 
@@ -189,7 +189,7 @@ perform_reduction <- function(requests, force = 0L)
     i_cat <- i_fin & (requests$CATEGORIES == cat)
 
     # used for sets
-    row_meta <- get_row_axis(cat)$metadata
+    row_meta <- cat_to_row_axis(cat)$metadata
 
     # perform scaling
     for (sca in unique(requests$SCALING[i_cat]))

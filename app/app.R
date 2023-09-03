@@ -538,7 +538,7 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
 
   # calculate which samples to keep after considering all metadata filters
   order <- reactive({
-    get_row_axis(cati())$metadata
+    cat_to_row_axis(cati())$metadata
   })
   row_order <- reactive({
     if (rowi() == "Total")
@@ -547,7 +547,7 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
   })
   keep <- reactive({
     keep <- rep(TRUE, nrow(row_order()))
-    row_axs <- get_row_axs(cati())
+    row_axs <- cat_to_row_axs(cati())
 
     for (char in get_app_row_choices(cati())$safe_chas)
     {
@@ -572,7 +572,7 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
 
   # the number of features before dimensionality reduction
   num_feat <- reactive({
-    get_col_sub_lengths(cati())[[coli()]]
+     cat_to_col_axis_summary(cati())[[coli()]]
   })
 
   # numeric data for displaying / downloading
@@ -614,7 +614,7 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
   })
 
   paint <- reactive({
-    custom_color_scales <- get_row_axis(cati())$color_scales
+    custom_color_scales <- cat_to_row_axis(cati())$color_scales
 
     if (iplot$palette == "Custom") # requesting a custom color palette
     {

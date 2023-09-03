@@ -6,6 +6,10 @@ if (!exists("sdr_config"))
 
 source_app("preprocess.R")
 
+# test the application with this line commented out
+load_app_data()
+cat_f("APP_DATA LOAD TIME: %.1f (sec)\n", net_time())
+
 # ----------------
 # ANALYSIS OPTIONS
 # ----------------
@@ -157,7 +161,7 @@ clean_req_keys <- function(req_keys)
   req_cat_names <- unique(cat_vec)
 
   stopifnot(
-    req_cat_names %in% cat_names,
+    req_cat_names %in% get_cat_names(),
     emb_vec %in% emb_options,
     sca_vec %in% sca_options,
     nor_vec %in% nor_options
@@ -213,7 +217,7 @@ clean_req_keys <- function(req_keys)
   # for Sets, characteristics must be in relevant metadata cols
   for (cat in req_cat_names)
   {
-    rel_meta <- get_row_axis(cat)$rel_meta
+    rel_meta <- cat_to_row_axis(cat)$rel_meta
     stopifnot(cha_vec[is_sets & (cat_vec == cat)] %in% rel_meta)
   }
 
@@ -225,13 +229,13 @@ clean_req_keys <- function(req_keys)
   {
     is_cat <- (cat_vec == cat)
 
-    row_sub_lens <- get_row_sub_lengths(cat)
-    for (row in names(row_sub_lens))
-      row_n_vec[is_cat & (row_vec == row)] <- row_sub_lens[[row]]
+    row_axis_summary <- cat_to_row_axis_summary(cat)
+    for (row in names(row_axis_summary))
+      row_n_vec[is_cat & (row_vec == row)] <- row_axis_summary[[row]]
 
-    col_sub_lens <- get_col_sub_lengths(cat)
-    for (col in names(col_sub_lens))
-      col_n_vec[is_cat & (col_vec == col)] <- col_sub_lens[[col]]
+    col_axis_summary <- cat_to_col_axis_summary(cat)
+    for (col in names(col_axis_summary))
+      col_n_vec[is_cat & (col_vec == col)] <- col_axis_summary[[col]]
   }
 
   # enforce valid ranges

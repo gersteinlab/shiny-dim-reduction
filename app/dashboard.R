@@ -303,15 +303,16 @@ get_opt_metadata <- function(metadata, rel_meta)
 }
 
 # specify choices unique to each row axis
+row_axs_names <- get_row_axs_names()
 app_row_choices <- empty_named_list(row_axs_names)
 for (row_axs in row_axs_names)
 {
-  row_axis <- row_axes[[row_axs]]
+  row_axis <- get_row_axis(row_axs)
   row_meta <- row_axis$metadata
   rel_meta <- row_axis$rel_meta
 
   app_row_choices[[row_axs]] <- list(
-    "rowby" = row_sub_lengths[[row_axs]] %>%
+    "rowby" = get_axis_summary(row_axis) %>%
       unlist() %>% get_opt_named_int(),
     "full_chas" = names(row_meta),
     "safe_chas" = rel_meta,
@@ -320,11 +321,12 @@ for (row_axs in row_axs_names)
 }
 
 # specify choices unique to each col axis (colby)
+col_axs_names <- get_col_axs_names()
 app_col_choices <- empty_named_list(col_axs_names)
 for (col_axs in col_axs_names)
 {
   app_col_choices[[col_axs]] <- list(
-    "colby" = col_sub_lengths[[col_axs]] %>%
+    "colby" = get_col_axis_summary(col_axs) %>%
       unlist() %>% get_opt_named_int()
   )
 }
@@ -335,7 +337,7 @@ for (col_axs in col_axs_names)
 #' @returns [list]
 get_app_row_choices <- function(cat)
 {
-  app_row_choices[[get_row_axs(cat)]]
+  app_row_choices[[cat_to_row_axs(cat)]]
 }
 
 #' wrapper for app_col_choices by cat
@@ -344,11 +346,12 @@ get_app_row_choices <- function(cat)
 #' @returns [list]
 get_app_col_choices <- function(cat)
 {
-  app_col_choices[[get_col_axs(cat)]]
+  app_col_choices[[cat_to_col_axs(cat)]]
 }
 
 # specify choices unique to each category (threby) and
 # the selections for each category
+cat_names <- get_cat_names()
 app_cat_choices <- empty_named_list(cat_names)
 app_cat_selected <- empty_named_list(dynam_picker_input_ids)
 for (dynam_id in dynam_picker_input_ids)
@@ -419,7 +422,7 @@ parameters_menu <- menuItem(
   startExpanded = TRUE,
   # icon = icon("table"),
   icon = icon("calculator"),
-  select_panel("category", "Category", groups),
+  select_panel("category", "Category", app_data$groups),
   select_panel("rowby", "Sample Subset"), # DYNAMIC
   select_panel("colby", "Feature Subset"), # DYNAMIC
   select_panel("scaling", "Scaling", sca_options),

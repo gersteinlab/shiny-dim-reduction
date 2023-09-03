@@ -60,7 +60,7 @@ is_app_data <- function(x) {
 # default application data
 app_data <- list(
   "title" = "Shiny Dimensionality Reduction",
-  "citations" = "",
+  "citations" = "<br><br> No citations found.",
   "row_axes" = list(),
   "col_axes" = list(),
   "categories" = list(),
@@ -82,25 +82,6 @@ load_app_data <- function(file)
    readRDS(get_app_loc("app_data.rds")) %>% update_app_data()
 }
 
-# test the application with this line commented out
-load_app_data()
-cat_f("APP_DATA LOAD TIME: %.1f (sec)\n", net_time())
-
-# set row axes
-assign_global("row_axes", app_data[["row_axes"]])
-assign_global("row_axs_names", names(row_axes))
-
-# set col axes
-assign_global("col_axes", app_data[["col_axes"]])
-assign_global("col_axs_names", names(col_axes))
-
-# set categories
-assign_global("categories", app_data[["categories"]])
-assign_global("cat_names", names(categories))
-
-# set groups
-assign_global("groups", app_data[["groups"]])
-
 #' saves current application data
 save_app_data <- function()
 {
@@ -112,47 +93,42 @@ save_app_data <- function()
 # ROW / COL SUBSETS
 # -----------------
 
-#' cat to row_axs (row axis name)
-#'
-#' @param cat [string] not checked
-#' @returns [string]
-get_row_axs <- function(cat)
+get_row_axs_names <- function()
 {
-  categories[[cat]]$row_axs
+  names(app_data$row_axes)
 }
 
-#' cat to row_axis
+#' row_axs to row_axis
 #'
-#' @param cat [string] not checked
+#' @param row_axs [row_axs]
 #' @returns [string]
-get_row_axis <- function(cat)
+get_row_axis <- function(row_axs)
 {
-  row_axes[[get_row_axs(cat)]]
+  stopifnot(row_axs %in% get_row_axs_names())
+  app_data$row_axes[[row_axs]]
 }
 
-#' cat to col_axs (col axis name)
-#'
-#' @param cat [string] not checked
-#' @returns [string]
-get_col_axs <- function(cat)
+get_col_axs_names <- function()
 {
-  categories[[cat]]$col_axs
+  names(app_data$col_axes)
 }
 
-#' cat to col_axis
-#'
-#' @param cat [string] not checked
-#' @returns [string]
-get_col_axis <- function(cat)
+get_col_axis <- function(col_axs)
 {
-  col_axes[[get_col_axs(cat)]]
+  stopifnot(col_axs %in% get_col_axs_names())
+  app_data$col_axes[[col_axs]]
 }
 
-#' gets the subset lengths of an axis
+# ----------------
+# SUBSET SUMMARIES
+# ----------------
+
+#' gets the summary of an axis, which
+#' focuses on subsets
 #'
 #' @param axis [axis] not checked
 #' @returns [list] of subset lengths
-get_sub_lengths <- function(axis)
+get_axis_summary <- function(axis)
 {
   c(
     list("Total" = axis$length),
@@ -160,35 +136,72 @@ get_sub_lengths <- function(axis)
   )
 }
 
-# precomputed row subset lengths
-row_sub_lengths <- empty_named_list(row_axs_names)
-for (row_axs in row_axs_names)
-  row_sub_lengths[[row_axs]] <- get_sub_lengths(
-    row_axes[[row_axs]])
-
-#' gets row subset lengths for a category
-#'
-#' @param cat [string] not checked
-#' @returns [list] of row subset lengths
-get_row_sub_lengths <- function(cat)
+get_row_axis_summary <- function(row_axs)
 {
-  row_sub_lengths[[get_row_axs(cat)]]
+  get_row_axis(row_axs) %>% get_axis_summary()
 }
 
-# precomputed col subset lengths
-col_sub_lengths <- empty_named_list(col_axs_names)
-for (col_axs in col_axs_names)
-  col_sub_lengths[[col_axs]] <- get_sub_lengths(
-    col_axes[[col_axs]])
+get_col_axis_summary <- function(col_axs)
+{
+  get_col_axis(col_axs) %>% get_axis_summary()
+}
 
-#' gets col subset lengths for a category
+# ---------------
+# CATEGORY LOOKUP
+# ---------------
+
+get_cat_names <- function()
+{
+  names(app_data$categories)
+}
+
+#' cat to row_axs (row axis name)
+#'
+#' @param cat [string]
+#' @returns [string]
+cat_to_row_axs <- function(cat)
+{
+  stopifnot(cat %in% get_cat_names())
+  app_data$categories[[cat]]$row_axs
+}
+
+cat_to_row_axis <- function(cat)
+{
+  cat_to_row_axs(cat) %>% get_row_axis()
+}
+
+#' cat to col_axs (col axis name)
 #'
 #' @param cat [string] not checked
-#' @returns [list] of col subset lengths
-get_col_sub_lengths <- function(cat)
+#' @returns [string]
+cat_to_col_axs <- function(cat)
 {
-  col_sub_lengths[[get_col_axs(cat)]]
+  stopifnot(cat %in% get_cat_names())
+  app_data$categories[[cat]]$col_axs
 }
+
+#' cat to col_axis
+#'
+#' @param cat [string] not checked
+#' @returns [string]
+cat_to_col_axis <- function(cat)
+{
+  cat_to_col_axs(cat) %>% get_col_axis()
+}
+
+cat_to_row_axis_summary <- function(cat)
+{
+  cat_to_row_axs(cat) %>% get_row_axis_summary()
+}
+
+cat_to_col_axis_summary <- function(cat)
+{
+  cat_to_col_axs(cat) %>% get_col_axis_summary()
+}
+
+# ------------------
+# PERFORM SUBSETTING
+# ------------------
 
 #' gets the row subset as row indices
 #'
@@ -197,7 +210,7 @@ get_col_sub_lengths <- function(cat)
 #' @returns [integer]
 get_row_sub <- function(cat, row)
 {
-  get_row_axis(cat)$subsets[[row]]
+  cat_to_row_axis(cat)$subsets[[row]]
 }
 
 #' gets the row subset as rownames
@@ -207,7 +220,7 @@ get_row_sub <- function(cat, row)
 #' @returns [character]
 get_row_sub_names <- function(cat, row)
 {
-  row_axis <- get_row_axis(cat)
+  row_axis <- cat_to_row_axis(cat)
   indices <- row_axis$subsets[[row]]
   row_axis$metadata[indices, 1]
 }
