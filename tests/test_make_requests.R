@@ -198,6 +198,18 @@ print(system.time({
   test2 <- name_req_key_files(app_requests[, 1:13])
 }))
 
+# ------------
+# TEST MERGING
+# ------------
+
+n <- nrow(app_requests)
+i1 <- as.integer(n / 3)
+req1 <- app_requests[1:(2*i1), ]
+req2 <- app_requests[i1:n, ]
+print(system.time({
+  req3 <- rbind_req2(req1, req2)
+}))
+
 # -------
 # CLEANUP
 # -------
