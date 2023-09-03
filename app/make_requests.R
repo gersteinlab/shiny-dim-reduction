@@ -679,11 +679,7 @@ rbind_req2 <- function(requests1, requests2)
   # map from requests1 file location to index
   r1_locs_to_i <- hash::hash()
   for (r1_i in which(r1_locs %in% r2_locs))
-<<<<<<< HEAD
     r1_locs_to_i[[r1_locs[r1_i]]] <- r1_i
-=======
-    req_dict[[r1_locs[r1_i]]] <- r1_i
->>>>>>> 04266e407cd01fa3cb511e2ff35e950b4880202c
 
   # which rows to keep in each data.frame
   r1_keep <- rep(TRUE, nrow(requests1))
