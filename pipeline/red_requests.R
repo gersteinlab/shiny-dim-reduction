@@ -112,20 +112,15 @@ name_req_key_inters <- function(req_keys)
 # REQUEST FULFILLMENT
 # -------------------
 
-# n_cur: number of analyses currently begun (including the one that just started)
-# n_fin: total number of analyses to be done
-# filename: the name of the analysis file
-red_update_msg <- function(n_cur, n_fin, filename)
+#' an update message for reduction
+#'
+#' @param n_cur [int] for analyses started (including current)
+#' @param n_fin [int] for total number of analyses
+#' @param file [string] naming the current analysis
+red_update_msg <- function(n_cur, n_fin, file)
 {
-  cat_f("request %s/%s: %s\n", n_cur, n_fin, filename)
-}
-
-# readRDS but return NULL if force_inter
-inter_readRDS <- function(force, int_loc)
-{
-  if (force != 2)
-    return(w_def_readRDS(int_loc))
-  return(NULL)
+  stopifnot(is_int(n_cur), is_int(n_fin), is_str(file))
+  cat_f("Request %d/%d: %s\n", n_cur, n_fin, file)
 }
 
 #' gets time last modified (aka TIME_COMPLETED) for files
@@ -179,7 +174,7 @@ perform_reduction <- function(requests, force = 0L)
 
   # used to show progress
   n_fin <- sum(i_fin)
-  n_cur <- 0
+  n_cur <- 0L
 
   # select the category
   for (cat in unique(requests$CATEGORIES[i_fin]))
@@ -220,7 +215,7 @@ perform_reduction <- function(requests, force = 0L)
             r <- requests[i,]
             f_loc <- final_locs[i]
 
-            n_cur <- n_cur + 1
+            n_cur <- n_cur + 1L
             red_update_msg(n_cur, n_fin, rel_fin_locs[i])
 
             set_label_matrix(
@@ -262,7 +257,10 @@ perform_reduction <- function(requests, force = 0L)
               {
                 # make the intermediate file
                 pca_loc <- inter_locs[i_pca_first]
-                pca_result <- inter_readRDS(force, pca_loc)
+                pca_result <- NULL
+                if (force < 2)
+                  pca_result <- w_def_readRDS(pca_loc)
+
                 if (is.null(pca_result))
                 {
                   cat_f("Generating PCA INTER: %s\n", rel_inter_locs[i_pca_first])
@@ -276,7 +274,7 @@ perform_reduction <- function(requests, force = 0L)
                   r <- requests[i,]
                   f_loc <-  final_locs[i]
 
-                  n_cur <- n_cur + 1
+                  n_cur <- n_cur + 1L
                   red_update_msg(n_cur, n_fin, rel_fin_locs[i])
 
                   if (r$VISUALIZATION == "Explore")
@@ -303,7 +301,10 @@ perform_reduction <- function(requests, force = 0L)
                 {
                   # make the intermediate file
                   vae_loc <- inter_locs[i_bat_first]
-                  vae_result <- inter_readRDS(force, vae_loc)
+                  vae_result <- NULL
+                  if (force < 2)
+                    vae_result <- w_def_readRDS(vae_loc)
+
                   if (is.null(vae_result))
                   {
                     cat_f("Generating VAE INTER: %s\n", rel_inter_locs[i_bat_first])
@@ -317,7 +318,7 @@ perform_reduction <- function(requests, force = 0L)
                     r <- requests[i,]
                     f_loc <-  final_locs[i]
 
-                    n_cur <- n_cur + 1
+                    n_cur <- n_cur + 1L
                     red_update_msg(n_cur, n_fin, rel_fin_locs[i])
 
                     if (r$VISUALIZATION == "Explore")
@@ -345,7 +346,10 @@ perform_reduction <- function(requests, force = 0L)
                 {
                   # make the intermediate file
                   umap_loc <- inter_locs[i_per_first]
-                  umap_result <- inter_readRDS(force, umap_loc)
+                  umap_result <- NULL
+                  if (force < 2)
+                    umap_result <- w_def_readRDS(umap_loc)
+
                   if (is.null(umap_result))
                   {
                     cat_f("Generating UMAP INTER: %s\n", rel_inter_locs[i_per_first])
@@ -359,7 +363,7 @@ perform_reduction <- function(requests, force = 0L)
                     r <- requests[i,]
                     f_loc <-  final_locs[i]
 
-                    n_cur <- n_cur + 1
+                    n_cur <- n_cur + 1L
                     red_update_msg(n_cur, n_fin, rel_fin_locs[i])
 
                     if (r$VISUALIZATION == "Explore")
@@ -382,7 +386,7 @@ perform_reduction <- function(requests, force = 0L)
                 r <- requests[i,]
                 f_loc <-  final_locs[i]
 
-                n_cur <- n_cur + 1
+                n_cur <- n_cur + 1L
                 red_update_msg(n_cur, n_fin, rel_fin_locs[i])
 
                 table_to_phate(col_table, com, r$PERPLEXITY) %>% mkdir_saveRDS(f_loc)

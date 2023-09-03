@@ -16,7 +16,16 @@ system.time({
 })
 
 set_workflow("exRNA")
-system.time({perform_reduction(val_req)})
-system.time({perform_reduction(val_req, 0)})
-# system.time({perform_reduction(val_req, 1)})
-# system.time({perform_reduction(val_req, 2)})
+
+cat("perform_reduction(val_req)\n")
+print(system.time({
+  perform_reduction(val_req)
+}))
+
+cat("perform_reduction(val_req, 0)\n")
+print(system.time({
+  perform_reduction(val_req, 0)
+}))
+
+# print(system.time({perform_reduction(val_req, 1)}))
+# print(system.time({perform_reduction(val_req, 2)}))
