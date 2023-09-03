@@ -93,6 +93,9 @@ save_app_data <- function()
 # ROW / COL SUBSETS
 # -----------------
 
+#' gets all row axis names
+#'
+#' @returns [character]
 get_row_axs_names <- function()
 {
   names(app_data$row_axes)
@@ -100,19 +103,26 @@ get_row_axs_names <- function()
 
 #' row_axs to row_axis
 #'
-#' @param row_axs [row_axs]
-#' @returns [string]
+#' @param row_axs [axs]
+#' @returns [axis]
 get_row_axis <- function(row_axs)
 {
   stopifnot(row_axs %in% get_row_axs_names())
   app_data$row_axes[[row_axs]]
 }
 
+#' gets all column axis names
+#'
+#' @returns [character]
 get_col_axs_names <- function()
 {
   names(app_data$col_axes)
 }
 
+#' col_axs to col_axis
+#'
+#' @param col_axs [axs]
+#' @returns [axis]
 get_col_axis <- function(col_axs)
 {
   stopifnot(col_axs %in% get_col_axs_names())
@@ -136,11 +146,19 @@ get_axis_summary <- function(axis)
   )
 }
 
+#' wrapper, see above
+#'
+#' @param row_axs [axs]
+#' @returns [axis_summary]
 get_row_axis_summary <- function(row_axs)
 {
   get_row_axis(row_axs) %>% get_axis_summary()
 }
 
+#' wrapper, see above
+#'
+#' @param col_axs [axs]
+#' @returns [axis_summary]
 get_col_axis_summary <- function(col_axs)
 {
   get_col_axis(col_axs) %>% get_axis_summary()
@@ -150,12 +168,15 @@ get_col_axis_summary <- function(col_axs)
 # CATEGORY LOOKUP
 # ---------------
 
+#' gets all category names
+#'
+#' @returns [character]
 get_cat_names <- function()
 {
   names(app_data$categories)
 }
 
-#' cat to row_axs (row axis name)
+#' cat to row_axs
 #'
 #' @param cat [string]
 #' @returns [string]
@@ -165,12 +186,16 @@ cat_to_row_axs <- function(cat)
   app_data$categories[[cat]]$row_axs
 }
 
+#' wrapper, see above
+#'
+#' @param cat [string]
+#' @returns [axis]
 cat_to_row_axis <- function(cat)
 {
   cat_to_row_axs(cat) %>% get_row_axis()
 }
 
-#' cat to col_axs (col axis name)
+#' cat to col_axs
 #'
 #' @param cat [string] not checked
 #' @returns [string]
@@ -180,20 +205,28 @@ cat_to_col_axs <- function(cat)
   app_data$categories[[cat]]$col_axs
 }
 
-#' cat to col_axis
+#' wrapper, see above
 #'
-#' @param cat [string] not checked
-#' @returns [string]
+#' @param cat [string]
+#' @returns [axis]
 cat_to_col_axis <- function(cat)
 {
   cat_to_col_axs(cat) %>% get_col_axis()
 }
 
+#' wrapper, see above
+#'
+#' @param cat [string]
+#' @returns [axis_summary]
 cat_to_row_axis_summary <- function(cat)
 {
   cat_to_row_axs(cat) %>% get_row_axis_summary()
 }
 
+#' wrapper, see above
+#'
+#' @param cat [string]
+#' @returns [axis_summary]
 cat_to_col_axis_summary <- function(cat)
 {
   cat_to_col_axs(cat) %>% get_col_axis_summary()
@@ -287,4 +320,4 @@ subset_by_col_names <- function(data, col_sub_names)
   subset_by_col(data, colnames(data) %in% col_sub_names)
 }
 
-cat_f("PREPROCESSING TIME: %.1f (sec)\n", net_time())
+cat_f("PREPROCESS MANAGER TIME: %.1f (sec)\n", net_time())
