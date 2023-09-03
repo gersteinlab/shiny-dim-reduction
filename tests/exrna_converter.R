@@ -28,50 +28,63 @@ set_self_rds <- function(name)
   saveRDS(get(name), sprintf("%s.rds", name))
 }
 
-# reads tsv text
-read_tsv_text <- function(filename)
+#' reads tsv text
+#'
+#' @param file [character] of existing files, not checked
+#' @returns [list] of tab-separated vectors
+read_tsv_text <- function(file)
 {
-  strsplit(readLines(filename), split = '\t', fixed = TRUE)
+  strsplit(readLines(file), split = '\t', fixed = TRUE)
 }
 
-# converts a matrix to a numeric matrix,
-# removing columns with no valid entries
-convert_to_num <- function(data){
+#' converts a matrix to a matrix of finite numbers,
+#' removing columns with no finite entries
+#'
+#' @param data [matrix]
+#' @returns [matrix]
+convert_to_num <- function(data)
+{
+  stopifnot(is.matrix(data))
   data[] <- lapply(data, as.numeric)
   data <- as.matrix(data)
-  data[is.na(data) | is.nan(data)] <- 0
-  data[,colSums(data) > 0]
+  data[!is.finite(data)] <- 0
+  data[, colSums(data) > 0, drop = FALSE]
 }
 
-# converts the first row of a matrix to column names
-r1_to_cols <- function(data){
-  if (length(data) < 1 || nrow(data) < 1)
-  {
-    print("Warning: < 1 row")
-    return(data)
-  }
-  colnames(data) <- data[1,]
-  data[-1,,drop=FALSE]
+#' converts the first row of a matrix to column names
+#'
+#' @param data [matrix] with at least 1 row
+#' @returns [matrix]
+r1_to_cols <- function(data)
+{
+  stopifnot(is.matrix(data), nrow(data) >= 1)
+  colnames(data) <- data[1, ]
+  data[-1, , drop = FALSE]
 }
 
-# a very permissive tryCatch that ignores all errors and warnings
+# a tryCatch that ignores all errors and warnings
 try_catch_ignore <- function(expr)
 {
   tryCatch(
     expr,
-    warning = function(e){NULL},
-    error = function(e){NULL},
-    finally = {NULL}
+    warning = function(e) {},
+    error = function(e) {},
+    finally = {}
   )
 }
 
-# a function that attempts a mass download,
-# returning all indices that the download failed at
-# url_vec: a vector of URLs
-# loc_vec: a vector of corresponding locations to write to
-# chunk_size: the number of concurrent downloads to be tried at a time
-mass_download <- function(url_vec, loc_vec, chunk_size = 100)
+#' a function that attempts a mass download,
+#' returning all indices that the download failed at
+#' @param url_vec [character] of URLs
+#' @param loc_vec [character] of file locations to write to
+#' @param chunk [integer]
+mass_download <- function(url_vec, loc_vec, chunk = 100L)
 {
+  stopifnot(
+    is.character(url_vec),
+    is.character(loc_vec),
+    is_int(chunk)
+  )
   # input validation
   len <- length(url_vec)
 
@@ -84,14 +97,14 @@ mass_download <- function(url_vec, loc_vec, chunk_size = 100)
   failed_indices <- numeric()
 
   # separate into chunks
-  chunk_indices <- c(seq(1, len, chunk_size), len+1)
+  chunk_indices <- c(seq(1, len, chunk), len+1)
   num_chunks <- length(chunk_indices)-1
 
   start <- my_timer()
 
   for (i in seq_len(num_chunks))
   {
-    sprintf_clean("Downloading chunk: %s/%s", i, num_chunks)
+    cat_f("Downloading chunk: %s/%s\n", i, num_chunks)
     chunk <- chunk_indices[i]:(chunk_indices[i+1]-1)
     download.file(url_vec[chunk], loc_vec[chunk], method = "libcurl")
 
@@ -99,9 +112,9 @@ mass_download <- function(url_vec, loc_vec, chunk_size = 100)
       if (!file.exists(loc_vec[j]))
         failed_indices <- c(failed_indices, j)
 
-    num_items_done <- max(i*chunk_size, len)
-    sprintf_clean("Number of items failed: %s", length(failed_indices)-1)
-    sprintf_clean("Seconds per item: %s", round(my_timer(start)/num_items_done, digits=4))
+    num_items_done <- max(i*chunk, len)
+    cat_f("Number of items failed: %s\n", length(failed_indices)-1)
+    cat_f("Seconds per item: %s\n", round(my_timer(start)/num_items_done, digits=4))
   }
 
   failed_indices
@@ -356,4 +369,18 @@ ran_df_to_combined <- function(df)
   result <- convert_to_num(df)
   sprintf_clean("Was a valid table made? %s", valid_table(result))
   result
+}
+
+#' combines several functions to make an import pipeline for exRNA
+#'
+#' @param filenames [character] not checked
+#' @returns [data.frame]
+import_pipeline <- function(filenames)
+{
+  n <- length(filenames)
+  m_list_names <- sprintf("F%s", seq_len(n))
+  m_list <- empty_named_list(m_list_names)
+  for (i in seq_len(n))
+    m_list[[i]] <- filenames[i] %>% read_tsv_text() %>% rem_preamble(10)
+  dplyr::bind_rows(m_list) %>% rem_dupe_rows() %>% order_by_col("FASTQ.IDENTIFIER")
 }

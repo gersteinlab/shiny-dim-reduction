@@ -10,6 +10,7 @@ library(data.table)
 source("tests/exrna_converter.R")
 source("app/app_utils.R")
 source("app/storage.R")
+source("app/preprocess.R")
 source("pipeline/workflows.R")
 
 # upsert_workflow("exRNA", "C:/Users/justin/Desktop/CodeR/DataR/sdr_workflows")
@@ -17,13 +18,18 @@ source("pipeline/workflows.R")
 load_wf_config()
 set_workflow("exRNA")
 
+# cloud_store, cloud_store_admin must be stored separately
+# save_local_store(get_loc_store())
+set_store_mode("local")
+load_all_stores()
+
 # ---------------------
 # CONSTANT DEPENDENCIES
 # ---------------------
 
-app_title <- "Dimensionality Reduction Plotting Tool for the exRNA Atlas"
+app_data$title <- "Dimensionality Reduction Plotting Tool for the exRNA Atlas"
 
-app_citations <- "<u>ERCC:</u>
+app_data$citations <- "<u>ERCC:</u>
 Ainsztein AM, Brooks PJ, Dugan VG, et al. The NIH Extracellular RNA Communication
 Consortium. J Extracell Vesicles. 2015;4:27493. Published 2015 Aug 28.
 <a href=\"doi:10.3402/jev.v4.27493\" target=\"_blank\">
@@ -41,14 +47,7 @@ Their Carriers Present across Human Biofluids. Cell. 2019;177(2):463-477.e15.
 <a href=\"doi:10.1016/j.cell.2019.02.018\" target=\"_blank\">
 doi:10.1016/j.cell.2019.02.018</a>
 <br><br>
-In addition, the NIH Common Fund, ERCC, and many ERCC producers
-graciously generated these datasets."
-
-set_dependency("amazon_keys")
-set_dependency("app_title")
-set_dependency("app_citations")
-set_dependency("user_credentials")
-# note: custom color scales not used here
+In addition, we thank the NIH Common Fund, ERCC, and many ERCC contributors."
 
 # ----------------
 # IMPORT CONSTANTS
@@ -80,20 +79,8 @@ common_cols <- c(
   "SPECIES", "STANDARDS", "TRANSCRIPTOME", "REFERENCE", "RATIO",
   "BIO_ID", "DATASET", "FASTQ_IDENTIFIER")
 
-status_loc <- sprintf("%s/Status", raw_loc)
-
-# -------------------
-# IMPORTING FUNCTIONS
-# -------------------
-
-# combines several functions to make an import pipeline for exRNA
-import_pipeline <- function(filenames)
-{
-  m_list <- empty_named_list(filenames)
-  for (filename in filenames)
-    m_list[[filename]] <- filename %>% read_tsv_text() %>% rem_preamble(10)
-  dplyr::bind_rows(m_list) %>% rem_dupe_rows() %>% order_by_col("FASTQ.IDENTIFIER")
-}
+raw_loc <- get_loc_wf("raw")
+status_loc <- file.path(raw_loc, "Status")
 
 # ---------------------------
 # SPLIT INTO COMMON / URL_LOC
