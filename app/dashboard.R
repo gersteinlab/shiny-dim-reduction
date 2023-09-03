@@ -604,6 +604,8 @@ The citations below are in the format requested by their respective creators.
     app_data$citations,
     sep = ""
   ) %>% HTML(),
+  br(),
+  br(),
   select_panel("cat_notes", "Category Notes", choices = cat_names),
   textOutput("cat_notes_text"),
   title = HTML("<b>Notes</b>"),

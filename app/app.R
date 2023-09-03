@@ -446,9 +446,11 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
     showModal(notes_modal)
   })
 
-  output$cat_notes_text <- renderText(
-    categories[[input$cat_notes]]$note
-  )
+  output$cat_notes_text <- renderText({
+    if (no_cats)
+      return("No categories found.")
+    get_cat_note(input$cat_notes)
+  })
 
   # ----------------
   # INPUT PROCESSING

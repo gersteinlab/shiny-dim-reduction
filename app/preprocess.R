@@ -60,7 +60,7 @@ is_app_data <- function(x) {
 # default application data
 app_data <- list(
   "title" = "Shiny Dimensionality Reduction",
-  "citations" = "<br><br> No citations found.",
+  "citations" = "No citations found.",
   "row_axes" = list(),
   "col_axes" = list(),
   "categories" = list(),
@@ -174,6 +174,16 @@ get_col_axis_summary <- function(col_axs)
 get_cat_names <- function()
 {
   names(app_data$categories)
+}
+
+#' cat to note
+#'
+#' @param cat [string]
+#' @returns [string]
+get_cat_note <- function(cat)
+{
+  stopifnot(cat %in% get_cat_names())
+  app_data$categories[[cat]]$note
 }
 
 #' cat to row_axs
