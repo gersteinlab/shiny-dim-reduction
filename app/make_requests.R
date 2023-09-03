@@ -656,89 +656,56 @@ make_requests <- function(req_keys = make_req_keys(), aut = character())
   requests
 }
 
-# merges two sets of requests, assuming they are both valid individually.
-# If two requests have the same final location, we must choose which one to keep.
-# If one request is complete and the other isn't, keep the complete one.
-# If it's a tie, pick the one completed more recently.
-# If it's still a tie, pick the one in requests1.
-# Then rbind, preserving the same order as rbind(requests1, requests2).
-# note: chain together with r1 %>% rbind_req2(r2) %>% rbind_req2(r3) %>% ...
+#' merges two sets of requests, assuming they are both valid individually.
+#' If two requests have the same final location, we must choose which one to keep.
+#' If one request is complete and the other isn't, keep the complete one.
+#' If it's a tie, pick the one completed more recently.
+#' If it's still a tie, pick the one in requests1.
+#' Then rbind, preserving the same order as rbind(requests1, requests2).
+#' note: chain together with r1 %>% rbind_req2(r2) %>% rbind_req2(r3) %>% ...
+#'
+#' @param requests1 [requests]
+#' @param requests2 [requests]
+#' @returns [requests]
 rbind_req2 <- function(requests1, requests2)
 {
-  n1 <- nrow(requests1)
-  n2 <- nrow(requests2)
-  r1_locs <- requests1$FILE_LOCATION
-  r2_locs <- requests2$FILE_LOCATION
-  r1_com_times <- requests1$TIME_COMPLETED
-  r1_req_times <- requests1$TIME_REQUESTED
+  r1_locs <- requests1[["FILE_LOCATION"]]
+  r2_locs <- requests2[["FILE_LOCATION"]]
+  r1_com_times <- requests1[["TIME_COMPLETED"]]
+  r2_com_times <- requests2[["TIME_COMPLETED"]]
+  r1_req_times <- requests1[["TIME_REQUESTED"]]
+  r2_req_times <- requests2[["TIME_REQUESTED"]]
 
-  req_dict <- hash::hash()
-
-  # key based on final location, value is (row, TIME_COMPLETED, done)
+  # map from requests1 file location to index
+  r1_locs_to_i <- hash::hash()
   for (r1_i in which(r1_locs %in% r2_locs))
-  {
-    r1_com_time <- r1_com_times[r1_i]
-    req_dict[[r1_locs[r1_i]]] <- c(r1_i, r1_com_time,
-                                   (r1_com_time > r1_req_times[r1_i]))
-  }
+    r1_locs_to_i[[r1_locs[r1_i]]] <- r1_i
+
+  # which rows to keep in each data.frame
+  r1_keep <- rep(TRUE, nrow(requests1))
+  r2_keep <- rep(TRUE, nrow(requests2))
 
   # now go through all intersecting indices
-  r2_com_times <- requests2$TIME_COMPLETED
-  r2_req_times <- requests2$TIME_REQUESTED
-  r1_keep <- rep(TRUE, n1)
-  r2_keep <- rep(TRUE, n2)
-
   for (r2_i in which(r2_locs %in% r1_locs))
   {
-    r1_val <- req_dict[[r2_locs[r2_i]]]
-    r1_i <- r1_val[1]
-    r1_com_time <- r1_val[2]
-    r1_done <- r1_val[3]
+    r1_i <- r1_locs_to_i[[r2_locs[r2_i]]]
+    r1_com_time <- r1_com_times[r1_i]
+    r1_done <- (r1_com_time > r1_req_times[r1_i])
     r2_com_time <- r2_com_times[r2_i]
     r2_done <- (r2_com_time > r2_req_times[r2_i])
 
-    if (r1_done)
-    {
-      if (r2_done)
-      {
-        if (r1_com_time < r2_com_time)
-        {
-          r1_keep[r1_i] <- FALSE
-        }
-        else
-        {
-          r2_keep[r2_i] <- FALSE
-        }
-      }
-      else
-      {
-        r2_keep[r2_i] <- FALSE
-      }
-    }
-    else
-    {
-      if (r2_done)
-      {
-        r1_keep[r1_i] <- FALSE
-      }
-      else
-      {
-        if (r1_com_time < r2_com_time)
-        {
-          r1_keep[r1_i] <- FALSE
-        }
-        else
-        {
-          r2_keep[r2_i] <- FALSE
-        }
-      }
-    }
+    r1_keep[r1_i] <- (r1_done && !r2_done) || (
+      r1_done == r2_done && r1_com_time >= r2_com_time)
+    r2_keep[r2_i] <- !r1_keep[r1_i]
   }
 
-  rbind(requests1[r1_keep,], requests2[r2_keep,])
+  rbind(requests1[r1_keep, ], requests2[r2_keep, ])
 }
 
-# vectorization of rbind_req
+#' vectorization of rbind_req
+#'
+#' @param ... [ellipsis]
+#' @returns [requests]
 rbind_req <- function(...)
 {
   reqs_list <- list(...)
