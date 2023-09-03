@@ -6,10 +6,6 @@ if (!exists("sdr_config") || sdr_config$mode != "pipeline")
   source("app/install.R")
 stopifnot(sdr_config$mode == "pipeline")
 
-source("app/app_utils.R")
-source("app/storage.R")
-source("pipeline/workflows.R")
-
 # ---------
 # FUNCTIONS
 # ---------
