@@ -25,7 +25,7 @@ test_that("make_requests() works for default input", {
 
 
 valid1 <- make_req_keys(
-  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "PCA", "Explore",
+  "miRNA", "Total", "Total", "Logarithmic", "Global Min-Max", "PCA", "Explore",
   10L, -1L, -1L, -1L, pi, "!"
 ) %>% make_requests("ADMIN")
 
@@ -35,47 +35,47 @@ valid2 <- make_req_keys(
 ) %>% make_requests("ADMIN")
 
 valid3 <- make_req_keys(
-  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "PCA", "tSNE",
+  "miRNA", "Total", "SD_Top_100", "Logarithmic", "Global Min-Max", "PCA", "tSNE",
   10L, 2L, 25L, -1L, pi, "!"
 ) %>% make_requests("ADMIN")
 
 valid4 <- make_req_keys(
-  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "VAE", "Explore",
+  "miRNA", "Urine", "SD_Top_100", "Logarithmic", "Global Min-Max", "VAE", "Explore",
   10L, -1L, -1L, 64L, pi, "!"
 ) %>% make_requests("ADMIN")
 
 valid5 <- make_req_keys(
-  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "VAE", "Summarize",
+  "miRNA", "Urine", "SD_Top_100", "Logarithmic", "Global Min-Max", "VAE", "Summarize",
   10L, -1L, -1L, 64L, pi, "!"
 ) %>% make_requests("ADMIN")
 
 valid6 <- make_req_keys(
-  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "VAE", "tSNE",
+  "miRNA", "Urine", "SD_Top_100", "Logarithmic", "Global Min-Max", "VAE", "tSNE",
   10L, 2L, 15L, 30L, pi, "!"
 ) %>% make_requests("ADMIN")
 
 valid7 <- make_req_keys(
-  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "UMAP", "Explore",
+  "miRNA", "Plasma", "SD_Top_100", "Logarithmic", "Global Min-Max", "UMAP", "Explore",
   10L, -1L, 25L, -1L, pi, "!"
 ) %>% make_requests("ADMIN")
 
 valid8 <- make_req_keys(
-  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "UMAP", "Summarize",
+  "miRNA", "Plasma", "SD_Top_100", "Logarithmic", "Global Min-Max", "UMAP", "Summarize",
   10L, -1L, 25L, -1L, pi, "!"
 ) %>% make_requests("ADMIN")
 
 valid9 <- make_req_keys(
-  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "UMAP", "tSNE",
+  "miRNA", "Plasma", "SD_Top_100", "Logarithmic", "Global Min-Max", "UMAP", "tSNE",
   10L, 2L, 25L, -1L, pi, "!"
 ) %>% make_requests("ADMIN")
 
 valid10 <- make_req_keys(
-  "miRNA", "Total", "SD_Top_1000", "Logarithmic", "Global Min-Max", "PHATE", "!",
+  "miRNA", "Saliva", "SD_Top_100", "Logarithmic", "Global Min-Max", "PHATE", "!",
   2L, -1L, 25L, -1L, pi, "!"
 ) %>% make_requests("ADMIN")
 
 valid11 <- make_req_keys(
-  "miRNA", "Plasma", "SD_Top_100", "Linear", "Quantile", "PHATE", "!",
+  "miRNA", "Saliva", "SD_Top_100", "Linear", "Quantile", "PHATE", "!",
   2L, -1L, 25L, -1L, pi, "!"
 ) %>% make_requests("ADMIN")
 

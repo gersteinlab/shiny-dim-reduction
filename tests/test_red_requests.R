@@ -16,7 +16,7 @@ system.time({
 })
 
 set_workflow("exRNA")
-perform_reduction(val_req)
-perform_reduction(val_req, 0)
-# perform_reduction(val_req, 1)
-# perform_reduction(val_req, 2)
+system.time({perform_reduction(val_req)})
+system.time({perform_reduction(val_req, 0)})
+# system.time({perform_reduction(val_req, 1)})
+# system.time({perform_reduction(val_req, 2)})
