@@ -38,10 +38,10 @@ make_transparent <- function(color_seq)
   sprintf("%s40", substr(color_seq, start = 1, stop = 7))
 }
 
-#' cycles a color_seq forward
+#' cycles a color_seq forward by i places
 #'
 #' @param color_seq [color_seq] not checked
-#' @param i [integer] not checked
+#' @param i [int] not checked
 #' @returns [color_seq]
 cycle_color_seq <- function(color_seq, i = 1L)
 {
@@ -78,7 +78,7 @@ alt_color_seq <- function(color_seq, alternate = TRUE)
 
 #' Generates a color_seq of length n and type color_type
 #'
-#' @param [int]
+#' @param n [int]
 #' @param color_type [string]
 #' @returns [color_seq]
 make_color_seq <- function(n, color_type = "Rainbow")
@@ -438,7 +438,8 @@ plotly_heatmap_dendrogram <- function(binary, colors = NULL,
     plot_method = "plotly",
     colorbar_len = ifelse(dend, 0.8, 1),
     showticklabels = c(FALSE, TRUE),
-    dendrogram = ifelse(dend, "both", "none"))
+    dendrogram = ifelse(dend, "both", "none")
+  )
 }
 
 # ----------
@@ -569,17 +570,7 @@ ggplot2_umap_sum <- function(label_mat, color_seq = NULL, title = "")
                     "Self_Neighbors" = apply(label_mat, 1, first_over_total))
   ggplot(res, aes(y = Self_Neighbors, x = Sample_Group, fill = Sample_Group)) +
     geom_bar(stat = "identity") + coord_flip() +
-    scale_fill_manual(values = color_seq) + ggtitle(title) + theme(
-      plot.title = element_text(size = 22, face = "bold"),
-      axis.title.x = element_text(size = 16, margin = margin(t = 10)),
-      axis.title.y = element_text(size = 16, margin = margin(r = 10)),
-      axis.text = element_text(size = 12),
-      legend.title = element_text(size = 16),
-      legend.text = element_text(size = 10),
-      legend.position = "none",
-      plot.margin = margin(1, 0.5, 0.5, 0.5, "cm"),
-      panel.background = element_blank(),
-      panel.grid.major = element_line(size = 0.1, linetype = 'solid', colour = "gray"))
+    scale_fill_manual(values = color_seq) + ggtitle(title) + ggplot2_theme
 }
 
 plotly_umap_sum <- function(label_mat, paint, title = "", legend = TRUE, three = TRUE, boost = FALSE)
