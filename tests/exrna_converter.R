@@ -13,27 +13,30 @@ stopifnot(sdr_config$mode == "pipeline")
 #' syntactic sugar for saving a variable
 #' in the current working directory
 #'
-#' @param name A string.
+#' @param name [string]
 get_self_rds <- function(name)
 {
+  stopifnot(is_str(name))
   assign_global(name, readRDS(sprintf("%s.rds", name)))
 }
 
 #' syntactic sugar for loading a variable
 #' from the current working directory
 #'
-#' @param name A string.
+#' @param name [string]
 set_self_rds <- function(name)
 {
+  stopifnot(is_str(name))
   saveRDS(get(name), sprintf("%s.rds", name))
 }
 
 #' reads tsv text
 #'
-#' @param file [character] of existing files, not checked
+#' @param file [character] of files that exist
 #' @returns [list] of tab-separated vectors
 read_tsv_text <- function(file)
 {
+  stopifnot(file.exists(file))
   strsplit(readLines(file), split = '\t', fixed = TRUE)
 }
 
@@ -73,51 +76,36 @@ try_catch_ignore <- function(expr)
   )
 }
 
-#' a function that attempts a mass download,
-#' returning all indices that the download failed at
-#' @param url_vec [character] of URLs
-#' @param loc_vec [character] of file locations to write to
-#' @param chunk [integer]
-mass_download <- function(url_vec, loc_vec, chunk = 100L)
+#' a function that attempts a download in batches
+#' note: use file.exists(url_vec) to check
+#' whether a download succeeded
+#'
+#' @param link [character] of download URLs
+#' @param file [character] of download destinations
+#' @param batch_size [int] of files to try concurrently
+batch_download <- function(link, file, batch_size = 100L)
 {
   stopifnot(
-    is.character(url_vec),
-    is.character(loc_vec),
-    is_int(chunk)
+    is.character(link),
+    is.character(file),
+    is_int(batch_size)
   )
-  # input validation
-  len <- length(url_vec)
 
-  if (len != length(loc_vec))
-    stop("Length of URL vector does not equal length of location vector.")
+  n <- length(link)
+  stopifnot(n == length(file))
 
-  if (len < 1)
-    return(numeric())
+  # separate into chunks: (starts[i]) to (starts[i+1] - 1)
+  starts <- c(seq(1L, n, batch_size), n + 1)
+  # number of chunks to download
+  k <- length(starts) - 1
 
-  failed_indices <- numeric()
-
-  # separate into chunks
-  chunk_indices <- c(seq(1, len, chunk), len+1)
-  num_chunks <- length(chunk_indices)-1
-
-  start <- my_timer()
-
-  for (i in seq_len(num_chunks))
+  # download each batch
+  for (i in seq_len(k))
   {
-    cat_f("Downloading chunk: %s/%s\n", i, num_chunks)
-    chunk <- chunk_indices[i]:(chunk_indices[i+1]-1)
-    download.file(url_vec[chunk], loc_vec[chunk], method = "libcurl")
-
-    for (j in chunk)
-      if (!file.exists(loc_vec[j]))
-        failed_indices <- c(failed_indices, j)
-
-    num_items_done <- max(i*chunk, len)
-    cat_f("Number of items failed: %s\n", length(failed_indices)-1)
-    cat_f("Seconds per item: %s\n", round(my_timer(start)/num_items_done, digits=4))
+    cat_f("Download Batch %d/%d\n", i, k)
+    batch <- starts[i]:(starts[i+1] - 1)
+    download.file(link[batch], file[batch], method = "libcurl")
   }
-
-  failed_indices
 }
 
 # gets the fraction of values of x that are not in 'unacceptable'
@@ -203,7 +191,8 @@ simple_mat_to_df <- function(result)
 
 # takes output of tsv_files_to_matrix and assembles it into a metadata df,
 # assuming duplicates and transpose with 1st initial col being future colnames
-transpose_to_df <- function(result){
+transpose_to_df <- function(result)
+{
   if (is.null(result))
     return(empty_df)
 

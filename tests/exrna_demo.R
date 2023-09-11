@@ -79,18 +79,20 @@ common_cols <- c(
   "SPECIES", "STANDARDS", "TRANSCRIPTOME", "REFERENCE", "RATIO",
   "BIO_ID", "DATASET", "FASTQ_IDENTIFIER")
 
+# locations:
+# raw -> Status
+#     -> Metadata_Raw
 raw_loc <- get_loc_wf("raw")
 status_loc <- file.path(raw_loc, "Status")
+raw_meta_loc <- file.path(raw_loc, "Metadata_Raw")
+meta_five_types <- c("Bios", "Expe", "Dono", "rRNA", "Gene")
+dest_folders <- sprintf("%s/%s_Mass", raw_meta_loc, meta_five_types)
 
 # ---------------------------
 # SPLIT INTO COMMON / URL_LOC
 # ---------------------------
 
 # folders, URLs, and filenames for downloading
-raw_meta_loc <- sprintf("%s/Metadata_Raw", raw_loc)
-meta_five_types <- c("Bios", "Expe", "Dono", "rRNA", "Gene")
-dest_folders <- sprintf("%s/%s_Mass", raw_meta_loc, meta_five_types)
-
 bios_ref <- sprintf("%s/Bios_%s.tsv", raw_meta_loc, 1:3) %>% import_pipeline()
 expe_ref <- sprintf("%s/Expe_%s.tsv", raw_meta_loc, 1:3) %>% import_pipeline()
 dono_ref <- sprintf("%s/Dono_%s.tsv", raw_meta_loc, 1:3) %>% import_pipeline()
@@ -98,8 +100,8 @@ rrna_ref <- sprintf("%s/rRNA_%s.tsv", raw_meta_loc, 1:3) %>% import_pipeline()
 gene_ref <- sprintf("%s/Gene_%s.tsv", raw_meta_loc, 1:3) %>% import_pipeline()
 
 non_download_cols <- c(1, 3:18)
-common_bed <- bios_ref[,non_download_cols]
-common_rg <- gene_ref[,non_download_cols]
+common_bed <- bios_ref[, non_download_cols]
+common_rg <- gene_ref[, non_download_cols]
 colnames(common_bed) <- common_cols
 colnames(common_rg) <- common_cols
 
@@ -111,43 +113,27 @@ loc_lists <- empty_named_list(meta_five_types)
 for (i in 1:5)
 {
   # ensure dest folders exist
-  safe_dir(dest_folders[i])
+  ensure_dir(dest_folders[i])
   # determine download locations
   loc_lists[[i]] <- sprintf("%s/M%s.txt", dest_folders[i], seq_along(url_lists[[i]]))
 }
 
 rm(bios_ref, expe_ref, dono_ref, rrna_ref, gene_ref)
 
-# -------------------
-# DOWNLOAD - FRAGILE!
-# -------------------
+# -----------------------
+# DOWNLOAD FROM URL LISTS
+# -----------------------
 
-download_status <- empty_named_list(meta_five_types)
-
-# first download - batches of 100
-for (i in 1:5)
-  download_status[[i]] <- mass_download(url_lists[[i]], loc_lists[[i]], 100)
-
-set_self_rds("download_status", status_loc)
-get_self_rds("download_status", status_loc)
-
-# second download - batches of 1 and catch missing entries
+# download all missing files
 for (i in 1:5)
 {
   urls <- url_lists[[i]]
   locs <- loc_lists[[i]]
-  miss <- download_status[[i]][-1]
-  mass_download(urls[miss], locs[miss], 1)
+  missing <- !file.exists(locs)
 
-  for (j in miss)
-    if (file.exists(locs[miss]))
-      download_status[[i]] <- setdiff(download_status[[i]], j)
+  # batch size can be varied
+  batch_download(urls[missing], locs[missing], batch_size = 1L)
 }
-
-set_self_rds("common_bed", status_loc)
-set_self_rds("common_rg", status_loc)
-
-rm(urls, locs, url_lists, loc_lists)
 
 # ----------------
 # BIOS, EXPE, DONO
