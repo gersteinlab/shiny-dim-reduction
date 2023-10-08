@@ -109,8 +109,8 @@ batch_download <- function(link, file, batch_size = 100L)
 }
 
 # gets the fraction of values of x that are not in 'unacceptable'
-frac_acceptable <- function(x, unacceptable=list(NA, NaN, NULL, "", "Unknown")){
-  1 - sum(x %in% unacceptable)/length(x)
+frac_acceptable <- function(x, unacceptable = list(NA, NaN, NULL, "", "Unknown")){
+  1 - sum(x %in% unacceptable) / length(x)
 }
 
 # a version of dplyr::bind_rows that works extremely quickly

@@ -139,7 +139,6 @@ for (i in 1:5)
 # BIOS, EXPE, DONO
 # ----------------
 
-get_self_rds("common_bed", status_loc)
 bed_txt <- empty_named_list(c("Bios", "Expe", "Dono"))
 
 for (i in 1:3)
@@ -157,16 +156,16 @@ check_garbo <- function(data, min) {
   select_if(data, function(x){frac_acceptable(x) > min})
 }
 
-indices <- which(common_bed$PROFILING != "qPCR")
-bios_c <- check_garbo(bios_total[indices,], 0.25)
-expe_c <- check_garbo(expe_total[indices,], 0.25)
-dono_c <- check_garbo(dono_total[indices,], 0.25)
+indices <- (common_bed$PROFILING != "qPCR")
+bios_c <- check_garbo(bios_total[indices, ], 0.25)
+expe_c <- check_garbo(expe_total[indices, ], 0.25)
+dono_c <- check_garbo(dono_total[indices, ], 0.25)
 
 # dono
-dono_clean <- dono_c[,1:6]
+dono_clean <- dono_c[, 1:6]
 dono_clean[is.na(dono_clean)] <- "Unknown"
-dono_clean[which(dono_clean == "")] <- "Unknown"
-dono_clean <- dono_clean[,-1]
+dono_clean[dono_clean == ""] <- "Unknown"
+dono_clean <- dono_clean[, -1]
 dono_clean[,5] <- gsub(" years", "", dono_clean[,5])
 dono_clean[,5] <- gsub(" y", "", dono_clean[,5])
 dono_clean <- cbind.data.frame(dono_clean, get_intervals(dono_clean[,5], 5))
@@ -178,14 +177,14 @@ colnames(dono_clean) <- c("DONOR", "DONOR_TYPE", "SEX", "STATUS",
 # bios
 bios_clean <- bios_c
 bios_clean[is.na(bios_clean)] <- "Unknown"
-bios_clean[which(bios_clean == "")] <- "Unknown"
+bios_clean[bios_clean == ""] <- "Unknown"
 bios_clean <- bios_clean[,c(2, 20),drop=FALSE]
 colnames(bios_clean) <- c("BIOSAMPLE", "FRACTIONATION")
 
 # expe
 expe_clean <- expe_c
 expe_clean[is.na(expe_clean)] <- "Unknown"
-expe_clean[which(expe_clean == "")] <- "Unknown"
+expe_clean[expe_clean == ""] <- "Unknown"
 
 expe_useless <- c(
   "X.property", "X..Status", "X..exRNA.Source.Isolation.Protocol",
@@ -410,7 +409,7 @@ for (n in 1:2)
     {
       x <- truncate_data(data)
 
-      if (sum(x$level == "species") < 1 || ncol(x) != 4)
+      if (!any(x$level == "species") || ncol(x) != 4)
       {
         rg_assoc[[n]][[k]] <- empty_df
         rg_txt2[[n]][[k]] <- empty_df
@@ -419,7 +418,7 @@ for (n in 1:2)
       {
         hmm2 <- species_only(populate_taxa(x))
         ind1 <- as.numeric(rownames(hmm2))
-        readCounts <- x[ind1,,drop=FALSE]
+        readCounts <- x[ind1, , drop = FALSE]
         rownames(readCounts) <- sprintf("%s_%s", readCounts$name, readCounts$ID)
         rownames(hmm2) <- rownames(readCounts)
         ind2 <- readCounts$readCount_direct > 0
@@ -478,8 +477,9 @@ get_self_rds("all_gene", status_loc)
 get_self_rds("assoc_gene", status_loc)
 
 # more cleaning
-cleanup_fun_2 <- function(data, frac){
-  data[,colSums(is.na(data)) < frac*nrow(data), drop=FALSE]
+cleanup_fun_2 <- function(data, frac)
+{
+  data[, colSums(is.na(data)) < frac * nrow(data), drop = FALSE]
 }
 
 clean_all_rRNA <- cleanup_fun_2(all_rRNA, 0.99)
@@ -921,7 +921,7 @@ self_save(c("amazon_keys", "app_title", "app_citations", "perplexity_types",
 # RBP INTERSECTIONS
 # -----------------
 
-setwd(wf_config$raw_loc)
+setwd(raw_loc)
 tgz_files <- list.files("RBP_raw")
 num_archives <- length(tgz_files)
 # dir.create("RBP_S1") # stage 1: untar
@@ -1097,7 +1097,7 @@ for (rbp_name in rbp_names)
 {
   stopifnot(
     identical(rbp_rownames_short, rbp_rownames[[rbp_name]]) ||
-    identical(rbp_rownames_long, rbp_rownames[[rbp_name]])
+      identical(rbp_rownames_long, rbp_rownames[[rbp_name]])
   )
 }
 
@@ -1437,7 +1437,7 @@ for (cat in c("miRNA", "piRNA", "tRNA", "ex_miRNA"))
   decorations[[cat]] <- list(
     "CATEGORIES" = cat,
     "ROW_SUBSETS" = list(),
-    "COL_SUBSETS"=list("Reference" = colnames(combined))
+    "COL_SUBSETS" = list("Reference" = colnames(combined))
   )
 
   for (cha in c("BIOFLUID", "DATASET"))
