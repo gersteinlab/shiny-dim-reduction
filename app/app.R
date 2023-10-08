@@ -427,7 +427,7 @@ Seconds elapsed: %.1f", time_diff(start)), "message")
     )
 
     if (test$FILE_LOCATION %in% all_prev_locations)
-      notif("Cannot make duplicate requests - please reach out to the ERCC
+      notif("Cannot make duplicate requests - please contact us
               if you believe this message is in error.", "warning")
     else
     {
