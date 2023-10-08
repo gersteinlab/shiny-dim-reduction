@@ -48,6 +48,217 @@ app_data$groups <- list(
   )
 )
 
+#' makes a category where row_axs is col_axs and note is blank
+#'
+#' @param row_axs [string] for a row axis name
+#' @returns [category]
+make_simple_category <- function(row_axs)
+{
+  make_category(row_axs, row_axs)
+}
+
+app_data$categories <- list(
+  "H3K27ac" = make_category("H3K27ac", "cCREs"),
+  "H3K27me3" = make_category("H3K27me3", "cCREs"),
+  "H3K4me1" = make_category("H3K4me1", "cCREs"),
+  "H3K4me3" = make_category("H3K4me3", "cCREs"),
+  "H3K9me3" = make_category("H3K9me3", "cCREs"),
+  "ATACseq" = make_category("ATACseq", "cCREs"),
+  "CTCF" = make_category("CTCF", "cCREs"),
+  "DNase" = make_category("DNase", "cCREs"),
+  "POLR2A" = make_category("POLR2A", "cCREs"),
+  "Methylation" = make_category("Methylation", "cCREs"),
+  "Protein_Coding_Genes" = make_simple_category("Protein_Coding_Genes"),
+  "Pseudogenes" = make_simple_category("Pseudogenes"),
+  "Long_Non_Coding_RNAs" = make_simple_category("Long_Non_Coding_RNAs"),
+  "RAMPAGE" = make_simple_category("RAMPAGE"),
+  "Peptide" = make_simple_category("Peptide"),
+  "FPKM_TPM" = make_simple_category("FPKM_TPM"),
+  "OMS" = make_simple_category("OMS")
+)
+
+tissue_color_scales <- c(
+  'skeletal muscle tissue' = '#7A67EE',
+  'gastrocnemius medialis' = '#7A67EE',
+  'stomach' = '#FFD39B',
+  'transverse colon' = '#EEC591',
+  "Peyer's patch" = '#CDB79E',
+  'ileum' = '#CDB79E',
+  'right lobe of liver' = '#CDB79E',
+  'body of pancreas' = '#CD9B1D',
+  'esophagus squamous epithelium'='#CDAA7D',
+  'gastroesophageal sphincter'='#CDAA7D',
+  'sigmoid colon'='#CDB79E',
+  'esophagus muscularis mucosa'='#8B7355',
+  'muscle layer of esophagus'='#8B7355',
+  'esophagus mucosa'='#8B7355',
+  'esophagogastric junction'='#8B7355',
+  'testis'='#A6A6A6',
+  'uterus'='#EED5D2',
+  'prostate'='#D9D9D9',
+  'prostate gland'='#D9D9D9',
+  'vagina'='#EED5D2',
+  'ovary'='#FFB6C1',
+  'thyroid gland'='#008B45',
+  'adrenal gland'='#8FBC8F',
+  'spleen'='#CDB79E',
+  'right atrium auricular region'='#B452CD',
+  'right cardiac atrium'='#B452CD',
+  'heart left ventricle'='#7A378B',
+  'thoracic aorta'='#8B1C62',
+  'ascending aorta'='#8B1C62',
+  'coronary artery'='#EE6A50',
+  'tibial artery'='#FF0000',
+  'omental fat pad'='#FFA54F',
+  'subcutaneous adipose tissue'='#FFA54F',
+  'tibial nerve' = '#FFD700',
+  'suprapubic skin' = '#3A5FCD',
+  'lower leg skin' = '#1E90FF',
+  'mammary gland' = '#00CDCD',
+  'breast epithelium' = '#00CDCD',
+  'upper lobe of left lung' = '#9ACD32'
+)
+
+subset_tissue_color_scales <- function(tissue_names)
+{
+  tissue_color_scales[names(tissue_color_scales) %in% tissue_names]
+}
+
+# where metadata only has SAMPLE, TISSUE, INDIVIDUAL
+make_ti_row_axis <- function(metadata)
+{
+  make_axis(
+    metadata,
+    color_scales = list(
+      "TISSUE" = subset_tissue_color_scales(metadata$TISSUE)
+    ),
+    rel_meta = c("TISSUE", "INDIVIDUAL")
+  )
+}
+
+cat(paste(sprintf("\"%s\"", order_total$Peptide$SAMPLE), collapse = ", "))
+cat(paste(sprintf("\"%s\"", order_total$OMS$SAMPLE), collapse = ", "))
+
+order_total$Peptide$SAMPLE <- c(
+  "PDProtein.LiverLL.3.A",
+  "PDProtein.LiverRL.3.A",
+  "PDProtein.LiverLL.3.B",
+  "PDProtein.LiverRL.3.B",
+  "PDProtein.Prostate.1",
+  "PDProtein.SIntestine.3",
+  "PDProtein.Spleen.3",
+  "PDProtein.Spleen.4",
+  "PDProtein.Testis.1",
+  "PDProtein.Testis.2",
+  "PDPeptide.LiverLL.3.A",
+  "PDPeptide.LiverRL.3.A",
+  "PDPeptide.LiverLL.3.B",
+  "PDPeptide.LiverRL.3.B",
+  "PDPeptide.Prostate.1",
+  "PDPeptide.SIntestine.3",
+  "PDPeptide.Spleen.3",
+  "PDPeptide.Spleen.4",
+  "PDPeptide.Testis.1",
+  "PDPeptide.Testis.2"
+)
+
+order_total$OMS$SAMPLE <- c(
+  "OMS.LiverLL.3.A",
+  "OMS.LiverRL.3.A",
+  "OMS.LiverLL.3.B",
+  "OMS.LiverRL.3.B",
+  "OMS.Prostate.1",
+  "OMS.SIntestine.3",
+  "OMS.Spleen.3",
+  "OMS.Spleen.4",
+  "OMS.Testis.1",
+  "OMS.Testis.2"
+)
+
+app_data$row_axes <- list(
+  "H3K27ac" = make_ti_row_axis(order_total[["H3K27ac"]]),
+  "H3K27me3" = make_ti_row_axis(order_total[["H3K27me3"]]),
+  "H3K4me1" = make_ti_row_axis(order_total[["H3K4me1"]]),
+  "H3K4me3" = make_ti_row_axis(order_total[["H3K4me3"]]),
+  "H3K9me3" = make_ti_row_axis(order_total[["H3K9me3"]]),
+  "ATACseq" = make_ti_row_axis(order_total[["ATACseq"]]),
+  "CTCF" = make_ti_row_axis(order_total[["CTCF"]]),
+  "DNase" = make_ti_row_axis(order_total[["DNase"]]),
+  "POLR2A" = make_ti_row_axis(order_total[["POLR2A"]]),
+  "Methylation" = make_ti_row_axis(order_total[["Methylation"]]),
+  "Protein_Coding_Genes" = make_ti_row_axis(order_total[["Protein_Coding_Genes"]]),
+  "Pseudogenes" = make_ti_row_axis(order_total[["Pseudogenes"]]),
+  "Long_Non_Coding_RNAs" = make_axis(order_total[["Long_Non_Coding_RNAs"]]),
+  "RAMPAGE" = make_axis(
+    order_total[["RAMPAGE"]],
+    color_scales = list(
+      "TISSUE" = subset_tissue_color_scales(order_total[["RAMPAGE"]]$TISSUE)
+    ),
+    rel_meta = c("TISSUE", "DATE_RELEASED", "TECHNICAL_REPLICATE")
+  ),
+  # THESE TISSUES DON'T WORK WITH CUSTOM SCALES
+  "Peptide" = make_axis(
+    order_total[["Peptide"]],
+    rel_meta = c("TISSUE", "INDIVIDUAL", "EXPRESSION")
+  ),
+  "FPKM_TPM" = make_axis(
+    order_total[["FPKM_TPM"]],
+    rel_meta = c("TISSUE", "INDIVIDUAL", "EXPRESSION", "EXP_COEFFICIENT")
+  ),
+  "OMS" = make_axis(
+    order_total[["OMS"]],
+    rel_meta = c("TISSUE", "INDIVIDUAL")
+  )
+)
+
+cat_names <- names(app_data$categories)
+for (cat in cat_names)
+  app_data$categories[[cat]]$note <- sprintf("This is the %s dataset.", cat)
+
+source("pipeline/workflows.R")
+load_wf_config()
+set_workflow("ENTEx")
+fabio_test <- get_loc_wf("raw/Fabio/k27ac.normalized.FN_JR.txt")
+
+lol <- readLines(fabio_test, 1)
+
+app_data$col_axes <- list(
+  "cCREs" = make_axis(
+    data.frame("EH38D_dELS" = decorations_old$cCREs$Subsets$Reference),
+    subsets = decorations_old$cCREs$Subsets[2:30]
+  )
+)
+
+remaining <- cat_names[11:17]
+for (cat in remaining)
+{
+  print(cat)
+  cat_table <- readRDS(get_cat_table_name(cat))
+  names_col <- colnames(cat_table)
+  stopifnot(is_table(cat_table))
+  print(head(names_col, 10))
+
+  if (cat == "RAMPAGE")
+  {
+    app_data$col_axes[[cat]] <- make_axis(
+      data.frame("TSS" = names_col)
+    )
+  }
+  else
+  {
+    app_data$col_axes[[cat]] <- make_axis(
+      data.frame("GENE" = names_col)
+    )
+  }
+}
+
+save_app_data()
+copy_app_to_wf_msg()
+
+# ---------
+# PREVIOUS
+# ---------
+
 formal_dec_names <- c(
   "Active_CTCF",
   "Active_Distal",
@@ -62,50 +273,6 @@ formal_dec_names <- c(
   "Repressive_nonCTCF",
   "Repressive_Proximal",
   "Repressive_Total"
-)
-
-custom_color_scales <- list(
-  "TISSUE" = c(
-    'skeletal muscle tissue' = '#7A67EE',
-    'gastrocnemius medialis' = '#7A67EE',
-    'stomach' = '#FFD39B',
-    'transverse colon' = '#EEC591',
-    "Peyer's patch" = '#CDB79E',
-    'ileum' = '#CDB79E',
-    'right lobe of liver' = '#CDB79E',
-    'body of pancreas' = '#CD9B1D',
-    'esophagus squamous epithelium'='#CDAA7D',
-    'gastroesophageal sphincter'='#CDAA7D',
-    'sigmoid colon'='#CDB79E',
-    'esophagus muscularis mucosa'='#8B7355',
-    'muscle layer of esophagus'='#8B7355',
-    'esophagus mucosa'='#8B7355',
-    'esophagogastric junction'='#8B7355',
-    'testis'='#A6A6A6',
-    'uterus'='#EED5D2',
-    'prostate'='#D9D9D9',
-    'prostate gland'='#D9D9D9',
-    'vagina'='#EED5D2',
-    'ovary'='#FFB6C1',
-    'thyroid gland'='#008B45',
-    'adrenal gland'='#8FBC8F',
-    'spleen'='#CDB79E',
-    'right atrium auricular region'='#B452CD',
-    'right cardiac atrium'='#B452CD',
-    'heart left ventricle'='#7A378B',
-    'thoracic aorta'='#8B1C62',
-    'ascending aorta'='#8B1C62',
-    'coronary artery'='#EE6A50',
-    'tibial artery'='#FF0000',
-    'omental fat pad'='#FFA54F',
-    'subcutaneous adipose tissue'='#FFA54F',
-    'tibial nerve' = '#FFD700',
-    'suprapubic skin' = '#3A5FCD',
-    'lower leg skin' = '#1E90FF',
-    'mammary gland' = '#00CDCD',
-    'breast epithelium' = '#00CDCD',
-    'upper lobe of left lung' = '#9ACD32'
-  )
 )
 
 library(Matrix)
