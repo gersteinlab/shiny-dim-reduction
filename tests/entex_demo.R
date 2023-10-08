@@ -255,6 +255,15 @@ for (cat in remaining)
 save_app_data()
 copy_app_to_wf_msg()
 
+app_requests <- make_pca_e_req_keys(
+  cat = "H3K27ac",
+  row = "Total",
+  col = "Total",
+  sca = "Logarithmic",
+  nor = "Global Min-Max",
+  com = 10L
+) %>% make_requests("ADMIN")
+
 # ---------
 # PREVIOUS
 # ---------
