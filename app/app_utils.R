@@ -34,20 +34,28 @@ reg_str <- function(x_stringi, pattern, replacement)
 # OPT MANAGEMENT
 # --------------
 
-# formats to "opt_name (opt_num)"
+#' formats to "opt_name (opt_num)"
+#'
+#' @param opt_name [character]
+#' @param opt_num [integer]
 get_opt <- function(opt_name, opt_num)
 {
   stopifnot(is.character(opt_name), is.integer(opt_num))
   sprintf("%s (%s)", opt_name, opt_num)
 }
 
-# gets the ith character of string s
+#' gets the ith character of string s
+#'
+#' @param s [string] not checked
+#' @param i [integer] not checked
 str_ind <- function(s, i)
 {
   substring(s, i, i)
 }
 
-# separates a single string opt
+#' separates a single string opt
+#'
+#' @param opt_str [string] that is an opt
 sep_opt_str <- function(opt_str)
 {
   stopifnot(is_str(opt_str))
@@ -74,9 +82,11 @@ sep_opt_str <- function(opt_str)
   stop_f("opt '%s' is not balanced!", opt_str)
 }
 
-# Suppose we have a vector of strings of the form "A (B)",
-# where A is any string and B is a number. Then
-# return a vector containing for each string c("A", "B").
+#' Suppose we have a vector of strings of the form "A (B)",
+#' where A is any string and B is a number. Then
+#' return a vector containing for each string c("A", "B").
+#'
+#' @param opt_chr [character]
 sep_opt <- function(opt_chr)
 {
   stopifnot(is.character(opt_chr))
