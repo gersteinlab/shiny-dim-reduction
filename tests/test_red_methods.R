@@ -150,17 +150,18 @@ cat_f("Time elapsed: %.1f (same)\n", same_red$time)
 # TEST CATEGORIES
 # ---------------
 
-source("pipeline/sca_nor_fun.R")
+source("pipeline/transforms.R")
 source("app/preprocess.R")
+load_app_data()
 
 name_cat_table_file <- function(cat)
 {
-  sprintf("~/DataR/sdr_workflows/exRNA/sdr_tables/combined_%s.rds", cat)
+  sprintf("C:/Users/justin/SDR/exRNA/sdr_tables/combined_%s.rds", cat)
 }
 
 get_labels <- function(cat, cha)
 {
-  get_row_axis(cat)$metadata[[cha]]
+  cat_to_row_axis(cat)$metadata[[cha]]
 }
 
 reduce_category <- function(cat, cha = "CONDITION", sca = "Logarithmic")
