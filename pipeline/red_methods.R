@@ -1,6 +1,11 @@
 # The purpose of this file is to integrate methods for
 # standardized and efficient dimensionality reduction.
 
+# COPY THE FOLDER rpytools
+# sys <- import("sys", convert = TRUE)
+# sys$path
+# paste0(system.file(package = "reticulate"),"/python")
+
 if (!exists("sdr_config") || sdr_config$mode != "pipeline")
   source("app/install.R")
 stopifnot(sdr_config$mode == "pipeline")
