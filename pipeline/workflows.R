@@ -98,7 +98,7 @@ load_wf_config <- function()
 {
   stopifnot(sdr_config$mode == "pipeline")
   readRDS(get_project_loc("sdr_wf_config.rds")
-          ) %>% update_wf_config()
+  ) %>% update_wf_config()
 }
 
 #' attempts to save wf_config
@@ -234,41 +234,89 @@ get_cat_table_name <- function(cat)
 # expected files to copy between app / workflows
 app_wf_files <- c("app_data.rds", "local_store.rds", "cloud_store.rds")
 
+#' logs a message
+#'
+#' @param msg [string]
+log_message <- function(msg)
+{
+  message(msg)
+  write(msg, get_project_loc("workflow_logs.txt"), append = TRUE)
+}
+
+#' wrapper for log_message(sprintf(...))
+#'
+#' @param ... [ellipsis]
+log_message_f <- function(...)
+{
+  log_message(sprintf(...))
+}
+
+#' copy with log_message and confirmation
+#'
+#' @param src [string]
+#' @param dst [string]
+safe_copy_with_log <- function(src, dst)
+{
+  stopifnot(
+    is_str(src),
+    is_str(dst),
+    file.exists(src)
+  )
+  log_message("PREP SAFE_COPY")
+  log_message_f(">> SRC: %s", src)
+
+  dst_status <- ifelse(
+    dir.exists(dst),
+    " (dir)",
+    ifelse(file.exists(dst), " (file)", "")
+  )
+  log_message_f(">> DST: %s%s", dst, dst_status)
+
+  confirm_copy <- readline(prompt = "
+To copy, type 'y' and press enter.
+To exit, type anything else and press enter. ")
+  stopifnot("y" == confirm_copy)
+  file.copy(src, dst, overwrite = TRUE)
+  log_message("SAFE_COPY DONE")
+}
+
 #' copies files from app folder to workflow folder
 #'
-#' @param file [character] not checked
-copy_app_to_wf <- function(file = app_wf_files)
+#' @param files [character]
+copy_app_to_wf <- function(files = app_wf_files)
 {
-  stopifnot(sdr_config$mode == "pipeline")
+  stopifnot(
+    is.character(files),
+    sdr_config$mode == "pipeline"
+  )
   ensure_dir(get_loc_app_d())
-  file.copy(get_app_loc(file), get_loc_app_d(file), overwrite = TRUE)
+
+  for (file in files)
+  {
+    safe_copy_with_log(
+      get_app_loc(file),
+      get_loc_app_d(file)
+    )
+  }
 }
 
 #' copies files from workflow folder to app folder
 #'
-#' @param file [character] not checked
-copy_wf_to_app <- function(file = app_wf_files)
+#' @param file [character]
+copy_wf_to_app <- function(files = app_wf_files)
 {
-  stopifnot(sdr_config$mode == "pipeline")
-  file.copy(get_loc_app_d(file), get_app_loc(file), overwrite = TRUE)
-}
+  stopifnot(
+    is.character(files),
+    sdr_config$mode == "pipeline"
+  )
 
-#' copy_app_to_wf with a message
-#'
-#' @param file [character] not checked
-copy_app_to_wf_msg <- function(file = app_wf_files)
-{
-  message_f("app to %s: %s", get_workflow(),
-            vec_str(file[copy_app_to_wf(file)]))
-}
-
-#' copy_wf_to_app with a message
-#'
-#' @param file [character] not checked
-copy_wf_to_app_msg <- function(file = app_wf_files)
-{
-  message_f("%s to app: %s", get_workflow(),
-            vec_str(file[copy_wf_to_app(file)]))
+  for (file in files)
+  {
+    safe_copy_with_log(
+      get_loc_app_d(file),
+      get_app_loc(file)
+    )
+  }
 }
 
 # ------------------

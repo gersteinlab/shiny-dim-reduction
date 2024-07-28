@@ -20,5 +20,6 @@ tests/test_cloud_store.rds
 ignore
 README.html
 sdr_wf_config.rds
+workflow_logs.txt
 # for microsoft office files
 extras/~$*
