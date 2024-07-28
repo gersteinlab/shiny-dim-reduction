@@ -77,7 +77,7 @@ update_app_data <- function(a_data)
 }
 
 #' attempts to load app_data
-load_app_data <- function(file)
+load_app_data <- function()
 {
    readRDS(get_app_loc("app_data.rds")) %>% update_app_data()
 }
