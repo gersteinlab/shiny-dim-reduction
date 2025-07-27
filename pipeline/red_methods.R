@@ -122,7 +122,14 @@ pca_to_tsne <- function(pca_result, dim = 2L, per = 1L)
 # -----------
 
 # must be done immediately after loading Keras
-tensorflow::use_condaenv("r-reticulate")
+tensorflow::use_condaenv(
+  "C:\\Users\\justin\\miniconda3\\envs\\r-reticulate"
+)
+
+# copy src: C:\Users\justin\Desktop\LibsR\reticulate\python
+# copy dst: C:\Users\justin\miniconda3\envs\r-reticulate\Lib
+# py_eval("1+1")
+
 K <- keras::backend()
 
 # disable eager execution
